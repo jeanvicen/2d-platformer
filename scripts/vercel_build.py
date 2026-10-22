@@ -127,13 +127,46 @@ def main():
         shutil.rmtree(OUTPUT, ignore_errors=True)
         OUTPUT.mkdir(parents=True)
         subprocess.run([str(godot), "--headless", "--path", str(ROOT), "--export-release", "Web", str(OUTPUT / "index.html")], cwd=ROOT, check=True)
-        files = [path for path in OUTPUT.iterdir() if path.is_file()]
+
+        # Package the PWA shell alongside the exported game, so Vercel publishes it.
+        pwa_source = ROOT / "pwa"
+        if not (pwa_source / "manifest.webmanifest").is_file() or not (pwa_source / "sw.js").is_file():
+            raise RuntimeError("PWA manifest or service worker source is missing")
+        shutil.copy2(pwa_source / "manifest.webmanifest", OUTPUT / "manifest.webmanifest")
+        shutil.copy2(pwa_source / "sw.js", OUTPUT / "sw.js")
+        shutil.copytree(pwa_source / "icons", OUTPUT / "icons", dirs_exist_ok=True)
+
+        index_path = OUTPUT / "index.html"
+        html = index_path.read_text(encoding="utf-8")
+        if 'rel="manifest"' not in html:
+            pwa_head = (
+                '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
+                '<meta name="theme-color" content="#10131c">\n'
+                '<meta name="mobile-web-app-capable" content="yes">\n'
+                '<meta name="apple-mobile-web-app-capable" content="yes">\n'
+                '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">\n'
+                '<link rel="manifest" href="/manifest.webmanifest">\n'
+                '<link rel="apple-touch-icon" href="/icons/icon-192.png">\n'
+            )
+            html = html.replace("</head>", pwa_head + "</head>", 1)
+        if "/sw.js" not in html:
+            registration = (
+                '<script>\n'
+                'if ("serviceWorker" in navigator) {\n'
+                '  window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch((error) => console.warn("PWA service worker registration failed", error)));\n'
+                '}\n'
+                '</script>\n'
+            )
+            html = html.replace("</body>", registration + "</body>", 1)
+        index_path.write_text(html, encoding="utf-8")
+
+        files = [path for path in OUTPUT.rglob("*") if path.is_file()]
         if not (OUTPUT / "index.html").is_file() or (OUTPUT / "index.html").stat().st_size < 1000:
             raise RuntimeError("Godot did not generate a valid game index.html")
         if not any(path.suffix == ".wasm" for path in files) or not any(path.suffix == ".pck" for path in files):
             raise RuntimeError("Web export is missing the WASM engine or game PCK resources")
         for path in sorted(files):
-            print(f"{path.name}: {path.stat().st_size:,} bytes", flush=True)
+            print(f"{path.relative_to(OUTPUT)}: {path.stat().st_size:,} bytes", flush=True)
         print(f"Total Web export: {sum(path.stat().st_size for path in files):,} bytes", flush=True)
 
 
