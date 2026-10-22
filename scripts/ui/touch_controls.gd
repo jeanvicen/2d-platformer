@@ -71,17 +71,19 @@ func _layout_buttons() -> void:
     if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
         return
 
-    _radius = clampf(minf(viewport_size.x, viewport_size.y) * 0.095, 72.0, 118.0)
+    # Size from both axes so compact portrait canvases keep practical targets
+    # without squeezing the left and right control clusters into each other.
+    _radius = clampf(minf(viewport_size.y * 0.095, viewport_size.x * 0.045), 28.0, 118.0)
     var bottom_y := viewport_size.y - _radius * 1.35
     var left_x := _radius * 1.35
     var right_margin := _radius * 1.35
     var second_column := _radius * 3.55
     var top_row_y := bottom_y - _radius * 2.15
-    var pause_radius := _radius * 0.48
+    var pause_radius := maxf(_radius * 0.48, 22.0)
     _buttons = [
         {"action": &"move_left", "label": "L", "center": Vector2(left_x, bottom_y), "radius": _radius},
         {"action": &"move_right", "label": "R", "center": Vector2(left_x + _radius * 2.15, bottom_y), "radius": _radius},
-        {"action": &"move_down", "label": "DOWN", "center": Vector2(left_x + _radius * 1.075, bottom_y - _radius * 2.15), "radius": _radius},
+        {"action": &"move_down", "label": "DOWN", "center": Vector2(left_x + _radius * 1.075, top_row_y), "radius": _radius},
         {"action": &"jump", "label": "JUMP", "center": Vector2(viewport_size.x - right_margin, bottom_y), "radius": _radius},
         {"action": &"attack", "label": "ATK", "center": Vector2(viewport_size.x - second_column, bottom_y), "radius": _radius},
         {"action": &"dash", "label": "DASH", "center": Vector2(viewport_size.x - right_margin, top_row_y), "radius": _radius},
