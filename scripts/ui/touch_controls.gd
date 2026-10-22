@@ -71,15 +71,15 @@ func _layout_buttons() -> void:
     if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
         return
 
-    # Size from both axes so compact portrait canvases keep practical targets
-    # without squeezing the left and right control clusters into each other.
+    # Derive hit target size from both axes to avoid controls colliding on
+    # compact portrait viewports while keeping them comfortably tappable.
     _radius = clampf(minf(viewport_size.y * 0.095, viewport_size.x * 0.045), 28.0, 118.0)
     var bottom_y := viewport_size.y - _radius * 1.35
     var left_x := _radius * 1.35
     var right_margin := _radius * 1.35
     var second_column := _radius * 3.55
     var top_row_y := bottom_y - _radius * 2.15
-    var pause_radius := maxf(_radius * 0.48, 22.0)
+    var pause_radius := maxf(_radius * 0.62, 22.0)
     _buttons = [
         {"action": &"move_left", "label": "L", "center": Vector2(left_x, bottom_y), "radius": _radius},
         {"action": &"move_right", "label": "R", "center": Vector2(left_x + _radius * 2.15, bottom_y), "radius": _radius},
