@@ -26,6 +26,7 @@ SaveManager="*res://scripts/autoloads/save_manager.gd"
 SceneTransition="*res://scripts/autoloads/scene_transition.gd"
 JuiceManager="*res://scripts/systems/juice_manager.gd"
 AudioManager="*res://scripts/autoloads/audio_manager.gd"
+TouchControls="*res://scripts/ui/touch_controls.gd"
 
 [display]
 
