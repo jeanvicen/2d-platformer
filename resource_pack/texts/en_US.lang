@@ -1,0 +1,5 @@
+item.shadowbound:shadow_summoner.name=Shadow Summoner
+item.shadowbound:shadow_summoner=Shadow Summoner
+entity.shadowbound:companion.name=Shadow
+pack.name=Shadowbound
+pack.description=Smart shadow companions

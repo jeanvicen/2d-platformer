@@ -1,1 +1,5 @@
+node_modules/
+behavior_pack/scripts/
+build/
+*.log
 .DS_Store

@@ -1,0 +1,16 @@
+{
+  "format_version": "1.21.40",
+  "minecraft:item": {
+    "description": {
+      "identifier": "shadowbound:shadow_summoner",
+      "menu_category": { "category": "equipment" }
+    },
+    "components": {
+      "minecraft:icon": "shadowbound_summoner",
+      "minecraft:display_name": { "value": "item.shadowbound:shadow_summoner.name" },
+      "minecraft:max_stack_size": 1,
+      "minecraft:glint": true,
+      "minecraft:hand_equipped": false
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "format_version": "1.10.0",
+  "render_controllers": {
+    "controller.render.shadowbound.companion": {
+      "arrays": {
+        "textures": {
+          "Array.skins": [
+            "Texture.luna",
+            "Texture.raven"
+          ]
+        },
+        "geometries": {
+          "Array.geos": [
+            "Geometry.luna",
+            "Geometry.raven"
+          ]
+        }
+      },
+      "geometry": "Array.geos[query.property('shadowbound:persona')]",
+      "materials": [
+        {
+          "*": "Material.default"
+        },
+        {
+          "glow_eyes": "Material.glow"
+        }
+      ],
+      "textures": [
+        "Array.skins[query.property('shadowbound:persona')]"
+      ],
+      "is_hurt_color": {},
+      "on_fire_color": {}
+    }
+  }
+}

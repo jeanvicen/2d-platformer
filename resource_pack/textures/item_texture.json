@@ -1,0 +1,7 @@
+{
+  "resource_pack_name": "shadowbound",
+  "texture_name": "atlas.items",
+  "texture_data": {
+    "shadowbound_summoner": { "textures": "textures/items/shadow_summoner" }
+  }
+}

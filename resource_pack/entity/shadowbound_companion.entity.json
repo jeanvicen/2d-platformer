@@ -1,0 +1,59 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "shadowbound:companion",
+      "materials": {
+        "default": "entity_alphatest",
+        "glow": "entity_emissive_alpha"
+      },
+      "textures": {
+        "luna": "textures/entity/shadowbound/luna",
+        "raven": "textures/entity/shadowbound/raven"
+      },
+      "geometry": {
+        "luna": "geometry.shadowbound.luna",
+        "raven": "geometry.shadowbound.raven"
+      },
+      "animations": {
+        "look_at": "animation.shadowbound.look_at",
+        "blink": "animation.shadowbound.blink",
+        "face": "animation.shadowbound.face",
+        "secondary": "animation.shadowbound.secondary",
+        "idle": "animation.shadowbound.idle",
+        "walk_native": "animation.shadowbound.walk_native",
+        "walk": "animation.shadowbound.walk",
+        "run": "animation.shadowbound.run",
+        "attack": "animation.shadowbound.attack",
+        "chop": "animation.shadowbound.chop",
+        "mine": "animation.shadowbound.mine",
+        "dig": "animation.shadowbound.dig",
+        "build": "animation.shadowbound.build",
+        "eat": "animation.shadowbound.eat",
+        "guard": "animation.shadowbound.guard",
+        "summon": "animation.shadowbound.summon",
+        "despawn": "animation.shadowbound.despawn",
+        "cast": "animation.shadowbound.cast",
+        "wave": "animation.shadowbound.wave",
+        "main": "controller.animation.shadowbound.main"
+      },
+      "scripts": {
+        "initialize": [
+          "variable.blink_offset = math.random(0, 3.6);"
+        ],
+        "animate": [
+          "main",
+          "look_at",
+          "blink",
+          "face",
+          "secondary"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.shadowbound.companion"
+      ],
+      "enable_attachables": true,
+      "hide_armor": false
+    }
+  }
+}

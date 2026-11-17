@@ -1,0 +1,13 @@
+{
+  "format_version": "1.12",
+  "minecraft:recipe_shapeless": {
+    "description": { "identifier": "shadowbound:shadow_summoner" },
+    "tags": ["crafting_table"],
+    "ingredients": [
+      { "item": "minecraft:book" },
+      { "item": "minecraft:stick" },
+      { "item": "minecraft:coal" }
+    ],
+    "result": { "item": "shadowbound:shadow_summoner" }
+  }
+}
