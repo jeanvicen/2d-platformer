@@ -227,6 +227,7 @@ footer { color: var(--muted); font-size: 0.85rem; }
   <footer>Shadowbound v1.1 · mod pessoal · Minecraft Bedrock 1.26.40+</footer>
 </main>
 
+<script type="application/octet-stream" id="pack">__PACK_B64__</script>
 <script>
 (function () {
   var status = document.getElementById("status");
@@ -239,9 +240,14 @@ footer { color: var(--muted); font-size: 0.85rem; }
       alt.hidden = false;
       alt.addEventListener("click", function () {
         status.textContent = "Preparando o arquivo...";
-        fetch("Shadowbound.zip")
-          .then(function (r) { if (!r.ok) throw new Error("http"); return r.blob(); })
-          .then(function (blob) { return downloads.save({ filename: "Shadowbound.zip", data: blob }); })
+        Promise.resolve()
+          .then(function () {
+            var b64 = document.getElementById("pack").textContent.trim();
+            var bin = atob(b64);
+            var bytes = new Uint8Array(bin.length);
+            for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+            return downloads.save({ filename: "Shadowbound.zip", data: new Blob([bytes]) });
+          })
           .then(function () { status.textContent = "Baixado! Renomeie para Shadowbound.mcaddon e toque nele."; })
           .catch(function (e) {
             if (e && e.code === "declined") status.textContent = "Download cancelado.";

@@ -38,6 +38,7 @@ const kb = Math.round(statSync("dist/Shadowbound.mcaddon").size / 1024);
 let html = readFileSync("site/template.html", "utf8")
   .replace("__DOWNLOAD_URL__", url)
   .replace("__SIZE__", `${kb} KB`)
+  .replace("__PACK_B64__", readFileSync("dist/Shadowbound.mcaddon").toString("base64"))
   .replace("__IMG_LUNA__", img("luna"))
   .replace("__IMG_RAVEN__", img("raven"))
   .replace("__IMG_SORA__", img("sora"))
