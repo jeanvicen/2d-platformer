@@ -9,11 +9,15 @@
       },
       "textures": {
         "luna": "textures/entity/shadowbound/luna",
-        "raven": "textures/entity/shadowbound/raven"
+        "raven": "textures/entity/shadowbound/raven",
+        "sora": "textures/entity/shadowbound/sora",
+        "yuki": "textures/entity/shadowbound/yuki"
       },
       "geometry": {
         "luna": "geometry.shadowbound.luna",
-        "raven": "geometry.shadowbound.raven"
+        "raven": "geometry.shadowbound.raven",
+        "sora": "geometry.shadowbound.sora",
+        "yuki": "geometry.shadowbound.yuki"
       },
       "animations": {
         "look_at": "animation.shadowbound.look_at",

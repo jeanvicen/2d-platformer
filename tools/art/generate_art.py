@@ -896,6 +896,143 @@ def persona_raven() -> list:
     return bones
 
 
+def long_skirt(base: Color, accent: Color, slit: bool) -> Painter:
+    """Ankle-length dress skirt with pleats; optional discreet side slit (shows black tights, not skin)."""
+    def p(img: Image.Image, face: str) -> None:
+        flat(base, 1.1, 0.7)(img, face)
+        if face in ("up", "down"):
+            return
+        w, h = img.size
+        d = ImageDraw.Draw(img)
+        for x in range(4, w, 7):
+            d.line([x, 1, x - 1, h], fill=shade(base, 0.8))
+        d.rectangle([0, h - 2, w, h], fill=accent)
+        if slit and face == "north":
+            x0 = int(w * 0.68)
+            top = int(h * 0.45)
+            d.polygon([(x0, top), (x0 + 3, h), (x0 - 3, h)], fill=hexc("#1a1a1a"))
+            d.line([(x0, top), (x0 + 3, h)], fill=accent)
+            d.line([(x0, top), (x0 - 3, h)], fill=accent)
+    return p
+
+
+def persona_sora() -> list:
+    """Sora: confident esper. Fluffy curly green hair, green eyes, long black dress, floats a little."""
+    st = FaceStyle(skin=hexc("#ffe9dd"), iris_dark=hexc("#11734a"), iris_light=hexc("#8dffbf"), sharp=True,
+                   blush=hexc("#ff97a8", 150))
+    hair_c = hexc("#33c47a")
+    dress = hexc("#151515")
+    trim = hexc("#1f7a4c")
+
+    def top(img: Image.Image, face: str) -> None:
+        flat(dress, 1.15, 0.75)(img, face)
+        w, h = img.size
+        d = ImageDraw.Draw(img)
+        if face in ("north", "south", "east", "west"):
+            d.rectangle([0, 0, w, 3], fill=trim)          # high collar
+        if face == "north":
+            d.polygon([(w // 2 - 3, 3), (w // 2 + 3, 3), (w // 2, 8)], fill=trim)
+            for y in range(11, h - 3, 6):
+                d.line([w // 2, y, w // 2, y + 3], fill=shade(dress, 1.6))
+            d.rectangle([0, h - 4, w, h - 3], fill=trim)  # waist line
+
+    def cuff(img: Image.Image, face: str) -> None:
+        flat(dress, 1.15, 0.75)(img, face)
+        if face not in ("up", "down"):
+            w, h = img.size
+            ImageDraw.Draw(img).rectangle([0, h - 2, w, h], fill=trim)
+
+    bones: list = [Bone("levitate", (0, 0, 0))]
+    by = common_body(bones, st, hair_c, top, flat(dress, 1.15, 0.75), skin(st.skin), flat(hexc("#1a1a1a"), 1.1, 0.8),
+                     boots(hexc("#0b0b0b"), hexc("#000000"), None))
+    by["root"].parent = "levitate"
+    by["rightArm"].cubes.append(Cube((-6.6, 10, -1.85), (3.7, 3.2, 3.7), cuff))
+    by["leftArm"].cubes.append(Cube((2.9, 10, -1.85), (3.7, 3.2, 3.7), cuff))
+    sk = Bone("skirt", (0, 12, 0), "waist")
+    bones.append(sk)
+    sk.cubes.append(Cube((-3.9, 7.0, -2.4), (7.8, 5.0, 4.8), long_skirt(dress, trim, False)))
+    sk.cubes.append(Cube((-4.4, 1.6, -2.9), (8.8, 5.6, 5.8), long_skirt(dress, trim, True)))
+    # hair: big curly volume
+    bangs = Bone("bangs", (0, 28, -4.5), "head")
+    bones.append(bangs)
+    bangs.cubes.append(Cube((-4.9, 24.6, -4.95), (9.8, 4.7, 0.45), jagged_bangs(hair_c, seed=55, sweep=-0.3),
+                            faces=("north", "up", "east", "west")))
+    puff = Bone("hair_top", (0, 28, 0), "head")
+    bones.append(puff)
+    puff.cubes.append(Cube((-5.3, 27.6, -4.7), (10.6, 2.8, 9.8), hair(hair_c, seed=56)))
+    for sx in (-1, 1):
+        lk = Bone("lock_r" if sx < 0 else "lock_l", (sx * 4.8, 27, -2.0), "head")
+        bones.append(lk)
+        x0 = -6.2 if sx < 0 else 4.6
+        lk.cubes.append(Cube((x0, 18.6, -4.0), (1.6, 8.6, 5.0), hair(hair_c, seed=60 + sx)))
+        cx = -7.3 if sx < 0 else 5.8
+        lk.cubes.append(Cube((cx, 18.0, -3.2), (1.5, 1.8, 3.6), hair(shade(hair_c, 0.9), seed=62 + sx)))  # outward curl
+    back = Bone("hair_back", (0, 28.5, 4.6), "head")
+    bones.append(back)
+    back.cubes.append(Cube((-5.4, 16.0, 3.8), (10.8, 13.0, 2.2), hair(hair_c, seed=64)))
+    back.cubes.append(Cube((-6.0, 16.6, 3.4), (12.0, 1.8, 2.8), hair(shade(hair_c, 0.88), seed=65)))  # curled ends
+    return bones
+
+
+def persona_yuki() -> list:
+    """Yuki: elegant older-sister type. Dark bob hair, green eyes, long green dress, white fur stole."""
+    st = FaceStyle(skin=hexc("#fde3d6"), iris_dark=hexc("#1d6b45"), iris_light=hexc("#a6efc6"))
+    hair_c = hexc("#25332c")
+    dress = hexc("#1f5a3c")
+    fur = hexc("#f2f2ef")
+
+    def top(img: Image.Image, face: str) -> None:
+        flat(dress, 1.15, 0.75)(img, face)
+        w, h = img.size
+        d = ImageDraw.Draw(img)
+        if face == "north":
+            for x in range(3, w - 2, 3):
+                d.ellipse([x, 4, x + 1, 5], fill=hexc("#ffffff"))  # pearl necklace
+            d.rectangle([0, h - 4, w, h - 3], fill=shade(dress, 0.7))
+
+    def fur_paint(img: Image.Image, face: str) -> None:
+        w, h = img.size
+        d = ImageDraw.Draw(img)
+        d.rectangle([0, 0, w, h], fill=fur)
+        rnd = random.Random(len(face) * 7 + w)
+        for _ in range(w * h // 6):
+            x, y = rnd.randrange(w), rnd.randrange(h)
+            d.point([x, y], fill=shade(fur, rnd.choice((0.85, 0.9, 1.0))))
+        if face not in ("up", "down"):
+            d.line([0, h - 1, w, h - 1], fill=shade(fur, 0.8))
+
+    bones: list = []
+    by = common_body(bones, st, hair_c, top, flat(dress, 1.15, 0.75), skin(st.skin), flat(hexc("#1a1a1a"), 1.1, 0.8),
+                     boots(hexc("#101010"), hexc("#000000"), None))
+    sk = Bone("skirt", (0, 12, 0), "waist")
+    bones.append(sk)
+    sk.cubes.append(Cube((-3.9, 7.0, -2.4), (7.8, 5.0, 4.8), long_skirt(dress, shade(dress, 0.7), False)))
+    sk.cubes.append(Cube((-4.4, 1.6, -2.9), (8.8, 5.6, 5.8), long_skirt(dress, shade(dress, 0.7), False)))
+    coat = Bone("coat", (0, 19.5, 0), "body")
+    bones.append(coat)
+    coat.cubes.append(Cube((-5.4, 17.4, -2.9), (10.8, 2.8, 5.8), fur_paint))           # fur stole
+    coat.cubes.append(Cube((-4.8, 9.0, 2.2), (9.6, 8.6, 0.8), fur_paint))              # back of the coat
+    cape = Bone("coat_tail", (0, 11.5, 2.0), "waist")
+    bones.append(cape)
+    cape.cubes.append(Cube((-4.6, 5.0, 2.6), (9.2, 4.2, 0.6), fur_paint))
+    # hair: straight bob with outward flare
+    bangs = Bone("bangs", (0, 28, -4.5), "head")
+    bones.append(bangs)
+    bangs.cubes.append(Cube((-4.8, 25.2, -4.95), (9.6, 4.0, 0.45), jagged_bangs(hair_c, seed=88),
+                            faces=("north", "up", "east", "west")))
+    for sx in (-1, 1):
+        lk = Bone("lock_r" if sx < 0 else "lock_l", (sx * 4.6, 27, -2.5), "head")
+        bones.append(lk)
+        x0 = -5.6 if sx < 0 else 4.4
+        lk.cubes.append(Cube((x0, 19.4, -4.3), (1.2, 8.0, 4.2), hair(hair_c, seed=90 + sx)))
+        fx = -6.7 if sx < 0 else 5.2
+        lk.cubes.append(Cube((fx, 19.0, -3.6), (1.5, 1.4, 3.4), hair(hair_c, seed=93 + sx)))
+    back = Bone("hair_back", (0, 28.5, 4.6), "head")
+    bones.append(back)
+    back.cubes.append(Cube((-5.0, 19.0, 3.8), (10.0, 9.6, 1.4), hair(hair_c, seed=95)))
+    return bones
+
+
 # --------------------------------------------------------------------------------------
 # Small 2D assets
 # --------------------------------------------------------------------------------------
@@ -979,8 +1116,9 @@ def pack_icon(path: str, previews: list) -> None:
         d.point([x, y], fill=(255, 255, 255, rnd.randint(80, 220)))
     for i, pv in enumerate(previews):
         crop = pv.crop((0, 0, pv.size[0], int(pv.size[1] * 0.62)))
-        crop = crop.resize((int(crop.size[0] * 0.62), int(crop.size[1] * 0.62)), Image.LANCZOS)
-        x = 8 + i * 118
+        k = 0.62 if len(previews) <= 2 else 0.4
+        crop = crop.resize((int(crop.size[0] * k), int(crop.size[1] * k)), Image.LANCZOS)
+        x = 4 + i * (118 if len(previews) <= 2 else 62)
         img.alpha_composite(crop, (x, s - crop.size[1]))
     img.save(path)
 
@@ -994,7 +1132,7 @@ def main() -> None:
 
     previews = []
     hidden_faces = ("lids", "eyes_happy", "brows", "mouth_open", "mouth_flat", "blush")
-    for persona, builder in (("luna", persona_luna), ("raven", persona_raven)):
+    for persona, builder in (("luna", persona_luna), ("raven", persona_raven), ("sora", persona_sora), ("yuki", persona_yuki)):
         bones = builder()
         geo, tex = build_model(persona, bones)
         with open(os.path.join(RP, "models", "entity", f"shadowbound_{persona}.geo.json"), "w") as f:

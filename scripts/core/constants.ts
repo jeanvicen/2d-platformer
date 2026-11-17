@@ -40,7 +40,7 @@ export enum Mood {
   Talking = 3,
 }
 
-export const PERSONAS = ["luna", "raven"] as const;
+export const PERSONAS = ["luna", "raven", "sora", "yuki"] as const;
 export type Persona = (typeof PERSONAS)[number];
 
 export const TUNING = {
@@ -71,4 +71,10 @@ export const TUNING = {
 export const COLORS: Record<Persona, { tag: string; name: string; particle: { red: number; green: number; blue: number } }> = {
   luna: { tag: "§d", name: "Luna", particle: { red: 0.85, green: 0.65, blue: 1.0 } },
   raven: { tag: "§c", name: "Raven", particle: { red: 1.0, green: 0.3, blue: 0.4 } },
+  sora: { tag: "§a", name: "Sora", particle: { red: 0.3, green: 1.0, blue: 0.55 } },
+  yuki: { tag: "§2", name: "Yuki", particle: { red: 0.55, green: 0.9, blue: 0.7 } },
 };
+
+export const DEFAULT_NAMES: Record<Persona, string> = { luna: "Luna", raven: "Raven", sora: "Sora", yuki: "Yuki" };
+/** personas with the ranged magic attack */
+export const CASTERS: Persona[] = ["luna", "sora"];

@@ -15,7 +15,7 @@ import { prettyItem } from "../inventory/item_catalog";
 import { equipBestArmor } from "../inventory/equipment";
 import { deliverTo } from "../executor/routines";
 import { bridgeAvailable } from "../ai/llm_bridge";
-import { TUNING } from "../core/constants";
+import { PERSONAS, TUNING } from "../core/constants";
 
 type Shown = { canceled: boolean; cancelationReason?: FormCancelationReason };
 
@@ -262,11 +262,15 @@ function openSettings(player: Player, a: Agent): void {
 export function openSummon(player: Player): void {
   const f = new ActionFormData()
     .title("Invocar sombra")
-    .body("Escolha sua companheira. Ela só obedece a você.\n\n§dLuna§r: bruxinha fofa e esperta, ataca à distância com magia.\n§cRaven§r: guerreira das sombras, fria e letal no corpo a corpo.")
+    .body(
+      "Escolha sua companheira. Ela só obedece a você.\n\n§dLuna§r: bruxinha fofa e esperta, raio mágico à distância.\n§cRaven§r: guerreira das sombras, letal no corpo a corpo.\n§aSora§r: psíquica orgulhosa que flutua e ataca com telecinese.\n§2Yuki§r: elegante e protetora, a 'irmã mais velha' do grupo.",
+    )
     .button("§dLuna§r - a bruxinha")
-    .button("§cRaven§r - a guerreira");
+    .button("§cRaven§r - a guerreira")
+    .button("§aSora§r - a psíquica")
+    .button("§2Yuki§r - a irmã elegante");
   show(player, () => f.show(player), (r) => {
-    const persona = r.selection === 1 ? "raven" : "luna";
+    const persona = PERSONAS[r.selection ?? 0] ?? "luna";
     const res = summon(player, persona);
     if (res === "failed") player.sendMessage("§cNão consegui invocar aqui. Tente num lugar aberto.");
   });

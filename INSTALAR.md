@@ -16,7 +16,7 @@ O arquivo que você vai usar é o **`dist/Shadowbound.mcaddon`**. Ele já tem os
 5. Crie um mundo novo (ou edite um que já existe):
    - **Configurações do mundo → Pacotes de comportamento → Disponível → Shadowbound (Comportamento) → Ativar.**
    - O jogo pergunta se quer ativar o pacote de recursos junto: **sim**.
-6. Entre no mundo. Em 2 segundos você recebe o **Invocador das Sombras** 📖.
+6. Entre no mundo. Em 2 segundos você recebe o **Invocador das Sombras** 📖. Ao usar, escolha **Luna, Raven, Sora ou Yuki**.
 
 ### Se o celular não oferecer "Abrir com Minecraft"
 - Use o app **Files by Google**: ele costuma oferecer o Minecraft.

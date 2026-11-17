@@ -60,7 +60,7 @@ export function loadRecord(ownerId: string): AgentRecord | undefined {
 
 function migrate(r: AgentRecord, ownerId: string): AgentRecord | undefined {
   if (!r || r.ownerId !== ownerId) return undefined; // never accept a record for someone else
-  const d = defaultRecord(ownerId, r.ownerName ?? "", PERSONAS.includes(r.persona) ? r.persona : "luna", r.shadowName ?? "Luna");
+  const d = defaultRecord(ownerId, r.ownerName ?? "", PERSONAS.includes(r.persona) ? r.persona : "luna", r.shadowName ?? "Sombra");
   const merged: AgentRecord = { ...d, ...r, settings: { ...d.settings, ...(r.settings ?? {}) }, stats: { ...d.stats, ...(r.stats ?? {}) } };
   merged.inventory = Array.isArray(r.inventory) ? r.inventory.filter((s) => s && typeof s.id === "string" && s.n > 0) : [];
   merged.queue = Array.isArray(r.queue) ? r.queue.slice(0, 12) : [];

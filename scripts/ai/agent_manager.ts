@@ -3,7 +3,7 @@
  * and the anti-duplication sweep (stale bodies from older generations are removed).
  */
 import { Dimension, Entity, Player, system, world } from "@minecraft/server";
-import { AnimState, COLORS, DP_GEN, DP_OWNER, ENTITY_ID, Mood, PROP_PERSONA, PERSONAS, type Persona } from "../core/constants";
+import { AnimState, COLORS, DEFAULT_NAMES, DP_GEN, DP_OWNER, ENTITY_ID, Mood, PROP_PERSONA, PERSONAS, type Persona } from "../core/constants";
 import { dist, getBlock, isPassableBlock, isSolidGround, isValid, log, particle, safe, sound } from "../core/mc";
 import type { Vec3 } from "../core/types";
 import { defaultRecord, loadRecord, pushHistory } from "../memory/memory_manager";
@@ -113,14 +113,14 @@ export function summon(owner: Player, persona?: Persona, name?: string): SummonR
   }
   if (!a) {
     const p = persona ?? "luna";
-    const rec = defaultRecord(owner.id, owner.name, p, name || (p === "luna" ? "Luna" : "Raven"));
+    const rec = defaultRecord(owner.id, owner.name, p, name || DEFAULT_NAMES[p]);
     a = new Agent(rec);
     agents.set(owner.id, a);
   } else if (persona) {
     a.record.persona = persona;
     if (name) a.record.shadowName = name;
-    else if (!a.record.shadowName || PERSONAS.some((x) => (x === "luna" ? "Luna" : "Raven") === a!.record.shadowName)) {
-      a.record.shadowName = persona === "luna" ? "Luna" : "Raven";
+    else if (!a.record.shadowName || PERSONAS.some((x) => DEFAULT_NAMES[x] === a!.record.shadowName)) {
+      a.record.shadowName = DEFAULT_NAMES[persona];
     }
   }
   a.record.ownerName = owner.name; // display only
@@ -292,7 +292,6 @@ export function dedupeSweep(): void {
 }
 
 export function personaFromText(s: string): Persona | undefined {
-  if (/raven/i.test(s)) return "raven";
-  if (/luna/i.test(s)) return "luna";
+  for (const p of PERSONAS) if (new RegExp(p, "i").test(s)) return p;
   return undefined;
 }

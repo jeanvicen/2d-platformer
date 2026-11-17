@@ -1,7 +1,7 @@
 # SHADOWBOUND — Agent Handoff
 
 Minecraft Bedrock add-on (Behavior Pack + Resource Pack + Script API in TypeScript): owner-bound shadow companions
-(personas Luna and Raven) that take Portuguese orders and perform real actions. Everything below is true for this repo;
+(personas Luna, Raven, Sora and Yuki) that take Portuguese orders and perform real actions. Everything below is true for this repo;
 keep it true when you change things.
 
 ## Layout
@@ -12,6 +12,7 @@ keep it true when you change things.
 - `tools/build.mjs` (bundle + validate + zip to `dist/`), `tools/validate-packs.mjs` (cross-reference checks), `tools/run-tests.mjs`.
 - `tests/` — pure unit tests + `integration.test.ts` running the real brain against `tests/mock/` (a simulator of the API surface we use).
 - `dist/` — committed deliverables: `Shadowbound.mcaddon` (+ separate `.mcpack`s). Rebuild after any change.
+- `site/template.html` → `site/index.html` (built by tools/build.mjs): the download page; the button links to the `.mcaddon` on GitHub.
 - `optional/` — LLM backend + BDS-only bridge pack. The main add-on must never depend on them.
 
 ## Rules

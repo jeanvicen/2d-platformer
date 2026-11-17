@@ -4,15 +4,15 @@
     "name": "Shadowbound §d(Comportamento)",
     "description": "Companheiras de sombra inteligentes: Luna e Raven. Use o Invocador das Sombras ou /sombra.",
     "uuid": "766caf2c-5b9d-4f36-9907-d08b8303d7e4",
-    "version": [1, 0, 0],
+    "version": [1, 1, 0],
     "min_engine_version": [1, 26, 40]
   },
   "modules": [
-    { "type": "data", "uuid": "2c68c4ca-be64-4df7-8c91-c03dfac739dc", "version": [1, 0, 0] },
-    { "type": "script", "language": "javascript", "entry": "scripts/main.js", "uuid": "b5c08604-af4a-45bb-a43c-a6c148d1d33e", "version": [1, 0, 0] }
+    { "type": "data", "uuid": "2c68c4ca-be64-4df7-8c91-c03dfac739dc", "version": [1, 1, 0] },
+    { "type": "script", "language": "javascript", "entry": "scripts/main.js", "uuid": "b5c08604-af4a-45bb-a43c-a6c148d1d33e", "version": [1, 1, 0] }
   ],
   "dependencies": [
-    { "uuid": "a0618dcb-4a24-42d0-92a1-639fb17dace7", "version": [1, 0, 0] },
+    { "uuid": "a0618dcb-4a24-42d0-92a1-639fb17dace7", "version": [1, 1, 0] },
     { "module_name": "@minecraft/server", "version": "2.3.0" },
     { "module_name": "@minecraft/server-ui", "version": "2.1.0" }
   ],

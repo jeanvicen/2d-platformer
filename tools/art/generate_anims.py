@@ -59,6 +59,10 @@ A["animation.shadowbound.secondary"] = {
         "scarf_tail": {"rotation": v3("12 + math.sin(query.life_time * 120) * 9", 0, "math.sin(query.life_time * 90) * 7")},
         "coat_tail": {"rotation": v3("4 + math.sin(query.life_time * 60) * 2", 0, 0)},
         "skirt": {"rotation": v3(0, 0, "math.sin(query.life_time * 50) * 1")},
+        "hair_top": {"rotation": v3("math.sin(query.life_time * 60) * 1.5", 0, 0)},
+        "coat": {"rotation": v3("math.sin(query.life_time * 55) * 1", 0, 0)},
+        # Sora floats (telekinesis): only her geometry has the 'levitate' bone
+        "levitate": {"position": v3(0, "2.2 + math.sin(query.life_time * 90) * 0.6", 0)},
     },
 }
 
@@ -241,8 +245,8 @@ render = {
     "render_controllers": {
         "controller.render.shadowbound.companion": {
             "arrays": {
-                "textures": {"Array.skins": ["Texture.luna", "Texture.raven"]},
-                "geometries": {"Array.geos": ["Geometry.luna", "Geometry.raven"]},
+                "textures": {"Array.skins": ["Texture.luna", "Texture.raven", "Texture.sora", "Texture.yuki"]},
+                "geometries": {"Array.geos": ["Geometry.luna", "Geometry.raven", "Geometry.sora", "Geometry.yuki"]},
             },
             "geometry": "Array.geos[query.property('shadowbound:persona')]",
             "materials": [{"*": "Material.default"}, {"glow_eyes": "Material.glow"}],
@@ -263,10 +267,14 @@ client = {
             "textures": {
                 "luna": "textures/entity/shadowbound/luna",
                 "raven": "textures/entity/shadowbound/raven",
+                "sora": "textures/entity/shadowbound/sora",
+                "yuki": "textures/entity/shadowbound/yuki",
             },
             "geometry": {
                 "luna": "geometry.shadowbound.luna",
                 "raven": "geometry.shadowbound.raven",
+                "sora": "geometry.shadowbound.sora",
+                "yuki": "geometry.shadowbound.yuki",
             },
             "animations": dict(anim_names, main="controller.animation.shadowbound.main"),
             "scripts": {

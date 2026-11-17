@@ -1,0 +1,271 @@
+<title>Shadowbound</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Nunito:wght@400;600;800&display=swap">
+<style>
+/* Layout: one column "night sky" landing - download first, then the four companions, then the steps. */
+:root {
+  --sky: #120d22;
+  --sky-2: #1c1534;
+  --card: #241b42;
+  --line: #3a2d63;
+  --text: #efeaff;
+  --muted: #b3a8d6;
+  --lilac: #c6a4ff;
+  --moon: #ffd36b;
+  --ok: #7be3a4;
+  --display: "Pixelify Sans", "Courier New", monospace;
+  --body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  background: var(--sky);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.55;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--sky); }
+.wrap {
+  max-width: 920px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 56px;
+  display: grid;
+  gap: 48px;
+}
+.stars {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 18%, #fff8 50%, transparent 51%),
+    radial-gradient(1px 1px at 72% 9%, #fff9 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 88% 32%, #fff6 50%, transparent 51%),
+    radial-gradient(1px 1px at 35% 6%, #fff7 50%, transparent 51%),
+    radial-gradient(1px 1px at 55% 24%, #fff5 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 6% 44%, #fff5 50%, transparent 51%);
+}
+.wrap > * { position: relative; z-index: 1; }
+
+/* hero */
+.hero { display: grid; gap: 18px; justify-items: start; }
+.moon { width: 54px; height: 54px; border-radius: 50%; background: var(--moon); box-shadow: inset -14px -4px 0 0 var(--sky); }
+h1 {
+  font-family: var(--display); font-weight: 700; margin: 0;
+  font-size: clamp(2.6rem, 9vw, 4.6rem); line-height: 1; letter-spacing: 0.02em;
+  text-shadow: 4px 4px 0 #5a2bb0;
+}
+.lead { margin: 0; max-width: 58ch; color: var(--muted); font-size: 1.1rem; }
+.lead b { color: var(--text); }
+.dl { display: grid; gap: 10px; width: 100%; max-width: 460px; }
+.btn {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  width: 100%; min-height: 64px; padding: 14px 22px;
+  font-family: var(--display); font-size: 1.45rem; font-weight: 700; letter-spacing: 0.03em;
+  color: #1b1030; background: var(--lilac); text-decoration: none;
+  border: 0; border-radius: 6px; cursor: pointer;
+  box-shadow: 0 6px 0 #6b45b8, 0 10px 30px #c6a4ff33;
+  transition: transform .08s, box-shadow .08s;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #6b45b8; }
+.btn:focus-visible { outline: 3px solid var(--moon); outline-offset: 3px; }
+.btn svg { width: 26px; height: 26px; flex: none; }
+.btn.alt {
+  min-height: 48px; font-size: 1.05rem; color: var(--text); background: transparent;
+  border: 2px solid var(--line); box-shadow: none;
+}
+.btn.alt:active { transform: translateY(1px); }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  font-size: 0.82rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 999px; background: var(--sky-2); border: 1px solid var(--line); color: var(--muted);
+}
+.chip.ok { color: var(--ok); border-color: #2f6b4a; }
+.status { min-height: 1.4em; margin: 0; font-size: 0.95rem; color: var(--muted); }
+
+h2 { font-family: var(--display); font-weight: 700; font-size: 1.7rem; margin: 0 0 14px; text-wrap: balance; }
+
+/* companions */
+.crew { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.who { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px 12px 16px; display: grid; gap: 6px; align-content: start; }
+.who img { width: 100%; height: 190px; object-fit: contain; image-rendering: pixelated; background: var(--sky-2); border-radius: 4px; }
+.who h3 { margin: 4px 0 0; font-family: var(--display); font-size: 1.25rem; }
+.who p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+.tag { justify-self: start; font-size: 0.75rem; font-weight: 800; padding: 2px 8px; border-radius: 4px; color: #1b1030; }
+
+/* steps: a real sequence */
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: start; background: var(--sky-2); border-radius: 8px; padding: 14px; }
+.steps li::before {
+  content: counter(s); font-family: var(--display); font-size: 1.4rem; font-weight: 700;
+  display: grid; place-items: center; width: 44px; height: 44px; border-radius: 6px; background: var(--card); color: var(--moon);
+}
+.steps b { color: var(--text); }
+.steps span { color: var(--muted); }
+.steps div { min-width: 0; }
+
+/* orders */
+.orders { display: flex; flex-wrap: wrap; gap: 8px; }
+.cmd {
+  font-family: ui-monospace, "Cascadia Mono", Menlo, monospace; font-size: 0.9rem;
+  padding: 8px 12px; border-radius: 6px; background: var(--card); border: 1px solid var(--line); color: var(--text); cursor: pointer;
+}
+.cmd:hover { border-color: var(--lilac); }
+.cmd:focus-visible { outline: 2px solid var(--moon); outline-offset: 2px; }
+.hint { margin: 10px 0 0; color: var(--muted); font-size: 0.92rem; }
+
+.help { display: grid; gap: 8px; }
+details { background: var(--sky-2); border-radius: 8px; padding: 12px 14px; }
+summary { cursor: pointer; font-weight: 800; }
+details p { margin: 8px 0 0; color: var(--muted); }
+code { font-family: ui-monospace, Menlo, monospace; background: var(--card); padding: 1px 5px; border-radius: 4px; color: var(--text); }
+footer { color: var(--muted); font-size: 0.85rem; }
+
+@media (max-width: 760px) { .crew { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
+</style>
+
+<div class="stars" aria-hidden="true"></div>
+<main class="wrap">
+  <section class="hero">
+    <div class="moon" aria-hidden="true"></div>
+    <h1>Shadowbound</h1>
+    <p class="lead">Mod para <b>Minecraft Bedrock</b> (celular e PC): uma companheira de sombra que entende português, coleta, minera, constrói, te protege e só obedece a você.</p>
+    <div class="dl">
+      <a class="btn" id="dl-main" href="__DOWNLOAD_URL__" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square" aria-hidden="true"><path d="M12 3v12M6 10l6 6 6-6M4 21h16"/></svg>
+        Baixar mod
+      </a>
+      <button class="btn alt" id="dl-alt" type="button" hidden>Download reserva (.zip)</button>
+      <p class="status" id="status" role="status">Shadowbound.mcaddon · __SIZE__ · versão 1.1</p>
+    </div>
+    <div class="meta">
+      <span class="chip ok">Minecraft 1.26.40 ou mais novo</span>
+      <span class="chip">Android e Windows</span>
+      <span class="chip">Sem experimentos</span>
+      <span class="chip">Funciona offline</span>
+    </div>
+  </section>
+
+  <section aria-labelledby="crew-title">
+    <h2 id="crew-title">Escolha sua companheira</h2>
+    <div class="crew">
+      <article class="who">
+        <img alt="Luna, bruxinha de cabelo lilás com chapéu de bruxa" src="__IMG_LUNA__">
+        <span class="tag" style="background:#d7a8ff">Raio mágico</span>
+        <h3>Luna</h3>
+        <p>Bruxinha fofa e esperta, vassoura nas costas.</p>
+      </article>
+      <article class="who">
+        <img alt="Raven, guerreira de cabelo prateado e cachecol vermelho" src="__IMG_RAVEN__">
+        <span class="tag" style="background:#ff8a99">Corpo a corpo</span>
+        <h3>Raven</h3>
+        <p>Guerreira das sombras, fria e certeira.</p>
+      </article>
+      <article class="who">
+        <img alt="Sora, psíquica de cabelo verde cacheado e vestido preto longo" src="__IMG_SORA__">
+        <span class="tag" style="background:#7be3a4">Telecinese</span>
+        <h3>Sora</h3>
+        <p>Psíquica orgulhosa que flutua no ar.</p>
+      </article>
+      <article class="who">
+        <img alt="Yuki, cabelo escuro chanel, vestido verde e estola branca" src="__IMG_YUKI__">
+        <span class="tag" style="background:#a6efc6">Protetora</span>
+        <h3>Yuki</h3>
+        <p>Elegante, a irmã mais velha do grupo.</p>
+      </article>
+    </div>
+  </section>
+
+  <section aria-labelledby="how-title">
+    <h2 id="how-title">Instalar no celular</h2>
+    <ol class="steps">
+      <li><div><b>Toque em "Baixar mod".</b> <span>O arquivo <code>Shadowbound.mcaddon</code> vai para a pasta Downloads.</span></div></li>
+      <li><div><b>Abra o arquivo e escolha "Minecraft".</b> <span>O jogo abre e mostra "Importação concluída" duas vezes.</span></div></li>
+      <li><div><b>Ative no mundo.</b> <span>Configurações do mundo → Pacotes de comportamento → Shadowbound → Ativar (aceite ativar o visual junto).</span></div></li>
+      <li><div><b>Entre e use o Invocador das Sombras.</b> <span>Você ganha o item ao entrar. Segure e use para escolher sua companheira.</span></div></li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="orders-title">
+    <h2 id="orders-title">Peça do seu jeito</h2>
+    <div class="orders" id="orders">
+      <button class="cmd" type="button">/sombra me proteja</button>
+      <button class="cmd" type="button">/sombra pegue 32 troncos e volte</button>
+      <button class="cmd" type="button">/sombra consiga comida</button>
+      <button class="cmd" type="button">/sombra minere ferro</button>
+      <button class="cmd" type="button">/sombra construa uma casinha de madeira</button>
+      <button class="cmd" type="button">/sombra me dá tudo</button>
+      <button class="cmd" type="button">/sombra ajuda</button>
+    </div>
+    <p class="hint" id="copy-hint">Toque num comando para copiar. Ou toque na sua companheira para abrir o menu.</p>
+  </section>
+
+  <section class="help" aria-labelledby="help-title">
+    <h2 id="help-title">Se der algum problema</h2>
+    <details>
+      <summary>O celular não oferece "Abrir com Minecraft"</summary>
+      <p>Abra pelo app <b>Files by Google</b>. Se o arquivo baixou como <code>.zip</code>, renomeie para <code>Shadowbound.mcaddon</code> e abra de novo.</p>
+    </details>
+    <details>
+      <summary>Usei o download reserva (.zip)</summary>
+      <p>Renomeie o arquivo de <code>Shadowbound.zip</code> para <code>Shadowbound.mcaddon</code> (no app de arquivos: segure o arquivo → Renomear) e toque nele.</p>
+    </details>
+    <details>
+      <summary>O comando /sombra não aparece</summary>
+      <p>Use o nome completo: <code>/shadowbound:sombra pegue madeira</code>. Ou toque na companheira para usar o menu.</p>
+    </details>
+    <details>
+      <summary>Perdi o Invocador das Sombras</summary>
+      <p>Na bancada: livro + graveto + carvão. Ou digite <code>/sombra invocar luna</code> (ou raven, sora, yuki).</p>
+    </details>
+  </section>
+
+  <footer>Shadowbound v1.1 · mod pessoal · Minecraft Bedrock 1.26.40+</footer>
+</main>
+
+<script>
+(function () {
+  var status = document.getElementById("status");
+  var alt = document.getElementById("dl-alt");
+
+  // Reserve download through the page itself (only .zip is accepted by the viewer).
+  if (window.claude && window.claude.use) {
+    window.claude.use("downloads").then(function (downloads) {
+      if (!downloads) return;
+      alt.hidden = false;
+      alt.addEventListener("click", function () {
+        status.textContent = "Preparando o arquivo...";
+        fetch("Shadowbound.zip")
+          .then(function (r) { if (!r.ok) throw new Error("http"); return r.blob(); })
+          .then(function (blob) { return downloads.save({ filename: "Shadowbound.zip", data: blob }); })
+          .then(function () { status.textContent = "Baixado! Renomeie para Shadowbound.mcaddon e toque nele."; })
+          .catch(function (e) {
+            if (e && e.code === "declined") status.textContent = "Download cancelado.";
+            else status.textContent = "Não deu por aqui. Use o botão Baixar mod.";
+          });
+      });
+    }).catch(function () {});
+  }
+
+  // Copy commands.
+  var hint = document.getElementById("copy-hint");
+  document.getElementById("orders").addEventListener("click", function (ev) {
+    var b = ev.target.closest(".cmd");
+    if (!b) return;
+    var text = b.textContent;
+    var done = function () { hint.textContent = "Copiado: " + text; };
+    try {
+      navigator.clipboard.writeText(text).then(done, function () { select(b); });
+    } catch (e) { select(b); }
+  });
+  function select(el) {
+    var r = document.createRange(); r.selectNodeContents(el);
+    var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    hint.textContent = "Selecionado: copie com o toque longo.";
+  }
+})();
+</script>

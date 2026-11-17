@@ -5,11 +5,13 @@
 Você invoca uma sombra, dá ordens em português normal e ela entende, planeja, executa ações reais no mundo,
 confere o resultado e continua trabalhando sozinha. Ela obedece **só a você**.
 
-| Luna, a bruxinha | Raven, a guerreira das sombras |
-|---|---|
-| Fofa e esperta, chapéu de bruxa, vassoura nas costas, ataca à distância com raio mágico. | Fria e confiante, rabo de cavalo prateado, cachecol vermelho, adagas, forte no corpo a corpo. |
+Quatro companheiras para escolher:
 
-![Luna e Raven](documentation/img/preview_duo.png)
+| Luna | Raven | Sora | Yuki |
+|---|---|---|---|
+| Bruxinha fofa, chapéu e vassoura; raio mágico à distância. | Guerreira das sombras, cabelo prateado e cachecol vermelho; corpo a corpo. | Psíquica orgulhosa de cabelo verde cacheado e vestido preto longo; flutua e ataca com telecinese. | Elegante "irmã mais velha", cabelo escuro chanel, vestido verde e estola de pelo branca. |
+
+![Luna, Raven, Sora e Yuki](documentation/img/preview_duo.png)
 
 Expressões (normal, feliz `^ ^` com blush, focada em combate), piscar automático e boca que mexe quando ela fala:
 
@@ -17,6 +19,7 @@ Expressões (normal, feliz `^ ^` com blush, focada em combate), piscar automáti
 ![rostos da Raven](documentation/img/faces_raven.png)
 
 ## ⬇️ Instalar
+Site de download: `site/index.html` (botão "Baixar mod" que baixa direto).
 Arquivo: **[`dist/Shadowbound.mcaddon`](dist/Shadowbound.mcaddon)**. Passo a passo para celular e PC: **[INSTALAR.md](INSTALAR.md)**.
 Requer Minecraft Bedrock **1.26.40+** (Play Store atual: 1.26.60). Sem experimentos, sem cheats.
 

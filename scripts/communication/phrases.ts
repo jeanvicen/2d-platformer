@@ -70,11 +70,75 @@ const RAVEN: Bank = {
   tool_broke: ["Minha {x} quebrou."],
 };
 
-const BANKS: Record<Persona, Bank> = { luna: LUNA, raven: RAVEN };
+const SORA: Bank = {
+  summon: ["Hmph. Você me chamou? Tudo bem, eu ajudo.", "Sora chegou. Pode agradecer depois.", "Pronto, estou aqui. Não vá se acostumar."],
+  return_alive: ["Voltei. Aquilo foi só um descuido.", "Hmph, não pense que me derrotaram de verdade.", "De volta. Onde paramos?"],
+  dismiss: ["Vou descansar. Me chame se precisar mesmo.", "Até mais. Seus itens estão guardados."],
+  ack: ["Tá, tá, eu faço.", "Entendido.", "Deixa comigo, é fácil."],
+  follow: ["Vou junto. Não ande rápido demais.", "Estou bem atrás de você."],
+  protect: ["Entendido. Vou permanecer ao seu lado.", "Ninguém toca em você enquanto eu estiver aqui."],
+  guard: ["Vou vigiar daqui.", "Esta área está sob minha proteção."],
+  stay: ["Fico aqui flutuando.", "Esperando."],
+  cancel: ["Entendido. Cancelando a tarefa e retornando.", "Tá bom, parei."],
+  start_wood: ["Estou procurando árvores próximas.", "Madeira? Vou arrancar umas árvores."],
+  start_food: ["Vou achar comida.", "Comida... já volto."],
+  start_mine: ["Vou minerar.", "Pedra e minério, já vou."],
+  done: ["Pronto. {x}", "Feito, como esperado. {x}"],
+  returning: ["Consegui coletar. Estou voltando.", "Terminei. Voltando."],
+  delivered: ["Tome: {x}.", "Aqui está: {x}."],
+  hungry: ["Estou com fome. Vou comer.", "Pausa rápida pra comer."],
+  ate: ["Comi {x}. Melhor.", "{x}. Pronto, continuando."],
+  no_food: ["Estou com fome e sem comida. Me dá alguma coisa?", "Não tenho nada pra comer..."],
+  hurt: ["Tch, me machucaram. Vou me recuperar.", "Ferida. Recuando um pouco."],
+  threat: ["Inimigo perto de você. Deixa comigo!", "Ameaça. Vou cuidar disso."],
+  full: ["Mochila cheia. Vou entregar e continuar.", "Sem espaço. Voltando pra entregar."],
+  blocked: ["O caminho está bloqueado. Estou tentando encontrar outra rota.", "Bloqueado. Procurando outra rota."],
+  fail: ["Não consegui: {x}", "Hmph... não deu: {x}"],
+  unknown: ["Não entendi. Fala direito. (ex.: 'pegue 16 troncos', 'me proteja')", "Hã? Diga 'ajuda' se não souber o que pedir."],
+  greet: ["O que foi?", "Oi. Precisa de algo?"],
+  thanks: ["Não foi nada. Óbvio que eu consegui.", "De nada."],
+  compliment: ["H-hmph! Eu sei. Agora foco.", "Claro que sou. Vamos trabalhar."],
+  died: ["Tch... já volto."],
+  tool_broke: ["Minha {x} quebrou."],
+};
+
+const YUKI: Bank = {
+  summon: ["Yuki, ao seu dispor. Vamos com calma e cuidado.", "Cheguei. Pode contar comigo.", "Olá. Vou cuidar de você."],
+  return_alive: ["Voltei. Desculpe a preocupação.", "Estou bem de novo. Vamos continuar?", "De volta, como prometido."],
+  dismiss: ["Vou descansar. Guardei tudo direitinho.", "Até logo. Cuide-se."],
+  ack: ["Entendido.", "Pode deixar comigo.", "Claro, farei isso."],
+  follow: ["Vou com você.", "Estou logo atrás."],
+  protect: ["Entendido. Vou permanecer ao seu lado.", "Fique tranquilo(a), eu protejo você."],
+  guard: ["Vou guardar este lugar.", "Ficarei de guarda aqui."],
+  stay: ["Espero aqui.", "Fico aqui, sem problemas."],
+  cancel: ["Entendido. Cancelando a tarefa e retornando.", "Certo, parei."],
+  start_wood: ["Estou procurando árvores próximas.", "Vou buscar madeira."],
+  start_food: ["Vou procurar comida para nós.", "Deixe que eu cuido da comida."],
+  start_mine: ["Vou minerar com cuidado.", "Indo minerar."],
+  done: ["Pronto. {x}", "Concluído. {x}"],
+  returning: ["Consegui coletar. Estou voltando.", "Terminei. Já estou voltando."],
+  delivered: ["Aqui está: {x}.", "Para você: {x}."],
+  hungry: ["Vou comer um pouco.", "Uma pausa para comer."],
+  ate: ["Comi {x}. Obrigada.", "{x}. Pronta para continuar."],
+  no_food: ["Estou com fome e sem comida. Pode me dar algo?", "Fiquei sem comida..."],
+  hurt: ["Estou ferida, vou me recuperar.", "Preciso de um momento para me recuperar."],
+  threat: ["Perigo perto de você! Estou indo.", "Não se preocupe, eu cuido disso."],
+  full: ["Minha mochila encheu. Vou entregar e continuar.", "Sem espaço, voltando para entregar."],
+  blocked: ["O caminho está bloqueado. Estou tentando encontrar outra rota.", "Caminho fechado. Buscando outra rota."],
+  fail: ["Não consegui: {x}", "Sinto muito... {x}"],
+  unknown: ["Não entendi bem. Pode repetir? (ex.: 'pegue 16 troncos')", "Desculpe, não entendi. Diga 'ajuda' para ver o que sei fazer."],
+  greet: ["Olá. Como posso ajudar?", "Oi. Tudo bem?"],
+  thanks: ["Por nada.", "Foi um prazer."],
+  compliment: ["Obrigada. Agora, ao trabalho.", "Gentileza sua. Vamos continuar?"],
+  died: ["Volto já..."],
+  tool_broke: ["Minha {x} quebrou."],
+};
+
+const BANKS: Record<Persona, Bank> = { luna: LUNA, raven: RAVEN, sora: SORA, yuki: YUKI };
 const lastIdx = new Map<string, number>();
 
 export function phrase(p: Persona, key: string, x?: string | number): string {
-  const list = BANKS[p][key] ?? LUNA[key] ?? [key];
+  const list = (BANKS[p] ?? LUNA)[key] ?? LUNA[key] ?? [key];
   const k = p + key;
   let i = Math.floor(Math.random() * list.length);
   if (list.length > 1 && i === lastIdx.get(k)) i = (i + 1) % list.length;

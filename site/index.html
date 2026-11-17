@@ -1,0 +1,271 @@
+<title>Shadowbound</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Nunito:wght@400;600;800&display=swap">
+<style>
+/* Layout: one column "night sky" landing - download first, then the four companions, then the steps. */
+:root {
+  --sky: #120d22;
+  --sky-2: #1c1534;
+  --card: #241b42;
+  --line: #3a2d63;
+  --text: #efeaff;
+  --muted: #b3a8d6;
+  --lilac: #c6a4ff;
+  --moon: #ffd36b;
+  --ok: #7be3a4;
+  --display: "Pixelify Sans", "Courier New", monospace;
+  --body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  background: var(--sky);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.55;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--sky); }
+.wrap {
+  max-width: 920px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 56px;
+  display: grid;
+  gap: 48px;
+}
+.stars {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 18%, #fff8 50%, transparent 51%),
+    radial-gradient(1px 1px at 72% 9%, #fff9 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 88% 32%, #fff6 50%, transparent 51%),
+    radial-gradient(1px 1px at 35% 6%, #fff7 50%, transparent 51%),
+    radial-gradient(1px 1px at 55% 24%, #fff5 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 6% 44%, #fff5 50%, transparent 51%);
+}
+.wrap > * { position: relative; z-index: 1; }
+
+/* hero */
+.hero { display: grid; gap: 18px; justify-items: start; }
+.moon { width: 54px; height: 54px; border-radius: 50%; background: var(--moon); box-shadow: inset -14px -4px 0 0 var(--sky); }
+h1 {
+  font-family: var(--display); font-weight: 700; margin: 0;
+  font-size: clamp(2.6rem, 9vw, 4.6rem); line-height: 1; letter-spacing: 0.02em;
+  text-shadow: 4px 4px 0 #5a2bb0;
+}
+.lead { margin: 0; max-width: 58ch; color: var(--muted); font-size: 1.1rem; }
+.lead b { color: var(--text); }
+.dl { display: grid; gap: 10px; width: 100%; max-width: 460px; }
+.btn {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  width: 100%; min-height: 64px; padding: 14px 22px;
+  font-family: var(--display); font-size: 1.45rem; font-weight: 700; letter-spacing: 0.03em;
+  color: #1b1030; background: var(--lilac); text-decoration: none;
+  border: 0; border-radius: 6px; cursor: pointer;
+  box-shadow: 0 6px 0 #6b45b8, 0 10px 30px #c6a4ff33;
+  transition: transform .08s, box-shadow .08s;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #6b45b8; }
+.btn:focus-visible { outline: 3px solid var(--moon); outline-offset: 3px; }
+.btn svg { width: 26px; height: 26px; flex: none; }
+.btn.alt {
+  min-height: 48px; font-size: 1.05rem; color: var(--text); background: transparent;
+  border: 2px solid var(--line); box-shadow: none;
+}
+.btn.alt:active { transform: translateY(1px); }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  font-size: 0.82rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 999px; background: var(--sky-2); border: 1px solid var(--line); color: var(--muted);
+}
+.chip.ok { color: var(--ok); border-color: #2f6b4a; }
+.status { min-height: 1.4em; margin: 0; font-size: 0.95rem; color: var(--muted); }
+
+h2 { font-family: var(--display); font-weight: 700; font-size: 1.7rem; margin: 0 0 14px; text-wrap: balance; }
+
+/* companions */
+.crew { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.who { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px 12px 16px; display: grid; gap: 6px; align-content: start; }
+.who img { width: 100%; height: 190px; object-fit: contain; image-rendering: pixelated; background: var(--sky-2); border-radius: 4px; }
+.who h3 { margin: 4px 0 0; font-family: var(--display); font-size: 1.25rem; }
+.who p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+.tag { justify-self: start; font-size: 0.75rem; font-weight: 800; padding: 2px 8px; border-radius: 4px; color: #1b1030; }
+
+/* steps: a real sequence */
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: start; background: var(--sky-2); border-radius: 8px; padding: 14px; }
+.steps li::before {
+  content: counter(s); font-family: var(--display); font-size: 1.4rem; font-weight: 700;
+  display: grid; place-items: center; width: 44px; height: 44px; border-radius: 6px; background: var(--card); color: var(--moon);
+}
+.steps b { color: var(--text); }
+.steps span { color: var(--muted); }
+.steps div { min-width: 0; }
+
+/* orders */
+.orders { display: flex; flex-wrap: wrap; gap: 8px; }
+.cmd {
+  font-family: ui-monospace, "Cascadia Mono", Menlo, monospace; font-size: 0.9rem;
+  padding: 8px 12px; border-radius: 6px; background: var(--card); border: 1px solid var(--line); color: var(--text); cursor: pointer;
+}
+.cmd:hover { border-color: var(--lilac); }
+.cmd:focus-visible { outline: 2px solid var(--moon); outline-offset: 2px; }
+.hint { margin: 10px 0 0; color: var(--muted); font-size: 0.92rem; }
+
+.help { display: grid; gap: 8px; }
+details { background: var(--sky-2); border-radius: 8px; padding: 12px 14px; }
+summary { cursor: pointer; font-weight: 800; }
+details p { margin: 8px 0 0; color: var(--muted); }
+code { font-family: ui-monospace, Menlo, monospace; background: var(--card); padding: 1px 5px; border-radius: 4px; color: var(--text); }
+footer { color: var(--muted); font-size: 0.85rem; }
+
+@media (max-width: 760px) { .crew { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
+</style>
+
+<div class="stars" aria-hidden="true"></div>
+<main class="wrap">
+  <section class="hero">
+    <div class="moon" aria-hidden="true"></div>
+    <h1>Shadowbound</h1>
+    <p class="lead">Mod para <b>Minecraft Bedrock</b> (celular e PC): uma companheira de sombra que entende português, coleta, minera, constrói, te protege e só obedece a você.</p>
+    <div class="dl">
+      <a class="btn" id="dl-main" href="https://github.com/jeanvicen/2d-platformer/raw/ccr-4bf51eb6-zchos1/dist/Shadowbound.mcaddon" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square" aria-hidden="true"><path d="M12 3v12M6 10l6 6 6-6M4 21h16"/></svg>
+        Baixar mod
+      </a>
+      <button class="btn alt" id="dl-alt" type="button" hidden>Download reserva (.zip)</button>
+      <p class="status" id="status" role="status">Shadowbound.mcaddon · 148 KB · versão 1.1</p>
+    </div>
+    <div class="meta">
+      <span class="chip ok">Minecraft 1.26.40 ou mais novo</span>
+      <span class="chip">Android e Windows</span>
+      <span class="chip">Sem experimentos</span>
+      <span class="chip">Funciona offline</span>
+    </div>
+  </section>
+
+  <section aria-labelledby="crew-title">
+    <h2 id="crew-title">Escolha sua companheira</h2>
+    <div class="crew">
+      <article class="who">
+        <img alt="Luna, bruxinha de cabelo lilás com chapéu de bruxa" src="data:image/png;base64,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">
+        <span class="tag" style="background:#d7a8ff">Raio mágico</span>
+        <h3>Luna</h3>
+        <p>Bruxinha fofa e esperta, vassoura nas costas.</p>
+      </article>
+      <article class="who">
+        <img alt="Raven, guerreira de cabelo prateado e cachecol vermelho" src="data:image/png;base64,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">
+        <span class="tag" style="background:#ff8a99">Corpo a corpo</span>
+        <h3>Raven</h3>
+        <p>Guerreira das sombras, fria e certeira.</p>
+      </article>
+      <article class="who">
+        <img alt="Sora, psíquica de cabelo verde cacheado e vestido preto longo" src="data:image/png;base64,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">
+        <span class="tag" style="background:#7be3a4">Telecinese</span>
+        <h3>Sora</h3>
+        <p>Psíquica orgulhosa que flutua no ar.</p>
+      </article>
+      <article class="who">
+        <img alt="Yuki, cabelo escuro chanel, vestido verde e estola branca" src="data:image/png;base64,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">
+        <span class="tag" style="background:#a6efc6">Protetora</span>
+        <h3>Yuki</h3>
+        <p>Elegante, a irmã mais velha do grupo.</p>
+      </article>
+    </div>
+  </section>
+
+  <section aria-labelledby="how-title">
+    <h2 id="how-title">Instalar no celular</h2>
+    <ol class="steps">
+      <li><div><b>Toque em "Baixar mod".</b> <span>O arquivo <code>Shadowbound.mcaddon</code> vai para a pasta Downloads.</span></div></li>
+      <li><div><b>Abra o arquivo e escolha "Minecraft".</b> <span>O jogo abre e mostra "Importação concluída" duas vezes.</span></div></li>
+      <li><div><b>Ative no mundo.</b> <span>Configurações do mundo → Pacotes de comportamento → Shadowbound → Ativar (aceite ativar o visual junto).</span></div></li>
+      <li><div><b>Entre e use o Invocador das Sombras.</b> <span>Você ganha o item ao entrar. Segure e use para escolher sua companheira.</span></div></li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="orders-title">
+    <h2 id="orders-title">Peça do seu jeito</h2>
+    <div class="orders" id="orders">
+      <button class="cmd" type="button">/sombra me proteja</button>
+      <button class="cmd" type="button">/sombra pegue 32 troncos e volte</button>
+      <button class="cmd" type="button">/sombra consiga comida</button>
+      <button class="cmd" type="button">/sombra minere ferro</button>
+      <button class="cmd" type="button">/sombra construa uma casinha de madeira</button>
+      <button class="cmd" type="button">/sombra me dá tudo</button>
+      <button class="cmd" type="button">/sombra ajuda</button>
+    </div>
+    <p class="hint" id="copy-hint">Toque num comando para copiar. Ou toque na sua companheira para abrir o menu.</p>
+  </section>
+
+  <section class="help" aria-labelledby="help-title">
+    <h2 id="help-title">Se der algum problema</h2>
+    <details>
+      <summary>O celular não oferece "Abrir com Minecraft"</summary>
+      <p>Abra pelo app <b>Files by Google</b>. Se o arquivo baixou como <code>.zip</code>, renomeie para <code>Shadowbound.mcaddon</code> e abra de novo.</p>
+    </details>
+    <details>
+      <summary>Usei o download reserva (.zip)</summary>
+      <p>Renomeie o arquivo de <code>Shadowbound.zip</code> para <code>Shadowbound.mcaddon</code> (no app de arquivos: segure o arquivo → Renomear) e toque nele.</p>
+    </details>
+    <details>
+      <summary>O comando /sombra não aparece</summary>
+      <p>Use o nome completo: <code>/shadowbound:sombra pegue madeira</code>. Ou toque na companheira para usar o menu.</p>
+    </details>
+    <details>
+      <summary>Perdi o Invocador das Sombras</summary>
+      <p>Na bancada: livro + graveto + carvão. Ou digite <code>/sombra invocar luna</code> (ou raven, sora, yuki).</p>
+    </details>
+  </section>
+
+  <footer>Shadowbound v1.1 · mod pessoal · Minecraft Bedrock 1.26.40+</footer>
+</main>
+
+<script>
+(function () {
+  var status = document.getElementById("status");
+  var alt = document.getElementById("dl-alt");
+
+  // Reserve download through the page itself (only .zip is accepted by the viewer).
+  if (window.claude && window.claude.use) {
+    window.claude.use("downloads").then(function (downloads) {
+      if (!downloads) return;
+      alt.hidden = false;
+      alt.addEventListener("click", function () {
+        status.textContent = "Preparando o arquivo...";
+        fetch("Shadowbound.zip")
+          .then(function (r) { if (!r.ok) throw new Error("http"); return r.blob(); })
+          .then(function (blob) { return downloads.save({ filename: "Shadowbound.zip", data: blob }); })
+          .then(function () { status.textContent = "Baixado! Renomeie para Shadowbound.mcaddon e toque nele."; })
+          .catch(function (e) {
+            if (e && e.code === "declined") status.textContent = "Download cancelado.";
+            else status.textContent = "Não deu por aqui. Use o botão Baixar mod.";
+          });
+      });
+    }).catch(function () {});
+  }
+
+  // Copy commands.
+  var hint = document.getElementById("copy-hint");
+  document.getElementById("orders").addEventListener("click", function (ev) {
+    var b = ev.target.closest(".cmd");
+    if (!b) return;
+    var text = b.textContent;
+    var done = function () { hint.textContent = "Copiado: " + text; };
+    try {
+      navigator.clipboard.writeText(text).then(done, function () { select(b); });
+    } catch (e) { select(b); }
+  });
+  function select(el) {
+    var r = document.createRange(); r.selectNodeContents(el);
+    var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    hint.textContent = "Selecionado: copie com o toque longo.";
+  }
+})();
+</script>

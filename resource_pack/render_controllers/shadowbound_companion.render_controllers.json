@@ -6,13 +6,17 @@
         "textures": {
           "Array.skins": [
             "Texture.luna",
-            "Texture.raven"
+            "Texture.raven",
+            "Texture.sora",
+            "Texture.yuki"
           ]
         },
         "geometries": {
           "Array.geos": [
             "Geometry.luna",
-            "Geometry.raven"
+            "Geometry.raven",
+            "Geometry.sora",
+            "Geometry.yuki"
           ]
         }
       },

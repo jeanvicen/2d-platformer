@@ -7,7 +7,7 @@
  */
 import { Entity, EntityDamageCause } from "@minecraft/server";
 import type { Agent } from "../ai/agent";
-import { AnimState, Mood, TUNING } from "../core/constants";
+import { AnimState, CASTERS, Mood, TUNING } from "../core/constants";
 import { dist, isValid, particle, safe, sound } from "../core/mc";
 import { armorPoints, equipBestWeapon } from "../inventory/equipment";
 import { weaponDamage } from "../inventory/item_catalog";
@@ -31,7 +31,7 @@ export function ownerThreat(a: Agent): Entity | undefined {
 /** Luna's magic bolt: ranged damage with a particle trail (also handles creepers safely). */
 export function magicBolt(a: Agent, target: Entity): boolean {
   const e = a.body();
-  if (!e || !isValid(target) || a.persona !== "luna") return false;
+  if (!e || !isValid(target) || !CASTERS.includes(a.persona)) return false;
   if (Date.now() < a.rt.boltCooldown) return false;
   const d = dist(e.location, target.location);
   if (d > 12 || d < 2) return false;
