@@ -16,4 +16,8 @@
 | Mineração | só blocos expostos, ou escada segura até 16 degraus | para perto de lava ou água; nunca cava o próprio chão nem os degraus da saída |
 | Chunks descarregados | não dá pra acessar | ela não entra em área não carregada e avisa |
 | IA generativa | `@minecraft/server-net` só existe no **Bedrock Dedicated Server** | addon 100% offline; ponte opcional só para BDS (`optional/`) |
+| Visual semi-realista | o Bedrock só desenha **cubos com textura** (sem malha orgânica, sem shaders próprios em add-on) | realismo vem da textura: 1024 px, luz e sombra pintadas, olhos/cílios/lábios detalhados, nariz e cabelo em camadas de cubos. De perto ainda é "Minecraft", não um modelo 3D liso |
+| Textura das humanas | 1024 px usa mais memória de vídeo | 6 texturas ≈ 24 MB de VRAM; se pesar num celular fraco, dá pra gerar em 512 trocando `HUMAN_UPSCALE` para 1 |
+| Esquadrão grande | cada sombra roda IA e caminho próprios | limite padrão 12 (até 40 no menu); acima disso o celular pode travar |
+| Criaturas | são lutadoras | não coletam, não fabricam e não constroem (de propósito) |
 | Testes no jogo | esta sessão não tem Minecraft | testado com typings oficiais, validador de pacotes e simulador. Checklist manual em `TESTES.md` |

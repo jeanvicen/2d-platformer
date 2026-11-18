@@ -1,52 +1,81 @@
-# SHADOWBOUND 🌙
+# SHADOWBOUND 🌙 — v2.0
 
-**Companheiras de sombra autônomas para Minecraft Bedrock (Android e Windows).**
+**Esquadrão de sombras autônomas para Minecraft Bedrock (Android e Windows).**
 
-Você invoca uma sombra, dá ordens em português normal e ela entende, planeja, executa ações reais no mundo,
-confere o resultado e continua trabalhando sozinha. Ela obedece **só a você**.
+Você invoca sombras, dá ordens em português normal e elas entendem, planejam, executam ações reais no mundo,
+conferem o resultado e continuam trabalhando sozinhas. Elas obedecem **só a você**.
 
-Quatro companheiras para escolher:
+Com uma sombra só, ela faz tudo sozinha. Com várias, **cada uma pega uma parte do serviço** pela especialidade
+dela, elas passam itens uma pra outra, correm pra ajudar quem está apanhando e conversam entre si.
 
-| Luna | Raven | Sora | Yuki |
-|---|---|---|---|
-| Bruxinha fofa, chapéu e vassoura; raio mágico à distância. | Guerreira das sombras, cabelo prateado e cachecol vermelho; corpo a corpo. | Psíquica orgulhosa de cabelo verde cacheado e vestido preto longo; flutua e ataca com telecinese. | Elegante "irmã mais velha", cabelo escuro chanel, vestido verde e estola de pelo branca. |
+## As seis companheiras
 
-![Luna, Raven, Sora e Yuki](documentation/img/preview_duo.png)
+| | Quem é | Especialidade |
+|---|---|---|
+| **Luna** | Bruxinha fofa, chapéu e vassoura; raio mágico à distância | magia, fabricação e cozinha |
+| **Raven** | Guerreira das sombras, cabelo prateado e cachecol vermelho | combate e caça |
+| **Sora** | Psíquica orgulhosa de cabelo verde cacheado e vestido preto longo; flutua | mineração e demolição |
+| **Yuki** | Elegante "irmã mais velha", cabelo escuro, vestido verde e estola branca | cozinha, entregas e proteção |
+| **Hana** | Fazendeira de chapéu de palha, macacão verde e cesta de frutas | comida, plantação e madeira |
+| **Aiko** | Construtora animada, cabelo laranja, óculos de proteção e martelo | obras grandes e madeira |
 
-Expressões (normal, feliz `^ ^` com blush, focada em combate), piscar automático e boca que mexe quando ela fala:
+![As seis companheiras](documentation/img/preview_duo.png)
+
+### Visual semi-realista (v2.0)
+Dentro do que o Bedrock permite (modelos de cubos com textura), as seis foram redesenhadas com cara mais natural:
+- textura **8× mais detalhada** (1024 px) com **luz pintada**: luz de cima, sombra embaixo, oclusão nas bordas e dobras de tecido;
+- **olhos amendoados** com íris em camadas, sombra da pálpebra, dois reflexos, cílios afinados e prega da pálpebra;
+- **sobrancelhas da cor do cabelo**, bochechas suaves, lábios, **nariz 3D** de verdade (um cubinho com luz e sombra);
+- **cabelo em duas camadas** de mechas finas com brilho, para dar profundidade.
+
+Cada personagem manteve cores, roupa, acessórios e personalidade. Visual não sexualizado.
+
+Expressões (normal, piscando, feliz `^ ^` com blush, focada em combate), piscar automático e boca que mexe quando ela fala:
 
 ![rostos da Luna](documentation/img/faces_luna.png)
 ![rostos da Raven](documentation/img/faces_raven.png)
+
+## As criaturas das sombras
+Doze criaturas originais que você invoca e desinvoca quando quiser. Elas lutam, caçam e protegem com habilidades
+próprias, mas **não coletam, não fabricam e não constroem**:
+
+Lobo (rápido, caça em dupla) · Coruja (mergulho que deixa lento) · Serpente (prende e envenena) · Sapo (puxa com a língua) ·
+Elefante (jato d'água que empurra e apaga fogo) · Coelho (nuvem que cega) · Cervo (cura você e o esquadrão) ·
+Touro (investida) · Tigre (golpes fortes) · Leão (rugido que enfraquece) · Dragão (sopro de fogo em área) ·
+Colosso (fica mais resistente a cada golpe que recebe).
+
+![criaturas](documentation/img/beasts_sheet.png)
 
 ## ⬇️ Instalar
 Site de download: `site/index.html` (botão "Baixar mod" que baixa direto).
 Arquivo: **[`dist/Shadowbound.mcaddon`](dist/Shadowbound.mcaddon)**. Passo a passo para celular e PC: **[INSTALAR.md](INSTALAR.md)**.
 Requer Minecraft Bedrock **1.26.40+** (Play Store atual: 1.26.60). Sem experimentos, sem cheats.
 
-## O que ela faz (de verdade)
-- **Segue e protege**: defende você de monstros, não persegue para longe, não ataca animais sem ordem. A Luna lança raios mágicos (inclusive em creeper, de longe).
-- **Coleta madeira**: acha árvores naturais (nunca a sua casa de tronco), anda até lá, corta com o tempo e a ferramenta certos, recolhe os itens, volta e entrega.
-- **Consegue comida**: colhe plantações maduras e replanta, pega frutinhas, faz pão na bancada; caça só com a sua permissão.
-- **Minera**: pedra, carvão, ferro, ouro, diamante, areia... Fabrica a picareta necessária e, se não houver nada exposto, cava uma escada segura (para em lava ou água).
-- **Fabrica**: tábuas, gravetos, bancada (e coloca no chão), tochas, baú, fornalha, pão, escadas e ferramentas de madeira até diamante.
-- **Cozinha e funde numa fornalha de verdade**: coloca os itens e o combustível, espera e recolhe. Não mexe em fornalha que já tenha coisas suas.
-- **Constrói** a partir de plantas: casinha, muro, plataforma, ponte, pilar e torre com escada. Confere material e espaço antes de começar.
-- **Quebra** o bloco que você está olhando, ou cava um buraco (só blocos naturais, nada de destruir suas construções).
-- **Inventário próprio** (27 espaços), equipamento (ferramenta, armas, armadura, escudo), durabilidade, entrega de itens.
-- **Fome simulada**: come sozinha quando precisa (pão, por exemplo), guarda reserva, nunca come item raro.
-- **Morre e volta** sem duplicar item nem corpo, retomando a tarefa.
-- **Memória persistente**: dono, tarefa, progresso, inventário, fome e configurações ficam salvos no mundo.
-- **Fala com você** em PT-BR, só com você, contando o estado real (nunca diz que terminou antes de conferir).
+## O que elas fazem (de verdade)
+- **Esquadrão**: até 12 sombras por padrão (dá pra subir até 40 no menu). Fale com todas (`me sigam`) ou com uma só pelo nome (`raven, me proteja`, `lobos, ataquem`).
+- **Divisão de trabalho**: `pegue 64 troncos` com três sombras → cada uma pega uma parte, e o total é **exatamente** o que você pediu.
+- **Seguem e protegem**: defendem você de monstros, não perseguem para longe, não atacam animais sem ordem. Quando você está seguro, **voltam para a tarefa** de onde pararam.
+- **Coletam madeira**: acham árvores naturais (nunca a sua casa de tronco), cortam, recolhem, voltam e entregam. Se não tem árvore perto, **saem explorando**.
+- **Conseguem comida de forma inteligente**: colhem e replantam; sem plantação, **caçam animais e assam a carne** numa fornalha; procuram mais longe se precisar.
+- **Mineram**: pedra, carvão, ferro, ouro, diamante, areia... Fabricam a picareta necessária e cavam uma escada segura (param em lava ou água).
+- **Fabricam e fundem**: tábuas, gravetos, bancada, tochas, baú, fornalha, cerca, porta, pão, ferramentas; usam fornalha de verdade (e colocam uma se precisar).
+- **Constroem grande**: casinha, **casa grande** (9×7) e **mansão** (13×11, dois andares, sacada e escada) com chão, pilares, janelas, porta, telhado, tochas, mesa e baú. Calculam o material, **vão buscar o que falta** antes de começar, limpam o terreno e conferem o resultado.
+- **Quebram** o bloco que você está olhando, ou cavam um buraco (só blocos naturais).
+- **Inventário próprio** (27 espaços), equipamento, durabilidade, entrega de itens para você e entre elas.
+- **Fome simulada**: comem sozinhas quando precisam, guardam reserva, nunca comem item raro.
+- **Morrem e voltam** sem duplicar item nem corpo, retomando a tarefa.
+- **Memória persistente**: esquadrão, tarefas, progresso, inventário, fome e configurações ficam salvos no mundo.
+- **Falam com você** em PT-BR, só com você, cada uma com seu jeito, contando o estado real (nunca dizem que terminaram antes de conferir).
 
 ## Arquitetura
 Módulos independentes em [`scripts/`](scripts) (TypeScript): autorização, percepção, linguagem natural, planejador,
-executor, memória, inventário, sobrevivência, navegação (A*), combate, recuperação, comunicação, UI e IA opcional.
-Detalhes e interfaces: **[documentation/ARQUITETURA.md](documentation/ARQUITETURA.md)**.
+esquadrão, executor, memória, inventário, sobrevivência, navegação (A*), combate e criaturas, recuperação,
+comunicação, UI e IA opcional. Detalhes e interfaces: **[documentation/ARQUITETURA.md](documentation/ARQUITETURA.md)**.
 
 ## Qualidade e testes
 - Typecheck estrito contra as typings oficiais `@minecraft/server` 2.3.0 / `@minecraft/server-ui` 2.1.0 (as versões declaradas no manifest).
-- Validador cruzado dos dois pacotes (geometria, texturas, animações, propriedades, eventos, partículas, idioma).
-- **41 testes automáticos**, incluindo testes de integração que rodam o cérebro real num simulador da API.
+- Validador cruzado dos dois pacotes (18 geometrias, texturas, animações, propriedades, eventos, partículas, idioma).
+- **48 testes automáticos**, incluindo testes de integração que rodam o cérebro real num simulador da API.
 - O que **ainda falta testar dentro do jogo**: [documentation/TESTES.md](documentation/TESTES.md).
 - Limitações reais da plataforma: [documentation/LIMITACOES.md](documentation/LIMITACOES.md).
 

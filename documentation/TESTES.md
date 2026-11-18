@@ -8,8 +8,8 @@ npm test            # unitários + integração (cérebro real rodando no simula
 npm run build       # valida os pacotes e gera dist/*.mcaddon
 ```
 
-## Resultado automático (registrado em 2026-11-17)
-Typecheck: **0 erros**. Validador de pacotes: **OK** (2 geometrias, 19 animações, 2 partículas, 0 avisos).
+## Resultado automático (registrado em 2026-11-18, v2.0)
+Typecheck: **0 erros**. Validador de pacotes: **OK** (18 geometrias, 30 animações, 2 partículas, 0 avisos).
 
 ```
 ✔ inventário: empilha, respeita capacidade e devolve o que não coube
@@ -24,6 +24,9 @@ Typecheck: **0 erros**. Validador de pacotes: **OK** (2 geometrias, 19 animaçõ
 ✔ A*: não entra em chunk descarregado
 ✔ IA externa: só aceita intenções da lista fechada
 ✔ catálogo: minérios, tempo de quebra e ferramentas
+✔ plantas grandes: casa grande e mansão têm chão, pilares, janelas, porta, telhado e decoração
+✔ materiais: calcula quantos troncos/pedras faltam incluindo peças fabricadas
+✔ linguagem: casa grande, mansão e criaturas
 ✔ recebe o Invocador das Sombras ao entrar
 ✔ 1-3) invocar, vínculo ao dono, impedir segunda invocação
 ✔ 4) outro jogador é ignorado e não acessa a sombra
@@ -41,6 +44,10 @@ Typecheck: **0 erros**. Validador de pacotes: **OK** (2 geometrias, 19 animaçõ
 ✔ 6) protege contra inimigos perto do dono
 ✔ mineração: fabrica picareta na bancada, cava escada segura e entrega pedra
 ✔ 15/13) sai do mundo no meio da tarefa, volta, e ela retoma do estado salvo
+✔ esquadrão: invoca várias, divide a coleta por especialidade e obedece por nome
+✔ criaturas: invoca várias, lutam com habilidades e não coletam
+✔ comida inteligente: sem plantação, caça animais e entrega a carne
+✔ construção sabe buscar o material que falta antes de construir
 ✔ 16) funciona sem internet (nenhuma chamada de rede) e sem erros de script
 ✔ normalização: acentos e números por extenso
 ✔ frases diferentes para madeira viram o mesmo pedido (seção 5)
@@ -53,8 +60,8 @@ Typecheck: **0 erros**. Validador de pacotes: **OK** (2 geometrias, 19 animaçõ
 ✔ combate e caça exigem ordem explícita para passivos
 ✔ comer e frases de conversa
 ✔ 'depois...' adiciona à fila em vez de substituir
-ℹ tests 41
-ℹ pass 41
+ℹ tests 48
+ℹ pass 48
 ℹ fail 0
 ```
 
@@ -63,6 +70,11 @@ Typecheck: **0 erros**. Validador de pacotes: **OK** (2 geometrias, 19 animaçõ
 2. Ao minerar, ela quebrava o **degrau da própria escada** e ficava presa. Agora nunca quebra o chão onde pisa nem os degraus da saída.
 3. Árvore com a base já cortada não era reconhecida, e ela desistia da tarefa. Agora reconhece o resto da árvore (e continua exigindo folhas naturais).
 4. Voltar ao dono usava só a IA nativa a partir de 7 blocos. Agora usa A* até 30 blocos e a IA nativa fica de reserva.
+5. (v2.0) Pedido de comida entregava pão velho do inventário em vez da carne caçada. Agora entrega o que acabou de conseguir.
+6. (v2.0) A reserva de tábuas para a bancada gerava falta falsa de material na casinha. Agora só reserva quando vai fabricar algo.
+7. (v2.0) Ordens no plural ("sigam", "protejam", "parem") não eram entendidas. Agora são.
+8. (v2.0) Criaturas não usavam habilidades enquanto protegiam. Agora usam.
+9. (v2.0, arte) As camadas de expressão do rosto (piscar, sobrancelha brava) deixavam contorno fantasma e sobrancelha dupla. Agora cada expressão é um recorte do mesmo rosto renderizado, encaixando pixel a pixel.
 
 ## Mapa dos testes obrigatórios (seção 18 do prompt)
 | # | Teste | Automático (simulador) | No jogo |
@@ -98,3 +110,12 @@ Typecheck: **0 erros**. Validador de pacotes: **OK** (2 geometrias, 19 animaçõ
 8. Fechar e reabrir o mundo no meio de uma tarefa → ela reaparece e continua.
 9. **Multiplayer**: jogador B tenta `/sombra ...` e tocar na sombra de A → nada acontece / "Acesso negado".
 10. `construa uma casinha de madeira` com 69 tábuas → casinha com porta e janelas.
+11. **Esquadrão**: invocar Luna, Raven e Aiko → `pegue 30 troncos` → cada uma pega uma parte e o total entregue é 30.
+12. `raven, me proteja` → só a Raven muda de modo.
+13. `/sombra invocar 2 lobos` e `/sombra invocar dragao` → aparecem com a animação de invocação; num zumbi, usam as habilidades. `desinvocar lobos` → somem.
+14. Mandar um lobo `pegar madeira` → ele recusa (criaturas não coletam).
+15. `consiga comida` longe de plantações → caça, assa a carne numa fornalha e entrega.
+16. `construa uma casa grande` sem material → ela busca troncos/pedra, fabrica as peças, limpa o terreno e constrói; confere ≥ 97% dos blocos.
+17. Durante uma coleta, um monstro aparece perto de você → ela protege e depois **volta para a coleta** de onde parou.
+18. **Visual**: chegar perto de cada uma → olhos amendoados, nariz 3D, cabelo em camadas, piscando sem contorno estranho; à noite só a íris brilha (o resto do rosto não).
+19. **Desempenho**: 12 sombras ao mesmo tempo num celular → anotar se trava.

@@ -19,7 +19,7 @@ import random
 from dataclasses import dataclass, field
 from typing import Callable, Optional
 
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 RP = os.path.join(ROOT, "resource_pack")
@@ -68,8 +68,19 @@ def flat(c: Color, top_light: float = 1.08, bottom_dark: float = 0.82, outline: 
             d.rectangle([0, 0, w, h], fill=shade(c, bottom_dark - 0.08))
             return
         d.rectangle([0, 0, w, h], fill=c)
+        # soft vertical folds (fabric volume)
+        rnd = random.Random(w * 131 + h * 17 + len(face))
+        x = rnd.randint(1, 4)
+        while x < w - 1:
+            fw_ = rnd.randint(2, 4)
+            k = rnd.choice((0.9, 0.94, 1.06))
+            for i in range(fw_):
+                t = 1 - abs(i - fw_ / 2) / (fw_ / 2 + 0.5)
+                d.line([x + i, int(h * 0.15), x + i, h], fill=shade(c, 1 + (k - 1) * t))
+            x += fw_ + rnd.randint(3, 7)
         band = max(1, h // 6)
-        d.rectangle([0, h - band, w, h], fill=shade(c, bottom_dark))
+        for i in range(band):
+            d.line([0, h - band + i, w, h - band + i], fill=mix(c, shade(c, bottom_dark), (i + 1) / band))
         d.rectangle([0, 0, w, max(0, band // 2)], fill=shade(c, top_light))
         if outline is not None:
             d.rectangle([0, 0, w - 1, h - 1], outline=outline)
@@ -124,6 +135,13 @@ def hair(c: Color, ring: bool = True, seed: int = 3, vertical: bool = True) -> P
         for y in range(int(h * 0.8), h):
             t = (y - h * 0.8) / max(1, h * 0.2)
             d.line([0, y, w, y], fill=mix(c, dark, t * 0.6))
+        # glossy streaks: a few lighter strands catching the light
+        for _ in range(max(2, w // 7)):
+            x = rnd.randrange(w)
+            y0 = rnd.randint(int(h * 0.15), int(h * 0.4))
+            d.line([x, y0, x + rnd.randint(-1, 1), y0 + rnd.randint(h // 5, h // 2)], fill=shade(c, 1.18))
+    p.hires = True  # type: ignore[attr-defined]
+    p.light = True  # type: ignore[attr-defined]
     return p
 
 
@@ -151,7 +169,7 @@ def jagged_bangs(c: Color, seed: int, sweep: float = 0.0) -> Painter:
                 for yy in range(max(0, cut), h):
                     px[xx, yy] = (0, 0, 0, 0)
             x += sw
-        # dark inner line along the strand tips for depth
+        # dark inner line along the strand tips for depth (skipped for the hi-res pass handled below)
         for xx in range(w):
             for yy in range(h - 1, -1, -1):
                 if px[xx, yy][3] != 0:
@@ -160,6 +178,8 @@ def jagged_bangs(c: Color, seed: int, sweep: float = 0.0) -> Painter:
                     if yy - 1 >= 0 and px[xx, yy - 1][3] != 0:
                         px[xx, yy - 1] = shade(c, 0.78)
                     break
+    p.hires = True  # type: ignore[attr-defined]
+    p.light = True  # type: ignore[attr-defined]
     return p
 
 
@@ -193,6 +213,8 @@ def only(faces: tuple, painter: Painter, other: Optional[Painter] = None) -> Pai
             painter(img, face)
         elif other is not None:
             other(img, face)
+    if getattr(painter, "hires", False):
+        p.hires_faces = faces  # type: ignore[attr-defined]
     return p
 
 
@@ -209,178 +231,265 @@ class FaceStyle:
     mouth: Color = hexc("#7a2a3a")
     tongue: Color = hexc("#ff7f8f")
     sharp: bool = False   # sharper, cooler eye shape (Raven)
+    brow: Color = hexc("#3a2a30")
 
 
-def draw_eye(d: ImageDraw.ImageDraw, x0: int, y0: int, w: int, h: int, st: FaceStyle, right: bool,
-             iris_alpha: int = 255) -> None:
-    """One big anime eye in the box (x0,y0,w,h)."""
-    # sclera
-    d.rounded_rectangle([x0 + 1, y0 + 2, x0 + w - 2, y0 + h - 1], radius=3, fill=hexc("#ffffff"))
-    # iris (gradient, dark top -> light bottom)
-    ix0, ix1 = x0 + 2, x0 + w - 3
-    iy0, iy1 = y0 + 2, y0 + h - 1
-    for yy in range(iy0, iy1 + 1):
-        t = (yy - iy0) / max(1, iy1 - iy0)
-        col = mix(st.iris_dark, st.iris_light, t ** 1.2)
-        col = (col[0], col[1], col[2], iris_alpha)
-        # ellipse row extent
-        cy = (iy0 + iy1) / 2
-        ry = (iy1 - iy0) / 2 + 0.5
-        rx = (ix1 - ix0) / 2 + 0.5
-        dy = (yy - cy) / ry
-        if abs(dy) > 1:
-            continue
-        half = rx * math.sqrt(max(0.0, 1 - dy * dy))
-        cx = (ix0 + ix1) / 2
-        d.line([int(round(cx - half)), yy, int(round(cx + half)), yy], fill=col)
-    # pupil
-    cx = (ix0 + ix1) / 2
-    cy = (iy0 + iy1) / 2 + 1
-    pd = shade(st.iris_dark, 0.45)
-    d.ellipse([cx - 1.6, cy - 2.6, cx + 1.6, cy + 2.6], fill=(pd[0], pd[1], pd[2], iris_alpha))
-    # iris ring sparkle (lower arc)
-    d.arc([ix0, iy0 + 2, ix1, iy1], start=30, end=150, fill=shade(st.iris_light, 1.3), width=1)
-    # highlights
-    hx = ix0 + (1 if not right else 2)
-    d.rectangle([hx, iy0 + 1, hx + 2, iy0 + 3], fill=hexc("#ffffff"))
-    d.rectangle([ix1 - 2, iy1 - 3, ix1 - 1, iy1 - 2], fill=hexc("#ffffff"))
-    # upper lash
-    if st.sharp:
-        d.line([x0, y0 + 2, x0 + w - 1, y0 + 1], fill=st.lash, width=2)
-        d.line([x0 + 1, y0 + 1, x0 + w - 2, y0], fill=st.lash, width=1)
-        if right:
-            d.line([x0 + w - 2, y0 + 1, x0 + w + 1, y0 - 2], fill=st.lash, width=2)
-        else:
-            d.line([x0 + 1, y0 + 1, x0 - 2, y0 - 2], fill=st.lash, width=2)
-    else:
-        # soft, rounded lash arc (cute) with a tiny outer lash
-        d.arc([x0 - 1, y0, x0 + w, y0 + h + 4], start=195, end=345, fill=st.lash, width=2)
-        if right:
-            d.line([x0 + w - 1, y0 + 3, x0 + w + 1, y0 + 2], fill=st.lash, width=1)
-        else:
-            d.line([x0, y0 + 3, x0 - 2, y0 + 2], fill=st.lash, width=1)
-    # lower lash hint
-    d.line([x0 + 2, y0 + h, x0 + w - 3, y0 + h], fill=shade(st.lash, 1.6), width=1)
+SS = 4  # supersampling factor for smooth, anti-aliased face drawing
 
 
-def eyes_region(st: FaceStyle, w: int, h: int, iris_alpha: int = 255) -> Image.Image:
-    """Both eyes on a skin background, sized w x h px (opaque)."""
-    img = Image.new("RGBA", (w, h), st.skin)
-    d = ImageDraw.Draw(img)
-    ew = int(w * 0.36)
-    eh = h - 4
+def _canvas(w: int, h: int, fill: Color = (0, 0, 0, 0)) -> tuple:
+    img = Image.new("RGBA", (w * SS, h * SS), fill)
+    return img, ImageDraw.Draw(img)
+
+
+def _down(img: Image.Image, w: int, h: int) -> Image.Image:
+    return img.convert("RGBa").resize((w, h), Image.LANCZOS).convert("RGBA")
+
+
+def _radial(d: ImageDraw.ImageDraw, cx: float, cy: float, rx: float, ry: float, inner: Color, outer: Color, steps: int = 14) -> None:
+    for i in range(steps, 0, -1):
+        t = i / steps
+        d.ellipse([cx - rx * t, cy - ry * t, cx + rx * t, cy + ry * t], fill=mix(inner, outer, t))
+
+
+def _eye_boxes(w: int, h: int) -> list:
+    """Two eye boxes inside a w x h eyes area (fractions match the 36px face layout)."""
+    ew = w * 0.36
     gap = w - 2 * ew
-    left_x = int(gap * 0.28)
-    right_x = w - left_x - ew
-    draw_eye(d, left_x, 2, ew, eh, st, right=False, iris_alpha=iris_alpha)
-    draw_eye(d, right_x, 2, ew, eh, st, right=True, iris_alpha=iris_alpha)
-    return img
+    lx = gap * 0.28
+    return [(lx, ew, False), (w - lx - ew, ew, True)]
+
+
+def _bez(p0: tuple, p1: tuple, p2: tuple, n: int = 28) -> list:
+    pts = []
+    for i in range(n + 1):
+        t = i / n
+        a, b, c = (1 - t) ** 2, 2 * (1 - t) * t, t * t
+        pts.append((a * p0[0] + b * p1[0] + c * p2[0], a * p0[1] + b * p1[1] + c * p2[1]))
+    return pts
+
+
+def _eye_geom(X: float, Y: float, E: float, H: float, st: FaceStyle, right: bool) -> dict:
+    """Almond eye inside box (X, Y, E, H) at canvas resolution. u runs from the inner corner (0) to the outer corner (1)."""
+    def P(u: float, v: float) -> tuple:
+        return (X + (E * u if right else E * (1 - u)), Y + H * v)
+    inner = P(0.0, 0.6)
+    outer = P(1.0, 0.42 if st.sharp else 0.5)
+    upper = _bez(inner, P(0.42, -0.1 if st.sharp else -0.2), outer)
+    lower = _bez(inner, P(0.52, 1.1 if st.sharp else 1.16), outer)
+    rx = min(E * 0.37, H * 0.42)
+    ry = rx * 1.1
+    icx, icy = P(0.52, 0.52)
+    return {"P": P, "inner": inner, "outer": outer, "upper": upper, "lower": lower, "iris": (icx, icy, rx, ry)}
+
+
+def _eye_mask(size: tuple, g: dict, grow: float = 0.0) -> Image.Image:
+    m = Image.new("L", size, 0)
+    md = ImageDraw.Draw(m)
+    md.polygon(g["upper"] + g["lower"][::-1], fill=255)
+    if grow > 0:
+        md.line(g["upper"], fill=255, width=int(grow))
+        md.line(g["lower"], fill=255, width=int(grow))
+    return m
+
+
+def _tapered(d: ImageDraw.ImageDraw, pts: list, w0: float, w1: float, col: Color) -> None:
+    n = len(pts) - 1
+    for i in range(n):
+        t = i / max(1, n - 1)
+        wd = w0 + (w1 - w0) * t
+        d.line([pts[i], pts[i + 1]], fill=col, width=max(1, int(wd)))
+        r = wd / 2
+        d.ellipse([pts[i + 1][0] - r, pts[i + 1][1] - r, pts[i + 1][0] + r, pts[i + 1][1] + r], fill=col)
+
+
+def draw_eye_hd(cv: Image.Image, X: float, Y: float, E: float, H: float, st: FaceStyle, right: bool) -> dict:
+    """Semi-realistic anime eye: almond lids, soft lid shadow, layered iris, catchlights, tapered lash line."""
+    g = _eye_geom(X, Y, E, H, st, right)
+    P = g["P"]
+    layer = Image.new("RGBA", cv.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    # sclera: warm off-white, slightly darker towards the corners
+    xs = [p[0] for p in g["upper"]]
+    _radial(d, (min(xs) + max(xs)) / 2, Y + H * 0.62, E * 0.62, H * 0.55, hexc("#fbf8fc"), hexc("#e6dde9"), steps=10)
+    # iris
+    icx, icy, rx, ry = g["iris"]
+    rim = shade(st.iris_dark, 0.5)
+    _radial(d, icx, icy + ry * 0.15, rx, ry, mix(st.iris_light, st.iris_dark, 0.25), rim, steps=16)
+    d.chord([icx - rx * 0.82, icy - ry * 0.05, icx + rx * 0.82, icy + ry * 0.9], start=0, end=180,
+            fill=mix(st.iris_light, hexc("#ffffff"), 0.12))                     # lit lower half
+    for k in range(18):                                                          # iris fibres
+        a = k / 18 * math.tau
+        d.line([icx + math.cos(a) * rx * 0.34, icy + math.sin(a) * ry * 0.34, icx + math.cos(a) * rx * 0.86, icy + math.sin(a) * ry * 0.86],
+               fill=mix(st.iris_dark, st.iris_light, 0.45), width=max(1, int(rx * 0.06)))
+    d.ellipse([icx - rx, icy - ry, icx + rx, icy + ry], outline=rim, width=max(1, int(rx * 0.1)))   # limbal ring
+    pd = shade(st.iris_dark, 0.28)
+    d.ellipse([icx - rx * 0.3, icy - ry * 0.34, icx + rx * 0.3, icy + ry * 0.34], fill=pd)
+    # soft shadow cast by the upper lid over sclera and iris
+    sh = Image.new("RGBA", cv.size, (0, 0, 0, 0))
+    sd = ImageDraw.Draw(sh)
+    band = [(x, y + H * 0.2) for x, y in g["upper"]][::-1]
+    sd.polygon(g["upper"] + band, fill=(*shade(st.iris_dark, 0.35)[:3], 120))
+    sh = sh.filter(ImageFilter.GaussianBlur(H * 0.06))
+    layer.alpha_composite(sh)
+    # catchlights (on top of the shadow)
+    d.ellipse([icx - rx * 0.68, icy - ry * 0.7, icx - rx * 0.12, icy - ry * 0.18], fill=(255, 255, 255, 250))
+    d.ellipse([icx + rx * 0.22, icy + ry * 0.3, icx + rx * 0.5, icy + ry * 0.56], fill=(255, 255, 255, 190))
+    cv.paste(layer, (0, 0), ImageChops.multiply(layer.getchannel("A"), _eye_mask(cv.size, g)))
+    fd = ImageDraw.Draw(cv)
+    # double-eyelid crease
+    crease = [(x, y - H * 0.13) for x, y in g["upper"][4:-6]]
+    fd.line(crease, fill=shade(st.skin, 0.82), width=max(1, int(H * 0.03)), joint="curve")
+    # inner corner (caruncle)
+    ix, iy = g["inner"]
+    fd.ellipse([ix - E * 0.035, iy - H * 0.035, ix + E * 0.035, iy + H * 0.035], fill=mix(st.skin, hexc("#e88a9a"), 0.5))
+    # upper lash line: thin at the inner corner, heavy at the outer corner, plus a wing
+    _tapered(fd, g["upper"], H * 0.045, H * 0.12, st.lash)
+    ox, oy = g["outer"]
+    sgn = 1 if right else -1
+    wing = (ox + sgn * E * (0.16 if st.sharp else 0.11), oy - H * (0.17 if st.sharp else 0.1))
+    _tapered(fd, [(ox - sgn * E * 0.06, oy - H * 0.02), (ox, oy), wing], H * 0.1, H * 0.03, st.lash)
+    for t in (0.72, 0.86):
+        x, y = g["upper"][int(t * (len(g["upper"]) - 1))]
+        _tapered(fd, [(x, y), (x + sgn * E * 0.05, y - H * 0.1)], H * 0.04, H * 0.015, st.lash)
+    # lower lash: thin, outer half only, lighter
+    lw = g["lower"][int(len(g["lower"]) * 0.45):]
+    fd.line(lw, fill=mix(st.lash, st.skin, 0.45), width=max(1, int(H * 0.028)), joint="curve")
+    return g
+
+
+EYES_BOX = (4 / 36, 15 / 36, 28 / 36, 14 / 36)   # eye area inside the head front face (fractions x, y, w, h)
+EYES_BOX_PX = (4, 15, 28, 14)                    # the same box on the base 36px face (geometry placement)
+_FACE_CACHE: dict = {}
+
+
+def _eye_boxes_in_face(W: float, H: float) -> list:
+    ex, ey, ew, eh = EYES_BOX
+    out = []
+    for x0, e, right in _eye_boxes(ew * W, eh * H):
+        out.append((ex * W + x0, ey * H + 0.05 * eh * H, e, 0.9 * eh * H, right))
+    return out
+
+
+def _closed_eye(d: ImageDraw.ImageDraw, X: float, Y: float, E: float, EH: float, st: FaceStyle, right: bool, happy: bool) -> None:
+    g = _eye_geom(X, Y, E, EH, st, right)
+    P = g["P"]
+    sgn = 1 if right else -1
+    if happy:   # smiling ^ ^
+        _tapered(d, _bez(P(0.0, 0.72), P(0.5, 0.05), P(1.0, 0.62), n=20), EH * 0.05, EH * 0.11, st.lash)
+        return
+    pts = _bez(g["inner"], P(0.5, 0.86), g["outer"], n=20)    # relaxed closed lid, lashes pointing down
+    _tapered(d, pts, EH * 0.045, EH * 0.11, st.lash)
+    for t in (0.55, 0.75, 0.92):
+        x, y = pts[int(t * 20)]
+        _tapered(d, [(x, y), (x + sgn * E * 0.04, y + EH * 0.1)], EH * 0.035, EH * 0.012, st.lash)
+    d.line(_bez(P(0.1, 0.45), P(0.5, 0.25), P(0.9, 0.35), n=16), fill=shade(st.skin, 0.84), width=max(1, int(EH * 0.03)), joint="curve")
+
+
+def face_render(st: FaceStyle, w: int, h: int, eyes: str = "open", brows: str = "neutral") -> tuple:
+    """Whole head front face at w x h px -> (RGBA, iris glow mask). eyes: open|closed|happy; brows: neutral|angry.
+    Every expression overlay is a crop of one of these renders, so overlays always match the face pixel for pixel."""
+    key = (id(st), w, h, eyes, brows)
+    if key in _FACE_CACHE:
+        return _FACE_CACHE[key]
+    W, H = w * SS, h * SS
+    cv = Image.new("RGBA", (W, H), st.skin)
+    d = ImageDraw.Draw(cv)
+    # volume: lit forehead/centre, cooler sides, rosy cheeks, jaw shadow
+    _radial(d, W * 0.5, H * 0.4, W * 0.78, H * 0.82, shade(st.skin, 1.045), shade(st.skin, 0.9), steps=20)
+    for cxr in (0.2, 0.8):
+        _radial(d, W * cxr, H * 0.79, W * 0.12, H * 0.055, mix(st.skin, hexc("#ffa3b2"), 0.16), shade(st.skin, 0.985), steps=10)
+    for i in range(8):
+        d.rectangle([0, H * (0.92 + 0.01 * i), W, H], fill=mix(shade(st.skin, 0.97), shade(st.skin, 0.86), i / 8))
+    d.ellipse([W * 0.46, H * 0.805, W * 0.54, H * 0.84], fill=shade(st.skin, 0.9))   # shadow under the 3D nose
+    mask = Image.new("L", (W, H), 0)
+    for X, Y, E, EH, right in _eye_boxes_in_face(W, H):
+        if eyes == "open":
+            g = draw_eye_hd(cv, X, Y, E, EH, st, right)
+            icx, icy, rx, ry = g["iris"]
+            iris = Image.new("L", (W, H), 0)
+            ImageDraw.Draw(iris).ellipse([icx - rx, icy - ry, icx + rx, icy + ry], fill=255)
+            mask.paste(255, (0, 0), ImageChops.multiply(iris, _eye_mask((W, H), g)))
+        else:
+            _closed_eye(ImageDraw.Draw(cv), X, Y, E, EH, st, right, happy=(eyes == "happy"))
+    d = ImageDraw.Draw(cv)
+    for X, Y, E, EH, right in _eye_boxes_in_face(W, H):
+        def B(u: float, v: float) -> tuple:
+            return (X + (E * u if right else E * (1 - u)), Y + EH * v)
+        if brows == "angry":   # determined: inner ends low, outer ends high
+            _tapered(d, _bez(B(-0.04, -0.06), B(0.5, -0.12), B(1.0, -0.26), n=20), EH * 0.11, EH * 0.045, st.brow)
+        else:                  # soft neutral arch
+            _tapered(d, _bez(B(-0.02, -0.12), B(0.45, -0.3), B(1.02, -0.14), n=20), EH * 0.085, EH * 0.035, st.brow)
+    out = (_down(cv, w, h), mask.resize((w, h), Image.LANCZOS))
+    _FACE_CACHE[key] = out
+    return out
+
+
+def face_region(st: FaceStyle, region: tuple, eyes: str = "open", brows: str = "neutral", glow: bool = False) -> Painter:
+    """Painter for a face overlay plane covering `region` = (x0, y0, w, h) in model units on the head front
+    (head front spans x 4.5 .. -4.5 left to right on screen, y 29 .. 20 top to bottom)."""
+    x0u, y0u, wu, hu = region
+
+    def p(img: Image.Image, face: str) -> None:
+        w, h = img.size
+        k = w / wu                                   # px per model unit
+        fw = int(round(9 * k))
+        full, mask = face_render(st, fw, fw, eyes, brows)
+        left = int(round((4.5 - (x0u + wu)) * k))
+        top = int(round((29 - (y0u + hu)) * k))
+        box = (left, top, left + w, top + h)
+        crop = full.crop(box)
+        if glow:   # emissive_alpha material: keep the face opaque, lower the iris alpha so it glows
+            rgb = crop.convert("RGB")
+            rgb.putalpha(mask.crop(box).point(lambda v: 255 - int(v * 145 / 255)))
+            crop = rgb
+        img.paste(crop, (0, 0))
+    p.hires = True  # type: ignore[attr-defined]
+    return p
 
 
 def head_front(st: FaceStyle) -> Painter:
-    """Head north face: skin, cheeks shading, eyes painted in (overlays may cover them)."""
+    """Face with painted volume, semi-realistic eyes and soft brows."""
     def p(img: Image.Image, face: str) -> None:
         w, h = img.size
-        d = ImageDraw.Draw(img)
-        d.rectangle([0, 0, w, h], fill=st.skin)
-        # eyes band mirrors the 'eyes' overlay layout
-        ex0, ey0, ew, eh = EYES_BOX_PX
-        img.alpha_composite(eyes_region(st, ew, eh), (ex0, ey0))
-        # tiny nose shadow
-        d.point([w // 2, int(h * 0.80)], fill=shade(st.skin, 0.85))
-        # chin shade
-        d.line([int(w * 0.3), h - 1, int(w * 0.7), h - 1], fill=shade(st.skin, 0.9))
-    return p
-
-
-# Eye box inside the 36x36 px head front face (head is 9 units, SCALE 4).
-EYES_BOX_PX = (4, 15, 28, 14)  # x, y, w, h
-
-
-def eyes_overlay(st: FaceStyle) -> Painter:
-    def p(img: Image.Image, face: str) -> None:
-        w, h = img.size
-        img.alpha_composite(eyes_region(st, w, h, iris_alpha=110), (0, 0))
-    return p
-
-
-def lids_overlay(st: FaceStyle) -> Painter:
-    """Closed eyes (blink): skin + soft curved lash lines."""
-    def p(img: Image.Image, face: str) -> None:
-        w, h = img.size
-        d = ImageDraw.Draw(img)
-        d.rectangle([0, 0, w, h], fill=(0, 0, 0, 0))
-        ew = int(w * 0.36)
-        gap = w - 2 * ew
-        lx = int(gap * 0.28)
-        rx = w - lx - ew
-        for x0 in (lx, rx):
-            d.rectangle([x0, 0, x0 + ew, h - 1], fill=st.skin)
-            d.arc([x0, h // 2 - 3, x0 + ew - 1, h // 2 + 5], start=200, end=340, fill=st.lash, width=2)
-    return p
-
-
-def happy_eyes_overlay(st: FaceStyle) -> Painter:
-    """^ ^ eyes."""
-    def p(img: Image.Image, face: str) -> None:
-        w, h = img.size
-        d = ImageDraw.Draw(img)
-        d.rectangle([0, 0, w, h], fill=(0, 0, 0, 0))
-        ew = int(w * 0.36)
-        gap = w - 2 * ew
-        lx = int(gap * 0.28)
-        rx = w - lx - ew
-        for x0 in (lx, rx):
-            d.rectangle([x0, 0, x0 + ew, h - 1], fill=st.skin)
-            mid = x0 + ew // 2
-            d.line([x0 + 1, h // 2 + 3, mid, h // 2 - 3], fill=st.lash, width=2)
-            d.line([mid, h // 2 - 3, x0 + ew - 2, h // 2 + 3], fill=st.lash, width=2)
-    return p
-
-
-def brows_overlay(st: FaceStyle) -> Painter:
-    """Determined / combat brows."""
-    def p(img: Image.Image, face: str) -> None:
-        w, h = img.size
-        d = ImageDraw.Draw(img)
-        d.rectangle([0, 0, w, h], fill=(0, 0, 0, 0))
-        ew = int(w * 0.36)
-        gap = w - 2 * ew
-        lx = int(gap * 0.28)
-        rx = w - lx - ew
-        d.line([lx, 1, lx + ew - 1, h - 2], fill=st.lash, width=2)
-        d.line([rx, h - 2, rx + ew - 1, 1], fill=st.lash, width=2)
+        img.paste(face_render(st, w, h)[0], (0, 0))
+    p.hires = True  # type: ignore[attr-defined]
     return p
 
 
 def mouth_overlay(st: FaceStyle, kind: str) -> Painter:
     def p(img: Image.Image, face: str) -> None:
         w, h = img.size
-        d = ImageDraw.Draw(img)
-        d.rectangle([0, 0, w, h], fill=(0, 0, 0, 0))
-        cx = w // 2
-        if kind == "smile":     # soft cat-like smile  'w'
-            d.line([cx - 4, h // 2 - 1, cx - 2, h // 2 + 1], fill=st.mouth, width=1)
-            d.line([cx - 2, h // 2 + 1, cx, h // 2], fill=st.mouth, width=1)
-            d.line([cx, h // 2, cx + 2, h // 2 + 1], fill=st.mouth, width=1)
-            d.line([cx + 2, h // 2 + 1, cx + 4, h // 2 - 1], fill=st.mouth, width=1)
-        elif kind == "open":    # happy open mouth
-            d.chord([cx - 3, 0, cx + 3, h - 1], start=0, end=180, fill=st.mouth)
-            d.chord([cx - 2, h // 2, cx + 2, h - 1], start=0, end=180, fill=st.tongue)
-        elif kind == "flat":    # focused
-            d.line([cx - 3, h // 2, cx + 3, h // 2], fill=st.mouth, width=1)
+        cv, d = _canvas(w, h)
+        W, H = w * SS, h * SS
+        lip = mix(st.skin, hexc("#e8778a"), 0.55)
+        if kind == "smile":
+            d.arc([W * 0.18, -H * 0.35, W * 0.82, H * 0.7], start=25, end=155, fill=st.mouth, width=int(H * 0.12))
+            d.chord([W * 0.36, H * 0.55, W * 0.64, H * 0.85], start=0, end=180, fill=lip)
+        elif kind == "open":
+            d.chord([W * 0.28, H * 0.05, W * 0.72, H * 0.98], start=0, end=180, fill=shade(st.mouth, 0.8))
+            d.rectangle([W * 0.3, H * 0.47, W * 0.7, H * 0.56], fill=hexc("#fbf6f2"))  # teeth
+            d.chord([W * 0.36, H * 0.6, W * 0.64, H * 0.95], start=0, end=180, fill=st.tongue)
+        elif kind == "flat":
+            d.line([(W * 0.3, H * 0.5), (W * 0.7, H * 0.52)], fill=st.mouth, width=int(H * 0.12))
+            d.chord([W * 0.38, H * 0.56, W * 0.62, H * 0.78], start=0, end=180, fill=lip)
+        img.paste(_down(cv, w, h), (0, 0))
+    p.hires = True  # type: ignore[attr-defined]
     return p
 
 
 def blush_overlay(st: FaceStyle) -> Painter:
     def p(img: Image.Image, face: str) -> None:
         w, h = img.size
-        d = ImageDraw.Draw(img)
-        d.rectangle([0, 0, w, h], fill=(0, 0, 0, 0))
-        for x0 in (1, w - 8):
-            d.ellipse([x0, 0, x0 + 6, h - 1], fill=st.blush)
-            for i in range(3):
-                d.line([x0 + 1 + i * 2, h - 2, x0 + 2 + i * 2, 1], fill=shade(st.blush, 0.85))
+        cv, d = _canvas(w, h)
+        W, H = w * SS, h * SS
+        for cxr in (0.12, 0.88):
+            for i in range(10, 0, -1):
+                t = i / 10
+                a = int(st.blush[3] * (1 - t) * 0.9)
+                d.ellipse([W * cxr - W * 0.1 * t, H * 0.5 - H * 0.45 * t, W * cxr + W * 0.1 * t, H * 0.5 + H * 0.45 * t], fill=(st.blush[0], st.blush[1], st.blush[2], a))
+        img.paste(_down(cv, w, h), (0, 0))
+    p.hires = True  # type: ignore[attr-defined]
     return p
 
 
@@ -491,9 +600,27 @@ class Atlas:
         return pos
 
 
-def build_model(persona: str, bones: list, tex: int = TEX_W, scale: int = SCALE, bounds: tuple = (3, 3.5)) -> tuple:
+def light_pass(region: Image.Image, face: str) -> None:
+    """Bake soft lighting: key light from above, darker underside, ambient occlusion at the edges."""
+    w, h = region.size
+    px = region.load()
+    base = {"up": 1.08, "down": 0.72, "north": 1.0, "south": 0.9, "east": 0.95, "west": 0.95}.get(face, 1.0)
+    for y in range(h):
+        vy = 1.0 if face in ("up", "down") else 1.06 - 0.2 * (y / max(1, h - 1))
+        for x in range(w):
+            r, g, b, a = px[x, y]
+            if a == 0:
+                continue
+            edge = min(x, y, w - 1 - x, h - 1 - y) if (w >= 12 and h >= 12) else 9
+            ao = 0.9 if edge == 0 else 0.96 if edge == 1 else 1.0
+            f = base * vy * ao
+            px[x, y] = (min(255, int(r * f)), min(255, int(g * f)), min(255, int(b * f)), a)
+
+
+def build_model(persona: str, bones: list, tex: int = TEX_W, scale: int = SCALE, bounds: tuple = (3, 3.5), upscale: int = 1) -> tuple:
     SCALE = scale  # noqa: N806 (local override for this model)
     atlas = Atlas(tex * scale, tex * scale)
+    big = Image.new("RGBA", (tex * scale * upscale, tex * scale * upscale), (0, 0, 0, 0)) if upscale > 1 else None
     # collect faces, pack tallest first for density
     jobs = []
     for b in bones:
@@ -508,9 +635,23 @@ def build_model(persona: str, bones: list, tex: int = TEX_W, scale: int = SCALE,
     jobs.sort(key=lambda j: (-j[0], -j[1]))
     for ph, pw, b, c, f, fw, fh in jobs:
         x, y = atlas.alloc(pw, ph)
-        region = Image.new("RGBA", (pw, ph), (0, 0, 0, 0))
-        c.paint(region, f)
-        atlas.img.alpha_composite(region, (x, y))
+        if big is not None:
+            if getattr(c.paint, "hires", False) or f in getattr(c.paint, "hires_faces", ()):
+                region = Image.new("RGBA", (pw * upscale, ph * upscale), (0, 0, 0, 0))
+                c.paint(region, f)      # painted natively at the high resolution
+                if getattr(c.paint, "light", False):
+                    light_pass(region, f)
+            else:
+                region = Image.new("RGBA", (pw, ph), (0, 0, 0, 0))
+                c.paint(region, f)
+                light_pass(region, f)
+                # smooth premultiplied upscale: painterly shading instead of hard pixels
+                region = region.convert("RGBa").resize((pw * upscale, ph * upscale), Image.BICUBIC).convert("RGBA")
+            big.paste(region, (x * upscale, y * upscale))
+        else:
+            region = Image.new("RGBA", (pw, ph), (0, 0, 0, 0))
+            c.paint(region, f)
+            atlas.img.alpha_composite(region, (x, y))
         # extend 1px gutter to avoid seams when sampling
         u = x / SCALE
         v = y / SCALE
@@ -518,6 +659,9 @@ def build_model(persona: str, bones: list, tex: int = TEX_W, scale: int = SCALE,
         if f == "down":
             # Bedrock samples 'down' with flipped V; flip so it reads the same as painted.
             c.uv[f] = {"uv": [round(u, 4), round(v + fh, 4)], "uv_size": [round(fw, 4), round(-fh, 4)]}
+
+    if big is not None:
+        atlas.img = big
 
     geo_bones = []
     for b in bones:
@@ -556,6 +700,28 @@ def build_model(persona: str, bones: list, tex: int = TEX_W, scale: int = SCALE,
     return geo, atlas.img
 
 
+def nose_paint(st: FaceStyle) -> Painter:
+    def p(img: Image.Image, face: str) -> None:
+        w, h = img.size
+        d = ImageDraw.Draw(img)
+        col = {"north": st.skin, "east": shade(st.skin, 0.9), "west": shade(st.skin, 0.94),
+               "down": shade(st.skin, 0.78), "up": shade(st.skin, 1.04)}.get(face, st.skin)
+        d.rectangle([0, 0, w, h], fill=col)
+        if face == "north":
+            d.rectangle([0, h - max(1, h // 4), w, h], fill=shade(st.skin, 0.9))
+    return p
+
+
+def layer_hair(bones: list, hair_c: Color, seed: int) -> None:
+    """Second, darker bangs layer behind the front bangs: strand depth/parallax through the gaps."""
+    for b in bones:
+        if b.name == "bangs" and b.cubes:
+            (ox, oy, _oz), (sx, sy, _sz) = b.cubes[0].origin, b.cubes[0].size
+            b.cubes.append(Cube((ox + 0.15, oy + 0.35, -4.62), (sx - 0.3, sy - 0.35, 0), jagged_bangs(shade(hair_c, 0.78), seed=seed),
+                                faces=("north",)))
+            return
+
+
 # --------------------------------------------------------------------------------------
 # Personas
 # --------------------------------------------------------------------------------------
@@ -563,6 +729,8 @@ def common_body(bones: list, st: FaceStyle, hair_c: Color, top: Painter, arm: Pa
                 leg: Painter, boot: Painter) -> dict:
     """Shared humanoid skeleton with anime proportions. Returns bones by name."""
     by = {}
+    if st.brow == FaceStyle.brow:
+        st.brow = mix(shade(hair_c, 0.7), st.lash, 0.3)   # brows follow the hair colour
 
     def add(b: Bone) -> Bone:
         bones.append(b)
@@ -576,6 +744,8 @@ def common_body(bones: list, st: FaceStyle, hair_c: Color, top: Painter, arm: Pa
 
     head = add(Bone("head", (0, 20, 0), "body"))
     head.cubes.append(Cube((-4.5, 20, -4.5), (9, 9, 9), only(("north",), head_front(st), skin(st.skin))))
+    # small 3D nose, shaded per face (top lit, underside in shadow)
+    head.cubes.append(Cube((-0.3, 21.75, -4.78), (0.6, 0.7, 0.28), nose_paint(st), faces=("north", "east", "west", "down", "up")))
 
     # Face overlays (planes slightly in front of the face).
     ex, ey, ew, eh = EYES_BOX_PX
@@ -585,14 +755,16 @@ def common_body(bones: list, st: FaceStyle, hair_c: Color, top: Painter, arm: Pa
     fw = ew / SCALE
     fh = eh / SCALE
     eye_origin = (fx0, fy1 - fh, -4.52)
+    eye_reg = (fx0, fy1 - fh, fw, fh)
+    brow_reg = (fx0, fy1 - 0.2, fw, 1.3)
     add(Bone("glow_eyes", (0, fy1, -4.5), "head")).cubes.append(
-        Cube(eye_origin, (fw, fh, 0), eyes_overlay(st), faces=("north",)))
+        Cube(eye_origin, (fw, fh, 0), face_region(st, eye_reg, glow=True), faces=("north",)))
     add(Bone("lids", (0, fy1, -4.5), "head")).cubes.append(
-        Cube((fx0, fy1 - fh, -4.55), (fw, fh, 0), lids_overlay(st), faces=("north",)))
+        Cube((fx0, fy1 - fh, -4.55), (fw, fh, 0), face_region(st, eye_reg, eyes="closed"), faces=("north",)))
     add(Bone("eyes_happy", (0, fy1, -4.5), "head")).cubes.append(
-        Cube((fx0, fy1 - fh, -4.56), (fw, fh, 0), happy_eyes_overlay(st), faces=("north",)))
+        Cube((fx0, fy1 - fh, -4.56), (fw, fh, 0), face_region(st, eye_reg, eyes="happy"), faces=("north",)))
     add(Bone("brows", (0, fy1 + 0.6, -4.5), "head")).cubes.append(
-        Cube((fx0, fy1 - 0.2, -4.57), (fw, 0.9, 0), brows_overlay(st), faces=("north",)))
+        Cube((fx0, fy1 - 0.2, -4.57), (fw, 1.3, 0), face_region(st, brow_reg, brows="angry"), faces=("north",)))
     add(Bone("blush", (0, 21.9, -4.5), "head")).cubes.append(
         Cube((-3.6, 21.2, -4.53), (7.2, 1.0, 0), blush_overlay(st), faces=("north",)))
     for kind in ("smile", "open", "flat"):
@@ -1643,6 +1815,11 @@ def pack_icon(path: str, previews: list) -> None:
     img.save(path)
 
 
+HUMAN_UPSCALE = 2   # humanoid textures: 128 UV units x 4 px x 2 = 1024 px (semi-realistic detail)
+PERSONA_HAIR = {"luna": hexc("#c6a4ff"), "raven": hexc("#e9e7f3"), "sora": hexc("#33c47a"),
+                "yuki": hexc("#25332c"), "hana": hexc("#7a4a2a"), "aiko": hexc("#f08a3c")}
+
+
 def main() -> None:
     os.makedirs(os.path.join(RP, "models", "entity"), exist_ok=True)
     os.makedirs(os.path.join(RP, "textures", "entity", "shadowbound"), exist_ok=True)
@@ -1654,11 +1831,12 @@ def main() -> None:
     hidden_faces = ("lids", "eyes_happy", "brows", "mouth_open", "mouth_flat", "blush")
     for persona, builder in (("luna", persona_luna), ("raven", persona_raven), ("sora", persona_sora), ("yuki", persona_yuki), ("hana", persona_hana), ("aiko", persona_aiko)):
         bones = builder()
-        geo, tex = build_model(persona, bones)
+        layer_hair(bones, PERSONA_HAIR[persona], seed=len(persona) * 97)
+        geo, tex = build_model(persona, bones, upscale=HUMAN_UPSCALE)
         with open(os.path.join(RP, "models", "entity", f"shadowbound_{persona}.geo.json"), "w") as f:
             json.dump(geo, f, indent=1)
         tex.save(os.path.join(RP, "textures", "entity", "shadowbound", f"{persona}.png"))
-        pv = render_front(geo, tex, hidden=hidden_faces)
+        pv = render_front(geo, tex, hidden=hidden_faces, scale=SCALE * HUMAN_UPSCALE)
         pv.save(os.path.join(DOCS, f"preview_{persona}.png"))
         previews.append(pv)
         # expression sheet: normal / happy / focused face close-ups
@@ -1669,7 +1847,7 @@ def main() -> None:
             ("lids", "eyes_happy", "mouth_smile", "mouth_open", "blush"),
         ]
         for i, hid in enumerate(variants):
-            full = render_front(geo, tex, px_per_unit=20, hidden=hid)
+            full = render_front(geo, tex, px_per_unit=20, hidden=hid, scale=SCALE * HUMAN_UPSCALE)
             # head region crop
             box = (int((15 - 8) * 20), int((42 - 32) * 20), int((15 + 8) * 20), int((42 - 19) * 20))
             face = full.crop(box).resize((180, int(180 * (box[3] - box[1]) / (box[2] - box[0]))), Image.LANCZOS)
