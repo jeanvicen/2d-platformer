@@ -1,0 +1,25 @@
+{
+	"conversations": [
+		{
+			"conditions": [],
+			"lines": [
+				{
+					"speaker": "Garden Spirit",
+					"text": "Welcome, little one. You found the Hidden Garden."
+				},
+				{
+					"speaker": "Garden Spirit",
+					"text": "Few travelers make it here. The path demands mastery of movement."
+				},
+				{
+					"speaker": "Garden Spirit",
+					"text": "Take these offerings. May they serve you well on your journey."
+				},
+				{
+					"speaker": "Garden Spirit",
+					"text": "The Crystal Queen awaits in the depths. Steel yourself."
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,12 @@
+{
+    "quest_id": "defeat_queen",
+    "title": "Defeat the Crystal Queen",
+    "description": "A terrible presence lurks in the depths. Destroy her.",
+    "given_by": "elder",
+    "objectives": [
+        { "id": "kill_queen", "description": "Defeat the Crystal Queen in the depths", "type": "kill", "target": "crystal_queen" }
+    ],
+    "rewards": {
+        "coins": 100
+    }
+}

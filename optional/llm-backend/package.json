@@ -1,8 +1,0 @@
-{
-  "name": "shadowbound-llm-backend",
-  "private": true,
-  "type": "module",
-  "description": "Backend OPCIONAL: traduz ordens livres em PT-BR para um plano estruturado validado. O addon funciona sem isto.",
-  "scripts": { "start": "node server.mjs" },
-  "dependencies": { "@anthropic-ai/sdk": "latest", "zod": "^3.25.0" }
-}

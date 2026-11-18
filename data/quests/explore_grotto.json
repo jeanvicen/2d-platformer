@@ -1,0 +1,12 @@
+{
+    "quest_id": "explore_grotto",
+    "title": "Explore the Grotto",
+    "description": "The Elder mentioned the Mossy Grotto to the west. Explore it.",
+    "given_by": "elder",
+    "objectives": [
+        { "id": "visit_grotto", "description": "Visit the Mossy Grotto", "type": "reach_room", "target": "room_02" }
+    ],
+    "rewards": {
+        "coins": 20
+    }
+}

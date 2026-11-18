@@ -1,0 +1,12 @@
+{
+    "quest_id": "fungal_harvest",
+    "title": "Fungal Harvest",
+    "description": "Strange fungi grow in the depths below. Investigate.",
+    "given_by": "elder",
+    "objectives": [
+        { "id": "visit_depths", "description": "Explore the Fungal Depths", "type": "reach_room", "target": "room_04" }
+    ],
+    "rewards": {
+        "coins": 50
+    }
+}

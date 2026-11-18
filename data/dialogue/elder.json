@@ -1,0 +1,15 @@
+{
+    "npc_id": "elder",
+    "conversations": [
+        {
+            "id": "first_meeting",
+            "condition": { "type": "always" },
+            "lines": [
+                { "speaker": "Elder", "text": "Ah, another soul drawn to these depths." },
+                { "speaker": "Elder", "text": "The caves below hold many secrets. And dangers." },
+                { "speaker": "Elder", "text": "The Mossy Grotto to the west holds a relic of speed. The Crystal Caves to the east are full of flying pests." },
+                { "speaker": "Elder", "text": "Rest at the bench when you need to. It will remember your journey." }
+            ]
+        }
+    ]
+}

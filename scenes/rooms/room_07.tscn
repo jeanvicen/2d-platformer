@@ -1,0 +1,204 @@
+[gd_scene load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/room_loader.gd" id="1_rl"]
+[ext_resource type="PackedScene" path="res://scenes/systems/coin.tscn" id="2_coin"]
+[ext_resource type="PackedScene" path="res://scenes/doors/door.tscn" id="3_door"]
+[ext_resource type="Script" path="res://scripts/systems/killzone.gd" id="4_kz"]
+[ext_resource type="Script" path="res://scripts/systems/parallax_bg.gd" id="5_bg"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="6_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="7_pause"]
+[ext_resource type="PackedScene" path="res://scenes/npcs/npc.tscn" id="8_npc"]
+
+[sub_resource type="RectangleShape2D" id="ground"]
+size = Vector2(1000, 64)
+
+[sub_resource type="RectangleShape2D" id="plat"]
+size = Vector2(128, 16)
+
+[sub_resource type="RectangleShape2D" id="wall"]
+size = Vector2(32, 400)
+
+[sub_resource type="RectangleShape2D" id="dp"]
+size = Vector2(2000, 32)
+
+[node name="Room07" type="Node2D"]
+script = ExtResource("1_rl")
+room_id = "room_07"
+
+[node name="ParallaxBg" type="ParallaxBackground" parent="."]
+script = ExtResource("5_bg")
+sky_color_top = Color(0.08, 0.14, 0.04, 1)
+sky_color_bottom = Color(0.14, 0.22, 0.06, 1)
+mountain_color_far = Color(0.1, 0.2, 0.06, 1)
+mountain_color_near = Color(0.16, 0.28, 0.08, 1)
+decoration_type = 0
+
+[node name="CamBoundTL" type="Marker2D" parent="."]
+position = Vector2(-100, -400)
+
+[node name="CamBoundBR" type="Marker2D" parent="."]
+position = Vector2(1100, 700)
+
+[node name="Geometry" type="Node2D" parent="."]
+
+[node name="Ground" type="StaticBody2D" parent="Geometry"]
+position = Vector2(500, 500)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Col" type="CollisionShape2D" parent="Geometry/Ground"]
+position = Vector2(0, 32)
+shape = SubResource("ground")
+
+[node name="V" type="Polygon2D" parent="Geometry/Ground"]
+polygon = PackedVector2Array(-500, 0, 500, 0, 500, 64, -500, 64)
+color = Color(0.2, 0.32, 0.14, 1)
+
+[node name="T" type="Polygon2D" parent="Geometry/Ground"]
+polygon = PackedVector2Array(-500, 0, 500, 0, 500, 4, -500, 4)
+color = Color(0.35, 0.5, 0.22, 1)
+
+[node name="PlatL" type="StaticBody2D" parent="Geometry"]
+position = Vector2(200, 420)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Col" type="CollisionShape2D" parent="Geometry/PlatL"]
+position = Vector2(0, 8)
+shape = SubResource("plat")
+
+[node name="V" type="Polygon2D" parent="Geometry/PlatL"]
+polygon = PackedVector2Array(-64, 0, 64, 0, 64, 16, -64, 16)
+color = Color(0.24, 0.36, 0.16, 1)
+
+[node name="T" type="Polygon2D" parent="Geometry/PlatL"]
+polygon = PackedVector2Array(-64, 0, 64, 0, 64, 3, -64, 3)
+color = Color(0.38, 0.55, 0.25, 1)
+
+[node name="PlatR" type="StaticBody2D" parent="Geometry"]
+position = Vector2(800, 420)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Col" type="CollisionShape2D" parent="Geometry/PlatR"]
+position = Vector2(0, 8)
+shape = SubResource("plat")
+
+[node name="V" type="Polygon2D" parent="Geometry/PlatR"]
+polygon = PackedVector2Array(-64, 0, 64, 0, 64, 16, -64, 16)
+color = Color(0.24, 0.36, 0.16, 1)
+
+[node name="T" type="Polygon2D" parent="Geometry/PlatR"]
+polygon = PackedVector2Array(-64, 0, 64, 0, 64, 3, -64, 3)
+color = Color(0.38, 0.55, 0.25, 1)
+
+[node name="PlatCenter" type="StaticBody2D" parent="Geometry"]
+position = Vector2(500, 350)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Col" type="CollisionShape2D" parent="Geometry/PlatCenter"]
+position = Vector2(0, 8)
+shape = SubResource("plat")
+
+[node name="V" type="Polygon2D" parent="Geometry/PlatCenter"]
+polygon = PackedVector2Array(-64, 0, 64, 0, 64, 16, -64, 16)
+color = Color(0.24, 0.36, 0.16, 1)
+
+[node name="T" type="Polygon2D" parent="Geometry/PlatCenter"]
+polygon = PackedVector2Array(-64, 0, 64, 0, 64, 3, -64, 3)
+color = Color(0.38, 0.55, 0.25, 1)
+
+[node name="WallLeft" type="StaticBody2D" parent="Geometry"]
+position = Vector2(-16, 300)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Col" type="CollisionShape2D" parent="Geometry/WallLeft"]
+shape = SubResource("wall")
+
+[node name="V" type="Polygon2D" parent="Geometry/WallLeft"]
+polygon = PackedVector2Array(-16, -200, 16, -200, 16, 200, -16, 200)
+color = Color(0.14, 0.24, 0.1, 1)
+
+[node name="WallRight" type="StaticBody2D" parent="Geometry"]
+position = Vector2(1016, 300)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Col" type="CollisionShape2D" parent="Geometry/WallRight"]
+shape = SubResource("wall")
+
+[node name="V" type="Polygon2D" parent="Geometry/WallRight"]
+polygon = PackedVector2Array(-16, -200, 16, -200, 16, 200, -16, 200)
+color = Color(0.14, 0.24, 0.1, 1)
+
+[node name="Doors" type="Node2D" parent="."]
+
+[node name="DoorToRoom03" parent="Doors" instance=ExtResource("3_door")]
+position = Vector2(50, 500)
+door_id = "door_left"
+target_room_id = "room_03"
+target_door_id = "door_right"
+auto_enter = true
+
+[node name="GardenSpirit" parent="." instance=ExtResource("8_npc")]
+position = Vector2(500, 500)
+npc_id = "garden_spirit"
+display_name = "Garden Spirit"
+dialogue_file = "res://data/dialogue/garden_spirit.json"
+body_color = Color(0.4, 0.75, 0.3, 1)
+
+[node name="Coins" type="Node2D" parent="."]
+
+[node name="C1" parent="Coins" instance=ExtResource("2_coin")]
+position = Vector2(150, 470)
+
+[node name="C2" parent="Coins" instance=ExtResource("2_coin")]
+position = Vector2(250, 470)
+
+[node name="C3" parent="Coins" instance=ExtResource("2_coin")]
+position = Vector2(350, 470)
+
+[node name="C4" parent="Coins" instance=ExtResource("2_coin")]
+position = Vector2(450, 470)
+
+[node name="C5" parent="Coins" instance=ExtResource("2_coin")]
+position = Vector2(550, 470)
+
+[node name="C6" parent="Coins" instance=ExtResource("2_coin")]
+position = Vector2(650, 470)
+
+[node name="C7" parent="Coins" instance=ExtResource("2_coin")]
+position = Vector2(750, 470)
+
+[node name="C8" parent="Coins" instance=ExtResource("2_coin")]
+position = Vector2(850, 470)
+
+[node name="C9" parent="Coins" instance=ExtResource("2_coin")]
+position = Vector2(200, 390)
+
+[node name="C10" parent="Coins" instance=ExtResource("2_coin")]
+position = Vector2(800, 390)
+
+[node name="C11" parent="Coins" instance=ExtResource("2_coin")]
+position = Vector2(500, 320)
+
+[node name="C12" parent="Coins" instance=ExtResource("2_coin")]
+position = Vector2(400, 320)
+
+[node name="C13" parent="Coins" instance=ExtResource("2_coin")]
+position = Vector2(600, 320)
+
+[node name="DeathPlane" type="Area2D" parent="."]
+position = Vector2(500, 700)
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("4_kz")
+
+[node name="Col" type="CollisionShape2D" parent="DeathPlane"]
+shape = SubResource("dp")
+
+[node name="HUD" parent="." instance=ExtResource("6_hud")]
+
+[node name="PauseMenu" parent="." instance=ExtResource("7_pause")]

@@ -1,0 +1,14 @@
+{
+    "npc_id": "shopkeeper",
+    "conversations": [
+        {
+            "id": "default",
+            "condition": { "type": "always" },
+            "lines": [
+                { "speaker": "Cornifer", "text": "Welcome to my shop, traveler." },
+                { "speaker": "Cornifer", "text": "I deal in charms and curiosities. Bring coins and I'll make you stronger." },
+                { "speaker": "Cornifer", "text": "Come back when you have more to spend." }
+            ]
+        }
+    ]
+}
