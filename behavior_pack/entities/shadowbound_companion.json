@@ -7,7 +7,7 @@
       "is_summonable": true,
       "properties": {
         "shadowbound:anim": { "type": "int", "range": [0, 15], "default": 0, "client_sync": true },
-        "shadowbound:persona": { "type": "int", "range": [0, 3], "default": 0, "client_sync": true },
+        "shadowbound:persona": { "type": "int", "range": [0, 5], "default": 0, "client_sync": true },
         "shadowbound:mood": { "type": "int", "range": [0, 4], "default": 0, "client_sync": true }
       }
     },

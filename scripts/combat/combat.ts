@@ -65,7 +65,7 @@ export function leash(a: Agent): void {
  */
 export function refreshCombatEffects(a: Agent): void {
   const e = a.body();
-  if (!e) return;
+  if (!e || a.isBeast) return;
   const pts = armorPoints(a);
   const res = pts >= 20 ? 2 : pts >= 13 ? 1 : pts >= 6 ? 0 : -1;
   if (res >= 0) safe(() => e.addEffect("resistance", 260, { amplifier: res, showParticles: false }), undefined);

@@ -8,7 +8,9 @@
             "Texture.luna",
             "Texture.raven",
             "Texture.sora",
-            "Texture.yuki"
+            "Texture.yuki",
+            "Texture.hana",
+            "Texture.aiko"
           ]
         },
         "geometries": {
@@ -16,7 +18,9 @@
             "Geometry.luna",
             "Geometry.raven",
             "Geometry.sora",
-            "Geometry.yuki"
+            "Geometry.yuki",
+            "Geometry.hana",
+            "Geometry.aiko"
           ]
         }
       },

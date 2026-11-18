@@ -11,13 +11,17 @@
         "luna": "textures/entity/shadowbound/luna",
         "raven": "textures/entity/shadowbound/raven",
         "sora": "textures/entity/shadowbound/sora",
-        "yuki": "textures/entity/shadowbound/yuki"
+        "yuki": "textures/entity/shadowbound/yuki",
+        "hana": "textures/entity/shadowbound/hana",
+        "aiko": "textures/entity/shadowbound/aiko"
       },
       "geometry": {
         "luna": "geometry.shadowbound.luna",
         "raven": "geometry.shadowbound.raven",
         "sora": "geometry.shadowbound.sora",
-        "yuki": "geometry.shadowbound.yuki"
+        "yuki": "geometry.shadowbound.yuki",
+        "hana": "geometry.shadowbound.hana",
+        "aiko": "geometry.shadowbound.aiko"
       },
       "animations": {
         "look_at": "animation.shadowbound.look_at",

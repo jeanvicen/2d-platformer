@@ -2,10 +2,10 @@
   "name": "shadowbound",
   "version": "1.0.0",
   "private": true,
-  "description": "SHADOWBOUND - companheiras de sombra autônomas para Minecraft Bedrock (Android e Windows)",
+  "description": "SHADOWBOUND - companheiras de sombra aut\u00f4nomas para Minecraft Bedrock (Android e Windows)",
   "type": "module",
   "scripts": {
-    "art": "python3 tools/art/generate_art.py && python3 tools/art/generate_anims.py",
+    "art": "python3 tools/art/generate_art.py && python3 tools/art/generate_anims.py && python3 tools/gen_beast_entity.py",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "node tools/run-tests.mjs",
     "validate": "node tools/validate-packs.mjs",

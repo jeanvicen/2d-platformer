@@ -92,6 +92,13 @@ h2 { font-family: var(--display); font-weight: 700; font-size: 1.7rem; margin: 0
 .crew { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .who { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px 12px 16px; display: grid; gap: 6px; align-content: start; }
 .who img { width: 100%; height: 190px; object-fit: contain; image-rendering: pixelated; background: var(--sky-2); border-radius: 4px; }
+.crew { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.beasts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.beast { background: var(--sky-2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px 12px; display: grid; gap: 4px; align-content: start; min-width: 0; }
+.beast img { width: 100%; height: 110px; object-fit: contain; image-rendering: pixelated; }
+.beast b { font-family: var(--display); font-size: 1.05rem; }
+.beast span { color: var(--muted); font-size: 0.85rem; }
+@media (max-width: 760px) { .beasts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .who h3 { margin: 4px 0 0; font-family: var(--display); font-size: 1.25rem; }
 .who p { margin: 0; color: var(--muted); font-size: 0.92rem; }
 .tag { justify-self: start; font-size: 0.75rem; font-weight: 800; padding: 2px 8px; border-radius: 4px; color: #1b1030; }
@@ -133,14 +140,14 @@ footer { color: var(--muted); font-size: 0.85rem; }
   <section class="hero">
     <div class="moon" aria-hidden="true"></div>
     <h1>Shadowbound</h1>
-    <p class="lead">Mod para <b>Minecraft Bedrock</b> (celular e PC): uma companheira de sombra que entende português, coleta, minera, constrói, te protege e só obedece a você.</p>
+    <p class="lead">Mod para <b>Minecraft Bedrock</b> (celular e PC): um esquadrão de sombras que entende português, coleta, minera, constrói mansões, invoca criaturas, te protege e só obedece a você.</p>
     <div class="dl">
       <a class="btn" id="dl-main" href="__DOWNLOAD_URL__" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square" aria-hidden="true"><path d="M12 3v12M6 10l6 6 6-6M4 21h16"/></svg>
         Baixar mod
       </a>
       <button class="btn alt" id="dl-alt" type="button" hidden>Download reserva (.zip)</button>
-      <p class="status" id="status" role="status">Shadowbound.mcaddon · __SIZE__ · versão 1.1</p>
+      <p class="status" id="status" role="status">Shadowbound.mcaddon · __SIZE__ · versão 2.0</p>
     </div>
     <div class="meta">
       <span class="chip ok">Minecraft 1.26.40 ou mais novo</span>
@@ -151,7 +158,8 @@ footer { color: var(--muted); font-size: 0.85rem; }
   </section>
 
   <section aria-labelledby="crew-title">
-    <h2 id="crew-title">Escolha sua companheira</h2>
+    <h2 id="crew-title">Monte seu esquadrão</h2>
+    <p class="lead" style="margin-bottom:14px">Invoque várias de uma vez. Elas dividem o trabalho pela especialidade, se ajudam e conversam entre si. Sozinha, uma faz tudo.</p>
     <div class="crew">
       <article class="who">
         <img alt="Luna, bruxinha de cabelo lilás com chapéu de bruxa" src="__IMG_LUNA__">
@@ -177,6 +185,26 @@ footer { color: var(--muted); font-size: 0.85rem; }
         <h3>Yuki</h3>
         <p>Elegante, a irmã mais velha do grupo.</p>
       </article>
+      <article class="who">
+        <img alt="Hana, fazendeira de tranças com chapéu de palha" src="__IMG_HANA__">
+        <span class="tag" style="background:#ffc46b">Comida</span>
+        <h3>Hana</h3>
+        <p>Fazendeira animada: colhe, caça e nunca deixa faltar comida.</p>
+      </article>
+      <article class="who">
+        <img alt="Aiko, construtora de cabelo laranja com óculos de proteção" src="__IMG_AIKO__">
+        <span class="tag" style="background:#ffb36b">Construção</span>
+        <h3>Aiko</h3>
+        <p>Construtora: lidera casas grandes e mansões.</p>
+      </article>
+    </div>
+  </section>
+
+  <section aria-labelledby="beast-title">
+    <h2 id="beast-title">Criaturas das sombras</h2>
+    <p class="lead" style="margin-bottom:14px">Invoque quantas quiser (até o limite do esquadrão). Elas lutam, caçam e protegem, cada uma com um poder.</p>
+    <div class="beasts">
+__BEAST_CARDS__
     </div>
   </section>
 
@@ -193,11 +221,16 @@ footer { color: var(--muted); font-size: 0.85rem; }
   <section aria-labelledby="orders-title">
     <h2 id="orders-title">Peça do seu jeito</h2>
     <div class="orders" id="orders">
-      <button class="cmd" type="button">/sombra me proteja</button>
+      <button class="cmd" type="button">/sombra invocar hana</button>
+      <button class="cmd" type="button">/sombra invocar 2 lobos</button>
+      <button class="cmd" type="button">/sombra invocar dragao</button>
+      <button class="cmd" type="button">/sombra me protejam</button>
+      <button class="cmd" type="button">/sombra raven, me siga</button>
+      <button class="cmd" type="button">/sombra construa uma casa grande</button>
       <button class="cmd" type="button">/sombra pegue 32 troncos e volte</button>
       <button class="cmd" type="button">/sombra consiga comida</button>
       <button class="cmd" type="button">/sombra minere ferro</button>
-      <button class="cmd" type="button">/sombra construa uma casinha de madeira</button>
+      <button class="cmd" type="button">/sombra construa uma mansao</button>
       <button class="cmd" type="button">/sombra me dá tudo</button>
       <button class="cmd" type="button">/sombra ajuda</button>
     </div>
@@ -224,7 +257,7 @@ footer { color: var(--muted); font-size: 0.85rem; }
     </details>
   </section>
 
-  <footer>Shadowbound v1.1 · mod pessoal · Minecraft Bedrock 1.26.40+</footer>
+  <footer>Shadowbound v2.0 · mod pessoal · Minecraft Bedrock 1.26.40+</footer>
 </main>
 
 <script type="application/octet-stream" id="pack">__PACK_B64__</script>

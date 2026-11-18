@@ -1,0 +1,624 @@
+{
+  "format_version": "1.21.40",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "shadowbound:beast",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "properties": {
+        "shadowbound:anim": {
+          "type": "int",
+          "range": [
+            0,
+            15
+          ],
+          "default": 0,
+          "client_sync": true
+        },
+        "shadowbound:species": {
+          "type": "int",
+          "range": [
+            0,
+            11
+          ],
+          "default": 0,
+          "client_sync": true
+        }
+      }
+    },
+    "component_groups": {
+      "shadowbound:tamed": {
+        "minecraft:is_tamed": {}
+      },
+      "shadowbound:mode_follow": {
+        "minecraft:behavior.owner_hurt_by_target": {
+          "priority": 1
+        },
+        "minecraft:behavior.hurt_by_target": {
+          "priority": 2,
+          "entity_types": {
+            "filters": {
+              "all_of": [
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "operator": "!=",
+                  "value": "player"
+                },
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "operator": "!=",
+                  "value": "shadowbound"
+                }
+              ]
+            }
+          }
+        },
+        "minecraft:behavior.nearest_attackable_target": {
+          "priority": 3,
+          "must_see": true,
+          "reselect_targets": true,
+          "within_radius": 14.0,
+          "entity_types": [
+            {
+              "filters": {
+                "all_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "monster"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "operator": "!=",
+                    "value": "enderman"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "operator": "!=",
+                    "value": "zombie_pigman"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "operator": "!=",
+                    "value": "piglin"
+                  }
+                ]
+              },
+              "max_dist": 14
+            }
+          ]
+        },
+        "minecraft:behavior.melee_attack": {
+          "priority": 4,
+          "speed_multiplier": 1.35,
+          "track_target": true,
+          "reach_multiplier": 1.8
+        },
+        "minecraft:behavior.owner_hurt_target": {
+          "priority": 2
+        },
+        "minecraft:behavior.follow_owner": {
+          "priority": 6,
+          "speed_multiplier": 1.2,
+          "start_distance": 8,
+          "stop_distance": 3
+        }
+      },
+      "shadowbound:mode_guard": {
+        "minecraft:behavior.owner_hurt_by_target": {
+          "priority": 1
+        },
+        "minecraft:behavior.hurt_by_target": {
+          "priority": 2,
+          "entity_types": {
+            "filters": {
+              "all_of": [
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "operator": "!=",
+                  "value": "player"
+                },
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "operator": "!=",
+                  "value": "shadowbound"
+                }
+              ]
+            }
+          }
+        },
+        "minecraft:behavior.nearest_attackable_target": {
+          "priority": 3,
+          "must_see": true,
+          "reselect_targets": true,
+          "within_radius": 12.0,
+          "entity_types": [
+            {
+              "filters": {
+                "all_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "monster"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "operator": "!=",
+                    "value": "enderman"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "operator": "!=",
+                    "value": "zombie_pigman"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "operator": "!=",
+                    "value": "piglin"
+                  }
+                ]
+              },
+              "max_dist": 12
+            }
+          ]
+        },
+        "minecraft:behavior.melee_attack": {
+          "priority": 4,
+          "speed_multiplier": 1.35,
+          "track_target": true,
+          "reach_multiplier": 1.8
+        }
+      },
+      "shadowbound:mode_scripted": {
+        "minecraft:behavior.look_at_player": {
+          "priority": 7,
+          "look_distance": 6,
+          "probability": 0.02
+        }
+      },
+      "shadowbound:species_wolf": {
+        "minecraft:health": {
+          "value": 30,
+          "max": 30
+        },
+        "minecraft:attack": {
+          "damage": 5
+        },
+        "minecraft:movement": {
+          "value": 0.36
+        },
+        "minecraft:collision_box": {
+          "width": 0.7,
+          "height": 0.9
+        }
+      },
+      "shadowbound:species_owl": {
+        "minecraft:health": {
+          "value": 24,
+          "max": 24
+        },
+        "minecraft:attack": {
+          "damage": 4
+        },
+        "minecraft:movement": {
+          "value": 0.34
+        },
+        "minecraft:collision_box": {
+          "width": 0.8,
+          "height": 1.1
+        }
+      },
+      "shadowbound:species_serpent": {
+        "minecraft:health": {
+          "value": 50,
+          "max": 50
+        },
+        "minecraft:attack": {
+          "damage": 6
+        },
+        "minecraft:movement": {
+          "value": 0.28
+        },
+        "minecraft:collision_box": {
+          "width": 1.2,
+          "height": 0.9
+        }
+      },
+      "shadowbound:species_toad": {
+        "minecraft:health": {
+          "value": 36,
+          "max": 36
+        },
+        "minecraft:attack": {
+          "damage": 4
+        },
+        "minecraft:movement": {
+          "value": 0.26
+        },
+        "minecraft:collision_box": {
+          "width": 1.0,
+          "height": 1.0
+        }
+      },
+      "shadowbound:species_elephant": {
+        "minecraft:health": {
+          "value": 90,
+          "max": 90
+        },
+        "minecraft:attack": {
+          "damage": 8
+        },
+        "minecraft:movement": {
+          "value": 0.24
+        },
+        "minecraft:collision_box": {
+          "width": 1.8,
+          "height": 2.3
+        }
+      },
+      "shadowbound:species_rabbit": {
+        "minecraft:health": {
+          "value": 16,
+          "max": 16
+        },
+        "minecraft:attack": {
+          "damage": 2
+        },
+        "minecraft:movement": {
+          "value": 0.42
+        },
+        "minecraft:collision_box": {
+          "width": 0.5,
+          "height": 0.6
+        }
+      },
+      "shadowbound:species_deer": {
+        "minecraft:health": {
+          "value": 40,
+          "max": 40
+        },
+        "minecraft:attack": {
+          "damage": 3
+        },
+        "minecraft:movement": {
+          "value": 0.32
+        },
+        "minecraft:collision_box": {
+          "width": 0.9,
+          "height": 1.7
+        }
+      },
+      "shadowbound:species_bull": {
+        "minecraft:health": {
+          "value": 70,
+          "max": 70
+        },
+        "minecraft:attack": {
+          "damage": 9
+        },
+        "minecraft:movement": {
+          "value": 0.3
+        },
+        "minecraft:collision_box": {
+          "width": 1.4,
+          "height": 1.6
+        }
+      },
+      "shadowbound:species_tiger": {
+        "minecraft:health": {
+          "value": 60,
+          "max": 60
+        },
+        "minecraft:attack": {
+          "damage": 9
+        },
+        "minecraft:movement": {
+          "value": 0.36
+        },
+        "minecraft:collision_box": {
+          "width": 1.1,
+          "height": 1.2
+        }
+      },
+      "shadowbound:species_lion": {
+        "minecraft:health": {
+          "value": 70,
+          "max": 70
+        },
+        "minecraft:attack": {
+          "damage": 8
+        },
+        "minecraft:movement": {
+          "value": 0.33
+        },
+        "minecraft:collision_box": {
+          "width": 1.2,
+          "height": 1.4
+        }
+      },
+      "shadowbound:species_dragon": {
+        "minecraft:health": {
+          "value": 140,
+          "max": 140
+        },
+        "minecraft:attack": {
+          "damage": 12
+        },
+        "minecraft:movement": {
+          "value": 0.3
+        },
+        "minecraft:collision_box": {
+          "width": 2.4,
+          "height": 2.6
+        }
+      },
+      "shadowbound:species_colossus": {
+        "minecraft:health": {
+          "value": 200,
+          "max": 200
+        },
+        "minecraft:attack": {
+          "damage": 14
+        },
+        "minecraft:movement": {
+          "value": 0.26
+        },
+        "minecraft:collision_box": {
+          "width": 1.6,
+          "height": 3.4
+        }
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "shadowbound",
+          "beast",
+          "mob"
+        ]
+      },
+      "minecraft:health": {
+        "value": 30,
+        "max": 30
+      },
+      "minecraft:attack": {
+        "damage": 5
+      },
+      "minecraft:movement": {
+        "value": 0.32
+      },
+      "minecraft:navigation.walk": {
+        "can_path_over_water": true,
+        "avoid_damage_blocks": true,
+        "can_swim": true,
+        "can_walk": true,
+        "can_pass_doors": true
+      },
+      "minecraft:movement.basic": {},
+      "minecraft:jump.static": {},
+      "minecraft:can_climb": {},
+      "minecraft:physics": {},
+      "minecraft:pushable": {
+        "is_pushable": true,
+        "is_pushable_by_piston": true
+      },
+      "minecraft:collision_box": {
+        "width": 0.8,
+        "height": 1.0
+      },
+      "minecraft:breathable": {
+        "total_supply": 15,
+        "suffocate_time": 0
+      },
+      "minecraft:nameable": {
+        "always_show": true,
+        "allow_name_tag_renaming": false
+      },
+      "minecraft:persistent": {},
+      "minecraft:knockback_resistance": {
+        "value": 0.6
+      },
+      "minecraft:conditional_bandwidth_optimization": {},
+      "minecraft:tameable": {
+        "probability": 0.0,
+        "tame_items": "minecraft:structure_void",
+        "tame_event": {
+          "event": "shadowbound:on_tame",
+          "target": "self"
+        }
+      },
+      "minecraft:damage_sensor": {
+        "triggers": [
+          {
+            "cause": "fall",
+            "deals_damage": "no"
+          },
+          {
+            "cause": "suffocation",
+            "deals_damage": "no"
+          },
+          {
+            "on_damage": {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "player"
+              }
+            },
+            "deals_damage": "no"
+          },
+          {
+            "on_damage": {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "shadowbound"
+              }
+            },
+            "deals_damage": "no"
+          }
+        ]
+      },
+      "minecraft:behavior.float": {
+        "priority": 0
+      },
+      "minecraft:behavior.look_at_player": {
+        "priority": 8,
+        "look_distance": 8,
+        "probability": 0.04
+      },
+      "minecraft:behavior.random_look_around": {
+        "priority": 9
+      }
+    },
+    "events": {
+      "minecraft:entity_spawned": {
+        "add": {
+          "component_groups": [
+            "shadowbound:mode_follow"
+          ]
+        }
+      },
+      "shadowbound:on_tame": {
+        "add": {
+          "component_groups": [
+            "shadowbound:tamed"
+          ]
+        }
+      },
+      "shadowbound:mode_follow": {
+        "remove": {
+          "component_groups": [
+            "shadowbound:mode_guard",
+            "shadowbound:mode_scripted"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "shadowbound:mode_follow"
+          ]
+        }
+      },
+      "shadowbound:mode_guard": {
+        "remove": {
+          "component_groups": [
+            "shadowbound:mode_follow",
+            "shadowbound:mode_scripted"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "shadowbound:mode_guard"
+          ]
+        }
+      },
+      "shadowbound:mode_scripted": {
+        "remove": {
+          "component_groups": [
+            "shadowbound:mode_follow",
+            "shadowbound:mode_guard"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "shadowbound:mode_scripted"
+          ]
+        }
+      },
+      "shadowbound:species_wolf": {
+        "add": {
+          "component_groups": [
+            "shadowbound:species_wolf"
+          ]
+        }
+      },
+      "shadowbound:species_owl": {
+        "add": {
+          "component_groups": [
+            "shadowbound:species_owl"
+          ]
+        }
+      },
+      "shadowbound:species_serpent": {
+        "add": {
+          "component_groups": [
+            "shadowbound:species_serpent"
+          ]
+        }
+      },
+      "shadowbound:species_toad": {
+        "add": {
+          "component_groups": [
+            "shadowbound:species_toad"
+          ]
+        }
+      },
+      "shadowbound:species_elephant": {
+        "add": {
+          "component_groups": [
+            "shadowbound:species_elephant"
+          ]
+        }
+      },
+      "shadowbound:species_rabbit": {
+        "add": {
+          "component_groups": [
+            "shadowbound:species_rabbit"
+          ]
+        }
+      },
+      "shadowbound:species_deer": {
+        "add": {
+          "component_groups": [
+            "shadowbound:species_deer"
+          ]
+        }
+      },
+      "shadowbound:species_bull": {
+        "add": {
+          "component_groups": [
+            "shadowbound:species_bull"
+          ]
+        }
+      },
+      "shadowbound:species_tiger": {
+        "add": {
+          "component_groups": [
+            "shadowbound:species_tiger"
+          ]
+        }
+      },
+      "shadowbound:species_lion": {
+        "add": {
+          "component_groups": [
+            "shadowbound:species_lion"
+          ]
+        }
+      },
+      "shadowbound:species_dragon": {
+        "add": {
+          "component_groups": [
+            "shadowbound:species_dragon"
+          ]
+        }
+      },
+      "shadowbound:species_colossus": {
+        "add": {
+          "component_groups": [
+            "shadowbound:species_colossus"
+          ]
+        }
+      }
+    }
+  }
+}

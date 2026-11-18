@@ -1,0 +1,248 @@
+{
+  "format_version": "1.10.0",
+  "animation_controllers": {
+    "controller.animation.shadowbound_beast.main": {
+      "initial_state": "default",
+      "states": {
+        "default": {
+          "animations": [
+            "idle",
+            {
+              "walk_native": "query.modified_move_speed > 0.03"
+            }
+          ],
+          "transitions": [
+            {
+              "walk": "query.property('shadowbound:anim') == 1"
+            },
+            {
+              "run": "query.property('shadowbound:anim') == 2"
+            },
+            {
+              "attack": "query.property('shadowbound:anim') == 3"
+            },
+            {
+              "cast": "query.property('shadowbound:anim') == 11"
+            },
+            {
+              "guard": "query.property('shadowbound:anim') == 8"
+            },
+            {
+              "summon": "query.property('shadowbound:anim') == 9"
+            },
+            {
+              "despawn": "query.property('shadowbound:anim') == 10"
+            }
+          ],
+          "blend_transition": 0.25
+        },
+        "walk": {
+          "animations": [
+            "walk"
+          ],
+          "transitions": [
+            {
+              "default": "query.property('shadowbound:anim') != 1 && query.property('shadowbound:anim') != 2 && query.property('shadowbound:anim') != 3 && query.property('shadowbound:anim') != 11 && query.property('shadowbound:anim') != 8 && query.property('shadowbound:anim') != 9 && query.property('shadowbound:anim') != 10"
+            },
+            {
+              "run": "query.property('shadowbound:anim') == 2"
+            },
+            {
+              "attack": "query.property('shadowbound:anim') == 3"
+            },
+            {
+              "cast": "query.property('shadowbound:anim') == 11"
+            },
+            {
+              "guard": "query.property('shadowbound:anim') == 8"
+            },
+            {
+              "summon": "query.property('shadowbound:anim') == 9"
+            },
+            {
+              "despawn": "query.property('shadowbound:anim') == 10"
+            }
+          ],
+          "blend_transition": 0.2
+        },
+        "run": {
+          "animations": [
+            "run"
+          ],
+          "transitions": [
+            {
+              "default": "query.property('shadowbound:anim') != 2 && query.property('shadowbound:anim') != 1 && query.property('shadowbound:anim') != 3 && query.property('shadowbound:anim') != 11 && query.property('shadowbound:anim') != 8 && query.property('shadowbound:anim') != 9 && query.property('shadowbound:anim') != 10"
+            },
+            {
+              "walk": "query.property('shadowbound:anim') == 1"
+            },
+            {
+              "attack": "query.property('shadowbound:anim') == 3"
+            },
+            {
+              "cast": "query.property('shadowbound:anim') == 11"
+            },
+            {
+              "guard": "query.property('shadowbound:anim') == 8"
+            },
+            {
+              "summon": "query.property('shadowbound:anim') == 9"
+            },
+            {
+              "despawn": "query.property('shadowbound:anim') == 10"
+            }
+          ],
+          "blend_transition": 0.2
+        },
+        "attack": {
+          "animations": [
+            "attack"
+          ],
+          "transitions": [
+            {
+              "default": "query.property('shadowbound:anim') != 3 && query.property('shadowbound:anim') != 1 && query.property('shadowbound:anim') != 2 && query.property('shadowbound:anim') != 11 && query.property('shadowbound:anim') != 8 && query.property('shadowbound:anim') != 9 && query.property('shadowbound:anim') != 10"
+            },
+            {
+              "walk": "query.property('shadowbound:anim') == 1"
+            },
+            {
+              "run": "query.property('shadowbound:anim') == 2"
+            },
+            {
+              "cast": "query.property('shadowbound:anim') == 11"
+            },
+            {
+              "guard": "query.property('shadowbound:anim') == 8"
+            },
+            {
+              "summon": "query.property('shadowbound:anim') == 9"
+            },
+            {
+              "despawn": "query.property('shadowbound:anim') == 10"
+            }
+          ],
+          "blend_transition": 0.2
+        },
+        "cast": {
+          "animations": [
+            "cast"
+          ],
+          "transitions": [
+            {
+              "default": "query.property('shadowbound:anim') != 11 && query.property('shadowbound:anim') != 1 && query.property('shadowbound:anim') != 2 && query.property('shadowbound:anim') != 3 && query.property('shadowbound:anim') != 8 && query.property('shadowbound:anim') != 9 && query.property('shadowbound:anim') != 10"
+            },
+            {
+              "walk": "query.property('shadowbound:anim') == 1"
+            },
+            {
+              "run": "query.property('shadowbound:anim') == 2"
+            },
+            {
+              "attack": "query.property('shadowbound:anim') == 3"
+            },
+            {
+              "guard": "query.property('shadowbound:anim') == 8"
+            },
+            {
+              "summon": "query.property('shadowbound:anim') == 9"
+            },
+            {
+              "despawn": "query.property('shadowbound:anim') == 10"
+            }
+          ],
+          "blend_transition": 0.2
+        },
+        "guard": {
+          "animations": [
+            "guard",
+            {
+              "walk_native": "query.modified_move_speed > 0.03"
+            }
+          ],
+          "transitions": [
+            {
+              "default": "query.property('shadowbound:anim') != 8 && query.property('shadowbound:anim') != 1 && query.property('shadowbound:anim') != 2 && query.property('shadowbound:anim') != 3 && query.property('shadowbound:anim') != 11 && query.property('shadowbound:anim') != 9 && query.property('shadowbound:anim') != 10"
+            },
+            {
+              "walk": "query.property('shadowbound:anim') == 1"
+            },
+            {
+              "run": "query.property('shadowbound:anim') == 2"
+            },
+            {
+              "attack": "query.property('shadowbound:anim') == 3"
+            },
+            {
+              "cast": "query.property('shadowbound:anim') == 11"
+            },
+            {
+              "summon": "query.property('shadowbound:anim') == 9"
+            },
+            {
+              "despawn": "query.property('shadowbound:anim') == 10"
+            }
+          ],
+          "blend_transition": 0.2
+        },
+        "summon": {
+          "animations": [
+            "summon"
+          ],
+          "transitions": [
+            {
+              "default": "query.property('shadowbound:anim') != 9 && query.property('shadowbound:anim') != 1 && query.property('shadowbound:anim') != 2 && query.property('shadowbound:anim') != 3 && query.property('shadowbound:anim') != 11 && query.property('shadowbound:anim') != 8 && query.property('shadowbound:anim') != 10"
+            },
+            {
+              "walk": "query.property('shadowbound:anim') == 1"
+            },
+            {
+              "run": "query.property('shadowbound:anim') == 2"
+            },
+            {
+              "attack": "query.property('shadowbound:anim') == 3"
+            },
+            {
+              "cast": "query.property('shadowbound:anim') == 11"
+            },
+            {
+              "guard": "query.property('shadowbound:anim') == 8"
+            },
+            {
+              "despawn": "query.property('shadowbound:anim') == 10"
+            }
+          ],
+          "blend_transition": 0.2
+        },
+        "despawn": {
+          "animations": [
+            "despawn"
+          ],
+          "transitions": [
+            {
+              "default": "query.property('shadowbound:anim') != 10 && query.property('shadowbound:anim') != 1 && query.property('shadowbound:anim') != 2 && query.property('shadowbound:anim') != 3 && query.property('shadowbound:anim') != 11 && query.property('shadowbound:anim') != 8 && query.property('shadowbound:anim') != 9"
+            },
+            {
+              "walk": "query.property('shadowbound:anim') == 1"
+            },
+            {
+              "run": "query.property('shadowbound:anim') == 2"
+            },
+            {
+              "attack": "query.property('shadowbound:anim') == 3"
+            },
+            {
+              "cast": "query.property('shadowbound:anim') == 11"
+            },
+            {
+              "guard": "query.property('shadowbound:anim') == 8"
+            },
+            {
+              "summon": "query.property('shadowbound:anim') == 9"
+            }
+          ],
+          "blend_transition": 0.2
+        }
+      }
+    }
+  }
+}

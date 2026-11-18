@@ -2,7 +2,6 @@
  * Shared data types between modules. Everything here is plain JSON-serialisable data,
  * because tasks, inventory and needs are persisted in dynamic properties.
  */
-import type { Persona } from "./constants";
 
 export interface Vec3 {
   x: number;
@@ -44,7 +43,7 @@ export type ResourceKind =
   | "berries"
   | "meat";
 
-export type StructureKind = "hut" | "wall" | "platform" | "bridge" | "pillar" | "tower";
+export type StructureKind = "hut" | "wall" | "platform" | "bridge" | "pillar" | "tower" | "house" | "mansion";
 export type MaterialKind = "planks" | "cobblestone" | "log" | "stone" | "dirt" | "any";
 
 export type IntentKind =
@@ -188,7 +187,9 @@ export interface AgentRecord {
   v: number;
   ownerId: string;
   ownerName: string; // display only, never used for authorisation
-  persona: Persona;
+  id: string; // squad member id, unique per owner ("a1", "a2"...)
+  kind: "companion" | "beast";
+  persona: string; // companion persona (luna, raven...) or beast species (wolf, dragon...)
   shadowName: string;
   gen: number; // incremented on every (re)summon; stale bodies are removed
   active: boolean; // false = dismissed

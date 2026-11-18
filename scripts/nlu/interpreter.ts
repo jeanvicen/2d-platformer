@@ -56,6 +56,8 @@ const MOBS: [RegExp, string][] = [
 ];
 
 const STRUCTURES: [RegExp, StructureKind][] = [
+  [/\b(mansao|mansoes|castelo|palacio|sobrado)\b/, "mansion"],
+  [/\b(casa grande|casarao|casa bonita|casa completa|casa decorada|casa de verdade|casa boa)\b/, "house"],
   [/\b(casa|casinha|cabana|abrigo|barraco|refugio)\b/, "hut"],
   [/\b(torre|torrezinha)\b/, "tower"],
   [/\b(muro|muralha|parede)\b/, "wall"],
@@ -99,7 +101,7 @@ const TIERS: [RegExp, string][] = [
 
 // verbs / phrases
 const V = {
-  cancel: /\b(cancel\w*|pare|para tudo|para agora|para com isso|esquece\w*|chega|abort\w*|desist\w*|deixa para la)\b/,
+  cancel: /\b(cancel\w*|pare|parem|para tudo|para agora|para com isso|esquece\w*|chega|abort\w*|desist\w*|deixa para la)\b/,
   dismiss: /\b(pode ir|dispens\w*|some daqui|desaparec\w*|va embora|vai embora|pode sumir|descans\w+ agora)\b/,
   pause: /\b(paus\w*|espera um pouco|segura ai)\b/,
   resume: /\b(continu\w+|retom\w+|volta ao trabalho|volte ao trabalho|pode seguir com)\b/,
@@ -111,18 +113,18 @@ const V = {
   greet: /\b(oi|ola|eai|e ai|bom dia|boa tarde|boa noite|salve|hey)\b/,
   thanks: /\b(obrigad\w*|valeu|vlw|brigad\w*|agradec\w*)\b/,
   compliment: /\b(linda|fofa|bonita|incrivel|perfeita|mandou bem|boa garota|maravilhosa|fodona|braba)\b/,
-  deliver: /\b(me (de|da|de ai|entreg\w+|pass\w+|mand\w+|jog\w+)|entreg\w+|devolv\w+|da para mim|de para mim|passa para mim|me traga o que)\b/,
-  eat: /\b(come|coma|comer agora|se aliment\w+|mata (a|sua) fome)\b/,
-  attack: /\b(ataca\w*|ataque\w*|mata|mate|matar|bate|bata|elimin\w+|acaba com|acabe com|derrota\w*|luta com|lute com)\b/,
+  deliver: /\b(me (de|da|deem|de ai|entreg\w+|pass\w+|mand\w+|jog\w+)|entreg\w+|devolv\w+|da para mim|de para mim|deem para mim|passa para mim|me traga o que)\b/,
+  eat: /\b(come|coma|comam|comer agora|se aliment\w+|mata (a|sua) fome|matem a fome)\b/,
+  attack: /\b(ataca\w*|ataque\w*|mata|mate|matem|matar|bate|bata|batam|elimin\w+|acaba com|acabe com|acabem com|derrota\w*|luta com|lute com|lutem com)\b/,
   hunt: /\b(caca|cace|cacar|cacem|caçe)\b/,
-  protect: /\b(me proteja|proteja me|me protege|protege\b|proteger|me defend\w+|defend\w+|guarda costas|cuide de mim|cuida de mim|fique (perto|do meu lado|comigo)|fica (perto|do meu lado|comigo)|ao meu lado)\b/,
-  guard: /\b(guard\w* (essa|esta|a|o|aqui|isso|area|casa|base)|vigi\w+|fique de guarda|fica de guarda|sentinela|proteja (essa|esta|a|o) (area|casa|base|lugar)|defenda (essa|esta|a) (area|casa|base))\b/,
-  stay: /\b(fica aqui|fique aqui|espera aqui|espere( aqui)?|nao se mexa|fique parad\w|fica parad\w|aguard\w+ aqui|parad[ao] ai)\b/,
-  follow: /\b(me seg\w+|segue|segu\w+ me|siga|siga me|vem comigo|venha comigo|me acompanh\w+|acompanh\w+ me)\b/,
-  ret: /\b(volt\w*|retorn\w+|vem aqui|venha aqui|vem ca|venha ca|cola aqui|chega aqui)\b/,
-  build: /\b(construa|construir|constroi|construi|construam|construe|monte|montar|monta|levante|levantar|ergu\w+|edifiqu\w+)\b/,
-  makeStructure: /\b(fa(ca|z|zer)|cria|crie|criar) (uma|um|a|o)? ?(casa|casinha|cabana|abrigo|barraco|torre|muro|muralha|parede|ponte|plataforma|pilar|coluna|chao|piso)\b/,
-  craft: /\b(fabriqu\w+|fabric\w+|crie|criar|cria|faca|faz|fazer|produz\w*|craft\w*)\b/,
+  protect: /\b(me proteja|me protejam|protejam me|proteja me|me protege|protege\b|protejam|proteger|me defend\w+|defend\w+|guarda costas|cuide de mim|cuidem de mim|cuida de mim|fique (perto|do meu lado|comigo)|fiquem (perto|do meu lado|comigo)|fica (perto|do meu lado|comigo)|ao meu lado)\b/,
+  guard: /\b(guard\w* (essa|esta|a|o|aqui|isso|area|casa|base)|vigi\w+|fique de guarda|fiquem de guarda|fica de guarda|sentinela|proteja (essa|esta|a|o) (area|casa|base|lugar)|defenda (essa|esta|a) (area|casa|base))\b/,
+  stay: /\b(fica aqui|fique aqui|fiquem aqui|espera aqui|espere( aqui)?|esperem( aqui)?|nao se mexa|nao se mexam|fique parad\w|fiquem parad\w|fica parad\w|aguard\w+ aqui|parad[ao]s? ai)\b/,
+  follow: /\b(me seg\w+|me sigam|sigam me|sigam|segue|segu\w+ me|siga|siga me|vem comigo|venha comigo|venham comigo|me acompanh\w+|acompanh\w+ me)\b/,
+  ret: /\b(volt\w*|retorn\w+|vem aqui|venha aqui|venham aqui|vem ca|venha ca|venham ca|cola aqui|chega aqui)\b/,
+  build: /\b(construa|construir|constroi|construi|construam|construe|construa|monte|montar|monta|montem|levante|levantar|ergu\w+|edifiqu\w+)\b/,
+  makeStructure: /\b(fa(ca|z|zer|cam)|cria|crie|criar|criem) (uma|um|a|o)? ?(casa|casinha|casarao|mansao|castelo|cabana|abrigo|barraco|torre|muro|muralha|parede|ponte|plataforma|pilar|coluna|chao|piso)\b/,
+  craft: /\b(fabriqu\w+|fabric\w+|crie|criem|criar|cria|faca|facam|faz|fazer|produz\w*|craft\w*)\b/,
   cook: /\b(cozinh\w+|asse|assa|assar|frit\w+|frite|grelh\w+|torr\w+|fund\w+|derret\w+)\b/,
   farm: /\b(plant\w+|colh\w+|replant\w+|cultiv\w+|semei\w+|horta|plantacao|fazenda)\b/,
   mine: /\b(miner\w+|cav\w+|escav\w+)\b/,
@@ -281,8 +283,10 @@ function clause(c: string, prev: Intent | undefined): ClauseResult {
       return {
         intents: [],
         clarification: {
-          question: "Construir o quê? Tenho plantas de: casinha, muro, plataforma, ponte, pilar e torre.",
+          question: "Construir o quê? Tenho plantas de: casa grande, mansão, casinha, muro, plataforma, ponte, pilar e torre.",
           options: [
+            { label: "Casa grande", text: "construa uma casa grande" },
+            { label: "Mansão", text: "construa uma mansao" },
             { label: "Casinha", text: "construa uma casinha" },
             { label: "Muro", text: "construa um muro" },
             { label: "Plataforma", text: "construa uma plataforma" },

@@ -2,7 +2,6 @@
  * Persona phrase bank (PT-BR). Several variants per situation so the companion does not
  * repeat itself. Placeholders: {n} number, {x} free text. Pure module.
  */
-import type { Persona } from "../core/constants";
 
 type Bank = Record<string, string[]>;
 
@@ -134,27 +133,135 @@ const YUKI: Bank = {
   tool_broke: ["Minha {x} quebrou."],
 };
 
-const BANKS: Record<Persona, Bank> = { luna: LUNA, raven: RAVEN, sora: SORA, yuki: YUKI };
+const HANA: Bank = {
+  summon: ["Hana chegou! Trouxe disposição e vontade de plantar!", "Oi! Precisando de comida? Comigo ninguém passa fome!", "Bom dia! Ou boa noite? Tanto faz, vamos trabalhar!"],
+  return_alive: ["Voltei! Igual broto depois da chuva.", "De volta! Onde estava aquela plantação?", "Pronto, recuperada!"],
+  dismiss: ["Vou descansar um pouquinho. Guardei tudo!", "Até já! Rega as plantas por mim!"],
+  ack: ["Pode deixar!", "Já vou!", "Combinado!", "Deixa com a Hana!"],
+  follow: ["Vou com você!", "Tô logo atrás!"],
+  protect: ["Entendido. Vou permanecer ao seu lado.", "Ninguém mexe com você!"],
+  guard: ["Vou vigiar aqui, igual espantalho... só que mais bonita!", "Guarda montada!"],
+  stay: ["Fico aqui!", "Esperando!"],
+  cancel: ["Entendido. Cancelando a tarefa e retornando.", "Parei!"],
+  start_wood: ["Estou procurando árvores próximas.", "Bora pegar madeira!"],
+  start_food: ["Comida é comigo! Vou procurar.", "Vou encher sua barriga!"],
+  start_mine: ["Vou minerar, mas prefiro plantar, hein!", "Indo minerar!"],
+  done: ["Prontinho! {x}", "Feito! {x}"],
+  returning: ["Consegui coletar. Estou voltando.", "Terminei! Voltando!"],
+  delivered: ["Aqui está: {x}. Bom apetite!", "Tome: {x}!"],
+  hungry: ["Até a fazendeira sente fome! Vou comer.", "Lanchinho rápido!"],
+  ate: ["Comi {x}. Delícia!", "{x}! Energia recarregada."],
+  no_food: ["Estou com fome e sem comida! Me dá algo?", "Barriga vazia aqui..."],
+  hurt: ["Ai! Me machucaram, vou me recuperar.", "Preciso de um tempinho pra me curar."],
+  threat: ["Perigo perto de você! Tô indo!", "Sai daí, monstro!"],
+  full: ["Mochila cheia! Vou entregar e voltar.", "Não cabe mais nada! Voltando pra entregar."],
+  blocked: ["O caminho está bloqueado. Estou tentando encontrar outra rota.", "Bloqueado! Procurando outro caminho."],
+  fail: ["Não consegui: {x}", "Poxa... {x}"],
+  unknown: ["Hã? Não entendi. Tenta 'consiga comida' ou 'pegue madeira'!", "Não entendi! Diga 'ajuda'."],
+  greet: ["Oi oi!", "Olá! Tudo bem?"],
+  thanks: ["De nada!", "Imagina!"],
+  compliment: ["Ah, obrigada! Agora bora!", "Hehe, valeu!"],
+  died: ["Ai... já volto!"],
+  tool_broke: ["Minha {x} quebrou!"],
+};
+
+const AIKO: Bank = {
+  summon: ["Aiko na área! Qual vai ser a obra de hoje?", "Cheguei com a planta na cabeça! O que construímos?", "Engenheira das sombras pronta!"],
+  return_alive: ["Voltei! Uma obra nunca para.", "De volta ao canteiro!", "Pronto, consertada!"],
+  dismiss: ["Fim de expediente! Ferramentas guardadas.", "Até a próxima obra!"],
+  ack: ["Deixa comigo!", "Anotado na planta!", "Bora construir!", "Entendido!"],
+  follow: ["Vou junto, de olho no terreno.", "Te sigo!"],
+  protect: ["Entendido. Vou permanecer ao seu lado.", "Proteção ativada!"],
+  guard: ["Vou guardar a obra!", "Fico de guarda aqui."],
+  stay: ["Fico aqui.", "Esperando instruções."],
+  cancel: ["Entendido. Cancelando a tarefa e retornando.", "Obra pausada, parei tudo."],
+  start_wood: ["Estou procurando árvores próximas.", "Madeira é o básico de toda obra!"],
+  start_food: ["Vou buscar comida.", "Comida? Já resolvo."],
+  start_mine: ["Pedra pra obra, já vou!", "Indo minerar!"],
+  done: ["Pronto! {x}", "Entregue! {x}"],
+  returning: ["Consegui coletar. Estou voltando.", "Material na mão, voltando!"],
+  delivered: ["Aqui está: {x}.", "Material entregue: {x}."],
+  hungry: ["Pausa pro lanche da obra!", "Vou comer rapidinho."],
+  ate: ["Comi {x}. Bora!", "{x}. Energia de pedreira!"],
+  no_food: ["Sem comida aqui. Me passa algo?", "Fiquei sem lanche..."],
+  hurt: ["Acidente de trabalho! Vou me recuperar.", "Machucada, recuando."],
+  threat: ["Invasor na obra! Indo!", "Perigo perto de você!"],
+  full: ["Mochila cheia! Vou entregar.", "Sem espaço, voltando pra descarregar."],
+  blocked: ["O caminho está bloqueado. Estou tentando encontrar outra rota.", "Caminho bloqueado, recalculando."],
+  fail: ["Não consegui: {x}", "Deu ruim: {x}"],
+  unknown: ["Não entendi. Tenta 'construa uma casa grande'!", "Não entendi a ordem. Diga 'ajuda'."],
+  greet: ["E aí! Bora construir?", "Oi!"],
+  thanks: ["De nada!", "Sempre!"],
+  compliment: ["Valeu! Mas o mérito é da planta.", "Hehe, obrigada!"],
+  died: ["Ai... volto logo!"],
+  tool_broke: ["Minha {x} quebrou!"],
+};
+
+/** Beasts do not talk: they make sounds and the chat narrates. {x} = text, {s} = sound. */
+const BEAST: Bank = {
+  summon: ["{s} (emerge das sombras ao seu lado)"],
+  return_alive: ["{s} (se reconstitui das sombras)"],
+  dismiss: ["{s} (afunda de volta na sombra)"],
+  ack: ["{s}"],
+  follow: ["{s} (te segue)"],
+  protect: ["{s} (fica em posição de defesa)"],
+  guard: ["{s} (vigia a área)"],
+  stay: ["{s} (deita e espera)"],
+  cancel: ["{s} (para e volta pra você)"],
+  done: ["{s} {x}"],
+  delivered: ["{s} {x}"],
+  hurt: ["{s} (ferido, recua)"],
+  threat: ["{s} (avança contra o inimigo!)"],
+  blocked: ["{s} (procura outro caminho)"],
+  fail: ["{s} (não conseguiu: {x})"],
+  unknown: ["{s} (inclina a cabeça, sem entender)"],
+  greet: ["{s}"],
+  thanks: ["{s} (abana o rabo)"],
+  compliment: ["{s} (parece orgulhoso)"],
+  died: ["{s} (se desfaz em fumaça... volta em breve)"],
+};
+
+const BANKS: Record<string, Bank> = { luna: LUNA, raven: RAVEN, sora: SORA, yuki: YUKI, hana: HANA, aiko: AIKO };
 const lastIdx = new Map<string, number>();
 
-export function phrase(p: Persona, key: string, x?: string | number): string {
-  const list = (BANKS[p] ?? LUNA)[key] ?? LUNA[key] ?? [key];
+export function phrase(p: string, key: string, x?: string | number, beastSound?: string): string {
+  const bank = beastSound !== undefined ? BEAST : BANKS[p] ?? LUNA;
+  const list = bank[key] ?? (beastSound !== undefined ? ["{s}"] : LUNA[key]) ?? [key];
   const k = p + key;
   let i = Math.floor(Math.random() * list.length);
   if (list.length > 1 && i === lastIdx.get(k)) i = (i + 1) % list.length;
   lastIdx.set(k, i);
-  return list[i].replace("{x}", x === undefined ? "" : String(x)).replace("{n}", x === undefined ? "" : String(x)).trim();
+  return list[i]
+    .replace("{x}", x === undefined ? "" : String(x))
+    .replace("{n}", x === undefined ? "" : String(x))
+    .replace("{s}", beastSound ?? "")
+    .trim();
 }
+
+/** Short exchanges between two companions (A speaks, B answers). {A}/{B} = names. */
+export const BANTER: [string, string][] = [
+  ["{B}, você viu aquele creeper ontem? Quase me explodiu!", "Relaxa, {A}. Da próxima vez eu cuido dele."],
+  ["{B}, sua mochila tá pesada? Posso ajudar a carregar.", "Valeu, {A}! Mas eu dou conta."],
+  ["Ei {B}, aposto que coleto mais madeira que você hoje!", "Pode apostar, {A}. Vai perder!"],
+  ["{B}, você acha que nosso mestre come o suficiente?", "Acho que não, {A}. Vamos garantir comida extra."],
+  ["{B}, que noite bonita, né?", "Bonita e cheia de monstros, {A}. Fica esperta."],
+  ["{B}, me ensina aquele golpe depois?", "Claro, {A}. Primeiro o trabalho."],
+  ["{B}, quando a gente vai construir uma mansão?", "Quando juntarmos madeira suficiente, {A}!"],
+  ["Tô cansada... {B}, você nunca se cansa?", "Sombras não cansam, {A}. Só fingem."],
+  ["{B}, olha, uma ovelha!", "{A}, foco. Ovelha não é tarefa."],
+  ["{B}, obrigada por me ajudar mais cedo.", "Somos uma equipe, {A}."],
+];
 
 export const HELP_TEXT = [
   "§lO que eu sei fazer:§r",
-  "§7Seguir/proteger:§r me siga, me proteja, fique de guarda aqui, fica aqui, volte",
-  "§7Coletar:§r pegue 32 troncos, consiga comida, cace vacas, colha o trigo",
+  "§7Esquadrão:§r /sombra invocar luna|raven|sora|yuki|hana|aiko  ·  /sombra invocar 2 lobos  ·  /sombra invocar dragao",
+  "§7Falar com uma só:§r comece com o nome: 'raven, me siga', 'lobos, ataquem aquele'",
+  "§7Seguir/proteger:§r me sigam, me protejam, fiquem de guarda aqui, fiquem aqui, voltem",
+  "§7Coletar:§r pegue 64 troncos (elas dividem), consiga comida, cace vacas, colha o trigo",
   "§7Minerar:§r minere ferro, pegue pedra, cave um buraco 3",
   "§7Fabricar:§r faça tábuas, faça uma picareta de pedra, faça pão, faça tochas",
-  "§7Cozinhar:§r cozinhe a carne (precisa de fornalha perto)",
-  "§7Construir:§r construa uma casinha / muro / plataforma / ponte / torre (de pedra)",
+  "§7Construir:§r construa uma casa grande / mansão / casinha / muro / torre (elas buscam o material)",
   "§7Quebrar:§r quebre esse bloco (olhe pra ele)",
-  "§7Itens:§r me dá tudo, me entrega a madeira, o que você tem?",
-  "§7Controle:§r cancela, pausa, continua, status, por que parou?",
+  "§7Itens:§r me deem tudo, me entrega a madeira, o que vocês têm?",
+  "§7Controle:§r cancela, pausa, continua, status, por que parou?, desinvocar lobos",
 ].join("\n");

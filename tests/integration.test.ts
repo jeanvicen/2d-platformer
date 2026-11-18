@@ -7,7 +7,8 @@ import assert from "node:assert/strict";
 import * as mc from "./mock/minecraft-server";
 import * as ui from "./mock/minecraft-server-ui";
 import "../scripts/main";
-import { agents } from "../scripts/ai/agent_manager";
+import { agents, squadOf } from "../scripts/ai/agent_manager";
+const ag = (p: { id: string }) => squadOf(p.id, false)[0];
 import { DP_AGENT_PREFIX } from "../scripts/core/constants";
 
 const cmds: Record<string, (origin: unknown, ...a: unknown[]) => unknown> = {};
@@ -29,6 +30,7 @@ const until = (pred: () => boolean, max: number) => {
   return pred();
 };
 const bodies = () => mc.__entities().filter((e) => e.typeId === "shadowbound:companion" && e.isValid);
+const beasts = () => mc.__entities().filter((e) => e.typeId === "shadowbound:beast" && e.isValid);
 const dim = mc.world.getDimension("minecraft:overworld") as unknown as mc.Dimension;
 
 const A = mc.__addPlayer("Jogador A", { x: 0.5, y: 64, z: 0.5 });
@@ -48,16 +50,16 @@ test("1-3) invocar, vínculo ao dono, impedir segunda invocação", () => {
   const b = bodies()[0];
   assert.equal(b.dyn["sb:owner"], A.id, "dono gravado pelo id persistente");
   assert.equal(b.tamedTo, A.id, "domada pelo dono (seguir nativo)");
-  run(A, "invocar raven");
+  run(A, "invocar luna");
   mc.__advance(10);
-  assert.equal(bodies().length, 1, "continua uma só sombra");
+  assert.equal(bodies().length, 1, "a mesma companheira não é invocada duas vezes");
 });
 
 test("4) outro jogador é ignorado e não acessa a sombra", () => {
   const before = A.messages.length;
   run(B, "pegue madeira");
-  assert.equal(agents.get(A.id)!.record.queue.length, 0, "ordem de B não chega na sombra de A");
-  assert.ok(B.messages.some((m) => m.includes("não tem uma sombra")));
+  assert.equal(ag(A).record.queue.length, 0, "ordem de B não chega na sombra de A");
+  assert.ok(B.messages.some((m) => m.includes("sombras ativas")));
   const ev = { player: B, target: bodies()[0], cancel: false };
   mc.world.beforeEvents.playerInteractWithEntity.fire(ev);
   mc.__advance(2);
@@ -71,7 +73,7 @@ test("5) seguir: modo nativo follow ativo", () => {
   run(A, "me siga");
   mc.__advance(20);
   assert.ok(bodies()[0].events.includes("shadowbound:mode_follow"));
-  assert.equal(agents.get(A.id)!.record.mode, "follow");
+  assert.equal(ag(A).record.mode, "follow");
 });
 
 test("7/11) coleta madeira DE VERDADE, volta e entrega", () => {
@@ -79,7 +81,7 @@ test("7/11) coleta madeira DE VERDADE, volta e entrega", () => {
   for (let y = 64; y <= 67; y++) dim.set(4, y, 3, "minecraft:oak_log");
   for (let x = 2; x <= 6; x++) for (let z = 1; z <= 5; z++) for (let y = 66; y <= 68; y++) if (!(x === 4 && z === 3 && y <= 67)) dim.set(x, y, z, "minecraft:oak_leaves");
   run(A, "pegue 4 troncos e volte");
-  const a = agents.get(A.id)!;
+  const a = ag(A);
   assert.equal(a.record.queue[0]?.kind, "gather_wood");
   const ok = until(() => A.inventory.count("minecraft:oak_log") >= 4, 20 * 150);
   assert.ok(ok, `entregou troncos (tem ${A.inventory.count("minecraft:oak_log")}); erros: ${mc.errors.slice(0, 2).join(" | ")}`);
@@ -91,7 +93,7 @@ test("7/11) coleta madeira DE VERDADE, volta e entrega", () => {
 });
 
 test("9) come pão sozinha quando está com fome (e o dono pode dar itens)", () => {
-  const a = agents.get(A.id)!;
+  const a = ag(A);
   A.inventory.setItem(0, new mc.ItemStack("minecraft:bread", 5));
   A.selectedSlotIndex = 0;
   A.isSneaking = true;
@@ -109,7 +111,7 @@ test("9) come pão sozinha quando está com fome (e o dono pode dar itens)", () 
 });
 
 test("12) cancelar e substituir tarefas", () => {
-  const a = agents.get(A.id)!;
+  const a = ag(A);
   run(A, "pegue 32 troncos");
   assert.equal(a.record.queue.length, 1);
   run(A, "cancela");
@@ -138,16 +140,16 @@ test("perguntas: status, inventário, por que parou", () => {
 });
 
 test("15) persistência: registro salvo no mundo", () => {
-  const a = agents.get(A.id)!;
+  const a = ag(A);
   a.save();
-  const raw = mc.__worldDyn()[DP_AGENT_PREFIX + A.id];
+  const raw = mc.__worldDyn()[DP_AGENT_PREFIX + A.id + ":" + ag(A).record.id];
   const rec = JSON.parse(raw);
   assert.equal(rec.ownerId, A.id);
   assert.equal(rec.inventory.find((s: { id: string }) => s.id === "minecraft:bread")?.n, 4);
 });
 
 test("14) morre e ressuscita sem duplicar itens nem corpos", () => {
-  const a = agents.get(A.id)!;
+  const a = ag(A);
   const before = JSON.stringify(a.inv.summary());
   const genBefore = a.record.gen;
   const body = bodies()[0];
@@ -167,7 +169,7 @@ test("14) morre e ressuscita sem duplicar itens nem corpos", () => {
 });
 
 test("construção: casinha de madeira com materiais reais", () => {
-  const a = agents.get(A.id)!;
+  const a = ag(A);
   a.inv.add({ id: "minecraft:oak_planks", n: 72 });
   // owner faces +z; build area 3 blocks ahead is flat and free
   A.teleport({ x: 0.5, y: 64, z: -10.5 });
@@ -183,7 +185,7 @@ test("construção: casinha de madeira com materiais reais", () => {
 });
 
 test("13) falha honesta e recuperação: sem árvores, explica o motivo", () => {
-  const a = agents.get(A.id)!;
+  const a = ag(A);
   A.teleport({ x: 120.5, y: 64, z: 120.5 });
   bodies()[0].teleport({ x: 121.5, y: 64, z: 120.5 });
   mc.__advance(5);
@@ -196,7 +198,7 @@ test("13) falha honesta e recuperação: sem árvores, explica o motivo", () => 
 });
 
 test("8) obtém comida DE VERDADE: colhe trigo maduro, replanta e faz pão na bancada", () => {
-  const a = agents.get(A.id)!;
+  const a = ag(A);
   A.teleport({ x: 60.5, y: 64, z: 60.5 });
   bodies()[0].teleport({ x: 61.5, y: 64, z: 60.5 });
   for (let x = 63; x <= 65; x++) for (let z = 62; z <= 64; z++) {
@@ -216,7 +218,7 @@ test("8) obtém comida DE VERDADE: colhe trigo maduro, replanta e faz pão na ba
 });
 
 test("10) equipa uma ferramenta suportada", () => {
-  const a = agents.get(A.id)!;
+  const a = ag(A);
   a.inv.add({ id: "minecraft:stone_axe", n: 1 });
   run(A, "equipe o machado");
   mc.__advance(10);
@@ -225,7 +227,7 @@ test("10) equipa uma ferramenta suportada", () => {
 });
 
 test("6) protege contra inimigos perto do dono", () => {
-  const a = agents.get(A.id)!;
+  const a = ag(A);
   const z = dim.spawnEntity("minecraft:zombie", { x: A.location.x + 4, y: 64, z: A.location.z });
   z.health = { currentValue: 20, effectiveMax: 20, setCurrentValue: (v: number) => ((z.health!.currentValue = v), true) };
   mc.__advance(20);
@@ -238,7 +240,7 @@ test("6) protege contra inimigos perto do dono", () => {
 });
 
 test("mineração: fabrica picareta na bancada, cava escada segura e entrega pedra", () => {
-  const a = agents.get(A.id)!;
+  const a = ag(A);
   A.teleport({ x: -60.5, y: 64, z: -60.5 });
   bodies()[0].teleport({ x: -59.5, y: 64, z: -60.5 });
   a.inv.add({ id: "minecraft:birch_log", n: 3 });
@@ -259,23 +261,105 @@ test("15/13) sai do mundo no meio da tarefa, volta, e ela retoma do estado salvo
   const logs = () => A.inventory.count("minecraft:oak_log") + A.inventory.count("minecraft:birch_log");
   const logsBefore = logs();
   run(A, "pegue 5 troncos");
-  const a1 = agents.get(A.id)!;
+  const a1 = ag(A);
   until(() => (a1.record.queue[0]?.data.collected as number) >= 2, 20 * 120);
   const mid = a1.record.queue[0]?.data.collected as number;
   assert.ok(mid >= 2 && mid < 5, `no meio da tarefa (${mid})`);
   mc.world.afterEvents.playerLeave.fire({ playerId: A.id, playerName: A.name });
   mc.__advance(5);
-  assert.equal(agents.has(A.id), false, "agente descarregado");
+  assert.equal([...agents.keys()].some((k) => k.startsWith(A.id + ":")), false, "agente descarregado");
   assert.equal(bodies().length, 0, "corpo recolhido às sombras");
   mc.world.afterEvents.playerSpawn.fire({ player: A, initialSpawn: true });
   mc.__advance(80);
-  const a2 = agents.get(A.id)!;
+  const a2 = ag(A);
   assert.notEqual(a2, a1, "agente recriado a partir do disco");
   assert.equal(a2.record.queue[0]?.kind, "gather_wood", "tarefa recuperada");
   assert.ok((a2.record.queue[0]?.data.collected as number) >= mid, "progresso recuperado");
   const ok = until(() => logs() >= logsBefore + 5, 20 * 200); // counts logs she already had ("quanto falta")
   assert.ok(ok, `terminou depois de recarregar: ${A.messages.slice(-2).join(" / ")}`);
   assert.equal(bodies().length, 1, "só uma sombra");
+});
+
+test("esquadrão: invoca várias, divide a coleta por especialidade e obedece por nome", () => {
+  A.teleport({ x: 0.5, y: 64, z: 0.5 });
+  mc.__advance(5);
+  run(A, "invocar raven");
+  run(A, "invocar aiko");
+  mc.__advance(60);
+  assert.equal(bodies().length, 3, "Luna + Raven + Aiko");
+  const squad = squadOf(A.id, true);
+  run(A, "pegue 16 troncos");
+  const withWood = squad.filter((m) => m.record.queue[0]?.kind === "gather_wood");
+  assert.ok(withWood.length >= 2, `tarefa dividida entre ${withWood.length}`);
+  const total = withWood.reduce((n, m) => n + (m.record.queue[0].goal.count ?? 0), 0);
+  assert.equal(total, 16, "a soma das partes é exatamente o pedido");
+  run(A, "cancela");
+  assert.ok(squad.every((m) => m.record.queue.length === 0), "cancelar vale para todas");
+  run(A, "todas fiquem aqui");
+  run(A, "raven, me siga");
+  const raven = squad.find((m) => m.persona === "raven")!;
+  const luna = squad.find((m) => m.persona === "luna")!;
+  assert.equal(raven.record.mode, "follow", "ordem com nome vai só para a Raven");
+  assert.equal(luna.record.mode, "stay");
+  run(A, "construa uma casa grande");
+  const aiko = squad.find((m) => m.persona === "aiko")!;
+  assert.equal(aiko.record.queue[0]?.kind, "build", "a construtora lidera a obra");
+  assert.ok(((aiko.record.queue[0]?.data.helpers as string[]) ?? []).length >= 1, "as outras ajudam com material");
+  run(A, "cancela");
+  run(A, "todas me sigam");
+});
+
+test("criaturas: invoca várias, lutam com habilidades e não coletam", () => {
+  run(A, "invocar 2 lobos");
+  run(A, "invocar dragao");
+  mc.__advance(60);
+  assert.equal(beasts().length, 3, "2 lobos + 1 dragão");
+  const dragon = squadOf(A.id, true).find((m) => m.persona === "dragon")!;
+  assert.ok(dragon.body()!.events.includes("shadowbound:species_dragon"), "status de espécie aplicado");
+  run(A, "criaturas, peguem madeira");
+  assert.ok(A.messages.some((m) => m.includes("Criaturas não sabem")), "criatura recusa coletar");
+  const z = dim.spawnEntity("minecraft:zombie", { x: A.location.x + 3, y: 64, z: A.location.z + 1 });
+  mc.__advance(40);
+  assert.ok(z.health!.currentValue < 10 || !z.isValid, "o dragão/Luna atacaram o zumbi");
+  z.applyDamage(999);
+  run(A, "desinvocar criaturas");
+  mc.__advance(40);
+  assert.equal(beasts().length, 0, "criaturas desinvocadas");
+});
+
+test("comida inteligente: sem plantação, caça animais e entrega a carne", () => {
+  run(A, "desinvocar raven e aiko");
+  mc.__advance(40);
+  A.teleport({ x: -100.5, y: 64, z: 100.5 });
+  bodies()[0].teleport({ x: -99.5, y: 64, z: 100.5 });
+  for (let i = 0; i < 3; i++) {
+    const cow = dim.spawnEntity("minecraft:cow", { x: -96.5 + i, y: 64, z: 103.5 });
+    void cow;
+  }
+  mc.__advance(5);
+  const before = A.inventory.count("minecraft:beef");
+  run(A, "consiga 4 de comida");
+  const ok = until(() => ag(A).record.queue.length === 0, 20 * 300);
+  assert.ok(ok, "terminou");
+  assert.ok(A.inventory.count("minecraft:beef") > before, `recebeu carne: ${A.messages.slice(-2).join(" / ")}`);
+});
+
+test("construção sabe buscar o material que falta antes de construir", () => {
+  const a = ag(A);
+  a.inv.remove((s) => /planks|_log/.test(s.id), 999);
+  a.inv.add({ id: "minecraft:oak_planks", n: 40 });
+  A.teleport({ x: 150.5, y: 64, z: 150.5 });
+  bodies()[0].teleport({ x: 151.5, y: 64, z: 150.5 });
+  for (const [tx, tz] of [[143, 147], [158, 147], [143, 160]]) {
+    for (let y = 64; y <= 67; y++) dim.set(tx, y, tz, "minecraft:oak_log");
+    for (let x = tx - 2; x <= tx + 2; x++) for (let z = tz - 2; z <= tz + 2; z++) for (let y = 66; y <= 68; y++) if (!(x === tx && z === tz && y <= 67)) dim.set(x, y, z, "minecraft:oak_leaves");
+  }
+  mc.__advance(5);
+  run(A, "construa uma casinha de madeira");
+  const done = until(() => a.record.queue.length === 0, 20 * 900);
+  assert.ok(done, `terminou: ${A.messages.slice(-3).join(" / ")}`);
+  assert.ok(A.messages.some((m) => /faltam .*troncos/.test(m)), "avisou que ia buscar madeira");
+  assert.ok(A.messages.some((m) => m.includes("pronta")), `casinha pronta: ${A.messages.slice(-3).join(" / ")}`);
 });
 
 test("16) funciona sem internet (nenhuma chamada de rede) e sem erros de script", () => {

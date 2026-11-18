@@ -137,6 +137,13 @@ export class Executor {
     this.genTaskId = undefined;
     a.mover.stop();
     a.setWorkAnim(AnimState.Idle);
+    if (out.ok === "defer") {
+      t.state = "pending";
+      a.record.queue.unshift(...out.before);
+      if (out.msg) say(a, out.msg, { key: "defer" + t.id, force: true });
+      a.markDirty();
+      return;
+    }
     if (out.ok) {
       t.state = "done";
       this.errors = 0;

@@ -5,9 +5,9 @@
  * menus are the input methods. Each word arrives as a separate String parameter.
  */
 import { CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus, Player, system, type StartupEvent } from "@minecraft/server";
-import { agentFor, personaFromText, summon } from "../ai/agent_manager";
-import { handleOrder } from "../ai/brain";
-import { openMain, openOrder } from "./menus";
+import { addressees, beastFromText, dismiss, personaFromText, squadIndex, squadOf, summon } from "../ai/agent_manager";
+import { dispatchOrder } from "../ai/squad";
+import { openMain, openOrder, openSummon } from "./menus";
 
 const WORDS = 16;
 
@@ -35,25 +35,50 @@ export function registerCommands(ev: StartupEvent): void {
 }
 
 function runText(p: Player, text: string): void {
-  const t = text.trim().toLowerCase();
+  const t = text.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   if (t === "menu" || t === "") {
     openMain(p);
     return;
   }
-  const inv = /^(invocar|invoca|chamar|summon)\b/.exec(t);
+  // summon: "/sombra invocar luna", "/sombra invocar 2 lobos", "/sombra invocar dragao"
+  const inv = /^(invocar|invoca|invoque|chamar|chame|summon)\b(.*)$/.exec(t);
   if (inv) {
-    const r = summon(p, personaFromText(t));
-    if (r === "failed") p.sendMessage("§cNão consegui invocar aqui.");
+    const rest = inv[2];
+    const n = Math.max(1, Math.min(10, parseInt((/\b(\d+)\b/.exec(rest) ?? [])[1] ?? "1", 10)));
+    const persona = personaFromText(rest);
+    const beast = beastFromText(rest);
+    if (!persona && !beast) {
+      openSummon(p);
+      return;
+    }
+    for (let i = 0; i < (beast ? n : 1); i++) {
+      const r = summon(p, persona ? { kind: "companion", species: persona } : { kind: "beast", species: beast! });
+      if (r === "full") {
+        p.sendMessage(`§7Esquadrão no máximo (${squadIndex(p.id).settings.maxMembers}). Aumente o limite em Configurações do esquadrão.`);
+        break;
+      }
+      if (r === "failed") {
+        p.sendMessage("§cNão consegui invocar aqui.");
+        break;
+      }
+    }
     return;
   }
-  const a = agentFor(p.id);
-  if (!a || !a.record.active) {
-    p.sendMessage("§7Você ainda não tem uma sombra ativa. Use o §dInvocador das Sombras§7 ou §f/sombra invocar luna§7.");
+  // dismiss: "/sombra desinvocar todos", "/sombra desinvocar lobos"
+  const dis = /^(desinvocar|desinvoca|desinvoque|dispensar|dispense|recolher)\b(.*)$/.exec(t);
+  if (dis) {
+    const { members } = addressees(p.id, dis[2].trim() || "todos");
+    members.forEach((m, i) => dismiss(m, i > 0));
+    return;
+  }
+  if (!squadOf(p.id, true).length) {
+    p.sendMessage("§7Você ainda não tem sombras ativas. Use o §dInvocador das Sombras§7 ou §f/sombra invocar luna§7.");
     return;
   }
   if (t === "ordem") {
-    openOrder(p, a);
+    const first = squadOf(p.id, true)[0];
+    openOrder(p, first);
     return;
   }
-  handleOrder(a, p, text);
+  dispatchOrder(p, text);
 }

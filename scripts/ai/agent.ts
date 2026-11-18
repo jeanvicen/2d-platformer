@@ -4,8 +4,9 @@
  * talk to each other only through it (documented in documentation/ARQUITETURA.md).
  */
 import { Entity, Player, world } from "@minecraft/server";
-import { AnimState, COLORS, PROP_ANIM, TUNING, type Persona } from "../core/constants";
+import { AnimState, BEAST_COLOR, COLORS, PROP_ANIM, TUNING, isPersona } from "../core/constants";
 import { findPlayerById, isValid, maxStack, safe } from "../core/mc";
+import { BEAST_INFO } from "../core/species";
 import type { AgentRecord, Clarification } from "../core/types";
 import { LogicalInventory } from "../inventory/logical_inventory";
 import { saveRecord } from "../memory/memory_manager";
@@ -71,8 +72,18 @@ export class Agent implements Speaker {
   }
 
   // ---- Speaker -------------------------------------------------------------------------
-  get persona(): Persona {
+  get persona(): string {
     return this.record.persona;
+  }
+  /** globally unique: ownerId:memberId */
+  get key(): string {
+    return `${this.record.ownerId}:${this.record.id}`;
+  }
+  get isBeast(): boolean {
+    return this.record.kind === "beast";
+  }
+  get beastSound(): string | undefined {
+    return this.isBeast ? (BEAST_INFO as Record<string, { sound: string }>)[this.persona]?.sound ?? "*grunhido*" : undefined;
   }
   get name(): string {
     return this.record.shadowName;
@@ -109,7 +120,7 @@ export class Agent implements Speaker {
   }
 
   color() {
-    return COLORS[this.persona];
+    return isPersona(this.persona) ? COLORS[this.persona] : BEAST_COLOR;
   }
 
   // ---- body helpers ----------------------------------------------------------------------

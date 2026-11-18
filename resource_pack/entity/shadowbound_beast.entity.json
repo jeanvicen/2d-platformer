@@ -1,0 +1,65 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "shadowbound:beast",
+      "materials": {
+        "default": "entity_alphatest",
+        "glow": "entity_emissive_alpha"
+      },
+      "textures": {
+        "wolf": "textures/entity/shadowbound/beast_wolf",
+        "owl": "textures/entity/shadowbound/beast_owl",
+        "serpent": "textures/entity/shadowbound/beast_serpent",
+        "toad": "textures/entity/shadowbound/beast_toad",
+        "elephant": "textures/entity/shadowbound/beast_elephant",
+        "rabbit": "textures/entity/shadowbound/beast_rabbit",
+        "deer": "textures/entity/shadowbound/beast_deer",
+        "bull": "textures/entity/shadowbound/beast_bull",
+        "tiger": "textures/entity/shadowbound/beast_tiger",
+        "lion": "textures/entity/shadowbound/beast_lion",
+        "dragon": "textures/entity/shadowbound/beast_dragon",
+        "colossus": "textures/entity/shadowbound/beast_colossus"
+      },
+      "geometry": {
+        "wolf": "geometry.shadowbound.beast_wolf",
+        "owl": "geometry.shadowbound.beast_owl",
+        "serpent": "geometry.shadowbound.beast_serpent",
+        "toad": "geometry.shadowbound.beast_toad",
+        "elephant": "geometry.shadowbound.beast_elephant",
+        "rabbit": "geometry.shadowbound.beast_rabbit",
+        "deer": "geometry.shadowbound.beast_deer",
+        "bull": "geometry.shadowbound.beast_bull",
+        "tiger": "geometry.shadowbound.beast_tiger",
+        "lion": "geometry.shadowbound.beast_lion",
+        "dragon": "geometry.shadowbound.beast_dragon",
+        "colossus": "geometry.shadowbound.beast_colossus"
+      },
+      "animations": {
+        "look_at": "animation.shadowbound_beast.look_at",
+        "secondary": "animation.shadowbound_beast.secondary",
+        "idle": "animation.shadowbound_beast.idle",
+        "walk_native": "animation.shadowbound_beast.walk_native",
+        "walk": "animation.shadowbound_beast.walk",
+        "run": "animation.shadowbound_beast.run",
+        "attack": "animation.shadowbound_beast.attack",
+        "cast": "animation.shadowbound_beast.cast",
+        "guard": "animation.shadowbound_beast.guard",
+        "summon": "animation.shadowbound_beast.summon",
+        "despawn": "animation.shadowbound_beast.despawn",
+        "main": "controller.animation.shadowbound_beast.main"
+      },
+      "scripts": {
+        "animate": [
+          "main",
+          "look_at",
+          "secondary"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.shadowbound.beast"
+      ],
+      "enable_attachables": false
+    }
+  }
+}

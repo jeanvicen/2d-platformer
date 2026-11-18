@@ -3,15 +3,17 @@
  * action bar, anti-spam throttle, and a short "talking" face animation.
  */
 import type { Entity, Player } from "@minecraft/server";
-import { COLORS, Mood, PROP_MOOD, type Persona } from "../core/constants";
+import { BEAST_COLOR, COLORS, Mood, PROP_MOOD, isPersona } from "../core/constants";
 import { safe, isValid } from "../core/mc";
 import { phrase } from "./phrases";
 
 const lastSent = new Map<string, number>();
 
 export interface Speaker {
-  persona: Persona;
+  persona: string;
   name: string;
+  /** set for beasts: they make this sound instead of talking */
+  beastSound?: string;
   owner(): Player | undefined;
   body(): Entity | undefined;
   chatEnabled(): boolean;
@@ -20,11 +22,11 @@ export interface Speaker {
 export function say(sp: Speaker, text: string, opts: { key?: string; throttleMs?: number; force?: boolean } = {}): void {
   const owner = sp.owner();
   if (!owner) return;
-  const tkey = owner.id + (opts.key ?? text);
+  const tkey = owner.id + sp.name + (opts.key ?? text);
   const now = Date.now();
   if (!opts.force && opts.throttleMs && (lastSent.get(tkey) ?? 0) + opts.throttleMs > now) return;
   lastSent.set(tkey, now);
-  const c = COLORS[sp.persona];
+  const c = isPersona(sp.persona) ? COLORS[sp.persona] : BEAST_COLOR;
   const msg = `${c.tag}[${sp.name}]§r ${text}`;
   if (sp.chatEnabled() || opts.force) safe(() => owner.sendMessage(msg), undefined);
   else safe(() => owner.onScreenDisplay.setActionBar(msg), undefined);
@@ -32,13 +34,13 @@ export function say(sp: Speaker, text: string, opts: { key?: string; throttleMs?
 }
 
 export function sayKey(sp: Speaker, key: string, x?: string | number, opts: { throttleMs?: number; force?: boolean } = {}): void {
-  say(sp, phrase(sp.persona, key, x), { key, ...opts });
+  say(sp, phrase(sp.persona, key, x, sp.beastSound), { key, ...opts });
 }
 
 export function actionBar(sp: Speaker, text: string): void {
   const owner = sp.owner();
   if (!owner) return;
-  safe(() => owner.onScreenDisplay.setActionBar(`${COLORS[sp.persona].tag}${sp.name}:§r ${text}`), undefined);
+  safe(() => owner.onScreenDisplay.setActionBar(`${(isPersona(sp.persona) ? COLORS[sp.persona] : BEAST_COLOR).tag}${sp.name}:§r ${text}`), undefined);
 }
 
 const talkUntil = new Map<string, number>();

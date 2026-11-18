@@ -260,9 +260,13 @@ export class Dimension {
   }
   spawnEntity(id: string, loc: any) {
     const e = new Entity(id, this, { ...loc });
-    if (id === "shadowbound:companion") {
-      e.health = { currentValue: 40, effectiveMax: 40, setCurrentValue: (v: number) => ((e.health!.currentValue = v), true) };
-      e.props = { "shadowbound:anim": 0, "shadowbound:persona": 0, "shadowbound:mood": 0 };
+    if (id === "shadowbound:companion" || id === "shadowbound:beast") {
+      const max = id === "shadowbound:beast" ? 60 : 40;
+      e.health = { currentValue: max, effectiveMax: max, setCurrentValue: (v: number) => ((e.health!.currentValue = v), true) };
+      e.props = { "shadowbound:anim": 0, "shadowbound:persona": 0, "shadowbound:mood": 0, "shadowbound:species": 0 };
+    }
+    if (id === "minecraft:cow" || id === "minecraft:zombie") {
+      e.health = { currentValue: 10, effectiveMax: 10, setCurrentValue: (v: number) => ((e.health!.currentValue = v), true) };
     }
     entities.push(e);
     world.afterEvents.entitySpawn.fire({ entity: e, cause: "Spawned" });
@@ -286,7 +290,7 @@ function dist(a: any, b: any) {
   return Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
 }
 function families(e: Entity): string[] {
-  if (e.typeId === "shadowbound:companion") return ["shadowbound", "companion", "mob"];
+  if (e.typeId === "shadowbound:companion" || e.typeId === "shadowbound:beast") return ["shadowbound", "companion", "mob"];
   if (e.typeId === "minecraft:zombie") return ["zombie", "monster", "mob"];
   if (e.typeId === "minecraft:player") return ["player"];
   if (e.typeId === "minecraft:cow") return ["cow", "mob"];
@@ -366,8 +370,17 @@ export class Entity {
     }
     return true;
   }
-  addEffect() {
+  effects: string[] = [];
+  addEffect(name: string) {
+    this.effects.push(name);
     return undefined;
+  }
+  applyImpulse() {}
+  extinguishFire() {
+    return true;
+  }
+  setOnFire() {
+    return true;
   }
   runCommand(c: string) {
     this.commands.push(c);

@@ -491,8 +491,9 @@ class Atlas:
         return pos
 
 
-def build_model(persona: str, bones: list) -> tuple:
-    atlas = Atlas(TEX_W * SCALE, TEX_H * SCALE)
+def build_model(persona: str, bones: list, tex: int = TEX_W, scale: int = SCALE, bounds: tuple = (3, 3.5)) -> tuple:
+    SCALE = scale  # noqa: N806 (local override for this model)
+    atlas = Atlas(tex * scale, tex * scale)
     # collect faces, pack tallest first for density
     jobs = []
     for b in bones:
@@ -543,11 +544,11 @@ def build_model(persona: str, bones: list) -> tuple:
         "minecraft:geometry": [{
             "description": {
                 "identifier": f"geometry.shadowbound.{persona}",
-                "texture_width": TEX_W,
-                "texture_height": TEX_H,
-                "visible_bounds_width": 3,
-                "visible_bounds_height": 3.5,
-                "visible_bounds_offset": [0, 1.5, 0],
+                "texture_width": tex,
+                "texture_height": tex,
+                "visible_bounds_width": bounds[0],
+                "visible_bounds_height": bounds[1],
+                "visible_bounds_offset": [0, bounds[1] / 2, 0],
             },
             "bones": geo_bones,
         }],
@@ -1033,6 +1034,499 @@ def persona_yuki() -> list:
     return bones
 
 
+
+# --------------------------------------------------------------------------------------
+# New companions: Hana (farmer) and Aiko (builder)
+# --------------------------------------------------------------------------------------
+def persona_hana() -> list:
+    """Hana: cheerful farmer. Brown twin braids, amber eyes, straw hat, green overall dress, basket."""
+    st = FaceStyle(skin=hexc("#fbe0cf"), iris_dark=hexc("#8a4b12"), iris_light=hexc("#ffc46b"))
+    hair_c = hexc("#7a4a2a")
+    green = hexc("#3f7d4a")
+    blouse = hexc("#f6f1e6")
+    straw = hexc("#e8c46a")
+
+    def top(img: Image.Image, face: str) -> None:
+        flat(blouse, 1.05, 0.85)(img, face)
+        w, h = img.size
+        d = ImageDraw.Draw(img)
+        if face in ("north", "south"):
+            d.rectangle([4, int(h * 0.35), w - 5, h], fill=green)          # overall bib
+            d.rectangle([4, 0, 7, int(h * 0.35)], fill=green)               # straps
+            d.rectangle([w - 8, 0, w - 5, int(h * 0.35)], fill=green)
+            if face == "north":
+                d.rectangle([w // 2 - 4, int(h * 0.5), w // 2 + 4, int(h * 0.7)], fill=shade(green, 0.8))  # pocket
+                for x in (5, w - 7):
+                    d.ellipse([x, int(h * 0.33), x + 2, int(h * 0.33) + 2], fill=hexc("#ffd36b"))
+        elif face in ("east", "west"):
+            d.rectangle([0, int(h * 0.35), w, h], fill=green)
+
+    def arm(img: Image.Image, face: str) -> None:
+        flat(blouse, 1.05, 0.85)(img, face)
+        if face not in ("up", "down"):
+            w, h = img.size
+            ImageDraw.Draw(img).rectangle([0, h - 3, w, h - 1], fill=hexc("#e2d6c2"))   # rolled sleeves
+
+    bones: list = []
+    by = common_body(bones, st, hair_c, top, arm, skin(st.skin), skin(st.skin), boots(hexc("#6b4428"), hexc("#3b2416"), None))
+    sk = Bone("skirt", (0, 12, 0), "waist")
+    bones.append(sk)
+    sk.cubes.append(Cube((-4.0, 7.0, -2.5), (8.0, 5.0, 5.0), long_skirt(green, shade(green, 0.7), False)))
+    bangs = Bone("bangs", (0, 28, -4.5), "head")
+    bones.append(bangs)
+    bangs.cubes.append(Cube((-4.8, 25.0, -4.95), (9.6, 4.2, 0.45), jagged_bangs(hair_c, seed=101), faces=("north", "up", "east", "west")))
+    for sx in (-1, 1):
+        br = Bone("lock_r" if sx < 0 else "lock_l", (sx * 4.2, 24, 0), "head")
+        bones.append(br)
+        x0 = -5.6 if sx < 0 else 3.6
+        br.cubes.append(Cube((x0, 13.0, -1.0), (2.0, 11.0, 2.0), hair(hair_c, seed=110 + sx)))        # braid
+        br.cubes.append(Cube((x0 + 0.2, 12.2, -0.8), (1.6, 1.0, 1.6), flat(hexc("#d94b4b"), 1.2, 0.8)))  # ribbon
+    back = Bone("hair_back", (0, 28.5, 4.6), "head")
+    bones.append(back)
+    back.cubes.append(Cube((-4.8, 19.5, 3.9), (9.6, 9.0, 1.2), hair(hair_c, seed=112)))
+    hat = Bone("hat", (0, 29, 0), "head", rotation=(-4, 0, -3))
+    bones.append(hat)
+
+    def straw_paint(img: Image.Image, face: str) -> None:
+        w, h = img.size
+        d = ImageDraw.Draw(img)
+        d.rectangle([0, 0, w, h], fill=straw)
+        for x in range(0, w, 3):
+            d.line([x, 0, x, h], fill=shade(straw, 0.85))
+        for y in range(0, h, 3):
+            d.line([0, y, w, y], fill=shade(straw, 0.9))
+    hat.cubes.append(Cube((-8.0, 28.6, -8.0), (16, 0.6, 16), straw_paint))
+    hat.cubes.append(Cube((-4.4, 29.2, -4.4), (8.8, 3.0, 8.8), straw_paint))
+    hat.cubes.append(Cube((-4.5, 29.2, -4.5), (9.0, 1.0, 9.0), flat(hexc("#d94b4b"), 1.2, 0.8), faces=("north", "south", "east", "west")))
+    basket = Bone("broom", (0, 15.5, 2.6), "body")
+    bones.append(basket)
+
+    def wicker(img: Image.Image, face: str) -> None:
+        w, h = img.size
+        d = ImageDraw.Draw(img)
+        d.rectangle([0, 0, w, h], fill=hexc("#a8743c"))
+        for y in range(0, h, 3):
+            d.line([0, y, w, y], fill=hexc("#7d5226"))
+        for x in range(0, w, 4):
+            d.line([x, 0, x, h], fill=hexc("#c99256"))
+    basket.cubes.append(Cube((-3.0, 12.0, 2.1), (6.0, 6.0, 3.0), wicker))
+    basket.cubes.append(Cube((-2.6, 17.6, 2.6), (1.0, 1.4, 2.0), flat(hexc("#ff6b6b"), 1.2, 0.8)))   # apples
+    basket.cubes.append(Cube((1.0, 17.6, 2.6), (1.2, 1.2, 1.8), flat(hexc("#ffb347"), 1.2, 0.8)))
+    return bones
+
+
+def persona_aiko() -> list:
+    """Aiko: energetic builder. Short orange hair, goggles, navy-orange work jacket, tool belt, hammer."""
+    st = FaceStyle(skin=hexc("#fde1d0"), iris_dark=hexc("#1d4f8a"), iris_light=hexc("#8cc8ff"))
+    hair_c = hexc("#f08a3c")
+    navy = hexc("#243453")
+    orange = hexc("#ff8c2b")
+    yellow = hexc("#ffd84d")
+
+    def top(img: Image.Image, face: str) -> None:
+        flat(navy, 1.15, 0.8)(img, face)
+        w, h = img.size
+        d = ImageDraw.Draw(img)
+        if face in ("north", "south", "east", "west"):
+            d.rectangle([0, int(h * 0.45), w, int(h * 0.45) + 2], fill=yellow)   # reflective stripe
+        if face == "north":
+            d.line([w // 2, 0, w // 2, h], fill=shade(navy, 0.7))
+            d.rectangle([0, 0, w, 2], fill=orange)
+            d.rectangle([0, h - 5, w, h - 2], fill=hexc("#6b4a2a"))                # tool belt
+            d.rectangle([3, h - 6, 6, h - 1], fill=hexc("#9e9e9e"))                # wrench
+        elif face == "south":
+            d.rectangle([0, h - 5, w, h - 2], fill=hexc("#6b4a2a"))
+
+    def arm(img: Image.Image, face: str) -> None:
+        flat(orange, 1.1, 0.8)(img, face)
+        if face not in ("up", "down"):
+            w, h = img.size
+            ImageDraw.Draw(img).rectangle([0, int(h * 0.5), w, int(h * 0.5) + 1], fill=yellow)
+
+    def gloves(img: Image.Image, face: str) -> None:
+        flat(hexc("#c79b52"), 1.1, 0.8)(img, face)
+
+    bones: list = []
+    by = common_body(bones, st, hair_c, top, arm, gloves, flat(navy, 1.1, 0.8), boots(hexc("#4a3524"), hexc("#20160e"), yellow))
+    shorts = Bone("skirt", (0, 12, 0), "waist")
+    bones.append(shorts)
+    shorts.cubes.append(Cube((-3.7, 8.6, -1.9), (7.4, 2.8, 3.8), flat(hexc("#1b2740"), 1.1, 0.8)))
+    bangs = Bone("bangs", (0, 28, -4.5), "head")
+    bones.append(bangs)
+    bangs.cubes.append(Cube((-4.8, 25.2, -4.95), (9.6, 4.0, 0.45), jagged_bangs(hair_c, seed=121, sweep=0.4), faces=("north", "up", "east", "west")))
+    for sx in (-1, 1):
+        lk = Bone("lock_r" if sx < 0 else "lock_l", (sx * 4.6, 27, -2.5), "head")
+        bones.append(lk)
+        x0 = -5.4 if sx < 0 else 4.4
+        lk.cubes.append(Cube((x0, 20.5, -4.0), (1.0, 7.0, 3.0), hair(hair_c, seed=123 + sx)))
+    back = Bone("hair_back", (0, 28.5, 4.6), "head")
+    bones.append(back)
+    back.cubes.append(Cube((-4.9, 21.0, 3.9), (9.8, 8.0, 1.2), hair(hair_c, seed=126)))
+    gog = Bone("hairpin", (0, 28, 0), "head")
+    bones.append(gog)
+    gog.cubes.append(Cube((-4.9, 27.2, -4.9), (9.8, 1.0, 9.8), flat(hexc("#3a3a3a"), 1.2, 0.8), faces=("north", "south", "east", "west")))
+
+    def lens(img: Image.Image, face: str) -> None:
+        w, h = img.size
+        d = ImageDraw.Draw(img)
+        d.rectangle([0, 0, w, h], fill=hexc("#7a5a2a"))
+        d.ellipse([1, 1, w - 2, h - 2], fill=hexc("#7fd6ff"))
+        d.point([2, 2], fill=hexc("#ffffff"))
+    gog.cubes.append(Cube((-3.6, 27.0, -5.3), (3.0, 1.6, 0.5), lens, faces=("north",)))
+    gog.cubes.append(Cube((0.6, 27.0, -5.3), (3.0, 1.6, 0.5), lens, faces=("north",)))
+    ham = Bone("broom", (0, 15.5, 2.6), "body", rotation=(0, 0, -30))
+    bones.append(ham)
+    ham.cubes.append(Cube((-0.5, 7.0, 2.3), (1.0, 11.0, 1.0), flat(hexc("#8a5a35"), 1.2, 0.7)))
+    ham.cubes.append(Cube((-2.2, 17.0, 1.8), (4.4, 2.4, 2.0), flat(hexc("#9aa0a8"), 1.3, 0.7)))
+    return bones
+
+
+# --------------------------------------------------------------------------------------
+# Shadow beasts
+# --------------------------------------------------------------------------------------
+SHADOW = hexc("#211a30")
+SHADOW_LIGHT = hexc("#352a52")
+RUNE = hexc("#8a5cff")
+
+
+def shadow_fur(base: Color = SHADOW, rune: Color = RUNE, seed: int = 1, stripes: Optional[Color] = None) -> Painter:
+    def p(img: Image.Image, face: str) -> None:
+        w, h = img.size
+        d = ImageDraw.Draw(img)
+        d.rectangle([0, 0, w, h], fill=base)
+        rnd = random.Random(seed * 31 + len(face) * 7 + w)
+        # soft fur strokes instead of noise
+        for _ in range(w * h // 14):
+            x, y = rnd.randrange(w), rnd.randrange(h)
+            d.line([x, y, x, min(h - 1, y + 2)], fill=shade(base, rnd.choice((0.82, 1.12, 1.18))))
+        d.line([0, 0, w, 0], fill=shade(base, 1.2))
+        if face == "up":
+            d.rectangle([0, 0, w, h], outline=SHADOW_LIGHT)
+        if face == "down":
+            d.rectangle([0, 0, w, h], fill=shade(base, 0.7))
+            return
+        if stripes is not None and face in ("east", "west", "up"):
+            for x in range(2, w, 6):
+                d.line([x, 0, x + rnd.randint(-2, 2), int(h * 0.7)], fill=stripes, width=2)
+        if face in ("east", "west") and w > 8 and h > 6:
+            y = int(h * 0.55)
+            pts = [(int(w * 0.15), y)]
+            for i in range(1, 5):
+                pts.append((int(w * (0.15 + 0.17 * i)), y + rnd.choice((-2, 0, 2))))
+            d.line(pts, fill=rune, width=1)
+    return p
+
+
+def beast_eyes(color: Color, eye_w: float = 0.2, y: float = 0.38, gap: float = 0.24) -> Painter:
+    """Head front: shadow fur + two glowing eyes."""
+    base = shadow_fur(seed=7)
+
+    def p(img: Image.Image, face: str) -> None:
+        base(img, face)
+        if face != "north":
+            return
+        w, h = img.size
+        d = ImageDraw.Draw(img)
+        ew = max(2, int(w * eye_w))
+        eh = max(2, int(ew * 0.6))
+        cy = int(h * y)
+        for cx in (int(w * (0.5 - gap)), int(w * (0.5 + gap))):
+            d.ellipse([cx - ew // 2 - 1, cy - eh // 2 - 1, cx + ew // 2 + 1, cy + eh // 2 + 1], fill=shade(color, 0.5))
+            d.ellipse([cx - ew // 2, cy - eh // 2, cx + ew // 2, cy + eh // 2], fill=color)
+            d.point([cx - 1, cy - 1], fill=hexc("#ffffff"))
+    return p
+
+
+def glow_plane(color: Color) -> Painter:
+    def p(img: Image.Image, face: str) -> None:
+        w, h = img.size
+        d = ImageDraw.Draw(img)
+        d.rectangle([0, 0, w, h], fill=(color[0], color[1], color[2], 120))
+    p.is_glow = True  # type: ignore[attr-defined]
+    return p
+
+
+def split_glow(bones: list) -> list:
+    """Move glowing planes into their own 'glow_eyes' bones (emissive material in the render controller)."""
+    out = list(bones)
+    n = 0
+    for b in bones:
+        glow = [c for c in b.cubes if getattr(c.paint, "is_glow", False)]
+        if not glow:
+            continue
+        b.cubes = [c for c in b.cubes if not getattr(c.paint, "is_glow", False)]
+        g = Bone("glow_eyes" if n == 0 else f"glow_eyes{n}", b.pivot, b.name)
+        g.cubes = glow
+        out.append(g)
+        n += 1
+    return out
+
+
+def ivory() -> Painter:
+    return flat(hexc("#e9e2d0"), 1.15, 0.8)
+
+
+def quad(bones: list, L: float, W: float, H: float, legH: float, legW: float, head: float, eye: Color,
+         snout: tuple = (0, 0, 0), tail: float = 0, tail_w: float = 2, stripes: Optional[Color] = None, neck: float = 0) -> dict:
+    """Generic four-legged shadow animal facing north (-z). Returns bones by name."""
+    by = {}
+
+    def add(b: Bone) -> Bone:
+        bones.append(b)
+        by[b.name] = b
+        return b
+    add(Bone("root", (0, 0, 0)))
+    body = add(Bone("body", (0, legH + H / 2, 0), "root"))
+    body.cubes.append(Cube((-W / 2, legH, -L / 2), (W, H, L), shadow_fur(seed=2, stripes=stripes)))
+    hy = legH + H * 0.45 + neck
+    hz = -L / 2 - head * 0.6
+    hd = add(Bone("head", (0, legH + H * 0.7, -L / 2 + 1), "body"))
+    if neck:
+        hd.cubes.append(Cube((-W * 0.22, legH + H * 0.5, -L / 2 - 2), (W * 0.44, neck + 2, 4), shadow_fur(seed=3, stripes=stripes)))
+    hd.cubes.append(Cube((-head / 2, hy, hz - head / 2), (head, head * 0.85, head), only(("north",), beast_eyes(eye), shadow_fur(seed=4))))
+    if snout[0]:
+        sw, sh, sl = snout
+        hd.cubes.append(Cube((-sw / 2, hy, hz - head / 2 - sl), (sw, sh, sl), shadow_fur(seed=5)))
+    # glowing eye overlay (emissive material in the render controller)
+    hd.cubes.append(Cube((-head * 0.35, hy + head * 0.85 * 0.5, hz - head / 2 - 0.05), (head * 0.7, head * 0.2, 0), glow_plane(eye), faces=("north",)))
+    by["head"].name = "head"
+    lx = W / 2 - legW / 2 - 0.2
+    lz = L / 2 - legW / 2 - 0.4
+    for name, x, z in (("leg_fl", -lx, -lz), ("leg_fr", lx, -lz), ("leg_bl", -lx, lz), ("leg_br", lx, lz)):
+        lg = add(Bone(name, (x, legH, z), "root"))
+        lg.cubes.append(Cube((x - legW / 2, 0, z - legW / 2), (legW, legH + 0.5, legW), shadow_fur(seed=6, stripes=stripes)))
+    if tail:
+        tl = add(Bone("tail", (0, legH + H * 0.8, L / 2), "body", rotation=(-35, 0, 0)))
+        tl.cubes.append(Cube((-tail_w / 2, legH + H * 0.8 - tail_w / 2, L / 2), (tail_w, tail_w, tail), shadow_fur(seed=8, stripes=stripes)))
+    return by
+
+
+def beast_wolf() -> list:
+    b: list = []
+    by = quad(b, 14, 7, 7, 8, 2.6, 7, hexc("#e8dcff"), snout=(3.4, 3, 3.6), tail=9, tail_w=2.4)
+    for sx in (-1, 1):
+        by["head"].cubes.append(Cube((sx * 2.2 - 1, 8 + 7 * 0.45 + 7 * 0.85, -7 - 4.2 - 0.6), (2, 3, 1.2), shadow_fur(seed=9)))
+    # neck ruff
+    by["body"].cubes.append(Cube((-4.2, 9.5, -7.6), (8.4, 6.5, 4.0), shadow_fur(base=SHADOW_LIGHT, seed=10)))
+    return b
+
+
+def beast_tiger() -> list:
+    b: list = []
+    by = quad(b, 24, 10, 10, 10, 3.6, 9, hexc("#ffd36b"), snout=(5, 4, 3), tail=16, tail_w=2.4, stripes=hexc("#6b46c9"))
+    for sx in (-1, 1):
+        by["head"].cubes.append(Cube((sx * 3 - 1, 10 + 4.5 + 7.65, -12 - 5.4 - 0.5), (2, 2, 1), shadow_fur(seed=11)))
+    return b
+
+
+def beast_lion() -> list:
+    b: list = []
+    by = quad(b, 24, 10, 11, 10, 3.6, 9, hexc("#ffcf5a"), snout=(5, 4, 3), tail=15, tail_w=2)
+    hy = 10 + 11 * 0.45
+    by["head"].cubes.append(Cube((-8, hy - 3, -12 - 2), (16, 14, 6), shadow_fur(base=hexc("#2a1846"), seed=12)))     # mane
+    by["tail"].cubes.append(Cube((-2, 10 + 11 * 0.8 - 2, 12 + 13), (4, 4, 4), shadow_fur(base=hexc("#2a1846"), seed=13)))
+    return b
+
+
+def beast_bull() -> list:
+    b: list = []
+    by = quad(b, 20, 12, 12, 9, 4, 9, hexc("#ff6b6b"), snout=(6, 5, 3), tail=10, tail_w=1.5)
+    hy = 9 + 12 * 0.45 + 9 * 0.85 - 2
+    for sx in (-1, 1):
+        by["head"].cubes.append(Cube((sx * 4.5 - (2.5 if sx < 0 else 0), hy, -10 - 5.4 - 1), (2.5, 2, 2), ivory()))
+        by["head"].cubes.append(Cube((sx * 6 - (1.5 if sx < 0 else 0) + (0 if sx < 0 else 0.5), hy + 1.5, -10 - 5.4 - 1), (1.5, 4, 1.5), ivory()))
+    by["body"].cubes.append(Cube((-6.5, 9 + 6, -10 - 1), (13, 8, 8), shadow_fur(base=SHADOW_LIGHT, seed=14)))     # hump
+    return b
+
+
+def beast_deer() -> list:
+    b: list = []
+    by = quad(b, 16, 7, 8, 14, 2.2, 6, hexc("#9dffcf"), snout=(3, 3, 3), tail=3, tail_w=2, neck=8)
+    hy = 14 + 8 * 0.45 + 8 + 6 * 0.85
+    for sx in (-1, 1):
+        x = sx * 1.6 - 0.5
+        by["head"].cubes.append(Cube((x, hy, -8 - 3.6), (1, 6, 1), flat(hexc("#c8b8ff"), 1.3, 0.8)))
+        by["head"].cubes.append(Cube((x + sx * 1.5 - (0 if sx > 0 else 0.5), hy + 4, -8 - 3.6), (2, 1, 1), flat(hexc("#c8b8ff"), 1.3, 0.8)))
+        by["head"].cubes.append(Cube((x, hy + 3, -8 - 5), (1, 1, 2), flat(hexc("#c8b8ff"), 1.3, 0.8)))
+    return b
+
+
+def beast_rabbit() -> list:
+    b: list = []
+    by = quad(b, 7, 5, 5, 3, 1.6, 4.5, hexc("#ffe3f1"), snout=(2, 1.6, 1), tail=0)
+    hy = 3 + 5 * 0.45 + 4.5 * 0.85
+    for sx in (-1, 1):
+        ear = Bone("ear_l" if sx > 0 else "ear_r", (sx * 1.2, hy, -3.5 - 2.7), "head", rotation=(-10, 0, sx * 10))
+        b.append(ear)
+        ear.cubes.append(Cube((sx * 1.2 - 0.6, hy, -3.5 - 3.2), (1.2, 6, 1.6), shadow_fur(seed=15)))
+    by["body"].cubes.append(Cube((-1.2, 5.5, 3.5), (2.4, 2.4, 2), flat(hexc("#e8e0ff"), 1.2, 0.8)))
+    return b
+
+
+def beast_elephant() -> list:
+    b: list = []
+    by = quad(b, 30, 20, 18, 16, 6.5, 14, hexc("#bfe3ff"), tail=8, tail_w=1.6)
+    hy = 16 + 18 * 0.45
+    hz = -15 - 14 * 0.6
+    for sx in (-1, 1):
+        ear = Bone("ear_l" if sx > 0 else "ear_r", (sx * 7, hy + 8, hz), "head")
+        b.append(ear)
+        ear.cubes.append(Cube((sx * 7 - (13 if sx < 0 else 0), hy, hz - 1), (13, 13, 1.5), shadow_fur(base=SHADOW_LIGHT, seed=16)))
+        by["head"].cubes.append(Cube((sx * 4 - (1.5 if sx < 0 else 0), hy - 3, hz - 7 - 4), (1.5, 1.5, 6), ivory()))     # tusks
+    prev = "head"
+    y = hy + 2
+    for i, (w, h) in enumerate(((5, 5), (4, 5), (3.4, 5), (3, 4))):
+        seg = Bone(f"trunk{i}", (0, y, hz - 7), prev)
+        b.append(seg)
+        seg.cubes.append(Cube((-w / 2, y - h, hz - 7 - w / 2), (w, h, w), shadow_fur(seed=17 + i)))
+        prev = seg.name
+        y -= h
+    return b
+
+
+def beast_toad() -> list:
+    b: list = []
+    b.append(Bone("root", (0, 0, 0)))
+    body = Bone("body", (0, 6, 0), "root")
+    b.append(body)
+    body.cubes.append(Cube((-8, 2, -7), (16, 9, 14), shadow_fur(base=hexc("#1c1f24"), seed=18)))
+    head = Bone("head", (0, 8, -7), "body")
+    b.append(head)
+    head.cubes.append(Cube((-7.5, 4, -12), (15, 7, 6), only(("north",), beast_eyes(hexc("#ffe066"), eye_w=0.12, y=0.25, gap=0.3), shadow_fur(seed=19))))
+    head.cubes.append(Cube((-7, 3.6, -12.05), (14, 0.8, 0), flat(hexc("#ff7a9c"), 1.2, 0.8), faces=("north",)))    # mouth line
+    for sx in (-1, 1):
+        head.cubes.append(Cube((sx * 4.5 - 1.5, 11, -10), (3, 2.5, 3), only(("north",), beast_eyes(hexc("#ffe066"), eye_w=0.6, y=0.5, gap=0.0), shadow_fur(seed=20))))
+    head.cubes.append(Cube((-3, 11.4, -9.6), (6, 0.6, 0), glow_plane(hexc("#ffe066")), faces=("north",)))
+    for name, x, z, w, h in (("leg_fl", -6, -6, 3, 4), ("leg_fr", 6, -6, 3, 4), ("leg_bl", -8, 4, 5, 6), ("leg_br", 8, 4, 5, 6)):
+        lg = Bone(name, (x, 4, z), "root")
+        b.append(lg)
+        lg.cubes.append(Cube((x - w / 2, 0, z - w / 2), (w, h, w + 2), shadow_fur(seed=21)))
+    return b
+
+
+def beast_owl() -> list:
+    b: list = []
+    b.append(Bone("levitate", (0, 0, 0)))
+    b.append(Bone("root", (0, 0, 0), "levitate"))
+    body = Bone("body", (0, 12, 0), "root")
+    b.append(body)
+    body.cubes.append(Cube((-6, 5, -5), (12, 14, 10), shadow_fur(base=hexc("#1d1730"), seed=22)))
+    body.cubes.append(Cube((-4.5, 6, -5.05), (9, 10, 0), flat(hexc("#3a2d63"), 1.2, 0.8), faces=("north",)))        # chest
+    head = Bone("head", (0, 19, 0), "body")
+    b.append(head)
+    head.cubes.append(Cube((-6.5, 19, -6), (13, 10, 11), only(("north",), beast_eyes(hexc("#ffd36b"), eye_w=0.24, y=0.45, gap=0.22), shadow_fur(seed=23))))
+    head.cubes.append(Cube((-1, 21, -7.5), (2, 3, 1.5), flat(hexc("#c9a24a"), 1.2, 0.8)))                        # beak
+    head.cubes.append(Cube((-4.2, 23.5, -6.05), (8.4, 1.6, 0), glow_plane(hexc("#ffd36b")), faces=("north",)))
+    for sx in (-1, 1):
+        head.cubes.append(Cube((sx * 4.5 - 1, 29, -3), (2, 3, 2), shadow_fur(seed=24)))                            # ear tufts
+        wing = Bone("wing_l" if sx > 0 else "wing_r", (sx * 6, 18, 0), "body")
+        b.append(wing)
+        wing.cubes.append(Cube((sx * 6 - (1.5 if sx < 0 else 0), 6, -4), (1.5, 13, 9), shadow_fur(base=hexc("#251c3d"), seed=25)))
+        leg = Bone("leg_fl" if sx < 0 else "leg_fr", (sx * 2.5, 5, 0), "root")
+        b.append(leg)
+        leg.cubes.append(Cube((sx * 2.5 - 1, 2, -1), (2, 3.5, 2), flat(hexc("#c9a24a"), 1.2, 0.8)))
+    tail = Bone("tail", (0, 7, 5), "body", rotation=(30, 0, 0))
+    b.append(tail)
+    tail.cubes.append(Cube((-3, 2, 4), (6, 6, 1.5), shadow_fur(seed=26)))
+    return b
+
+
+def beast_serpent() -> list:
+    b: list = []
+    b.append(Bone("root", (0, 0, 0)))
+    head = Bone("head", (0, 6, -6), "root", rotation=(-10, 0, 0))
+    b.append(head)
+    head.cubes.append(Cube((-5, 3, -16), (10, 6, 10), only(("north",), beast_eyes(hexc("#9dff7a"), eye_w=0.18, y=0.3, gap=0.28), shadow_fur(base=hexc("#14201a"), seed=27))))
+    head.cubes.append(Cube((-4, 1, -15), (8, 2, 8), shadow_fur(base=hexc("#14201a"), seed=28)))                    # jaw
+    for sx in (-1, 1):
+        head.cubes.append(Cube((sx * 2.5 - 0.4, 0.2, -15.6), (0.8, 2, 0.8), ivory()))                              # fangs
+    head.cubes.append(Cube((-3.5, 6.8, -16.05), (7, 1.2, 0), glow_plane(hexc("#9dff7a")), faces=("north",)))
+    prev = "root"
+    z = -6
+    for i in range(7):
+        w = 7 - i * 0.6
+        seg = Bone(f"seg{i}", (0, 3, z), prev)
+        b.append(seg)
+        seg.cubes.append(Cube((-w / 2, 0, z), (w, w * 0.85, 7), shadow_fur(base=hexc("#14201a"), seed=29 + i, rune=hexc("#5cff9d"))))
+        prev = seg.name
+        z += 7
+    b.append(Bone("body", (0, 3, 0), "root"))
+    return b
+
+
+def beast_dragon() -> list:
+    b: list = []
+    eye = hexc("#ff4d6d")
+    by = quad(b, 26, 14, 12, 12, 4, 0.01, eye, tail=0)
+    # replace the tiny head with neck + head chain
+    by["head"].cubes.clear()
+    neck = Bone("neck", (0, 20, -13), "body", rotation=(30, 0, 0))
+    b.append(neck)
+    neck.cubes.append(Cube((-3, 18, -21), (6, 6, 9), shadow_fur(base=hexc("#1a1022"), seed=31)))
+    dh = Bone("dhead", (0, 21, -21), "neck", rotation=(-25, 0, 0))
+    b.append(dh)
+    dh.cubes.append(Cube((-4.5, 18, -32), (9, 7, 11), only(("north",), beast_eyes(eye, eye_w=0.16, y=0.3, gap=0.3), shadow_fur(base=hexc("#1a1022"), seed=32))))
+    dh.cubes.append(Cube((-3.5, 15.5, -31), (7, 2.5, 9), shadow_fur(base=hexc("#1a1022"), seed=33)))                 # jaw
+    dh.cubes.append(Cube((-3.2, 23.2, -32.05), (6.4, 1.2, 0), glow_plane(eye), faces=("north",)))
+    for sx in (-1, 1):
+        dh.cubes.append(Cube((sx * 3 - 0.75, 25, -25), (1.5, 5, 1.5), ivory()))                                    # horns
+        wing = Bone("wing_l" if sx > 0 else "wing_r", (sx * 7, 23, -6), "body")
+        b.append(wing)
+        x0 = sx * 7 - (26 if sx < 0 else 0)
+        wing.cubes.append(Cube((x0, 23, -8), (26, 1, 3), shadow_fur(base=hexc("#251536"), seed=34)))             # arm bone
+        wing.cubes.append(Cube((x0 + (0 if sx > 0 else 1), 22.6, -5), (25, 0.6, 16), flat(hexc("#3a1f5c"), 1.2, 0.8)))  # membrane
+    prev = "body"
+    z = 13
+    for i in range(4):
+        w = 6 - i * 1.2
+        seg = Bone(f"tail{i}" if i else "tail", (0, 16, z), prev)
+        b.append(seg)
+        seg.cubes.append(Cube((-w / 2, 16 - w / 2, z), (w, w, 8), shadow_fur(base=hexc("#1a1022"), seed=35 + i, rune=hexc("#ff6b9c"))))
+        prev = seg.name
+        z += 8
+    for i in range(5):
+        by["body"].cubes.append(Cube((-0.75, 24, -10 + i * 5), (1.5, 2.5, 2), ivory()))                             # spines
+    return b
+
+
+def beast_colossus() -> list:
+    b: list = []
+    b.append(Bone("root", (0, 0, 0)))
+    body = Bone("body", (0, 34, 0), "root")
+    b.append(body)
+    body.cubes.append(Cube((-10, 22, -6), (20, 20, 12), shadow_fur(base=hexc("#120e1a"), seed=41)))
+
+    def core(img: Image.Image, face: str) -> None:
+        w, h = img.size
+        d = ImageDraw.Draw(img)
+        d.rectangle([0, 0, w, h], fill=(0, 0, 0, 0))
+        d.ellipse([0, 0, w - 1, h - 1], fill=(111, 240, 255, 150))
+        d.ellipse([w // 4, h // 4, 3 * w // 4, 3 * h // 4], fill=(230, 255, 255, 220))
+    body.cubes.append(Cube((-2.5, 32, -6.1), (5, 5, 0), core, faces=("north",)))
+    for i in range(4):
+        body.cubes.append(Cube((-1, 42 - i * 4, 6), (2, 2.5, 4), ivory()))                                          # back spikes
+    head = Bone("head", (0, 42, 0), "body")
+    b.append(head)
+    head.cubes.append(Cube((-5, 42, -5), (10, 10, 10), only(("north",), beast_eyes(hexc("#6ff0ff"), eye_w=0.18, y=0.45, gap=0.22), shadow_fur(seed=42))))
+    head.cubes.append(Cube((-3.6, 46.4, -5.05), (7.2, 1.2, 0), glow_plane(hexc("#6ff0ff")), faces=("north",)))
+    for sx in (-1, 1):
+        head.cubes.append(Cube((sx * 4 - 1, 52, -1), (2, 4, 2), ivory()))                                          # crown spikes
+        arm = Bone("arm_l" if sx > 0 else "arm_r", (sx * 12, 40, 0), "body")
+        b.append(arm)
+        arm.cubes.append(Cube((sx * 12 - 4, 16, -4), (8, 24, 8), shadow_fur(base=hexc("#120e1a"), seed=43)))
+        arm.cubes.append(Cube((sx * 12 - 4.5, 13, -4.5), (9, 4, 9), shadow_fur(base=SHADOW_LIGHT, seed=44)))       # fists
+        leg = Bone("leg_l" if sx > 0 else "leg_r", (sx * 5, 22, 0), "root")
+        b.append(leg)
+        leg.cubes.append(Cube((sx * 5 - 4, 0, -4), (8, 22, 8), shadow_fur(base=hexc("#120e1a"), seed=45)))
+    return b
+
+
+BEAST_BUILDERS = [
+    ("wolf", beast_wolf), ("owl", beast_owl), ("serpent", beast_serpent), ("toad", beast_toad),
+    ("elephant", beast_elephant), ("rabbit", beast_rabbit), ("deer", beast_deer), ("bull", beast_bull),
+    ("tiger", beast_tiger), ("lion", beast_lion), ("dragon", beast_dragon), ("colossus", beast_colossus),
+]
+
 # --------------------------------------------------------------------------------------
 # Small 2D assets
 # --------------------------------------------------------------------------------------
@@ -1072,7 +1566,8 @@ def wisp_sprite(path: str) -> None:
 # --------------------------------------------------------------------------------------
 # Orthographic preview (front view, ignores bone rotations except none) for docs/QA
 # --------------------------------------------------------------------------------------
-def render_front(geo: dict, tex: Image.Image, px_per_unit: int = 10, hidden: tuple = ()) -> Image.Image:
+def render_front(geo: dict, tex: Image.Image, px_per_unit: int = 10, hidden: tuple = (), scale: int = SCALE, canvas: tuple = (30, 44)) -> Image.Image:
+    SCALE = scale  # noqa: N806
     bones = geo["minecraft:geometry"][0]["bones"]
     quads = []
     for b in bones:
@@ -1088,7 +1583,7 @@ def render_front(geo: dict, tex: Image.Image, px_per_unit: int = 10, hidden: tup
             uw, vh = c["uv"]["north"]["uv_size"]
             quads.append((oz - inf, ox - inf, oy - inf, sx + 2 * inf, sy + 2 * inf, u, v, uw, vh))
     quads.sort(key=lambda q: -q[0])  # far first
-    W, H = 30 * px_per_unit, 44 * px_per_unit
+    W, H = canvas[0] * px_per_unit, canvas[1] * px_per_unit
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     for _, ox, oy, sx, sy, u, v, uw, vh in quads:
         if uw <= 0 or vh <= 0:
@@ -1097,9 +1592,34 @@ def render_front(geo: dict, tex: Image.Image, px_per_unit: int = 10, hidden: tup
         tw = max(1, int(round(sx * px_per_unit)))
         th = max(1, int(round(sy * px_per_unit)))
         crop = crop.resize((tw, th), Image.NEAREST)
-        sxp = int(round((15 - (ox + sx)) * px_per_unit))
-        syp = int(round((42 - (oy + sy)) * px_per_unit))
+        sxp = int(round((canvas[0] / 2 - (ox + sx)) * px_per_unit))
+        syp = int(round((canvas[1] - 2 - (oy + sy)) * px_per_unit))
         img.alpha_composite(crop, (sxp, syp))
+    return img
+
+
+def render_side(geo: dict, tex: Image.Image, px_per_unit: int = 4, scale: int = 2, canvas: tuple = (90, 64)) -> Image.Image:
+    """Side view (from +x) using east faces; far cubes first. Rotations ignored."""
+    bones = geo["minecraft:geometry"][0]["bones"]
+    quads = []
+    for b in bones:
+        for c in b.get("cubes", []):
+            if "east" not in c["uv"]:
+                continue
+            ox, oy, oz = c["origin"]
+            sx, sy, sz = c["size"]
+            u, v = c["uv"]["east"]["uv"]
+            uw, vh = c["uv"]["east"]["uv_size"]
+            quads.append((ox + sx, oz, oy, sz, sy, u, v, uw, vh))
+    quads.sort(key=lambda q: q[0])
+    W, H = canvas[0] * px_per_unit, canvas[1] * px_per_unit
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    for _, oz, oy, sz, sy, u, v, uw, vh in quads:
+        if uw <= 0 or vh <= 0 or sz <= 0:
+            continue
+        crop = tex.crop((int(u * scale), int(v * scale), int(round((u + uw) * scale)), int(round((v + vh) * scale))))
+        crop = crop.resize((max(1, int(round(sz * px_per_unit))), max(1, int(round(sy * px_per_unit)))), Image.NEAREST)
+        img.alpha_composite(crop, (int(round((canvas[0] / 2 + oz) * px_per_unit)), int(round((canvas[1] - 2 - (oy + sy)) * px_per_unit))))
     return img
 
 
@@ -1132,7 +1652,7 @@ def main() -> None:
 
     previews = []
     hidden_faces = ("lids", "eyes_happy", "brows", "mouth_open", "mouth_flat", "blush")
-    for persona, builder in (("luna", persona_luna), ("raven", persona_raven), ("sora", persona_sora), ("yuki", persona_yuki)):
+    for persona, builder in (("luna", persona_luna), ("raven", persona_raven), ("sora", persona_sora), ("yuki", persona_yuki), ("hana", persona_hana), ("aiko", persona_aiko)):
         bones = builder()
         geo, tex = build_model(persona, bones)
         with open(os.path.join(RP, "models", "entity", f"shadowbound_{persona}.geo.json"), "w") as f:
@@ -1155,6 +1675,21 @@ def main() -> None:
             face = full.crop(box).resize((180, int(180 * (box[3] - box[1]) / (box[2] - box[0]))), Image.LANCZOS)
             sheet.alpha_composite(face, (i * 180, 0))
         sheet.save(os.path.join(DOCS, f"faces_{persona}.png"))
+
+    beast_previews = []
+    for sp, builder in BEAST_BUILDERS:
+        bones = split_glow(builder())
+        geo, tex = build_model(f"beast_{sp}", bones, tex=256, scale=2, bounds=(5, 5))
+        with open(os.path.join(RP, "models", "entity", f"shadowbound_beast_{sp}.geo.json"), "w") as f:
+            json.dump(geo, f, indent=1)
+        tex.save(os.path.join(RP, "textures", "entity", "shadowbound", f"beast_{sp}.png"))
+        pv = render_side(geo, tex, px_per_unit=4, scale=2, canvas=(80, 64))
+        pv.save(os.path.join(DOCS, f"beast_{sp}.png"))
+        beast_previews.append(pv)
+    sheet = Image.new("RGBA", (4 * 320, 3 * 256), hexc("#1a1426"))
+    for i, pv in enumerate(beast_previews):
+        sheet.alpha_composite(pv, ((i % 4) * 320, (i // 4) * 256))
+    sheet.save(os.path.join(DOCS, "beasts_sheet.png"))
 
     item_icon(os.path.join(RP, "textures", "items", "shadow_summoner.png"))
     particle_sprite(os.path.join(RP, "textures", "particle", "shadowbound_sparkle.png"))

@@ -52,7 +52,7 @@
               "dig": "query.property('shadowbound:anim') == 13"
             }
           ],
-          "blend_transition": 0.18
+          "blend_transition": 0.25
         },
         "walk": {
           "animations": [
@@ -99,7 +99,7 @@
               "dig": "query.property('shadowbound:anim') == 13"
             }
           ],
-          "blend_transition": 0.15
+          "blend_transition": 0.2
         },
         "run": {
           "animations": [
@@ -146,7 +146,7 @@
               "dig": "query.property('shadowbound:anim') == 13"
             }
           ],
-          "blend_transition": 0.15
+          "blend_transition": 0.2
         },
         "attack": {
           "animations": [
@@ -193,7 +193,7 @@
               "dig": "query.property('shadowbound:anim') == 13"
             }
           ],
-          "blend_transition": 0.15
+          "blend_transition": 0.2
         },
         "chop": {
           "animations": [
@@ -240,7 +240,7 @@
               "dig": "query.property('shadowbound:anim') == 13"
             }
           ],
-          "blend_transition": 0.15
+          "blend_transition": 0.2
         },
         "mine": {
           "animations": [
@@ -287,7 +287,7 @@
               "dig": "query.property('shadowbound:anim') == 13"
             }
           ],
-          "blend_transition": 0.15
+          "blend_transition": 0.2
         },
         "build": {
           "animations": [
@@ -334,7 +334,7 @@
               "dig": "query.property('shadowbound:anim') == 13"
             }
           ],
-          "blend_transition": 0.15
+          "blend_transition": 0.2
         },
         "eat": {
           "animations": [
@@ -381,7 +381,7 @@
               "dig": "query.property('shadowbound:anim') == 13"
             }
           ],
-          "blend_transition": 0.15
+          "blend_transition": 0.2
         },
         "guard": {
           "animations": [
@@ -431,7 +431,7 @@
               "dig": "query.property('shadowbound:anim') == 13"
             }
           ],
-          "blend_transition": 0.15
+          "blend_transition": 0.2
         },
         "summon": {
           "animations": [
@@ -478,7 +478,7 @@
               "dig": "query.property('shadowbound:anim') == 13"
             }
           ],
-          "blend_transition": 0.15
+          "blend_transition": 0.2
         },
         "despawn": {
           "animations": [
@@ -525,7 +525,7 @@
               "dig": "query.property('shadowbound:anim') == 13"
             }
           ],
-          "blend_transition": 0.15
+          "blend_transition": 0.2
         },
         "cast": {
           "animations": [
@@ -572,7 +572,7 @@
               "dig": "query.property('shadowbound:anim') == 13"
             }
           ],
-          "blend_transition": 0.15
+          "blend_transition": 0.2
         },
         "wave": {
           "animations": [
@@ -619,7 +619,7 @@
               "dig": "query.property('shadowbound:anim') == 13"
             }
           ],
-          "blend_transition": 0.15
+          "blend_transition": 0.2
         },
         "dig": {
           "animations": [
@@ -666,7 +666,7 @@
               "wave": "query.property('shadowbound:anim') == 12"
             }
           ],
-          "blend_transition": 0.15
+          "blend_transition": 0.2
         }
       }
     }

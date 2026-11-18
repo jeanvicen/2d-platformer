@@ -7,6 +7,8 @@ import { chooseFood, eat, exert, freshNeeds } from "../scripts/survival/needs";
 import { findPath, runSync, type WorldProbe } from "../scripts/navigation/astar";
 import { validateExternalPlan } from "../scripts/ai/plan_schema";
 import { breakTicks, oreInfo, itemMatchesResource } from "../scripts/inventory/item_catalog";
+import { countNeeds, shortfall } from "../scripts/building/materials";
+import { interpret } from "../scripts/nlu/interpreter";
 
 const MAX = (id: string) => (/(pickaxe|axe|sword|shovel|hoe)$/.test(id) ? 1 : id.endsWith("ender_pearl") ? 16 : 64);
 const inv = (slots: any[] = [], cap = 27) => new LogicalInventory(slots, cap, MAX);
@@ -131,4 +133,33 @@ test("catálogo: minérios, tempo de quebra e ferramentas", () => {
   assert.ok(breakTicks("minecraft:oak_log", "minecraft:iron_axe") < breakTicks("minecraft:oak_log", undefined));
   assert.ok(itemMatchesResource("minecraft:raw_iron", "iron"));
   assert.ok(itemMatchesResource("minecraft:spruce_log", "wood"));
+});
+
+test("plantas grandes: casa grande e mansão têm chão, pilares, janelas, porta, telhado e decoração", () => {
+  for (const kind of ["house", "mansion"] as const) {
+    const bp = makeBlueprint(kind);
+    const roles = new Set(bp.placements.map((p) => p.role));
+    for (const r of ["foundation", "floor", "frame", "wall", "window", "door_lower", "door_upper", "roof", "torch", "chest", "table"]) assert.ok(roles.has(r as never), `${kind} sem ${r}`);
+    if (kind === "mansion") assert.ok(roles.has("ladder") && roles.has("fence"), "mansão tem escada interna e varanda");
+  }
+});
+
+test("materiais: calcula quantos troncos/pedras faltam incluindo peças fabricadas", () => {
+  const bp = makeBlueprint("house");
+  const need = countNeeds(bp.placements, "any");
+  assert.ok(need.planks > 100 && need.log > 20 && need.cobblestone > 30);
+  const none = { planks: 0, log: 0, cobblestone: 0, coal: 0, stick: 0, fence: 0, door: 0, torch: 0, crafting_table: 0, chest: 0, ladder: 0 };
+  const sf = shortfall(need, none);
+  assert.ok(sf.logs >= need.log + Math.ceil(need.planks / 4), "troncos suficientes para tábuas e pilares");
+  assert.equal(sf.cobblestone, need.cobblestone);
+  assert.ok(sf.coal > 0, "carvão para as tochas");
+  const rich = { ...none, planks: 999, log: 999, cobblestone: 999, coal: 99, stick: 99, fence: 99, door: 9, torch: 99, crafting_table: 9, chest: 9, ladder: 9 };
+  const ok = shortfall(need, rich);
+  assert.equal(ok.logs + ok.cobblestone + ok.coal, 0);
+});
+
+test("linguagem: casa grande, mansão e criaturas", () => {
+  assert.equal(interpret("construa uma casa grande").intents[0].structure, "house");
+  assert.equal(interpret("faz uma mansão bem bonita").intents[0].structure, "mansion");
+  assert.equal(interpret("construam um castelo").intents[0].structure, "mansion");
 });

@@ -8,7 +8,7 @@ import type { BehaviorMode, Intent, Task, TaskKind } from "../core/types";
 import { RESOURCE_PT } from "../inventory/item_catalog";
 import { TUNING } from "../core/constants";
 
-const STRUCT_PT: Record<string, string> = { hut: "uma casinha", wall: "um muro", platform: "uma plataforma", bridge: "uma ponte", pillar: "um pilar", tower: "uma torre" };
+const STRUCT_PT: Record<string, string> = { hut: "uma casinha", wall: "um muro", platform: "uma plataforma", bridge: "uma ponte", pillar: "um pilar", tower: "uma torre", house: "uma casa grande", mansion: "uma mansão" };
 
 let counter = 0;
 const newId = (): string => `t${Date.now().toString(36)}${(counter++).toString(36)}`;

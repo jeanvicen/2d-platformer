@@ -11,6 +11,8 @@ import { BlockPermutation, Entity, ItemStack, Player } from "@minecraft/server";
 import type { Agent } from "../ai/agent";
 import { AnimState, TUNING } from "../core/constants";
 import { center, dist, getBlock, isPassableBlock, isValid, log, particle, safe, sound, toStack, toStored } from "../core/mc";
+import { makeProbe } from "../navigation/mover";
+import { standable } from "../navigation/astar";
 import type { StoredItem, Vec3 } from "../core/types";
 import { breakTicks, effectiveTool, PROTECTED_BLOCKS, prettyItem, TIER_LEVEL, toolInfo } from "../inventory/item_catalog";
 import { damageMainhand, equipBestTool } from "../inventory/equipment";
@@ -26,8 +28,17 @@ export function* wait(ticks: number): R<void> {
 
 const EYE = 1.6;
 
-/** Walk until the shadow's eye is within `range` of `target` (block center). */
-export function* goNear(a: Agent, target: Vec3, range: number, opts: { run?: boolean; avoid?: Set<string> } = {}): R<{ ok: boolean; reason?: string }> {
+/**
+ * Walk until the shadow's eye is within `range` of `target` (block center).
+ * `shadowStep`: when no walkable path exists and the target is close (<= 10 blocks), the shadow
+ * may step through the shadows to a free, standable spot in reach (never into blocks).
+ */
+export function* goNear(
+  a: Agent,
+  target: Vec3,
+  range: number,
+  opts: { run?: boolean; avoid?: Set<string>; shadowStep?: boolean } = {},
+): R<{ ok: boolean; reason?: string }> {
   const e = a.body();
   if (!e) return { ok: false, reason: "corpo indisponível" };
   const t = center(target);
@@ -46,8 +57,74 @@ export function* goNear(a: Agent, target: Vec3, range: number, opts: { run?: boo
   }
   const reason = a.mover.failReason || "não consegui chegar";
   a.mover.status = "idle";
+  if (opts.shadowStep && shadowStep(a, t, range, opts.avoid)) {
+    yield { t: "wait", ticks: 6 };
+    return { ok: true };
+  }
   a.rt.lastWhy = reason;
   return { ok: false, reason };
+}
+
+/** Teleport to the nearest standable cell within reach of `t` (max 10 blocks away). */
+export function shadowStep(a: Agent, t: Vec3, range: number, avoid?: Set<string>): boolean {
+  const e = a.body();
+  if (!e || dist(e.location, t) > 12) return false;
+  const dim = e.dimension;
+  const probe = makeProbe(dim);
+  let best: Vec3 | undefined;
+  let bestD = Infinity;
+  const tx = Math.floor(t.x);
+  const ty = Math.floor(t.y);
+  const tz = Math.floor(t.z);
+  for (let dx = -4; dx <= 4; dx++) {
+    for (let dz = -4; dz <= 4; dz++) {
+      for (let dy = -5; dy <= 3; dy++) {
+        const c = { x: tx + dx, y: ty + dy, z: tz + dz };
+        if (avoid && avoid.has(`${c.x},${c.y},${c.z}`)) continue;
+        if (Math.hypot(c.x + 0.5 - t.x, c.y + EYE - t.y, c.z + 0.5 - t.z) > range) continue;
+        if (!standable(probe, c.x, c.y, c.z)) continue;
+        const d = dist(c, e.location);
+        if (d < bestD) {
+          bestD = d;
+          best = c;
+        }
+      }
+    }
+  }
+  if (!best) return false;
+  particle(dim, "shadowbound:wisp", e.location);
+  const dest = { x: best.x + 0.5, y: best.y, z: best.z + 0.5 };
+  safe(() => e.teleport(dest, { facingLocation: t }), undefined);
+  particle(dim, "shadowbound:wisp", dest);
+  sound(dim, "mob.endermen.portal", dest, 0.4, 1.5);
+  return true;
+}
+
+/**
+ * Explore: walk ~20 blocks away (a different direction each attempt, staying near the owner)
+ * so a new search can find trees, stone, animals or crops.
+ */
+export function* explore(a: Agent, attempt: number): R<boolean> {
+  const e = a.body();
+  if (!e) return false;
+  const owner = a.owner();
+  const base = owner && owner.dimension.id === e.dimension.id ? owner.location : e.location;
+  const ang = (attempt * 137 + Math.random() * 40) * (Math.PI / 180);
+  const r = 18 + attempt * 6;
+  const gx = Math.floor(base.x + Math.cos(ang) * r);
+  const gz = Math.floor(base.z + Math.sin(ang) * r);
+  const probe = makeProbe(e.dimension);
+  let gy: number | undefined;
+  for (let y = Math.floor(base.y) + 12; y >= Math.floor(base.y) - 12; y--) {
+    if (standable(probe, gx, y, gz)) {
+      gy = y;
+      break;
+    }
+  }
+  if (gy === undefined) return false;
+  a.sm.set("EXPLORING");
+  const g = yield* goNear(a, { x: gx, y: gy, z: gz }, 4, { run: true });
+  return g.ok;
 }
 
 /** Face a position (the follower already faces its path; this is for work). */

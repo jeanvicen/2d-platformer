@@ -6,7 +6,10 @@
 import { Player, system } from "@minecraft/server";
 import { ActionFormData, FormCancelationReason, ModalFormData } from "@minecraft/server-ui";
 import type { Agent } from "../ai/agent";
-import { agentFor, summon, executorOf } from "../ai/agent_manager";
+import { dismiss, executorOf, squadIndex, squadOf, summon, type SummonResult } from "../ai/agent_manager";
+import { dispatchOrder, squadStatus } from "../ai/squad";
+import { saveSquadIndex } from "../memory/memory_manager";
+import { BEASTS, BEAST_INFO, PERSONA_ROLE } from "../core/species";
 import { applyIntents, handleOrder, statusText } from "../ai/brain";
 import { isOwner } from "../authorization/owner_auth";
 import { say } from "../communication/comms";
@@ -15,7 +18,7 @@ import { prettyItem } from "../inventory/item_catalog";
 import { equipBestArmor } from "../inventory/equipment";
 import { deliverTo } from "../executor/routines";
 import { bridgeAvailable } from "../ai/llm_bridge";
-import { PERSONAS, TUNING } from "../core/constants";
+import { COLORS, DEFAULT_NAMES, PERSONAS, TUNING } from "../core/constants";
 
 type Shown = { canceled: boolean; cancelationReason?: FormCancelationReason };
 
@@ -47,41 +50,153 @@ function order(a: Agent, p: Player, text: string): void {
   handleOrder(a, p, text, { fromMenu: true, askForm });
 }
 
+/** Squad menu: whole-team orders, members, summoning. */
 export function openMain(player: Player): void {
-  const a = agentFor(player.id);
-  if (!a || !a.record.active) {
+  const squad = squadOf(player.id, true);
+  if (!squad.length) {
     openSummon(player);
     return;
   }
-  if (!isOwner(player, a)) return;
-  if (a.record.dead) {
-    say(a, `Ainda estou nas sombras... volto em ${Math.max(0, Math.ceil((a.record.respawnAt - Date.now()) / 1000))}s.`, { force: true });
+  if (squad.length === 1) {
+    openMember(player, squad[0]);
     return;
   }
+  const team = (text: string) => dispatchOrder(player, text, { members: squadOf(player.id, true), fromMenu: true, askForm });
   const items: [string, () => void][] = [
-    ["§lDar uma ordem (texto)", () => openOrder(player, a)],
-    ["Me seguir", () => order(a, player, "me siga")],
-    ["Me proteger", () => order(a, player, "me proteja")],
-    ["Ficar de guarda aqui", () => order(a, player, "fique de guarda aqui")],
-    ["Ficar parada aqui", () => order(a, player, "fica aqui")],
-    ["Coletar madeira", () => openAmount(player, a, "Quantos troncos?", 16, 64, (n) => `pegue ${n} troncos`)],
-    ["Conseguir comida", () => order(a, player, "consiga comida")],
-    ["Minerar...", () => openMine(player, a)],
-    ["Construir...", () => openBuild(player, a)],
-    ["Fabricar...", () => openCraft(player, a)],
-    ["Inventário e itens", () => openInventory(player, a)],
-    ["Me entregar tudo", () => order(a, player, "me da tudo")],
-    ["Status", () => say(a, "\n" + statusText(a), { force: true })],
-    [a.record.pausedByOwner ? "Retomar tarefa" : "Pausar tarefa", () => order(a, player, a.record.pausedByOwner ? "continua" : "pausa")],
-    ["Cancelar tarefas", () => order(a, player, "cancela")],
-    ["Configurações", () => openSettings(player, a)],
-    ["§cDispensar a sombra", () => order(a, player, "pode ir")],
+    ["§lOrdem para todas (texto)", () => openTeamOrder(player)],
+    ["Escolher uma sombra...", () => openPickMember(player)],
+    ["Todas: me seguir", () => team("me sigam")],
+    ["Todas: me proteger", () => team("me protejam")],
+    ["Todas: guarda aqui", () => team("fiquem de guarda aqui")],
+    ["Todas: ficar paradas", () => team("fiquem aqui")],
+    ["Dividir: madeira", () => openAmountTeam(player, "Quantos troncos no total?", 32, 128, (n) => `pegue ${n} troncos`)],
+    ["Dividir: comida", () => team("consigam 12 de comida")],
+    ["Construir juntas...", () => openBuildTeam(player)],
+    ["Me entreguem tudo", () => team("me deem tudo")],
+    ["Cancelar tudo", () => team("cancela")],
+    ["Invocar companheira", () => openSummon(player)],
+    ["Invocar criatura", () => openSummonBeast(player)],
+    ["Configurações do esquadrão", () => openSquadSettings(player)],
+    ["§cDesinvocar todas", () => squadOf(player.id, true).forEach((m, i) => dismiss(m, i > 0))],
   ];
+  const f = new ActionFormData().title(`Esquadrão (${squad.length})`).body(squadStatus(player.id));
+  for (const [label] of items) f.button(label);
+  show(player, () => f.show(player), (r) => {
+    if (r.selection !== undefined) items[r.selection]?.[1]();
+  });
+}
+
+function openTeamOrder(player: Player): void {
+  const f = new ModalFormData()
+    .title("Ordem para o esquadrão")
+    .textField("O que vocês devem fazer? (comece com um nome para falar com uma só)", "ex.: pegue 64 troncos e construa uma casa grande")
+    .submitButton("Enviar");
+  show(player, () => f.show(player), (r) => {
+    const text = r.formValues?.[0];
+    if (typeof text === "string" && text.trim()) dispatchOrder(player, text, { fromMenu: true, askForm });
+  });
+}
+
+function openAmountTeam(player: Player, label: string, def: number, max: number, mk: (n: number) => string): void {
+  const f = new ModalFormData().title("Esquadrão").slider(label, 4, max, { defaultValue: def }).submitButton("Ok");
+  show(player, () => f.show(player), (r) => {
+    const n = Number(r.formValues?.[0] ?? def);
+    dispatchOrder(player, mk(Math.max(1, Math.floor(n))), { members: squadOf(player.id, true), fromMenu: true, askForm });
+  });
+}
+
+function openBuildTeam(player: Player): void {
+  const opts: [string, string][] = [
+    ["Casa grande (com chão, janelas e decoração)", "construam uma casa grande"],
+    ["Mansão de dois andares", "construam uma mansao"],
+    ["Casinha simples", "construam uma casinha"],
+    ["Muro de pedra", "construam um muro de pedra"],
+    ["Torre de vigia", "construam uma torre"],
+  ];
+  const f = new ActionFormData().title("Construir juntas").body("A melhor construtora lidera; as outras buscam o material que faltar.");
+  for (const [l] of opts) f.button(l);
+  show(player, () => f.show(player), (r) => {
+    const o = r.selection !== undefined ? opts[r.selection] : undefined;
+    if (o) dispatchOrder(player, o[1], { members: squadOf(player.id, true), fromMenu: true, askForm });
+  });
+}
+
+function openPickMember(player: Player): void {
+  const squad = squadOf(player.id, true);
+  const f = new ActionFormData().title("Escolher sombra");
+  for (const m of squad) f.button(`${m.color().tag}${m.name}§r${m.record.dead ? " (ressurgindo)" : ""}`);
+  show(player, () => f.show(player), (r) => {
+    const m = r.selection !== undefined ? squad[r.selection] : undefined;
+    if (m) openMember(player, m);
+  });
+}
+
+function openSquadSettings(player: Player): void {
+  const idx = squadIndex(player.id);
+  const f = new ModalFormData()
+    .title("Configurações do esquadrão")
+    .slider(`Máximo de sombras ao mesmo tempo (celular: até 12 é o mais leve)`, 1, TUNING.hardMaxMembers, { defaultValue: idx.settings.maxMembers })
+    .toggle("Conversas entre elas", { defaultValue: idx.settings.chatter })
+    .submitButton("Salvar");
+  show(player, () => f.show(player), (r) => {
+    idx.settings.maxMembers = Math.max(1, Math.min(TUNING.hardMaxMembers, Number(r.formValues?.[0] ?? idx.settings.maxMembers)));
+    idx.settings.chatter = !!r.formValues?.[1];
+    saveSquadIndex(player.id, idx);
+    player.sendMessage("§d[Shadowbound]§r Configurações do esquadrão salvas.");
+  });
+}
+
+/** Menu of ONE member (also opened by tapping it). */
+export function openMember(player: Player, a: Agent): void {
+  if (!isOwner(player, a)) return;
+  if (a.record.dead) {
+    say(a, `Ainda nas sombras... volta em ${Math.max(0, Math.ceil((a.record.respawnAt - Date.now()) / 1000))}s.`, { force: true });
+    return;
+  }
+  const back: [string, () => void][] = squadOf(player.id, true).length > 1 ? [["← Esquadrão", () => openMain(player)]] : [];
+  const items: [string, () => void][] = a.isBeast
+    ? [
+        ...back,
+        ["Me seguir", () => order(a, player, "me siga")],
+        ["Me proteger", () => order(a, player, "me proteja")],
+        ["Ficar de guarda aqui", () => order(a, player, "fique de guarda aqui")],
+        ["Ficar parado aqui", () => order(a, player, "fica aqui")],
+        ["Atacar o que estou olhando", () => order(a, player, "ataque aquele")],
+        ["Caçar animais para comida", () => order(a, player, "cace 4 animais")],
+        ["Invocar outra sombra", () => openSummonAny(player)],
+        ["§cDesinvocar", () => order(a, player, "pode ir")],
+      ]
+    : [
+        ...back,
+        ["§lDar uma ordem (texto)", () => openOrder(player, a)],
+        ["Me seguir", () => order(a, player, "me siga")],
+        ["Me proteger", () => order(a, player, "me proteja")],
+        ["Ficar de guarda aqui", () => order(a, player, "fique de guarda aqui")],
+        ["Ficar parada aqui", () => order(a, player, "fica aqui")],
+        ["Coletar madeira", () => openAmount(player, a, "Quantos troncos?", 16, 64, (n) => `pegue ${n} troncos`)],
+        ["Conseguir comida", () => order(a, player, "consiga comida")],
+        ["Minerar...", () => openMine(player, a)],
+        ["Construir...", () => openBuild(player, a)],
+        ["Fabricar...", () => openCraft(player, a)],
+        ["Inventário e itens", () => openInventory(player, a)],
+        ["Me entregar tudo", () => order(a, player, "me da tudo")],
+        ["Status", () => say(a, "\n" + statusText(a), { force: true })],
+        [a.record.pausedByOwner ? "Retomar tarefa" : "Pausar tarefa", () => order(a, player, a.record.pausedByOwner ? "continua" : "pausa")],
+        ["Cancelar tarefas", () => order(a, player, "cancela")],
+        ["Invocar outra sombra", () => openSummonAny(player)],
+        ["Configurações", () => openSettings(player, a)],
+        ["§cDispensar", () => order(a, player, "pode ir")],
+      ];
   const f = new ActionFormData().title(`${a.color().tag}${a.name}`).body(statusText(a));
   for (const [label] of items) f.button(label);
   show(player, () => f.show(player), (r) => {
     if (r.selection !== undefined) items[r.selection]?.[1]();
   });
+}
+
+function openSummonAny(player: Player): void {
+  const f = new ActionFormData().title("Invocar").button("Companheira (humana)").button("Criatura das sombras");
+  show(player, () => f.show(player), (r) => (r.selection === 1 ? openSummonBeast(player) : openSummon(player)));
 }
 
 export function openOrder(player: Player, a: Agent): void {
@@ -259,20 +374,36 @@ function openSettings(player: Player, a: Agent): void {
   });
 }
 
+function summonReport(player: Player, res: SummonResult): void {
+  if (res === "failed") player.sendMessage("§cNão consegui invocar aqui. Tente num lugar aberto.");
+  if (res === "full") player.sendMessage(`§7Seu esquadrão está no máximo (${squadIndex(player.id).settings.maxMembers}). Desinvoque alguém ou aumente o limite nas configurações do esquadrão.`);
+}
+
 export function openSummon(player: Player): void {
+  const active = new Set(squadOf(player.id, true).filter((m) => !m.isBeast).map((m) => m.persona));
   const f = new ActionFormData()
-    .title("Invocar sombra")
-    .body(
-      "Escolha sua companheira. Ela só obedece a você.\n\n§dLuna§r: bruxinha fofa e esperta, raio mágico à distância.\n§cRaven§r: guerreira das sombras, letal no corpo a corpo.\n§aSora§r: psíquica orgulhosa que flutua e ataca com telecinese.\n§2Yuki§r: elegante e protetora, a 'irmã mais velha' do grupo.",
-    )
-    .button("§dLuna§r - a bruxinha")
-    .button("§cRaven§r - a guerreira")
-    .button("§aSora§r - a psíquica")
-    .button("§2Yuki§r - a irmã elegante");
+    .title("Invocar companheira")
+    .body("Cada uma tem seu jeito e sua especialidade. Elas só obedecem a você e dividem o trabalho entre si.");
+  for (const p of PERSONAS) f.button(`${COLORS[p].tag}${DEFAULT_NAMES[p]}§r - ${PERSONA_ROLE[p]}${active.has(p) ? " §7(ativa)" : ""}`);
+  f.button("§5Criaturas das sombras...");
   show(player, () => f.show(player), (r) => {
+    if (r.selection === PERSONAS.length) {
+      openSummonBeast(player);
+      return;
+    }
     const persona = PERSONAS[r.selection ?? 0] ?? "luna";
-    const res = summon(player, persona);
-    if (res === "failed") player.sendMessage("§cNão consegui invocar aqui. Tente num lugar aberto.");
+    summonReport(player, summon(player, { kind: "companion", species: persona }));
+  });
+}
+
+export function openSummonBeast(player: Player): void {
+  const f = new ActionFormData()
+    .title("Criaturas das sombras")
+    .body("Criaturas lutam, caçam e protegem. Elas não coletam nem constroem. Pode invocar várias (até o limite do esquadrão).");
+  for (const b of BEASTS) f.button(`§5${BEAST_INFO[b].pt}§r - ${BEAST_INFO[b].ability}`);
+  show(player, () => f.show(player), (r) => {
+    const b = r.selection !== undefined ? BEASTS[r.selection] : undefined;
+    if (b) summonReport(player, summon(player, { kind: "beast", species: b }));
   });
 }
 

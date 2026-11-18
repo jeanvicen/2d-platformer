@@ -8,15 +8,17 @@
  *   every 100 ticks save dirty records, anti-duplication sweep, combat effects
  */
 import { EntityHealthComponent, Player, system, world } from "@minecraft/server";
-import { DP_GOT_ITEM, ENTITY_ID, SUMMONER_ITEM, TUNING } from "./core/constants";
+import { BODY_TYPES, DP_GOT_ITEM, SUMMONER_ITEM, TUNING } from "./core/constants";
 import { isValid, log, safe } from "./core/mc";
-import { agentByBody, agentFor, agents, dedupeSweep, executorOf, onDeath, onEntitySpawn, onJoin, onLeave, respawnTick } from "./ai/agent_manager";
+import { agentByBody, agents, dedupeSweep, executorOf, onDeath, onEntitySpawn, onJoin, onLeave, respawnTick, squadOf } from "./ai/agent_manager";
+import { rallyTo, socialTick } from "./ai/squad";
+import { onBeastHit, onBeastHurt } from "./combat/beasts";
 import { brainTick } from "./ai/brain";
 import { onScriptEvent } from "./ai/llm_bridge";
 import { isOwnerOfBody } from "./authorization/owner_auth";
 import { refreshCombatEffects } from "./combat/combat";
 import { survivalTick } from "./survival/survival_manager";
-import { giveHeldItem, openMain } from "./ui/menus";
+import { giveHeldItem, openMain, openMember } from "./ui/menus";
 import { registerCommands } from "./ui/commands";
 import { AnimState } from "./core/constants";
 import { damageMainhand } from "./inventory/equipment";
@@ -75,7 +77,7 @@ world.afterEvents.itemUse.subscribe((ev) => {
 });
 
 world.beforeEvents.playerInteractWithEntity.subscribe((ev) => {
-  if (ev.target.typeId !== ENTITY_ID) return;
+  if (!BODY_TYPES.includes(ev.target.typeId)) return;
   ev.cancel = true; // nobody can ride/trade/name/feed the shadow through vanilla interactions
   const player = ev.player;
   const target = ev.target;
@@ -85,10 +87,10 @@ world.beforeEvents.playerInteractWithEntity.subscribe((ev) => {
       safe(() => player.onScreenDisplay.setActionBar("§7Acesso negado: esta sombra pertence a outra pessoa."), undefined);
       return;
     }
-    const a = agentFor(player.id);
+    const a = agentByBody(target);
     if (!a) return;
-    if (sneaking) giveHeldItem(player, a);
-    else openMain(player);
+    if (sneaking && !a.isBeast) giveHeldItem(player, a);
+    else openMember(player, a);
   });
 });
 
@@ -97,40 +99,43 @@ world.beforeEvents.playerInteractWithEntity.subscribe((ev) => {
 // ---------------------------------------------------------------------------------------------
 world.afterEvents.entityDie.subscribe((ev) => {
   const e = ev.deadEntity;
-  if (safe(() => e.typeId, "") === ENTITY_ID) onDeath(e);
+  if (BODY_TYPES.includes(safe(() => e.typeId, ""))) onDeath(e);
 });
 
 world.afterEvents.entityHurt.subscribe((ev) => {
   const hurt = ev.hurtEntity;
   const attacker = ev.damageSource.damagingEntity;
   if (hurt instanceof Player) {
-    const a = agents.get(hurt.id);
-    if (a && attacker && attacker.id !== a.bodyId && !(attacker instanceof Player)) {
+    if (!attacker || attacker instanceof Player || BODY_TYPES.includes(safe(() => attacker.typeId, ""))) return;
+    for (const a of squadOf(hurt.id, true)) {
       a.rt.ownerHurtAt = Date.now();
       a.rt.ownerAttackerId = attacker.id;
     }
     return;
   }
-  if (safe(() => hurt.typeId, "") !== ENTITY_ID) return;
+  if (!BODY_TYPES.includes(safe(() => hurt.typeId, ""))) return;
   const a = agentByBody(hurt);
   if (!a) return;
   a.markDirty();
-  if (attacker && !(attacker instanceof Player) && safe(() => attacker.typeId, "") !== ENTITY_ID) {
-    // attacked while working: defend herself (native hurt_by_target in follow mode)
+  if (a.isBeast) onBeastHurt(a, ev.damage);
+  if (attacker && !(attacker instanceof Player) && !BODY_TYPES.includes(safe(() => attacker.typeId, ""))) {
+    // attacked while working: defend herself (native hurt_by_target in follow mode), friends come to help
     a.rt.protectUntil = Date.now() + 4000;
     a.rt.threatId = attacker.id;
     executorOf(a).interrupt();
     a.setNativeMode("follow");
+    rallyTo(a, attacker);
   }
 });
 
 world.afterEvents.entityHitEntity.subscribe((ev) => {
   const d = ev.damagingEntity;
-  if (safe(() => d.typeId, "") !== ENTITY_ID) return;
+  if (!BODY_TYPES.includes(safe(() => d.typeId, ""))) return;
   const a = agentByBody(d);
   if (!a) return;
   a.setAnim(AnimState.Attack, 450);
-  damageMainhand(a);
+  if (a.isBeast) onBeastHit(a, ev.hitEntity);
+  else damageMainhand(a);
   const hit = ev.hitEntity;
   const hp = safe(() => (hit.getComponent("minecraft:health") as EntityHealthComponent | undefined)?.currentValue ?? 1, 1);
   if (hp <= 0) a.record.stats.kills++;
@@ -187,6 +192,13 @@ system.runInterval(() => {
       log("survival", String(e));
     }
   }
+  if (slow % 10 === 0) {
+    try {
+      socialTick();
+    } catch (e) {
+      log("social", String(e));
+    }
+  }
   if (slow % 5 === 0) {
     for (const a of agents.values()) if (a.dirty) a.save();
     try {
@@ -200,8 +212,7 @@ system.runInterval(() => {
 // players already online when scripts reload (/reload)
 system.run(() => {
   for (const p of world.getAllPlayers()) {
-    const a = agentFor(p.id);
-    if (a && a.record.active && !isValid(a.body())) onJoin(p);
+    if (squadOf(p.id, true).some((a) => !isValid(a.body()))) onJoin(p);
   }
 });
 

@@ -9,7 +9,7 @@ import { exert, EXERTION, healthDelta } from "./needs";
 
 export function survivalTick(a: Agent, seconds: number): void {
   const e = a.body();
-  if (!e) return;
+  if (!e || a.isBeast) return;
   const moving = a.mover.status === "moving";
   a.record.needs = exert(a.record.needs, (moving ? EXERTION.walkPerSecond : EXERTION.idlePerSecond) * seconds);
   const h = safe(() => e.getComponent("minecraft:health"), undefined);

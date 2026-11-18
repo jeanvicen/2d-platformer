@@ -11,20 +11,20 @@ import type { Agent } from "./agent";
 import { AnimState, Mood, PROP_ANIM, TUNING } from "../core/constants";
 import { dist, getBlock, isValid, safe } from "../core/mc";
 import type { Intent, Task } from "../core/types";
-import { interpret } from "../nlu/interpreter";
-import { plan as makePlan, stepLabel } from "../planner/planner";
+import { stepLabel } from "../planner/planner";
 import { isOwner } from "../authorization/owner_auth";
-import { actionBar, say, sayKey, setMood, updateMood, updateTalk } from "../communication/comms";
+import { say, sayKey, setMood, updateMood, updateTalk } from "../communication/comms";
 import { HELP_TEXT } from "../communication/phrases";
 import { STATE_PT } from "../state/state_machine";
-import { dismiss, executorOf } from "./agent_manager";
+import { executorOf } from "./agent_manager";
+import { applyToMembers, dispatchOrder } from "./squad";
 import { enterProtect, leash, magicBolt, ownerThreat } from "../combat/combat";
+import { beastTick } from "../combat/beasts";
 import { chooseFood, shouldEat } from "../survival/needs";
 import { needsRecovery, recovered } from "../survival/survival_manager";
 import { eatNow, ownerLookFacing } from "../executor/tasks";
 import type { R } from "../executor/routines";
 import { prettyItem, RESOURCE_PT } from "../inventory/item_catalog";
-import { requestExternalPlan } from "./llm_bridge";
 import { NATURAL_DIG } from "../inventory/item_catalog";
 
 export interface OrderOptions {
@@ -32,88 +32,19 @@ export interface OrderOptions {
   askForm?: (a: Agent, question: string, options: { label: string; text: string }[]) => void;
 }
 
-/** Entry point for every order (command, menu, form). Authorization is checked FIRST. */
+/** Order for ONE member (its own menu). Routed through the squad coordinator. */
 export function handleOrder(a: Agent, sender: Player, text: string, opts: OrderOptions = {}): void {
   if (!isOwner(sender, a)) return; // other players are ignored silently
-  const clean = text.trim().slice(0, 200);
-  if (!clean) return;
-  const res = interpret(clean);
-  if (res.clarification) {
-    a.rt.clarification = res.clarification;
-    say(a, res.clarification.question, { force: true });
-    if (opts.askForm) opts.askForm(a, res.clarification.question, res.clarification.options);
-    if (!res.intents.length) return;
-  } else a.rt.clarification = undefined;
-
-  if (!res.understood || (res.intents.length === 1 && res.intents[0].kind === "unknown")) {
-    if (requestExternalPlan(a, clean, (intents, reply) => applyIntents(a, sender, intents, false, reply))) {
-      actionBar(a, "pensando...");
-      return;
-    }
-    sayKey(a, "unknown", undefined, { force: true });
-    return;
-  }
-  applyIntents(a, sender, res.intents, res.append);
+  dispatchOrder(sender, text, { ...opts, members: [a] });
 }
 
-/** Shared by the local interpreter and the (validated) external AI plans. */
+/** Direct intents for ONE member (menus build them without text). */
 export function applyIntents(a: Agent, sender: Player, intents: Intent[], append: boolean, reply?: string): void {
   if (!isOwner(sender, a)) return;
-  if (reply) say(a, reply, { force: true });
-  const p = makePlan(intents);
-  const ex = executorOf(a);
-
-  for (const c of p.control) {
-    if (c === "cancel") {
-      const n = ex.cancelAll();
-      a.record.pausedByOwner = false;
-      if (n || !p.tasks.length) sayKey(a, "cancel", undefined, { force: true });
-    } else if (c === "pause") {
-      a.record.pausedByOwner = true;
-      ex.interrupt();
-      say(a, "Pausado. Diga 'continua' quando quiser.", { force: true });
-    } else if (c === "resume") {
-      a.record.pausedByOwner = false;
-      say(a, a.record.queue.length ? `Retomando: ${a.record.queue[0].label}.` : "Não tenho tarefa pausada.", { force: true });
-    } else if (c === "dismiss") {
-      dismiss(a);
-      return;
-    }
-  }
-
-  if (p.mode) {
-    setMode(a, sender, p.mode);
-    if (!p.tasks.length && a.record.queue.length && !append) {
-      ex.cancelAll(); // a new mode order replaces the current work
-    }
-  }
-
-  if (p.tasks.length) {
-    for (const t of p.tasks) {
-      const err = bindCommandContext(a, sender, t, intents);
-      if (err) {
-        say(a, err, { force: true });
-        return;
-      }
-    }
-    if (append) a.record.queue.push(...p.tasks);
-    else {
-      if (a.record.queue.length) ex.cancelAll();
-      a.record.queue = p.tasks;
-      a.record.pausedByOwner = false;
-    }
-    a.record.queue = a.record.queue.slice(0, 10);
-    a.markDirty();
-    const list = p.tasks.map((t, i) => (p.tasks.length > 1 ? `${i + 1}) ${t.label}` : t.label)).join("  ");
-    const ack = a.persona === "luna" ? "Entendido!" : "Entendido.";
-    say(a, `${ack} ${append ? "Adicionado à fila: " : "Plano: "}${list}`, { force: true });
-    if (p.urgent) a.setAnim(AnimState.Run, 300);
-  }
-
-  for (const q of p.queries) answerQuery(a, q);
+  applyToMembers(sender, [a], intents, append, reply);
 }
 
-function setMode(a: Agent, sender: Player, mode: Agent["record"]["mode"]): void {
+export function setMode(a: Agent, sender: Player, mode: Agent["record"]["mode"]): void {
   a.record.mode = mode;
   if (mode === "guard") {
     const l = sender.location;
@@ -128,7 +59,7 @@ function setMode(a: Agent, sender: Player, mode: Agent["record"]["mode"]): void 
 }
 
 /** Resolve things that must be captured at order time (what the owner is looking at, where). */
-function bindCommandContext(a: Agent, sender: Player, t: Task, intents: Intent[]): string | undefined {
+export function bindCommandContext(a: Agent, sender: Player, t: Task, intents: Intent[]): string | undefined {
   const target = t.goal.target;
   if (t.kind === "build") {
     const { origin, facing } = ownerLookFacing(sender);
@@ -208,7 +139,7 @@ export function statusText(a: Agent): string {
   return lines.join("\n");
 }
 
-function answerQuery(a: Agent, q: string): void {
+export function answerQuery(a: Agent, q: string): void {
   const t = a.record.queue[0];
   switch (q) {
     case "status":
@@ -277,6 +208,7 @@ export function brainTick(a: Agent, dt: number): void {
     if (ex.running()) ex.interrupt();
     enterProtect(a, threat);
     magicBolt(a, threat);
+    if (a.isBeast) beastTick(a);
     a.sm.set("PROTECTING");
     return;
   }
@@ -284,9 +216,18 @@ export function brainTick(a: Agent, dt: number): void {
     leash(a);
     const t = a.rt.threatId ? safe(() => e.dimension.getEntities({ location: e.location, maxDistance: 14 }).find((x) => x.id === a.rt.threatId), undefined) : undefined;
     if (isValid(t)) magicBolt(a, t);
+    if (a.isBeast) beastTick(a);
     return;
   }
   if (a.sm.state === "PROTECTING") setMood(e, Mood.Neutral);
+
+  // beasts: no hunger, no equipment; special moves + orders + default behaviour
+  if (a.isBeast) {
+    beastTick(a);
+    if (a.record.queue.length && !a.record.pausedByOwner) ex.tick(dt);
+    else idleBehaviour(a);
+    return;
+  }
 
   // 3. own needs (health first, then hunger)
   const gen = needGens.get(a);

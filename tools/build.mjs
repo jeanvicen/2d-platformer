@@ -35,6 +35,16 @@ const BRANCH = process.env.SITE_BRANCH ?? "ccr-4bf51eb6-zchos1";
 const url = `https://github.com/jeanvicen/2d-platformer/raw/${BRANCH}/dist/Shadowbound.mcaddon`;
 const img = (n) => "data:image/png;base64," + readFileSync(`documentation/img/preview_${n}.png`).toString("base64");
 const kb = Math.round(statSync("dist/Shadowbound.mcaddon").size / 1024);
+function beastCards() {
+  const src = readFileSync("scripts/core/species.ts", "utf8");
+  const rows = [...src.matchAll(/^  (\w+): \{ pt: "([^"]+)".*?ability: "([^"]+)"/gm)];
+  return rows
+    .map(([, id, pt, ab]) => {
+      const data = "data:image/png;base64," + readFileSync(`documentation/img/beast_${id}.png`).toString("base64");
+      return `      <div class="beast"><img alt="${pt}" src="${data}"><b>${pt}</b><span>${ab}</span></div>`;
+    })
+    .join("\n");
+}
 let html = readFileSync("site/template.html", "utf8")
   .replace("__DOWNLOAD_URL__", url)
   .replace("__SIZE__", `${kb} KB`)
@@ -42,7 +52,10 @@ let html = readFileSync("site/template.html", "utf8")
   .replace("__IMG_LUNA__", img("luna"))
   .replace("__IMG_RAVEN__", img("raven"))
   .replace("__IMG_SORA__", img("sora"))
-  .replace("__IMG_YUKI__", img("yuki"));
+  .replace("__IMG_YUKI__", img("yuki"))
+  .replace("__IMG_HANA__", img("hana"))
+  .replace("__IMG_AIKO__", img("aiko"))
+  .replace("__BEAST_CARDS__", beastCards());
 if (/__[A-Z_]+__/.test(html)) throw new Error("placeholder left in site");
 writeFileSync("site/index.html", html);
 console.log("site/index.html pronto");

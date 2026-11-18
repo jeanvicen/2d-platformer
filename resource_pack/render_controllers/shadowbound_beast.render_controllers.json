@@ -1,0 +1,55 @@
+{
+  "format_version": "1.10.0",
+  "render_controllers": {
+    "controller.render.shadowbound.beast": {
+      "arrays": {
+        "textures": {
+          "Array.skins": [
+            "Texture.wolf",
+            "Texture.owl",
+            "Texture.serpent",
+            "Texture.toad",
+            "Texture.elephant",
+            "Texture.rabbit",
+            "Texture.deer",
+            "Texture.bull",
+            "Texture.tiger",
+            "Texture.lion",
+            "Texture.dragon",
+            "Texture.colossus"
+          ]
+        },
+        "geometries": {
+          "Array.geos": [
+            "Geometry.wolf",
+            "Geometry.owl",
+            "Geometry.serpent",
+            "Geometry.toad",
+            "Geometry.elephant",
+            "Geometry.rabbit",
+            "Geometry.deer",
+            "Geometry.bull",
+            "Geometry.tiger",
+            "Geometry.lion",
+            "Geometry.dragon",
+            "Geometry.colossus"
+          ]
+        }
+      },
+      "geometry": "Array.geos[query.property('shadowbound:species')]",
+      "materials": [
+        {
+          "*": "Material.default"
+        },
+        {
+          "glow_eyes*": "Material.glow"
+        }
+      ],
+      "textures": [
+        "Array.skins[query.property('shadowbound:species')]"
+      ],
+      "is_hurt_color": {},
+      "on_fire_color": {}
+    }
+  }
+}

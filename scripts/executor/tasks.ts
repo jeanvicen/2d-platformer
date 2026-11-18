@@ -8,11 +8,12 @@ import { BlockPermutation, Entity, EntityDamageCause, ItemStack, type Player } f
 import type { Agent } from "../ai/agent";
 import { AnimState, Mood, TUNING } from "../core/constants";
 import { center, dist, getBlock, isPassableBlock, isValid, particle, safe, sound, yawTo } from "../core/mc";
-import type { StoredItem, Task, Vec3 } from "../core/types";
+import type { Intent, MaterialKind, StoredItem, Task, Vec3 } from "../core/types";
 import { craft, findRecipe, missingFor, plankPotential, type Recipe } from "../crafting/recipes";
-import { makeBlueprint, countRoles, rotate, ladderFacing } from "../building/blueprints";
+import { makeBlueprint, rotate, ladderFacing } from "../building/blueprints";
+import { countNeeds, roleMat, shortfall, type Have, type MatKey } from "../building/materials";
 import {
-  COOK_RESULT, CROPS, FOOD_ANIMALS, FOODS, fuelValue, isFood, isLogItem, isPlanksItem, itemMatchesResource, NATURAL_DIG,
+  COOK_RESULT, CROPS, FOOD_ANIMALS, FOODS, fuelValue, isLeafBlock, isLogBlock, isFood, isLogItem, isPlanksItem, itemMatchesResource, NATURAL_DIG,
   oreInfo, prettyItem, RARE_ITEMS, resourceOfOre, RESOURCE_PT, SOFT_BLOCKS, STONE_BLOCKS, TIER_LEVEL, toolInfo,
   weaponDamage, isFoodCookable, type Tier,
 } from "../inventory/item_catalog";
@@ -21,10 +22,16 @@ import { say, sayKey, setMood, actionBar } from "../communication/comms";
 import { entitiesNear, exposed, findTree, inspectTree, nearLiquid, scanBlocks, TICK, type TreeInfo } from "../perception/perception";
 import { stateForStep } from "../state/state_machine";
 import { chooseFood, eat } from "../survival/needs";
-import { breakAt, collectNear, deliverTo, goNear, placeAt, returnAndDeliver, returnToOwner, type R } from "./routines";
+import { breakAt, collectNear, deliverTo, explore, goNear, placeAt, returnAndDeliver, returnToOwner, type R } from "./routines";
 import { plan } from "../planner/planner";
+import { agents } from "../ai/agent_manager";
+import { handOff } from "../ai/squad";
 
-export type Outcome = { ok: true; msg?: string; followUp?: Task[] } | { ok: false; reason: string; retry?: boolean };
+export type Outcome =
+  | { ok: true; msg?: string; followUp?: Task[] }
+  | { ok: false; reason: string; retry?: boolean }
+  /** prerequisites first: `before` runs ahead of this task, which stays in the queue */
+  | { ok: "defer"; before: Task[]; msg?: string };
 
 const key = (p: Vec3) => `${p.x},${p.y},${p.z}`;
 
@@ -56,7 +63,26 @@ function* finish(a: Agent, t: Task, match: (id: string) => boolean, label: strin
   const d = data(t);
   step(a, t, "verify");
   const have = a.inv.count(match);
-  const toDeliver = Math.min(have, Math.max(0, d.collected - d.delivered));
+  // deliver exactly what was asked (never more), even if a tree dropped extra logs
+  const asked = t.goal.count ?? Infinity;
+  const toDeliver = Math.min(have, Math.max(0, Math.min(d.collected, asked) - d.delivered));
+  const toAgent = t.data.deliverToAgent as string | undefined;
+  if (toAgent && toDeliver > 0) {
+    const target = agents.get(toAgent);
+    const tb = target?.body();
+    if (target && tb) {
+      step(a, t, "return");
+      const g = yield* goNear(a, tb.location, 3, { run: true });
+      if (g.ok || dist(a.body()?.location ?? tb.location, tb.location) < 8) {
+        step(a, t, "deliver");
+        const r = handOff(a, toAgent, match, toDeliver);
+        d.delivered += r.n;
+        a.setAnim(AnimState.Wave, 1000);
+        step(a, t, "confirm");
+        return { ok: true, msg: r.n ? `Entreguei ${r.n} de ${label} para ${target.name}.` : `${target.name} estava sem espaço.` };
+      }
+    }
+  }
   if (!t.deliver) {
     step(a, t, "confirm");
     return { ok: true, msg: `Guardei ${d.collected} de ${label} na minha mochila.` };
@@ -126,8 +152,15 @@ export function* gatherWood(a: Agent, t: Task): R<Outcome> {
     if (forced) tree = inspectTree(body.dimension, forced) ?? { base: forced, logs: [forced] };
     else tree = yield* findTree(body.dimension, body.location, avoid);
     if (!tree) {
+      const tries = (d.explored as number) ?? 0;
+      if (tries < 3) {
+        d.explored = tries + 1;
+        say(a, "Não vejo árvores aqui. Vou explorar um pouco!", { key: "explore-wood", throttleMs: 20000 });
+        yield* explore(a, tries);
+        continue;
+      }
       if (d.collected > 0) break;
-      return { ok: false, reason: "não encontrei árvores naturais num raio de 22 blocos. Me leve até uma floresta?" };
+      return { ok: false, reason: "explorei os arredores e não encontrei árvores naturais. Me leve até uma floresta?" };
     }
     let gotHere = 0;
     for (const log of tree.logs) {
@@ -135,7 +168,7 @@ export function* gatherWood(a: Agent, t: Task): R<Outcome> {
       const b = getBlock(body.dimension, log);
       if (!b || !/(_log|_stem|^minecraft:log2?$)/.test(b.typeId)) continue;
       step(a, t, "goto_target");
-      const g = yield* goNear(a, log, TUNING.reach);
+      const g = yield* goNear(a, log, TUNING.reach, { shadowStep: true });
       if (!g.ok) continue;
       step(a, t, "harvest");
       const br = yield* breakAt(a, log);
@@ -249,8 +282,15 @@ export function* mine(a: Agent, t: Task): R<Outcome> {
         }
         continue;
       }
+      const tries = (d.explored as number) ?? 0;
+      if (tries < 2) {
+        d.explored = tries + 1;
+        say(a, `Não acho ${RESOURCE_PT[r]} por aqui. Vou procurar em outro lugar.`, { key: "explore-mine", throttleMs: 20000 });
+        yield* explore(a, tries);
+        continue;
+      }
       if (d.collected > 0) break;
-      return { ok: false, reason: `não encontrei ${RESOURCE_PT[r]} exposto por perto. Me leve até uma caverna ou encosta.` };
+      return { ok: false, reason: `procurei em volta e não encontrei ${RESOURCE_PT[r]} exposto. Me leve até uma caverna ou encosta.` };
     }
     let gotRound = 0;
     for (const p of targets) {
@@ -444,6 +484,8 @@ export function* gatherFood(a: Agent, t: Task): R<Outcome> {
     sayKey(a, "start_food");
   }
   const effective = () => (d.food as number) + Math.floor((d.wheat as number) / 3);
+  // deliver what was gathered/cooked for THIS order, not food she already carried
+  const gathered = new Set<string>((d.ids as string[]) ?? []);
   let rounds = 0;
   while (effective() < need && rounds++ < 12) {
     step(a, t, "find_target");
@@ -459,6 +501,7 @@ export function* gatherFood(a: Agent, t: Task): R<Outcome> {
         for (const s of items) {
           if (s.id === "minecraft:wheat") d.wheat = (d.wheat as number) + s.n;
           else if (isFood(s.id)) d.food = (d.food as number) + s.n;
+          gathered.add(s.id);
         }
         progress(a, t, effective(), need, "Comida");
       }
@@ -466,12 +509,20 @@ export function* gatherFood(a: Agent, t: Task): R<Outcome> {
     }
     const canHunt = a.record.settings.allowHunting || t.goal.allowHunting;
     if (canHunt) {
-      const h = yield* huntOnce(a, t, undefined);
+      const h = yield* huntOnce(a, t, undefined, gathered);
       if (h > 0) {
         d.food = (d.food as number) + h;
         progress(a, t, effective(), need, "Comida");
         continue;
       }
+    }
+    // nothing here: look around before giving up (like a player would)
+    const tries = (d.explored as number) ?? 0;
+    if (tries < 3) {
+      d.explored = tries + 1;
+      say(a, canHunt ? "Não achei plantação nem animais aqui. Vou procurar mais longe!" : "Não achei plantação aqui. Vou procurar mais longe!", { key: "explore-food", throttleMs: 20000 });
+      yield* explore(a, tries);
+      continue;
     }
     if (effective() > 0) break;
     if (!canHunt) {
@@ -483,9 +534,9 @@ export function* gatherFood(a: Agent, t: Task): R<Outcome> {
         ],
         context: "",
       };
-      return { ok: false, reason: "não achei plantação madura nem frutinhas por perto. Posso caçar animais? Diga 'cace animais' (ou ative a caça nas configurações)." };
+      return { ok: false, reason: "não achei plantação madura nem frutinhas. Posso caçar animais? Diga 'cace animais' (ou ative a caça nas configurações)." };
     }
-    return { ok: false, reason: "não encontrei comida nem animais por perto" };
+    return { ok: false, reason: "explorei em volta e não encontrei comida nem animais" };
   }
   // process: wheat -> bread at a crafting table, raw meat stays raw unless a furnace is used
   step(a, t, "process");
@@ -495,9 +546,20 @@ export function* gatherFood(a: Agent, t: Task): R<Outcome> {
     if (made.ok) d.food = (d.food as number) + (made.n ?? 0);
     else say(a, `Tenho trigo mas não consegui fazer pão: ${made.reason}. Vou entregar o trigo.`, { key: "nobread", throttleMs: 30000 });
   }
+  // cook raw meat when a furnace is available (or can be made): cooked food is much better
+  const raw = a.inv.slots.find((x) => isFoodCookable(x.id) && FOODS[x.id]?.raw);
+  if (raw) {
+    const cooked = yield* smeltAt(a, raw.id, a.inv.countId(raw.id), a.inv.count((id) => id === "minecraft:cobblestone" || id === "minecraft:cobbled_deepslate") >= 8 || a.inv.countId("minecraft:furnace") > 0);
+    if (cooked.got) {
+      gathered.add(COOK_RESULT[raw.id]);
+      say(a, `Assei ${cooked.got} ${prettyItem(COOK_RESULT[raw.id])} pra você!`, { key: "cooked", throttleMs: 10000 });
+    }
+  }
+  if (wheat >= 3) gathered.add("minecraft:bread");
+  d.ids = [...gathered];
   d.collected = (d.food as number) + (wheat >= 3 ? 0 : (d.wheat as number));
   a.record.stats.food += d.food as number;
-  const match = (id: string) => isFood(id) || id === "minecraft:wheat";
+  const match = (id: string) => (gathered.size ? gathered.has(id) : isFood(id) || id === "minecraft:wheat");
   return yield* finish(a, t, match, RESOURCE_PT.food);
 }
 
@@ -556,7 +618,7 @@ function isBaby(e: Entity): boolean {
 }
 
 /** Hunt one animal; returns the amount of meat collected. */
-function* huntOnce(a: Agent, t: Task, mob?: string): R<number> {
+function* huntOnce(a: Agent, t: Task, mob?: string, gathered?: Set<string>): R<number> {
   const e = a.body();
   if (!e) return 0;
   step(a, t, "find_target");
@@ -577,10 +639,43 @@ function* huntOnce(a: Agent, t: Task, mob?: string): R<number> {
   if (!f.killed) return 0;
   step(a, t, "collect");
   const c = yield* collectNear(a, f.at ?? target.location, 4, 20);
+  for (const s of c.picked) if (isFood(s.id)) gathered?.add(s.id);
   return c.picked.filter((s) => isFood(s.id)).reduce((x, y) => x + y.n, 0);
 }
 
+/** Beasts hunt near the owner and leave the meat on the ground for the squad/owner. */
+function* beastHunt(a: Agent, t: Task): R<Outcome> {
+  const need = t.goal.count ?? 3;
+  let kills = 0;
+  let misses = 0;
+  while (kills < need && misses < 3) {
+    const e = a.body();
+    const owner = a.owner();
+    if (!e) return { ok: false, reason: "corpo indisponível", retry: true };
+    step(a, t, "find_target");
+    const center = owner && owner.dimension.id === e.dimension.id ? owner.location : e.location;
+    const list = entitiesNear(e.dimension, center, 24).filter((x) => {
+      const id = safe(() => x.typeId, "");
+      return id in FOOD_ANIMALS && !isBaby(x) && !safe(() => x.nameTag, "");
+    });
+    list.sort((x, y) => dist(x.location, e.location) - dist(y.location, e.location));
+    if (!list[0]) {
+      misses++;
+      yield { t: "wait", ticks: 40 };
+      continue;
+    }
+    step(a, t, "work");
+    const f = yield* fight(a, list[0], 20 * 25);
+    if (f.killed) kills++;
+    else misses++;
+    progress(a, t, kills, need, "Caça");
+  }
+  step(a, t, "confirm");
+  return kills ? { ok: true, msg: `Abateu ${kills} animal(is). A carne ficou no chão perto do local.` } : { ok: false, reason: "não achou animais adultos por perto" };
+}
+
 export function* hunt(a: Agent, t: Task): R<Outcome> {
+  if (a.isBeast) return yield* beastHunt(a, t);
   const d = data(t);
   const need = t.goal.count ?? 4;
   const mob = t.goal.target?.kind === "mob" ? t.goal.target.mob : undefined;
@@ -620,7 +715,7 @@ export function* attack(a: Agent, t: Task): R<Outcome> {
   setMood(a.body(), Mood.Neutral);
   if (!f.killed) return { ok: false, reason: f.reason ?? "não consegui derrotar o alvo" };
   a.record.stats.kills++;
-  yield* collectNear(a, f.at ?? e.location, 4, 12);
+  if (!a.isBeast) yield* collectNear(a, f.at ?? e.location, 4, 12);
   step(a, t, "confirm");
   return { ok: true, msg: "Alvo derrotado." };
 }
@@ -763,50 +858,63 @@ export function* craftTask(a: Agent, t: Task): R<Outcome> {
 // =============================================================================================
 const STATIONS = ["minecraft:furnace", "minecraft:lit_furnace", "minecraft:smoker", "minecraft:lit_smoker", "minecraft:blast_furnace", "minecraft:lit_blast_furnace"];
 
-export function* cook(a: Agent, t: Task): R<Outcome> {
+/**
+ * Smelt/cook `inputId` in a REAL furnace block. Finds one within 12 blocks; with `placeIfMissing`
+ * it places a furnace from the inventory (crafting one from 8 cobblestone if needed).
+ */
+function* smeltAt(a: Agent, inputId: string, nMax: number, placeIfMissing: boolean): R<{ got: number; reason?: string }> {
   const e0 = a.body();
-  if (!e0) return { ok: false, reason: "corpo indisponível", retry: true };
-  step(a, t, "check_inventory");
-  const r = t.goal.resource;
-  const inputs = a.inv.slots.filter((s) => {
-    if (!(s.id in COOK_RESULT)) return false;
-    if (r === "iron" || r === "gold" || r === "copper") return s.id === `minecraft:raw_${r}`;
-    if (r && r !== "food" && r !== "meat") return itemMatchesResource(s.id, r);
-    return isFoodCookable(s.id);
-  });
-  if (!inputs.length) return { ok: false, reason: "não tenho nada cru para cozinhar/fundir" };
-  const inputId = inputs[0].id;
+  if (!e0) return { got: 0, reason: "corpo indisponível" };
   const food = isFood(COOK_RESULT[inputId]);
-  step(a, t, "find_station");
   const found = yield* scanBlocks(e0.dimension, e0.location, (b) => STATIONS.includes(b.typeId) && (food || !b.typeId.includes("smoker")) && (!food || !b.typeId.includes("blast")), { radius: 12, yDown: 4, yUp: 4, limit: 1 });
-  if (!found.length) return { ok: false, reason: "não há fornalha por perto (até 12 blocos). Coloque uma e eu uso." };
-  const st = found[0];
-  step(a, t, "goto_target");
+  let st = found[0];
+  if (!st && placeIfMissing) {
+    if (a.inv.countId("minecraft:furnace") === 0) {
+      const made = yield* craftByKey(a, "furnace", 1, true);
+      if (!made.ok) return { got: 0, reason: "não há fornalha por perto e não tenho 8 pedregulhos para fazer uma" };
+    }
+    const e = a.body();
+    if (!e) return { got: 0, reason: "corpo indisponível" };
+    const base = { x: Math.floor(e.location.x), y: Math.floor(e.location.y), z: Math.floor(e.location.z) };
+    for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1]]) {
+      const p = { x: base.x + dx, y: base.y, z: base.z + dz };
+      const b = getBlock(e.dimension, p);
+      const below = getBlock(e.dimension, { x: p.x, y: p.y - 1, z: p.z });
+      if (b && b.isAir && below && !below.isAir && !below.isLiquid) {
+        const pl = yield* placeAt(a, p, { id: "minecraft:furnace", n: 1 }, BlockPermutation.resolve("minecraft:furnace"));
+        if (pl.ok) {
+          st = p;
+          say(a, "Coloquei uma fornalha aqui pra cozinhar.", { key: "furnace", throttleMs: 15000 });
+          break;
+        }
+      }
+    }
+  }
+  if (!st) return { got: 0, reason: "não há fornalha por perto (até 12 blocos). Coloque uma e eu uso." };
   const g = yield* goNear(a, st, 4);
-  if (!g.ok) return { ok: false, reason: `não alcancei a fornalha (${g.reason})`, retry: true };
+  if (!g.ok) return { got: 0, reason: `não alcancei a fornalha (${g.reason})` };
   const e = a.body();
-  if (!e) return { ok: false, reason: "corpo indisponível", retry: true };
+  if (!e) return { got: 0, reason: "corpo indisponível" };
   const block = getBlock(e.dimension, st);
   const cont = block ? safe(() => block.getComponent("minecraft:inventory")?.container, undefined) : undefined;
-  if (!cont) return { ok: false, reason: "não consegui acessar essa fornalha" };
+  if (!cont) return { got: 0, reason: "não consegui acessar essa fornalha" };
   const inSlot = safe(() => cont.getItem(0), undefined);
   const outSlot = safe(() => cont.getItem(2), undefined);
   const fuelSlot = safe(() => cont.getItem(1), undefined);
-  if (inSlot || outSlot) return { ok: false, reason: "a fornalha já está em uso (tem itens dentro); não vou mexer nas suas coisas" };
-  const n = Math.min(a.inv.countId(inputId), t.goal.count ?? 64, 64);
-  // fuel
+  if (inSlot || outSlot) return { got: 0, reason: "a fornalha já está em uso (tem itens dentro); não vou mexer nas suas coisas" };
+  const n = Math.min(a.inv.countId(inputId), nMax, 64);
+  if (n <= 0) return { got: 0, reason: "não tenho o que cozinhar" };
   const fuels = a.inv.slots.filter((s) => fuelValue(s.id) > 0 && s.id !== inputId && !RARE_ITEMS.has(s.id)).sort((x, y) => fuelValue(y.id) - fuelValue(x.id));
   let fuelId: string | undefined;
   let fuelN = 0;
   const existingFuel = fuelSlot ? fuelValue(fuelSlot.typeId) * fuelSlot.amount : 0;
   if (existingFuel < n) {
-    if (fuelSlot) return { ok: false, reason: "a fornalha tem outro combustível dentro; não vou misturar" };
+    if (fuelSlot) return { got: 0, reason: "a fornalha tem outro combustível dentro; não vou misturar" };
     const f = fuels[0];
-    if (!f) return { ok: false, reason: "não tenho combustível (carvão, madeira ou tábuas)" };
+    if (!f) return { got: 0, reason: "não tenho combustível (carvão, madeira ou tábuas)" };
     fuelId = f.id;
     fuelN = Math.min(a.inv.countId(f.id), Math.ceil(n / fuelValue(f.id)), 64);
   }
-  step(a, t, "work");
   const took = a.inv.removeId(inputId, n);
   const tookFuel = fuelId ? a.inv.removeId(fuelId, fuelN) : 0;
   const inStack = safe(() => makeStack(inputId, took), undefined);
@@ -819,7 +927,7 @@ export function* cook(a: Agent, t: Task): R<Outcome> {
   if (!placed) {
     a.inv.add({ id: inputId, n: took });
     if (fuelId) a.inv.add({ id: fuelId, n: tookFuel });
-    return { ok: false, reason: "não consegui colocar os itens na fornalha" };
+    return { got: 0, reason: "não consegui colocar os itens na fornalha" };
   }
   a.markDirty();
   say(a, `Coloquei ${took} ${prettyItem(inputId)} na fornalha. Vou esperar ficar pronto.`, { key: "cook", throttleMs: 5000 });
@@ -842,7 +950,7 @@ export function* cook(a: Agent, t: Task): R<Outcome> {
       }
     }
   }
-  // take back whatever is left (never leave the owner's items behind silently)
+  // take back whatever is left (never leave items behind silently)
   const rest = safe(() => cont.getItem(0), undefined);
   if (rest && rest.typeId === inputId) {
     a.inv.add({ id: inputId, n: rest.amount });
@@ -855,10 +963,26 @@ export function* cook(a: Agent, t: Task): R<Outcome> {
   }
   a.setWorkAnim(AnimState.Idle);
   a.markDirty();
+  return got ? { got } : { got: 0, reason: "a fornalha não produziu nada a tempo" };
+}
+
+export function* cook(a: Agent, t: Task): R<Outcome> {
+  step(a, t, "check_inventory");
+  const r = t.goal.resource;
+  const inputs = a.inv.slots.filter((s) => {
+    if (!(s.id in COOK_RESULT)) return false;
+    if (r === "iron" || r === "gold" || r === "copper") return s.id === `minecraft:raw_${r}`;
+    if (r && r !== "food" && r !== "meat") return itemMatchesResource(s.id, r);
+    return isFoodCookable(s.id);
+  });
+  if (!inputs.length) return { ok: false, reason: "não tenho nada cru para cozinhar/fundir" };
+  const inputId = inputs[0].id;
+  step(a, t, "find_station");
+  const res = yield* smeltAt(a, inputId, t.goal.count ?? 64, true);
   step(a, t, "verify");
-  if (!got) return { ok: false, reason: "a fornalha não produziu nada a tempo" };
+  if (!res.got) return { ok: false, reason: res.reason ?? "não consegui cozinhar" };
   const d = data(t);
-  d.collected = got;
+  d.collected = res.got;
   const outId = COOK_RESULT[inputId];
   return yield* finish(a, t, (id) => id === outId, prettyItem(outId));
 }
@@ -870,140 +994,292 @@ function makeStack(id: string, n: number): ItemStack {
 // =============================================================================================
 // BUILDING
 // =============================================================================================
-function chooseMaterial(a: Agent, wanted: string, need: number): { id?: string; label: string; fromLogs: boolean } {
-  const byCount = (pred: (id: string) => boolean) => {
-    const m = new Map<string, number>();
-    for (const s of a.inv.slots) if (pred(s.id)) m.set(s.id, (m.get(s.id) ?? 0) + s.n);
-    return [...m.entries()].sort((x, y) => y[1] - x[1])[0];
+const ROLE_ORDER: Record<string, number> = {
+  foundation: 0, floor: 1, main: 2, frame: 2, wall: 3, window: 4, ladder: 5, door_lower: 6, door_upper: 7, fence: 8, roof: 9, torch: 10, table: 10, chest: 10,
+};
+
+function haveCounts(a: Agent): Have {
+  const c = (f: (id: string) => boolean) => a.inv.count(f);
+  return {
+    planks: c(isPlanksItem),
+    log: c(isLogItem),
+    cobblestone: c((id) => id === "minecraft:cobblestone" || id === "minecraft:cobbled_deepslate"),
+    coal: c((id) => id === "minecraft:coal" || id === "minecraft:charcoal"),
+    stick: c((id) => id === "minecraft:stick"),
+    fence: c((id) => /_fence$/.test(id) && !id.includes("nether")),
+    door: c((id) => id === "minecraft:wooden_door"),
+    torch: c((id) => id === "minecraft:torch"),
+    crafting_table: c((id) => id === "minecraft:crafting_table"),
+    chest: c((id) => id === "minecraft:chest"),
+    ladder: c((id) => id === "minecraft:ladder"),
   };
-  const planks = byCount(isPlanksItem);
-  if (wanted === "planks" || wanted === "any") {
-    if (planks && planks[1] >= need) return { id: planks[0], label: "tábuas", fromLogs: false };
-    if (plankPotential(a.inv) >= need) return { id: undefined, label: "tábuas", fromLogs: true };
-    if (wanted === "planks") return { label: "tábuas", fromLogs: false };
+}
+
+function mostOf(a: Agent, pred: (id: string) => boolean): string | undefined {
+  const m = new Map<string, number>();
+  for (const s of a.inv.slots) if (pred(s.id)) m.set(s.id, (m.get(s.id) ?? 0) + s.n);
+  return [...m.entries()].sort((x, y) => y[1] - x[1])[0]?.[0];
+}
+
+function itemFor(a: Agent, mat: MatKey): string | undefined {
+  switch (mat) {
+    case "planks":
+      return mostOf(a, isPlanksItem);
+    case "log":
+      return mostOf(a, isLogItem);
+    case "cobblestone":
+      return mostOf(a, (id) => id === "minecraft:cobblestone" || id === "minecraft:cobbled_deepslate");
+    case "fence":
+      return mostOf(a, (id) => /_fence$/.test(id) && !id.includes("nether"));
+    case "door":
+      return a.inv.countId("minecraft:wooden_door") ? "minecraft:wooden_door" : undefined;
+    case "torch":
+      return a.inv.countId("minecraft:torch") ? "minecraft:torch" : undefined;
+    case "crafting_table":
+      return a.inv.countId("minecraft:crafting_table") ? "minecraft:crafting_table" : undefined;
+    case "chest":
+      return a.inv.countId("minecraft:chest") ? "minecraft:chest" : undefined;
+    case "ladder":
+      return a.inv.countId("minecraft:ladder") ? "minecraft:ladder" : undefined;
   }
-  if (wanted === "cobblestone" || wanted === "any") {
-    const c = byCount((id) => id === "minecraft:cobblestone" || id === "minecraft:cobbled_deepslate");
-    if (c && c[1] >= need) return { id: c[0], label: "pedregulho", fromLogs: false };
-    if (wanted === "cobblestone") return { label: "pedregulho", fromLogs: false };
+}
+
+function satisfiedBy(typeId: string, mat: MatKey | null, role: string): boolean {
+  if (mat === null) return /door/.test(typeId);
+  switch (mat) {
+    case "planks":
+      return isPlanksItem(typeId);
+    case "log":
+      return isLogBlock(typeId) || /_wood$/.test(typeId);
+    case "cobblestone":
+      return /(cobblestone|cobbled_deepslate|stone_bricks)$/.test(typeId) || (role === "foundation" && typeId !== "minecraft:air");
+    case "fence":
+      return /_fence$/.test(typeId) || /glass/.test(typeId);
+    case "door":
+      return /door/.test(typeId);
+    case "torch":
+      return /torch/.test(typeId);
+    case "crafting_table":
+      return typeId === "minecraft:crafting_table";
+    case "chest":
+      return typeId === "minecraft:chest";
+    case "ladder":
+      return typeId === "minecraft:ladder";
   }
-  if (wanted === "log" || wanted === "any") {
-    const l = byCount(isLogItem);
-    if (l && l[1] >= need) return { id: l[0], label: "troncos", fromLogs: false };
-    if (wanted === "log") return { label: "troncos", fromLogs: false };
+}
+
+function permFor(itemId: string, role: string, facing: number): BlockPermutation | undefined {
+  try {
+    if (role === "torch") return BlockPermutation.resolve("minecraft:torch", { torch_facing_direction: "top" } as never);
+    if (role === "ladder") return BlockPermutation.resolve("minecraft:ladder", { facing_direction: ladderFacing(facing) } as never);
+    if (role === "door_lower" || role === "door_upper") {
+      return BlockPermutation.resolve("minecraft:wooden_door", { direction: [3, 0, 1, 2][facing], upper_block_bit: role === "door_upper" } as never);
+    }
+    return BlockPermutation.resolve(itemId);
+  } catch {
+    return undefined; // block not available in this version: leave the spot open
   }
-  if (wanted === "stone" || wanted === "any") {
-    const s = byCount((id) => id === "minecraft:stone");
-    if (s && s[1] >= need) return { id: s[0], label: "pedra", fromLogs: false };
-  }
-  if (wanted === "dirt" || wanted === "any") {
-    const s = byCount((id) => id === "minecraft:dirt");
-    if (s && s[1] >= need) return { id: s[0], label: "terra", fromLogs: false };
-  }
-  return { label: wanted === "any" ? "blocos de construção" : wanted, fromLogs: false };
 }
 
 export function* build(a: Agent, t: Task): R<Outcome> {
   const d = data(t);
   const bp = makeBlueprint(t.goal.structure ?? "hut", t.goal.size);
-  const roles = countRoles(bp);
   const origin = d.origin as Vec3 | undefined;
   const facing = (d.facing as number) ?? 0;
   if (!origin) return { ok: false, reason: "não sei onde construir" };
-  const e = a.body();
-  if (!e) return { ok: false, reason: "corpo indisponível", retry: true };
-  const dim = e.dimension;
+  const e0 = a.body();
+  if (!e0) return { ok: false, reason: "corpo indisponível", retry: true };
+  const dim = e0.dimension;
+  const pref = (t.goal.material ?? "any") as MaterialKind;
+  const fillOnly = bp.kind === "platform" || bp.kind === "bridge";
   const world = bp.placements.map((p) => {
     const r = rotate(p, facing);
-    return { pos: { x: origin.x + r.x, y: origin.y + p.y, z: origin.z + r.z }, role: p.role };
+    return { pos: { x: origin.x + r.x, y: origin.y + p.y, z: origin.z + r.z }, role: p.role, mat: roleMat(p.role, pref) };
   });
-  // already placed blocks (resume) do not need material
-  const already = (d.placed as number) ?? 0;
+  world.sort((x, y) => x.pos.y - y.pos.y || (ROLE_ORDER[x.role] ?? 5) - (ROLE_ORDER[y.role] ?? 5));
+  const isDone = (w: (typeof world)[number]) => {
+    const b = getBlock(dim, w.pos);
+    if (!b) return false;
+    if (satisfiedBy(b.typeId, w.mat, w.role)) return true;
+    return (fillOnly || w.role === "foundation") && !isPassableBlock(b) && !b.isLiquid;
+  };
+
+  // ---- 1. materials (gather what is missing first, alone or with helpers) ----------------
   step(a, t, "check_inventory");
-  const remainingMain = Math.max(0, roles.main - already);
-  let mat = chooseMaterial(a, t.goal.material ?? "any", remainingMain);
-  step(a, t, "prepare_materials");
-  if (!mat.id && mat.fromLogs) {
-    const p = yield* ensurePlanks(a, remainingMain);
-    if (!p.ok) return { ok: false, reason: p.reason ?? "faltam tábuas" };
-    mat = chooseMaterial(a, "planks", remainingMain);
+  for (;;) {
+    const todo = world.filter((w) => !isDone(w));
+    if (!todo.length) break;
+    const need = countNeeds(todo.map((w) => ({ x: 0, y: 0, z: 0, role: w.role })), pref);
+    const sf = shortfall(need, haveCounts(a), !d.skipTorches);
+    const missingCoalOnly = !sf.logs && !sf.cobblestone && sf.coal > 0;
+    if (missingCoalOnly && ((d.matRound as number) ?? 0) >= 1) {
+      d.skipTorches = true; // decoration without torches rather than failing the house
+      continue;
+    }
+    if (!sf.logs && !sf.cobblestone && !sf.coal) break;
+    step(a, t, "prepare_materials");
+    const rounds = (d.matRound as number) ?? 0;
+    const helpers = ((t.data.helpers as string[]) ?? []).map((k) => agents.get(k)).filter((h): h is Agent => !!h && h.record.active && !h.record.dead);
+    if (d.waitingHelpers) {
+      // helpers are bringing materials: wait while any of them is still working on it
+      const busy = helpers.some((h) => h.record.queue.some((q) => q.data.deliverToAgent === a.key));
+      if (busy && ((d.waited as number) ?? 0) < 20 * 60 * 15) {
+        actionBar(a, "esperando materiais das ajudantes...");
+        a.setWorkAnim(AnimState.Idle);
+        yield { t: "wait", ticks: 60 };
+        d.waited = ((d.waited as number) ?? 0) + 60;
+        continue;
+      }
+      d.waitingHelpers = false;
+    }
+    if (rounds >= 3) {
+      const parts = [sf.logs ? `${sf.logs} troncos` : "", sf.cobblestone ? `${sf.cobblestone} pedregulhos` : ""].filter(Boolean).join(" e ");
+      return { ok: false, reason: `ainda faltam ${parts} para ${bp.label}. Me traga ou me leve a uma floresta/caverna.` };
+    }
+    d.matRound = rounds + 1;
+    const want: Intent[] = [];
+    if (sf.logs) want.push({ kind: "gather", resource: "wood", quantity: sf.logs + 2, priority: "normal", raw: "material" });
+    if (sf.cobblestone) want.push({ kind: "mine", resource: "stone", quantity: sf.cobblestone + 2, priority: "normal", raw: "material" });
+    if (sf.coal) want.push({ kind: "mine", resource: "coal", quantity: sf.coal, priority: "normal", raw: "material" });
+    const tasks = plan(want).tasks;
+    for (const x of tasks) x.deliver = false;
+    const summary = [sf.logs ? `~${sf.logs} troncos` : "", sf.cobblestone ? `${sf.cobblestone} pedras` : "", sf.coal ? `${sf.coal} carvão` : ""].filter(Boolean).join(", ");
+    if (helpers.length) {
+      // split every material task between the builder and the helpers
+      const crew = [a, ...helpers];
+      const mine: Task[] = [];
+      for (const x of tasks) {
+        const total = x.goal.count ?? 1;
+        const share = Math.ceil(total / crew.length);
+        crew.forEach((m, i) => {
+          const part: Task = JSON.parse(JSON.stringify(x));
+          part.id = `${x.id}-h${i}`;
+          part.goal.count = Math.min(share, Math.max(0, total - share * i));
+          if (!part.goal.count) return;
+          part.progress = { done: 0, total: part.goal.count };
+          part.label = x.label.replace(/\d+/, String(part.goal.count)) + (m === a ? "" : ` para ${a.name}`);
+          if (m === a) mine.push(part);
+          else {
+            part.data.deliverToAgent = a.key;
+            m.record.queue.push(part);
+            m.markDirty();
+          }
+        });
+      }
+      d.waitingHelpers = true;
+      d.waited = 0;
+      say(a, `Para ${bp.label} faltam ${summary}. ${helpers.map((h) => h.name).join(" e ")} vão me ajudar a buscar!`, { force: true });
+      if (mine.length) return { ok: "defer", before: mine };
+      continue;
+    }
+    return { ok: "defer", before: tasks, msg: `Para ${bp.label} faltam ${summary}. Vou buscar primeiro e depois construo!` };
   }
-  if (!mat.id) {
-    const have = t.goal.material === "cobblestone" ? a.inv.count((id) => id === "minecraft:cobblestone") : plankPotential(a.inv);
-    return {
-      ok: false,
-      reason: `preciso de ${remainingMain} ${mat.label} para a ${bp.label} e tenho ${have}. Peça "pegue madeira" ou "pegue pedra", ou me dê os blocos.`,
-    };
-  }
-  const matId = mat.id;
-  if (roles.ladder > 0) {
-    const ladders = a.inv.countId("minecraft:ladder");
-    if (ladders < roles.ladder) {
-      const times = Math.ceil((roles.ladder - ladders) / 3);
-      const r = yield* craftByKey(a, "ladder", times, true);
-      if (!r.ok) return { ok: false, reason: `preciso de ${roles.ladder} escadas de mão (${r.reason})` };
+
+  // ---- 2. craft the parts --------------------------------------------------------------
+  {
+    const todo = world.filter((w) => !isDone(w));
+    const need = countNeeds(todo.map((w) => ({ x: 0, y: 0, z: 0, role: w.role })), pref);
+    const sf = shortfall(need, haveCounts(a), !d.skipTorches);
+    // logs -> planks, keeping the logs the frame needs
+    const have = haveCounts(a);
+    const planksShort = Math.max(0, sf.planksTotal - have.planks);
+    const spareLogs = Math.max(0, have.log - need.log);
+    const convert = Math.min(spareLogs, Math.ceil(planksShort / 4));
+    if (convert > 0) {
+      const r = craft(findRecipe("planks")!, a.inv, convert);
+      if (!r.ok) return { ok: false, reason: r.reason };
+    }
+    for (const [k, times] of [["fence", sf.crafts.fence], ["door", sf.crafts.door], ["torch", sf.crafts.torch], ["crafting_table", sf.crafts.crafting_table], ["chest", sf.crafts.chest], ["ladder", sf.crafts.ladder]] as [string, number][]) {
+      if (times <= 0) continue;
+      const r = yield* craftByKey(a, k, times, true);
+      if (!r.ok && k !== "torch") say(a, `Não consegui fazer ${k}: ${r.reason}. Vou seguir sem.`, { key: "craft" + k, throttleMs: 30000 });
     }
   }
+
+  // ---- 3. space: clear natural obstacles, refuse to destroy builds -------------------------
   step(a, t, "check_space");
+  const clear: Vec3[] = [];
   let obstructed = 0;
-  // platforms and bridges only FILL gaps: existing solid ground already counts as done
-  const fillOnly = bp.kind === "platform" || bp.kind === "bridge";
-  const satisfied = (b: ReturnType<typeof getBlock>, role: string) =>
-    !!b && (b.typeId === matId || (role === "ladder" && b.typeId === "minecraft:ladder") || (fillOnly && !isPassableBlock(b) && !b.isLiquid));
   for (const w of world) {
+    if (isDone(w)) continue;
     const b = getBlock(dim, w.pos);
     if (!b) return { ok: false, reason: "parte da área não está carregada" };
-    if (satisfied(b, w.role)) continue;
-    if (fillOnly && b.isLiquid) continue; // bridges go over water
-    if (!isPassableBlock(b) || b.isLiquid) obstructed++;
+    if (isPassableBlock(b) || (fillOnly && b.isLiquid)) continue;
+    if (NATURAL_DIG.has(b.typeId) || isLeafBlock(b.typeId)) clear.push(w.pos);
+    else obstructed++;
   }
-  if (obstructed > 0) return { ok: false, reason: `tem ${obstructed} blocos ocupando o espaço da ${bp.label}. Escolha um lugar mais aberto e plano.` };
+  if (obstructed > 0) return { ok: false, reason: `tem ${obstructed} blocos que não são naturais no lugar d${bp.label === "mansão" ? "a" : "a"} ${bp.label}. Escolha um lugar mais aberto.` };
   const owner = a.owner();
   if (owner && world.some((w) => Math.floor(owner.location.x) === w.pos.x && Math.floor(owner.location.z) === w.pos.z && Math.abs(owner.location.y - w.pos.y) < 2)) {
     say(a, "Sai um pouquinho do lugar da construção, por favor!", { key: "move", throttleMs: 8000 });
     yield { t: "wait", ticks: 60 };
   }
+  if (clear.length) say(a, `Limpando ${clear.length} blocos de terreno antes de construir.`, { key: "clear", throttleMs: 20000 });
+  for (const p of clear.sort((x, y) => y.y - x.y)) {
+    const g = yield* goNear(a, p, 5, { shadowStep: true });
+    if (g.ok) {
+      yield* breakAt(a, p, { allowAny: true });
+      yield* collectNear(a, p, 3, 4);
+    }
+  }
+
+  // ---- 4. build layer by layer ---------------------------------------------------------
   step(a, t, "work");
-  say(a, `Começando a ${bp.label} com ${mat.label}. São ${world.length} blocos.`, { key: "buildstart", throttleMs: 10000 });
-  const footprint = new Set<string>();
-  for (const w of world) for (let dy = -1; dy <= 3; dy++) footprint.add(`${w.pos.x},${w.pos.y + dy},${w.pos.z}`);
+  say(a, `Começando ${bp.label}! São ${world.length} blocos.`, { key: "buildstart", throttleMs: 10000 });
+  const occupied = new Set<string>();
+  for (const w of world) {
+    occupied.add(`${w.pos.x},${w.pos.y},${w.pos.z}`);
+    occupied.add(`${w.pos.x},${w.pos.y - 1},${w.pos.z}`); // never stand with the head inside a future block
+  }
   let placed = 0;
   let unreachable = 0;
-  const ladderPerm = BlockPermutation.resolve("minecraft:ladder", { facing_direction: ladderFacing(facing) } as never);
-  const mainPerm = BlockPermutation.resolve(matId);
+  let skipped = 0;
   for (const w of world) {
-    const b = getBlock(dim, w.pos);
-    if (satisfied(b, w.role)) {
+    if (isDone(w)) {
       placed++;
       continue;
     }
-    const g = yield* goNear(a, w.pos, 5.5, { avoid: footprint });
+    if (w.role === "torch" && d.skipTorches && a.inv.countId("minecraft:torch") === 0) {
+      skipped++;
+      continue;
+    }
+    const itemId = w.mat ? itemFor(a, w.mat) : "minecraft:wooden_door";
+    if (!itemId) {
+      if (["torch", "table", "chest", "fence", "window", "door_lower", "door_upper", "ladder"].includes(w.role)) {
+        skipped++; // decoration/parts we could not make: keep building
+        continue;
+      }
+      return { ok: false, reason: `acabou o material (${w.mat}): coloquei ${placed}/${world.length} blocos` };
+    }
+    const perm = permFor(itemId, w.role, facing);
+    if (!perm) {
+      skipped++;
+      continue;
+    }
+    const g = yield* goNear(a, w.pos, 5.5, { avoid: occupied, shadowStep: true });
     if (!g.ok) {
       unreachable++;
       continue;
     }
-    const pl = yield* placeAt(a, w.pos, { id: w.role === "ladder" ? "minecraft:ladder" : matId, n: 1 }, w.role === "ladder" ? ladderPerm : mainPerm);
+    const pl = yield* placeAt(a, w.pos, w.role === "door_upper" ? undefined : { id: itemId, n: 1 }, perm);
     if (pl.ok) {
       placed++;
       d.placed = placed;
       progress(a, t, placed, world.length, bp.label);
-    } else if (pl.reason?.startsWith("sem ")) {
-      return { ok: false, reason: `acabou o material: coloquei ${placed}/${world.length} blocos` };
     } else unreachable++;
   }
   a.setWorkAnim(AnimState.Idle);
   a.record.stats.built += placed;
   step(a, t, "verify");
-  let verified = 0;
-  for (const w of world) {
-    if (satisfied(getBlock(dim, w.pos), w.role)) verified++;
-  }
+  const verified = world.filter(isDone).length;
   step(a, t, "confirm");
-  if (verified === world.length) {
+  const ratio = verified / world.length;
+  if (ratio >= 0.97) {
     setMood(a.body(), Mood.Happy, 4000);
-    return { ok: true, msg: `${bp.label[0].toUpperCase() + bp.label.slice(1)} pronta! ${verified} blocos colocados.` };
+    a.setAnim(AnimState.Wave, 1500);
+    return { ok: true, msg: `${bp.label[0].toUpperCase() + bp.label.slice(1)} pronta! ${verified} blocos${skipped ? ` (${skipped} detalhes de decoração ficaram de fora)` : ""}.` };
   }
-  return { ok: false, reason: `a ${bp.label} ficou incompleta: ${verified}/${world.length} blocos (${unreachable} fora do meu alcance)` };
+  return { ok: false, reason: `${bp.label} ficou incompleta: ${verified}/${world.length} blocos (${unreachable} fora de alcance)`, retry: unreachable > 0 };
 }
 
 // =============================================================================================

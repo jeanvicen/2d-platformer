@@ -76,6 +76,14 @@ export const RECIPES: Recipe[] = [
   { key: "furnace", label: "fornalha", output: "minecraft:furnace", count: 1, station: "crafting_table", inputs: [{ label: "pedregulho", match: STONE_MAT, n: 8 }] },
   { key: "bread", label: "pão", output: "minecraft:bread", count: 1, station: "crafting_table", inputs: [{ label: "trigo", match: any(["minecraft:wheat"]), n: 3 }] },
   {
+    key: "fence", label: "cercas", output: "minecraft:oak_fence", count: 3, station: "crafting_table",
+    inputs: [
+      { label: "tábua", match: PLANKS, n: 4 },
+      { label: "graveto", match: STICK, n: 2 },
+    ],
+  },
+  { key: "door", label: "portas", output: "minecraft:wooden_door", count: 3, station: "crafting_table", inputs: [{ label: "tábua", match: PLANKS, n: 6 }] },
+  {
     key: "ladder", label: "escadas de mão", output: "minecraft:ladder", count: 3, station: "crafting_table",
     inputs: [{ label: "graveto", match: STICK, n: 7 }],
   },
