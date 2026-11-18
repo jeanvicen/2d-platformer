@@ -37,7 +37,11 @@ Expressões (normal, piscando, feliz `^ ^` com blush, focada em combate), piscar
 
 ## As criaturas das sombras
 Doze criaturas originais que você invoca e desinvoca quando quiser. Elas lutam, caçam e protegem com habilidades
-próprias, mas **não coletam, não fabricam e não constroem**:
+próprias, mas **não coletam, não fabricam e não constroem**. Cada uma tem **cores e textura próprias** (pelo, penas,
+escamas, pele ou pedra), olhos que brilham, boca que abre e **animações só dela**: o lobo uiva e abana o rabo, a coruja
+gira a cabeça e mergulha, a serpente desliza e dá o bote, o sapo pula e estica a língua, o elefante abana as orelhas e
+ergue a tromba, o coelho pula e bate a pata, o cervo pasta, o touro cava o chão, o tigre anda agachado e dá o bote,
+o leão chacoalha a juba e ruge, o dragão bate as asas e cospe fogo, o colosso pisa pesado e esmaga com os dois punhos.
 
 Lobo (rápido, caça em dupla) · Coruja (mergulho que deixa lento) · Serpente (prende e envenena) · Sapo (puxa com a língua) ·
 Elefante (jato d'água que empurra e apaga fogo) · Coelho (nuvem que cega) · Cervo (cura você e o esquadrão) ·
@@ -74,7 +78,7 @@ comunicação, UI e IA opcional. Detalhes e interfaces: **[documentation/ARQUITE
 
 ## Qualidade e testes
 - Typecheck estrito contra as typings oficiais `@minecraft/server` 2.3.0 / `@minecraft/server-ui` 2.1.0 (as versões declaradas no manifest).
-- Validador cruzado dos dois pacotes (18 geometrias, texturas, animações, propriedades, eventos, partículas, idioma).
+- Validador cruzado dos dois pacotes (18 geometrias, 129 animações, texturas, propriedades, eventos, partículas, idioma; confere que cada animação de criatura só mexe em ossos que existem no modelo dela).
 - **48 testes automáticos**, incluindo testes de integração que rodam o cérebro real num simulador da API.
 - O que **ainda falta testar dentro do jogo**: [documentation/TESTES.md](documentation/TESTES.md).
 - Limitações reais da plataforma: [documentation/LIMITACOES.md](documentation/LIMITACOES.md).

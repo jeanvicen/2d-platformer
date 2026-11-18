@@ -68,6 +68,15 @@ for (const [bpPath, rpPath] of PAIRS) {
   const used = Object.values(rpe.animations).filter((n) => anims[n]);
   animCount += used.length;
   for (const an of used) for (const b of Object.keys(anims[an].bones ?? {})) if (!allBones.has(b)) warns.push(`${an}: osso ${b} não existe em nenhuma geometria`);
+  // per-species beast animations must only move bones that exist in that species' geometry
+  for (const an of used) {
+    const sp = /^animation\.shadowbound_beast\.([a-z]+)\./.exec(an)?.[1];
+    const g = sp && geos.get(`geometry.shadowbound.beast_${sp}`);
+    if (!sp) continue;
+    if (!g) { errors.push(`${an}: geometria da espécie ${sp} não existe`); continue; }
+    const own = new Set(g.bones.map((b) => b.name));
+    for (const b of Object.keys(anims[an].bones ?? {})) if (!own.has(b)) warns.push(`${an}: osso ${b} não existe no modelo ${sp}`);
+  }
   const molang = JSON.stringify([used.map((n) => anims[n]), ctrls, rpe.render_controllers.map((r) => rcs[r])]);
   for (const m of molang.matchAll(/query\.property\('([^']+)'\)/g)) {
     // controllers are shared files: only check properties for controllers this entity uses

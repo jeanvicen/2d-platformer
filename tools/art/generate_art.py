@@ -617,7 +617,7 @@ def light_pass(region: Image.Image, face: str) -> None:
             px[x, y] = (min(255, int(r * f)), min(255, int(g * f)), min(255, int(b * f)), a)
 
 
-def build_model(persona: str, bones: list, tex: int = TEX_W, scale: int = SCALE, bounds: tuple = (3, 3.5), upscale: int = 1) -> tuple:
+def build_model(persona: str, bones: list, tex: int = TEX_W, scale: int = SCALE, bounds: tuple = (3, 3.5), upscale: int = 1, light: bool = False) -> tuple:
     SCALE = scale  # noqa: N806 (local override for this model)
     atlas = Atlas(tex * scale, tex * scale)
     big = Image.new("RGBA", (tex * scale * upscale, tex * scale * upscale), (0, 0, 0, 0)) if upscale > 1 else None
@@ -651,6 +651,8 @@ def build_model(persona: str, bones: list, tex: int = TEX_W, scale: int = SCALE,
         else:
             region = Image.new("RGBA", (pw, ph), (0, 0, 0, 0))
             c.paint(region, f)
+            if light and not getattr(c.paint, "nolight", False):
+                light_pass(region, f)
             atlas.img.alpha_composite(region, (x, y))
         # extend 1px gutter to avoid seams when sampling
         u = x / SCALE
@@ -1354,44 +1356,211 @@ def persona_aiko() -> list:
 
 
 # --------------------------------------------------------------------------------------
-# Shadow beasts
+# Shadow beasts — each species has its own colours and pelt (fur, feathers, scales, skin or stone).
+# The "shadow" theme stays in the glowing eyes and a thin rune line along the flanks.
 # --------------------------------------------------------------------------------------
-SHADOW = hexc("#211a30")
-SHADOW_LIGHT = hexc("#352a52")
 RUNE = hexc("#8a5cff")
+SIDES = ("north", "south", "east", "west")
+PAINT_SCALE = [2]   # px per model unit of the model being built (set by build_beast)
 
 
-def shadow_fur(base: Color = SHADOW, rune: Color = RUNE, seed: int = 1, stripes: Optional[Color] = None) -> Painter:
+@dataclass
+class Pal:
+    base: Color
+    belly: Color
+    eye: Color
+    kind: str = "fur"                 # fur | feather | scale | skin | stone
+    pattern: Optional[str] = None     # stripes | spots | diamonds | bars | warts | wrinkles | cracks | plates
+    pat: Color = hexc("#000000")
+    detail: Optional[Color] = None    # muzzle / inner ear
+    rune: Color = RUNE
+    pupil: str = "round"              # round | slit | bar
+
+    def det(self) -> Color:
+        return self.detail or mix(self.base, self.belly, 0.6)
+
+
+PALS = {
+    "wolf": Pal(hexc("#4b505e"), hexc("#d9dde5"), hexc("#bfe6ff"), detail=hexc("#b3b8c2"), rune=hexc("#8fb8ff")),
+    "owl": Pal(hexc("#7a5434"), hexc("#ecd9ae"), hexc("#ffc640"), kind="feather", pattern="bars", pat=hexc("#4a301c"),
+               detail=hexc("#dcc394"), rune=hexc("#ffb347")),
+    "serpent": Pal(hexc("#23744f"), hexc("#e3cf7a"), hexc("#d4ff4a"), kind="scale", pattern="diamonds", pat=hexc("#0f3b28"),
+                   detail=hexc("#2f8f61"), rune=hexc("#5cff9d"), pupil="slit"),
+    "toad": Pal(hexc("#62712f"), hexc("#e8dea8"), hexc("#ffb02e"), kind="skin", pattern="warts", pat=hexc("#3c471a"),
+                detail=hexc("#8a9a46"), rune=hexc("#ffd84d"), pupil="bar"),
+    "elephant": Pal(hexc("#8d8e98"), hexc("#74757f"), hexc("#9fd8ff"), kind="skin", pattern="wrinkles", pat=hexc("#6a6b74"),
+                    detail=hexc("#c99c9c"), rune=hexc("#7fd0ff")),
+    "rabbit": Pal(hexc("#f1efec"), hexc("#ffffff"), hexc("#ff5c7a"), detail=hexc("#f7b3c4"), rune=hexc("#ff9cc0")),
+    "deer": Pal(hexc("#a26c3b"), hexc("#f2e4c9"), hexc("#7dffc8"), pattern="spots", pat=hexc("#f6ecd8"), detail=hexc("#5a3a1e"),
+                rune=hexc("#7dffc8")),
+    "bull": Pal(hexc("#3d2b22"), hexc("#5a4433"), hexc("#ff5a4a"), detail=hexc("#7c604d"), rune=hexc("#ff7a5a")),
+    "tiger": Pal(hexc("#e3792a"), hexc("#f8f1e4"), hexc("#ffe066"), pattern="stripes", pat=hexc("#1d1410"), detail=hexc("#f8f1e4"),
+                 rune=hexc("#ffb347"), pupil="slit"),
+    "lion": Pal(hexc("#d7a64f"), hexc("#f2dda8"), hexc("#ffcf3a"), detail=hexc("#f0dbab"), rune=hexc("#ffcf5a"), pupil="slit"),
+    "dragon": Pal(hexc("#4b2572"), hexc("#c28c40"), hexc("#ff4d6d"), kind="scale", pattern="plates", pat=hexc("#2b1245"),
+                  detail=hexc("#6d3b9e"), rune=hexc("#ff6b9c"), pupil="slit"),
+    "colossus": Pal(hexc("#514d5a"), hexc("#3e3b46"), hexc("#6ff0ff"), kind="stone", pattern="cracks", pat=hexc("#6ff0ff"),
+                    detail=hexc("#6f6a7a"), rune=hexc("#6ff0ff")),
+}
+LION_MANE = hexc("#7a4520")
+IVORY = hexc("#ebe3cf")
+MOUTH = hexc("#6a2430")
+
+
+def _blend_px(img: Image.Image, x: int, y: int, c: Color, t: float) -> None:
+    px = img.load()
+    r, g, b, a = px[x, y]
+    if a == 0:
+        return
+    px[x, y] = (int(r + (c[0] - r) * t), int(g + (c[1] - g) * t), int(b + (c[2] - b) * t), a)
+
+
+def _texture(d: ImageDraw.ImageDraw, rnd: random.Random, w: int, h: int, col: Color, kind: str) -> None:
+    if kind == "fur":
+        for _ in range(w * h // 5):
+            x, y = rnd.randrange(w), rnd.randrange(h)
+            d.line([x, y, x + rnd.choice((-1, 0, 0, 1)), min(h - 1, y + rnd.randint(1, 3))],
+                   fill=shade(col, rnd.choice((0.84, 0.9, 1.1, 1.16))))
+    elif kind == "feather":
+        for yy in range(-2, h, 3):
+            off = (yy // 3 % 2) * 2
+            for xx in range(-4 + off, w, 4):
+                d.arc([xx, yy, xx + 4, yy + 4], 20, 160, fill=shade(col, 0.78))
+                d.point([xx + 2, yy + 1], fill=shade(col, 1.14))
+    elif kind == "scale":
+        for yy in range(-1, h, 3):
+            off = (yy // 3 % 2) * 2
+            for xx in range(-4 + off, w, 4):
+                d.arc([xx, yy - 1, xx + 4, yy + 3], 0, 180, fill=shade(col, 0.72))
+                d.point([xx + 2, yy], fill=shade(col, 1.22))
+    elif kind == "skin":
+        for _ in range(w * h // 24):
+            x, y = rnd.randrange(w), rnd.randrange(h)
+            r = rnd.choice((1, 1, 2))
+            d.ellipse([x - r, y - r, x + r, y + r], fill=shade(col, rnd.choice((0.92, 1.07))))
+    elif kind == "stone":
+        for _ in range(w * h // 18):
+            x, y = rnd.randrange(w), rnd.randrange(h)
+            d.rectangle([x, y, x + rnd.randint(1, 3), y + rnd.randint(1, 2)], fill=shade(col, rnd.choice((0.84, 0.92, 1.1, 1.18))))
+
+
+def _pattern(img: Image.Image, d: ImageDraw.ImageDraw, rnd: random.Random, w: int, h: int, face: str, pal: Pal, col: Color) -> None:
+    p = pal.pattern
+    if p == "stripes":
+        if face == "up":
+            for y in range(2, h, 5):
+                pts = [(x, y + rnd.choice((-1, 0, 1))) for x in range(0, w + 2, 2)]
+                d.line(pts, fill=pal.pat, width=rnd.choice((1, 2)))
+        elif face in ("east", "west"):
+            for x in range(2, w, 5):
+                length = rnd.randint(int(h * 0.4), int(h * 0.72))
+                d.line([(x, 0), (x + rnd.choice((-1, 0, 1)), length // 2), (x + rnd.choice((-1, 1)), length)], fill=pal.pat, width=rnd.choice((1, 2)))
+        else:
+            for y in range(2, int(h * 0.8), 4):
+                x0 = rnd.randint(0, max(0, w // 4))
+                d.line([(x0, y), (w - rnd.randint(0, max(0, w // 4)), y + rnd.choice((-1, 0, 1)))], fill=pal.pat, width=1)
+    elif p == "spots" and face in ("up", "east", "west"):
+        lim = h if face == "up" else int(h * 0.6)
+        for _ in range(max(2, w * lim // 30)):
+            x, y = rnd.randrange(w), rnd.randrange(max(1, lim))
+            d.ellipse([x - 1, y - 1, x + 1, y + 1], fill=pal.pat)
+    elif p == "diamonds":
+        if face == "up":
+            for y in range(0, h, 7):
+                cx = w / 2
+                d.polygon([(cx, y), (cx + w * 0.32, y + 3.5), (cx, y + 7), (cx - w * 0.32, y + 3.5)], fill=pal.pat)
+                d.polygon([(cx, y + 2), (cx + w * 0.14, y + 3.5), (cx, y + 5), (cx - w * 0.14, y + 3.5)], fill=shade(col, 1.15))
+        elif face in ("east", "west"):
+            for x in range(0, w, 7):
+                d.polygon([(x, 0), (x + 3.5, h * 0.35), (x + 7, 0)], fill=pal.pat)
+    elif p == "bars":
+        for y in range(3, h, 5):
+            d.line([(0, y), (w, y + rnd.choice((-1, 0, 1)))], fill=pal.pat, width=1)
+    elif p == "warts":
+        for _ in range(max(2, w * h // 16)):
+            x, y = rnd.randrange(w), rnd.randrange(h)
+            d.ellipse([x - 1, y - 1, x + 1, y + 1], fill=pal.pat)
+            d.point([x - 1, y - 1], fill=shade(col, 1.25))
+    elif p == "wrinkles" and face != "up":
+        ph = rnd.random() * 6
+        for y in range(2, h, 3):
+            pts = [(x, y + math.sin(x * 0.7 + ph + y) * 0.8) for x in range(0, w + 1)]
+            d.line(pts, fill=pal.pat, width=1)
+    elif p == "cracks":
+        for _ in range(max(2, (w + h) // 12)):
+            x, y = rnd.randrange(w), rnd.randrange(h)
+            pts = [(x, y)]
+            for _ in range(rnd.randint(3, 6)):
+                x += rnd.randint(-3, 3)
+                y += rnd.randint(1, 3)
+                pts.append((x, y))
+            d.line(pts, fill=shade(col, 0.45), width=2)
+            d.line(pts, fill=pal.pat, width=1)     # glowing seam
+    elif p == "plates" and face == "up":
+        for y in range(2, h, 4):
+            d.line([(0, y), (w, y)], fill=pal.pat, width=1)
+
+
+def pelt(pal: Pal, seed: int = 1, base: Optional[Color] = None, belly: bool = True, pattern: bool = True,
+         rune: bool = False, paw: bool = False, kind: Optional[str] = None) -> Painter:
+    col0 = base or pal.base
+    knd = kind or pal.kind
+
     def p(img: Image.Image, face: str) -> None:
         w, h = img.size
         d = ImageDraw.Draw(img)
-        d.rectangle([0, 0, w, h], fill=base)
-        rnd = random.Random(seed * 31 + len(face) * 7 + w)
-        # soft fur strokes instead of noise
-        for _ in range(w * h // 14):
-            x, y = rnd.randrange(w), rnd.randrange(h)
-            d.line([x, y, x, min(h - 1, y + 2)], fill=shade(base, rnd.choice((0.82, 1.12, 1.18))))
-        d.line([0, 0, w, 0], fill=shade(base, 1.2))
-        if face == "up":
-            d.rectangle([0, 0, w, h], outline=SHADOW_LIGHT)
+        rnd = random.Random(seed * 131 + len(face) * 17 + w * 7 + h)
+        col = pal.belly if (face == "down" and belly) else col0
+        d.rectangle([0, 0, w, h], fill=col)
+        _texture(d, rnd, w, h, col, knd)
         if face == "down":
-            d.rectangle([0, 0, w, h], fill=shade(base, 0.7))
+            if belly and pal.pattern == "plates":
+                for y in range(1, h, 4):
+                    d.line([(0, y), (w, y)], fill=shade(pal.belly, 0.72), width=1)
             return
-        if stripes is not None and face in ("east", "west", "up"):
-            for x in range(2, w, 6):
-                d.line([x, 0, x + rnd.randint(-2, 2), int(h * 0.7)], fill=stripes, width=2)
-        if face in ("east", "west") and w > 8 and h > 6:
-            y = int(h * 0.55)
-            pts = [(int(w * 0.15), y)]
-            for i in range(1, 5):
-                pts.append((int(w * (0.15 + 0.17 * i)), y + rnd.choice((-2, 0, 2))))
-            d.line(pts, fill=rune, width=1)
+        if belly and face in SIDES and h >= 6:
+            band = max(2, int(h * 0.34))
+            for i in range(band):
+                t = (1 - i / band) * 0.9
+                for x in range(w):
+                    _blend_px(img, x, h - 1 - i, pal.belly, t)
+        if pattern and pal.pattern:
+            _pattern(img, d, rnd, w, h, face, pal, col)
+        if paw and face in SIDES and h >= 6:
+            band = max(1, int(h * 0.14))
+            for i in range(band):
+                for x in range(w):
+                    _blend_px(img, x, h - 1 - i, shade(col, 0.62), 0.7)
+        if rune and face in ("east", "west") and w > 10 and h > 6:
+            y = int(h * 0.42)
+            pts = [(int(w * 0.18), y)]
+            for i in range(1, 6):
+                pts.append((int(w * (0.18 + 0.13 * i)), y + (-2 if i % 2 else 2)))
+            d.line(pts, fill=pal.rune, width=1)
     return p
 
 
-def beast_eyes(color: Color, eye_w: float = 0.2, y: float = 0.38, gap: float = 0.24) -> Painter:
-    """Head front: shadow fur + two glowing eyes."""
-    base = shadow_fur(seed=7)
+def plain(c: Color, kind: str = "skin", seed: int = 3) -> Painter:
+    """Single-colour part (horns, beaks, claws) with light texture."""
+    def p(img: Image.Image, face: str) -> None:
+        w, h = img.size
+        d = ImageDraw.Draw(img)
+        d.rectangle([0, 0, w, h], fill=c)
+        _texture(d, random.Random(seed + w + h + len(face)), w, h, c, kind)
+        if face in SIDES and h >= 4:   # darker tip/base gradient
+            for i in range(max(1, h // 4)):
+                for x in range(w):
+                    _blend_px(img, x, i, shade(c, 1.12), 0.5)
+    return p
+
+
+def horn() -> Painter:
+    return plain(IVORY, "skin", 5)
+
+
+def beast_face(pal: Pal, eye_w: float = 0.2, y: float = 0.38, gap: float = 0.24, belly: bool = True, disc: Optional[Color] = None) -> Painter:
+    """Head front: pelt + detailed eyes (socket, iris, pupil, glint, brow)."""
+    base = pelt(pal, seed=7, belly=belly, pattern=pal.pattern in ("stripes", "warts", "wrinkles", "cracks"))
 
     def p(img: Image.Image, face: str) -> None:
         base(img, face)
@@ -1399,23 +1568,109 @@ def beast_eyes(color: Color, eye_w: float = 0.2, y: float = 0.38, gap: float = 0
             return
         w, h = img.size
         d = ImageDraw.Draw(img)
-        ew = max(2, int(w * eye_w))
-        eh = max(2, int(ew * 0.6))
+        ew = max(3, int(round(w * eye_w)))
+        eh = max(3, int(round(ew * 0.72)))
         cy = int(h * y)
         for cx in (int(w * (0.5 - gap)), int(w * (0.5 + gap))):
-            d.ellipse([cx - ew // 2 - 1, cy - eh // 2 - 1, cx + ew // 2 + 1, cy + eh // 2 + 1], fill=shade(color, 0.5))
-            d.ellipse([cx - ew // 2, cy - eh // 2, cx + ew // 2, cy + eh // 2], fill=color)
-            d.point([cx - 1, cy - 1], fill=hexc("#ffffff"))
+            if disc is not None:   # owl facial disc
+                r = int(ew * 1.25)
+                d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=disc)
+            d.line([cx - ew // 2 - 1, cy - eh // 2 - 2, cx + ew // 2 + 1, cy - eh // 2 - 2], fill=shade(pal.base, 0.6))   # brow
+            d.ellipse([cx - ew // 2 - 1, cy - eh // 2 - 1, cx + ew // 2 + 1, cy + eh // 2 + 1], fill=shade(pal.base, 0.35))
+            d.ellipse([cx - ew // 2, cy - eh // 2, cx + ew // 2, cy + eh // 2], fill=pal.eye)
+            d.chord([cx - ew // 2, cy - eh // 2, cx + ew // 2, cy + eh // 2], 0, 180, fill=mix(pal.eye, hexc("#ffffff"), 0.3))
+            dark = hexc("#120c10")
+            if pal.pupil == "slit":
+                d.rectangle([cx - max(0, ew // 10), cy - eh // 2 + 1, cx + max(0, ew // 10), cy + eh // 2 - 1], fill=dark)
+            elif pal.pupil == "bar":
+                d.rectangle([cx - ew // 2 + 1, cy - max(0, eh // 8), cx + ew // 2 - 1, cy + max(0, eh // 8)], fill=dark)
+            else:
+                r = max(1, ew // 4)
+                d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=dark)
+            d.rectangle([cx - ew // 2 + 1, cy - eh // 2 + 1, cx - ew // 2 + 1 + max(0, ew // 6), cy - eh // 2 + 1 + max(0, ew // 6)], fill=hexc("#ffffff"))
     return p
 
 
-def glow_plane(color: Color) -> Painter:
+def snout_paint(pal: Pal, nose: Color = hexc("#2a1f22")) -> Painter:
+    base = pelt(pal, seed=8, base=pal.det(), belly=False, pattern=pal.pattern in ("stripes",))
+
     def p(img: Image.Image, face: str) -> None:
         w, h = img.size
         d = ImageDraw.Draw(img)
-        d.rectangle([0, 0, w, h], fill=(color[0], color[1], color[2], 120))
-    p.is_glow = True  # type: ignore[attr-defined]
+        if face == "down":
+            d.rectangle([0, 0, w, h], fill=MOUTH)
+            return
+        base(img, face)
+        if face == "north":
+            nw = max(2, int(w * 0.42))
+            d.rounded_rectangle([w // 2 - nw // 2, 0, w // 2 + nw // 2, max(2, int(h * 0.45))], radius=max(1, nw // 3), fill=nose)
+            d.point([w // 2 - nw // 4, 1], fill=shade(nose, 2.2))
+            d.line([w // 2, int(h * 0.45), w // 2, h], fill=shade(pal.det(), 0.6))
     return p
+
+
+def jaw_paint(pal: Pal, teeth: bool) -> Painter:
+    base = pelt(pal, seed=9, base=pal.det(), belly=False, pattern=False)
+
+    def p(img: Image.Image, face: str) -> None:
+        w, h = img.size
+        d = ImageDraw.Draw(img)
+        if face == "up":
+            d.rectangle([0, 0, w, h], fill=MOUTH)
+            d.ellipse([w * 0.25, h * 0.2, w * 0.75, h * 0.95], fill=hexc("#d9667a"))      # tongue
+            if teeth:
+                for x in range(0, w, 2):
+                    d.point([x, 0], fill=hexc("#f4efe6"))
+            return
+        if face == "down":
+            d.rectangle([0, 0, w, h], fill=pal.belly)
+            return
+        base(img, face)
+        if teeth and face == "north":
+            for x in range(1, w - 1, 2):
+                d.point([x, 0], fill=hexc("#f4efe6"))
+    return p
+
+
+def inner_ear(pal: Pal, seed: int = 10) -> Painter:
+    base = pelt(pal, seed=seed, belly=False, pattern=False)
+
+    def p(img: Image.Image, face: str) -> None:
+        base(img, face)
+        if face == "north":
+            w, h = img.size
+            ImageDraw.Draw(img).rectangle([w * 0.22, h * 0.2, w * 0.78, h], fill=pal.det())
+    return p
+
+
+def glow_crop(cube: Cube, pal: Pal, y_from_top: float, height: float) -> Cube:
+    """Emissive eye band: an exact crop of the head front (opaque), iris pixels get lower alpha so only they glow."""
+    ox, oy, oz = cube.origin
+    sx, sy, _ = cube.size
+    q = 0.25
+    top_off = round(y_from_top / q) * q
+    hh = max(q, round(height / q) * q)
+
+    def p(img: Image.Image, face: str) -> None:
+        s = PAINT_SCALE[0]
+        fw, fh = int(math.ceil(sx * s)), int(math.ceil(sy * s))
+        full = Image.new("RGBA", (fw, fh), (0, 0, 0, 0))
+        cube.paint(full, "north")
+        light_pass(full, "north")        # same lighting as the head face it covers
+        top = int(round(top_off * s))
+        crop = full.crop((0, top, img.size[0], top + img.size[1]))
+        px = crop.load()
+        for yy in range(crop.size[1]):
+            for xx in range(crop.size[0]):
+                r, g, b, a = px[xx, yy]
+                dist = abs(r - pal.eye[0]) + abs(g - pal.eye[1]) + abs(b - pal.eye[2])
+                lit = mix(pal.eye, hexc("#ffffff"), 0.3)
+                dist2 = abs(r - lit[0]) + abs(g - lit[1]) + abs(b - lit[2])
+                px[xx, yy] = (r, g, b, 110 if min(dist, dist2) < 70 else 255)
+        img.paste(crop, (0, 0))
+    p.is_glow = True  # type: ignore[attr-defined]
+    p.nolight = True  # type: ignore[attr-defined]
+    return Cube((ox, oy + sy - top_off - hh, oz - 0.04), (sx, hh, 0), p, faces=("north",))
 
 
 def split_glow(bones: list) -> list:
@@ -1434,13 +1689,10 @@ def split_glow(bones: list) -> list:
     return out
 
 
-def ivory() -> Painter:
-    return flat(hexc("#e9e2d0"), 1.15, 0.8)
-
-
-def quad(bones: list, L: float, W: float, H: float, legH: float, legW: float, head: float, eye: Color,
-         snout: tuple = (0, 0, 0), tail: float = 0, tail_w: float = 2, stripes: Optional[Color] = None, neck: float = 0) -> dict:
-    """Generic four-legged shadow animal facing north (-z). Returns bones by name."""
+def quad(bones: list, pal: Pal, L: float, W: float, H: float, legH: float, legW: float, head: float,
+         snout: tuple = (0, 0, 0), tail: float = 0, tail_w: float = 2, neck: float = 0, teeth: bool = False,
+         eye: tuple = (0.2, 0.38, 0.24), tail_tip: Optional[Color] = None) -> dict:
+    """Generic four-legged animal facing north (-z). Returns bones by name."""
     by = {}
 
     def add(b: Bone) -> Bone:
@@ -1449,108 +1701,123 @@ def quad(bones: list, L: float, W: float, H: float, legH: float, legW: float, he
         return b
     add(Bone("root", (0, 0, 0)))
     body = add(Bone("body", (0, legH + H / 2, 0), "root"))
-    body.cubes.append(Cube((-W / 2, legH, -L / 2), (W, H, L), shadow_fur(seed=2, stripes=stripes)))
+    body.cubes.append(Cube((-W / 2, legH, -L / 2), (W, H, L), pelt(pal, seed=2, rune=True)))
     hy = legH + H * 0.45 + neck
     hz = -L / 2 - head * 0.6
     hd = add(Bone("head", (0, legH + H * 0.7, -L / 2 + 1), "body"))
     if neck:
-        hd.cubes.append(Cube((-W * 0.22, legH + H * 0.5, -L / 2 - 2), (W * 0.44, neck + 2, 4), shadow_fur(seed=3, stripes=stripes)))
-    hd.cubes.append(Cube((-head / 2, hy, hz - head / 2), (head, head * 0.85, head), only(("north",), beast_eyes(eye), shadow_fur(seed=4))))
+        hd.cubes.append(Cube((-W * 0.22, legH + H * 0.5, -L / 2 - 2), (W * 0.44, neck + 2, 4), pelt(pal, seed=3)))
+    if head > 0.1:
+        hc = Cube((-head / 2, hy, hz - head / 2), (head, head * 0.85, head), only(("north",), beast_face(pal, *eye), pelt(pal, seed=4)))
+        hd.cubes.append(hc)
+        fh = head * 0.85
+        hd.cubes.append(glow_crop(hc, pal, eye[1] * fh - fh * 0.2, fh * 0.4))
     if snout[0]:
         sw, sh, sl = snout
-        hd.cubes.append(Cube((-sw / 2, hy, hz - head / 2 - sl), (sw, sh, sl), shadow_fur(seed=5)))
-    # glowing eye overlay (emissive material in the render controller)
-    hd.cubes.append(Cube((-head * 0.35, hy + head * 0.85 * 0.5, hz - head / 2 - 0.05), (head * 0.7, head * 0.2, 0), glow_plane(eye), faces=("north",)))
-    by["head"].name = "head"
+        z0 = hz - head / 2 - sl
+        up_h = sh * 0.62
+        hd.cubes.append(Cube((-sw / 2, hy + sh - up_h, z0), (sw, up_h, sl), snout_paint(pal)))
+        jaw = add(Bone("jaw", (0, hy + sh - up_h, hz - head / 2), "head"))
+        jaw.cubes.append(Cube((-sw * 0.45, hy, z0 + 0.2), (sw * 0.9, sh - up_h, sl - 0.2), jaw_paint(pal, teeth)))
     lx = W / 2 - legW / 2 - 0.2
     lz = L / 2 - legW / 2 - 0.4
     for name, x, z in (("leg_fl", -lx, -lz), ("leg_fr", lx, -lz), ("leg_bl", -lx, lz), ("leg_br", lx, lz)):
         lg = add(Bone(name, (x, legH, z), "root"))
-        lg.cubes.append(Cube((x - legW / 2, 0, z - legW / 2), (legW, legH + 0.5, legW), shadow_fur(seed=6, stripes=stripes)))
+        lg.cubes.append(Cube((x - legW / 2, 0, z - legW / 2), (legW, legH + 0.5, legW), pelt(pal, seed=6, belly=False, paw=True)))
     if tail:
         tl = add(Bone("tail", (0, legH + H * 0.8, L / 2), "body", rotation=(-35, 0, 0)))
-        tl.cubes.append(Cube((-tail_w / 2, legH + H * 0.8 - tail_w / 2, L / 2), (tail_w, tail_w, tail), shadow_fur(seed=8, stripes=stripes)))
+        tl.cubes.append(Cube((-tail_w / 2, legH + H * 0.8 - tail_w / 2, L / 2), (tail_w, tail_w, tail), pelt(pal, seed=8, belly=False)))
+        if tail_tip is not None:
+            tl.cubes.append(Cube((-tail_w / 2 - 0.2, legH + H * 0.8 - tail_w / 2 - 0.2, L / 2 + tail - 2.5), (tail_w + 0.4, tail_w + 0.4, 2.7),
+                                 pelt(pal, seed=12, base=tail_tip, belly=False, pattern=False)))
     return by
 
 
 def beast_wolf() -> list:
     b: list = []
-    by = quad(b, 14, 7, 7, 8, 2.6, 7, hexc("#e8dcff"), snout=(3.4, 3, 3.6), tail=9, tail_w=2.4)
+    P = PALS["wolf"]
+    by = quad(b, P, 14, 7, 7, 8, 2.6, 7, snout=(3.4, 3, 3.6), tail=9, tail_w=2.4, teeth=True, tail_tip=P.belly)
     for sx in (-1, 1):
-        by["head"].cubes.append(Cube((sx * 2.2 - 1, 8 + 7 * 0.45 + 7 * 0.85, -7 - 4.2 - 0.6), (2, 3, 1.2), shadow_fur(seed=9)))
-    # neck ruff
-    by["body"].cubes.append(Cube((-4.2, 9.5, -7.6), (8.4, 6.5, 4.0), shadow_fur(base=SHADOW_LIGHT, seed=10)))
+        by["head"].cubes.append(Cube((sx * 2.2 - 1, 8 + 7 * 0.45 + 7 * 0.85, -7 - 4.2 - 0.6), (2, 3, 1.2), inner_ear(P)))
+    by["body"].cubes.append(Cube((-4.2, 9.5, -7.6), (8.4, 6.5, 4.0), pelt(P, seed=10, base=mix(P.base, P.belly, 0.35))))   # neck ruff
     return b
 
 
 def beast_tiger() -> list:
     b: list = []
-    by = quad(b, 24, 10, 10, 10, 3.6, 9, hexc("#ffd36b"), snout=(5, 4, 3), tail=16, tail_w=2.4, stripes=hexc("#6b46c9"))
+    P = PALS["tiger"]
+    by = quad(b, P, 24, 10, 10, 10, 3.6, 9, snout=(5, 4, 3), tail=16, tail_w=2.4, teeth=True, tail_tip=P.pat)
     for sx in (-1, 1):
-        by["head"].cubes.append(Cube((sx * 3 - 1, 10 + 4.5 + 7.65, -12 - 5.4 - 0.5), (2, 2, 1), shadow_fur(seed=11)))
+        by["head"].cubes.append(Cube((sx * 3 - 1, 10 + 4.5 + 7.65, -12 - 5.4 - 0.5), (2, 2, 1), inner_ear(P, 11)))
     return b
 
 
 def beast_lion() -> list:
     b: list = []
-    by = quad(b, 24, 10, 11, 10, 3.6, 9, hexc("#ffcf5a"), snout=(5, 4, 3), tail=15, tail_w=2)
+    P = PALS["lion"]
+    by = quad(b, P, 24, 10, 11, 10, 3.6, 9, snout=(5, 4, 3), tail=15, tail_w=2, teeth=True)
     hy = 10 + 11 * 0.45
-    by["head"].cubes.append(Cube((-8, hy - 3, -12 - 2), (16, 14, 6), shadow_fur(base=hexc("#2a1846"), seed=12)))     # mane
-    by["tail"].cubes.append(Cube((-2, 10 + 11 * 0.8 - 2, 12 + 13), (4, 4, 4), shadow_fur(base=hexc("#2a1846"), seed=13)))
+    by["head"].cubes.append(Cube((-8, hy - 3, -12 - 2), (16, 14, 6), pelt(P, seed=12, base=LION_MANE, belly=False, pattern=False)))   # mane
+    by["tail"].cubes.append(Cube((-2, 10 + 11 * 0.8 - 2, 12 + 13), (4, 4, 4), pelt(P, seed=13, base=LION_MANE, belly=False, pattern=False)))
     return b
 
 
 def beast_bull() -> list:
     b: list = []
-    by = quad(b, 20, 12, 12, 9, 4, 9, hexc("#ff6b6b"), snout=(6, 5, 3), tail=10, tail_w=1.5)
+    P = PALS["bull"]
+    by = quad(b, P, 20, 12, 12, 9, 4, 9, snout=(6, 5, 3), tail=10, tail_w=1.5, tail_tip=hexc("#1c1410"))
     hy = 9 + 12 * 0.45 + 9 * 0.85 - 2
     for sx in (-1, 1):
-        by["head"].cubes.append(Cube((sx * 4.5 - (2.5 if sx < 0 else 0), hy, -10 - 5.4 - 1), (2.5, 2, 2), ivory()))
-        by["head"].cubes.append(Cube((sx * 6 - (1.5 if sx < 0 else 0) + (0 if sx < 0 else 0.5), hy + 1.5, -10 - 5.4 - 1), (1.5, 4, 1.5), ivory()))
-    by["body"].cubes.append(Cube((-6.5, 9 + 6, -10 - 1), (13, 8, 8), shadow_fur(base=SHADOW_LIGHT, seed=14)))     # hump
+        by["head"].cubes.append(Cube((sx * 4.5 - (2.5 if sx < 0 else 0), hy, -10 - 5.4 - 1), (2.5, 2, 2), horn()))
+        by["head"].cubes.append(Cube((sx * 6 - (1.5 if sx < 0 else 0) + (0 if sx < 0 else 0.5), hy + 1.5, -10 - 5.4 - 1), (1.5, 4, 1.5), horn()))
+    by["body"].cubes.append(Cube((-6.5, 9 + 6, -10 - 1), (13, 8, 8), pelt(P, seed=14, base=shade(P.base, 1.12))))     # hump
     return b
 
 
 def beast_deer() -> list:
     b: list = []
-    by = quad(b, 16, 7, 8, 14, 2.2, 6, hexc("#9dffcf"), snout=(3, 3, 3), tail=3, tail_w=2, neck=8)
+    P = PALS["deer"]
+    by = quad(b, P, 16, 7, 8, 14, 2.2, 6, snout=(3, 3, 3), tail=3, tail_w=2, neck=8, tail_tip=P.belly)
     hy = 14 + 8 * 0.45 + 8 + 6 * 0.85
+    ant = plain(hexc("#e2d1a8"), "skin", 7)
     for sx in (-1, 1):
         x = sx * 1.6 - 0.5
-        by["head"].cubes.append(Cube((x, hy, -8 - 3.6), (1, 6, 1), flat(hexc("#c8b8ff"), 1.3, 0.8)))
-        by["head"].cubes.append(Cube((x + sx * 1.5 - (0 if sx > 0 else 0.5), hy + 4, -8 - 3.6), (2, 1, 1), flat(hexc("#c8b8ff"), 1.3, 0.8)))
-        by["head"].cubes.append(Cube((x, hy + 3, -8 - 5), (1, 1, 2), flat(hexc("#c8b8ff"), 1.3, 0.8)))
+        by["head"].cubes.append(Cube((x, hy, -8 - 3.6), (1, 6, 1), ant))
+        by["head"].cubes.append(Cube((x + sx * 1.5 - (0 if sx > 0 else 0.5), hy + 4, -8 - 3.6), (2, 1, 1), ant))
+        by["head"].cubes.append(Cube((x, hy + 3, -8 - 5), (1, 1, 2), ant))
     return b
 
 
 def beast_rabbit() -> list:
     b: list = []
-    by = quad(b, 7, 5, 5, 3, 1.6, 4.5, hexc("#ffe3f1"), snout=(2, 1.6, 1), tail=0)
+    P = PALS["rabbit"]
+    by = quad(b, P, 7, 5, 5, 3, 1.6, 4.5, snout=(2, 1.6, 1), tail=0, eye=(0.2, 0.4, 0.26))
     hy = 3 + 5 * 0.45 + 4.5 * 0.85
     for sx in (-1, 1):
         ear = Bone("ear_l" if sx > 0 else "ear_r", (sx * 1.2, hy, -3.5 - 2.7), "head", rotation=(-10, 0, sx * 10))
         b.append(ear)
-        ear.cubes.append(Cube((sx * 1.2 - 0.6, hy, -3.5 - 3.2), (1.2, 6, 1.6), shadow_fur(seed=15)))
-    by["body"].cubes.append(Cube((-1.2, 5.5, 3.5), (2.4, 2.4, 2), flat(hexc("#e8e0ff"), 1.2, 0.8)))
+        ear.cubes.append(Cube((sx * 1.2 - 0.6, hy, -3.5 - 3.2), (1.2, 6, 1.6), inner_ear(P, 15)))
+    by["body"].cubes.append(Cube((-1.2, 5.5, 3.5), (2.4, 2.4, 2), pelt(P, seed=16, base=hexc("#ffffff"), belly=False)))   # cotton tail
     return b
 
 
 def beast_elephant() -> list:
     b: list = []
-    by = quad(b, 30, 20, 18, 16, 6.5, 14, hexc("#bfe3ff"), tail=8, tail_w=1.6)
+    P = PALS["elephant"]
+    by = quad(b, P, 30, 20, 18, 16, 6.5, 14, tail=8, tail_w=1.6, tail_tip=hexc("#4a4a52"), eye=(0.12, 0.4, 0.3))
     hy = 16 + 18 * 0.45
     hz = -15 - 14 * 0.6
     for sx in (-1, 1):
         ear = Bone("ear_l" if sx > 0 else "ear_r", (sx * 7, hy + 8, hz), "head")
         b.append(ear)
-        ear.cubes.append(Cube((sx * 7 - (13 if sx < 0 else 0), hy, hz - 1), (13, 13, 1.5), shadow_fur(base=SHADOW_LIGHT, seed=16)))
-        by["head"].cubes.append(Cube((sx * 4 - (1.5 if sx < 0 else 0), hy - 3, hz - 7 - 4), (1.5, 1.5, 6), ivory()))     # tusks
+        ear.cubes.append(Cube((sx * 7 - (13 if sx < 0 else 0), hy, hz - 1), (13, 13, 1.5), inner_ear(P, 16)))
+        by["head"].cubes.append(Cube((sx * 4 - (1.5 if sx < 0 else 0), hy - 3, hz - 7 - 4), (1.5, 1.5, 6), horn()))     # tusks
     prev = "head"
     y = hy + 2
     for i, (w, h) in enumerate(((5, 5), (4, 5), (3.4, 5), (3, 4))):
         seg = Bone(f"trunk{i}", (0, y, hz - 7), prev)
         b.append(seg)
-        seg.cubes.append(Cube((-w / 2, y - h, hz - 7 - w / 2), (w, h, w), shadow_fur(seed=17 + i)))
+        seg.cubes.append(Cube((-w / 2, y - h, hz - 7 - w / 2), (w, h, w), pelt(P, seed=17 + i, belly=False)))
         prev = seg.name
         y -= h
     return b
@@ -1558,68 +1825,95 @@ def beast_elephant() -> list:
 
 def beast_toad() -> list:
     b: list = []
+    P = PALS["toad"]
     b.append(Bone("root", (0, 0, 0)))
     body = Bone("body", (0, 6, 0), "root")
     b.append(body)
-    body.cubes.append(Cube((-8, 2, -7), (16, 9, 14), shadow_fur(base=hexc("#1c1f24"), seed=18)))
+    body.cubes.append(Cube((-8, 2, -7), (16, 9, 14), pelt(P, seed=18, rune=True)))
     head = Bone("head", (0, 8, -7), "body")
     b.append(head)
-    head.cubes.append(Cube((-7.5, 4, -12), (15, 7, 6), only(("north",), beast_eyes(hexc("#ffe066"), eye_w=0.12, y=0.25, gap=0.3), shadow_fur(seed=19))))
-    head.cubes.append(Cube((-7, 3.6, -12.05), (14, 0.8, 0), flat(hexc("#ff7a9c"), 1.2, 0.8), faces=("north",)))    # mouth line
+
+    def toad_face(img: Image.Image, face: str) -> None:
+        pelt(P, seed=19)(img, face)
+        if face == "north":
+            w, h = img.size
+            d = ImageDraw.Draw(img)
+            d.line([(1, int(h * 0.42)), (w // 2, int(h * 0.5)), (w - 2, int(h * 0.42))], fill=MOUTH, width=2)   # wide smile
+            for cx in (int(w * 0.44), int(w * 0.56)):
+                d.point([cx, int(h * 0.15)], fill=shade(P.base, 0.4))                                          # nostrils
+    head.cubes.append(Cube((-7.5, 4, -12), (15, 7, 6), only(("north",), toad_face, pelt(P, seed=19))))
+    tongue = Bone("tongue", (0, 6.5, -10.8), "head")     # hidden inside the mouth; the attack animation stretches it
+    b.append(tongue)
+    tongue.cubes.append(Cube((-1, 6, -11.8), (2, 1, 1), plain(hexc("#e8607e"), "skin", 9)))
     for sx in (-1, 1):
-        head.cubes.append(Cube((sx * 4.5 - 1.5, 11, -10), (3, 2.5, 3), only(("north",), beast_eyes(hexc("#ffe066"), eye_w=0.6, y=0.5, gap=0.0), shadow_fur(seed=20))))
-    head.cubes.append(Cube((-3, 11.4, -9.6), (6, 0.6, 0), glow_plane(hexc("#ffe066")), faces=("north",)))
+        bump = Cube((sx * 4.5 - 1.5, 11, -10), (3, 2.5, 3), only(("north",), beast_face(P, eye_w=0.62, y=0.5, gap=0.0, belly=False), pelt(P, seed=20, belly=False)))
+        head.cubes.append(bump)
+        head.cubes.append(glow_crop(bump, P, 0.0, 2.5))
     for name, x, z, w, h in (("leg_fl", -6, -6, 3, 4), ("leg_fr", 6, -6, 3, 4), ("leg_bl", -8, 4, 5, 6), ("leg_br", 8, 4, 5, 6)):
         lg = Bone(name, (x, 4, z), "root")
         b.append(lg)
-        lg.cubes.append(Cube((x - w / 2, 0, z - w / 2), (w, h, w + 2), shadow_fur(seed=21)))
+        lg.cubes.append(Cube((x - w / 2, 0, z - w / 2), (w, h, w + 2), pelt(P, seed=21, belly=False, paw=True)))
     return b
 
 
 def beast_owl() -> list:
     b: list = []
+    P = PALS["owl"]
     b.append(Bone("levitate", (0, 0, 0)))
     b.append(Bone("root", (0, 0, 0), "levitate"))
     body = Bone("body", (0, 12, 0), "root")
     b.append(body)
-    body.cubes.append(Cube((-6, 5, -5), (12, 14, 10), shadow_fur(base=hexc("#1d1730"), seed=22)))
-    body.cubes.append(Cube((-4.5, 6, -5.05), (9, 10, 0), flat(hexc("#3a2d63"), 1.2, 0.8), faces=("north",)))        # chest
+    body.cubes.append(Cube((-6, 5, -5), (12, 14, 10), pelt(P, seed=22, rune=True)))
+
+    def chest(img: Image.Image, face: str) -> None:
+        w, h = img.size
+        d = ImageDraw.Draw(img)
+        d.rectangle([0, 0, w, h], fill=P.belly)
+        for y in range(2, h, 4):
+            for x in range(1, w, 4):
+                d.line([(x, y), (x + 1, y + 1), (x + 2, y)], fill=P.pat)     # chevrons
+    body.cubes.append(Cube((-4.5, 6, -5.05), (9, 10, 0), chest, faces=("north",)))
     head = Bone("head", (0, 19, 0), "body")
     b.append(head)
-    head.cubes.append(Cube((-6.5, 19, -6), (13, 10, 11), only(("north",), beast_eyes(hexc("#ffd36b"), eye_w=0.24, y=0.45, gap=0.22), shadow_fur(seed=23))))
-    head.cubes.append(Cube((-1, 21, -7.5), (2, 3, 1.5), flat(hexc("#c9a24a"), 1.2, 0.8)))                        # beak
-    head.cubes.append(Cube((-4.2, 23.5, -6.05), (8.4, 1.6, 0), glow_plane(hexc("#ffd36b")), faces=("north",)))
+    hc = Cube((-6.5, 19, -6), (13, 10, 11), only(("north",), beast_face(P, eye_w=0.22, y=0.45, gap=0.22, belly=False, disc=P.det()), pelt(P, seed=23, belly=False)))
+    head.cubes.append(hc)
+    head.cubes.append(glow_crop(hc, P, 10 * 0.45 - 2.5, 5.0))
+    head.cubes.append(Cube((-1, 21, -7.5), (2, 3, 1.5), plain(hexc("#c9a24a"), "skin", 4)))                       # beak
     for sx in (-1, 1):
-        head.cubes.append(Cube((sx * 4.5 - 1, 29, -3), (2, 3, 2), shadow_fur(seed=24)))                            # ear tufts
+        head.cubes.append(Cube((sx * 4.5 - 1, 29, -3), (2, 3, 2), pelt(P, seed=24, belly=False)))                  # ear tufts
         wing = Bone("wing_l" if sx > 0 else "wing_r", (sx * 6, 18, 0), "body")
         b.append(wing)
-        wing.cubes.append(Cube((sx * 6 - (1.5 if sx < 0 else 0), 6, -4), (1.5, 13, 9), shadow_fur(base=hexc("#251c3d"), seed=25)))
+        wing.cubes.append(Cube((sx * 6 - (1.5 if sx < 0 else 0), 6, -4), (1.5, 13, 9), pelt(P, seed=25, base=shade(P.base, 0.88), belly=False)))
         leg = Bone("leg_fl" if sx < 0 else "leg_fr", (sx * 2.5, 5, 0), "root")
         b.append(leg)
-        leg.cubes.append(Cube((sx * 2.5 - 1, 2, -1), (2, 3.5, 2), flat(hexc("#c9a24a"), 1.2, 0.8)))
+        leg.cubes.append(Cube((sx * 2.5 - 1, 2, -1), (2, 3.5, 2), plain(hexc("#c9a24a"), "skin", 6)))
     tail = Bone("tail", (0, 7, 5), "body", rotation=(30, 0, 0))
     b.append(tail)
-    tail.cubes.append(Cube((-3, 2, 4), (6, 6, 1.5), shadow_fur(seed=26)))
+    tail.cubes.append(Cube((-3, 2, 4), (6, 6, 1.5), pelt(P, seed=26, belly=False)))
     return b
 
 
 def beast_serpent() -> list:
     b: list = []
+    P = PALS["serpent"]
     b.append(Bone("root", (0, 0, 0)))
     head = Bone("head", (0, 6, -6), "root", rotation=(-10, 0, 0))
     b.append(head)
-    head.cubes.append(Cube((-5, 3, -16), (10, 6, 10), only(("north",), beast_eyes(hexc("#9dff7a"), eye_w=0.18, y=0.3, gap=0.28), shadow_fur(base=hexc("#14201a"), seed=27))))
-    head.cubes.append(Cube((-4, 1, -15), (8, 2, 8), shadow_fur(base=hexc("#14201a"), seed=28)))                    # jaw
+    hc = Cube((-5, 3, -16), (10, 6, 10), only(("north",), beast_face(P, eye_w=0.18, y=0.3, gap=0.28), pelt(P, seed=27)))
+    head.cubes.append(hc)
+    head.cubes.append(glow_crop(hc, P, 6 * 0.3 - 1.25, 2.5))
+    jaw = Bone("jaw", (0, 3, -7), "head")
+    b.append(jaw)
+    jaw.cubes.append(Cube((-4, 1, -15), (8, 2, 8), jaw_paint(P, teeth=False)))
     for sx in (-1, 1):
-        head.cubes.append(Cube((sx * 2.5 - 0.4, 0.2, -15.6), (0.8, 2, 0.8), ivory()))                              # fangs
-    head.cubes.append(Cube((-3.5, 6.8, -16.05), (7, 1.2, 0), glow_plane(hexc("#9dff7a")), faces=("north",)))
+        head.cubes.append(Cube((sx * 2.5 - 0.4, 1.6, -15.6), (0.8, 1.6, 0.8), horn()))                                # fangs
     prev = "root"
     z = -6
     for i in range(7):
         w = 7 - i * 0.6
         seg = Bone(f"seg{i}", (0, 3, z), prev)
         b.append(seg)
-        seg.cubes.append(Cube((-w / 2, 0, z), (w, w * 0.85, 7), shadow_fur(base=hexc("#14201a"), seed=29 + i, rune=hexc("#5cff9d"))))
+        seg.cubes.append(Cube((-w / 2, 0, z), (w, w * 0.85, 7), pelt(P, seed=29 + i, rune=(i % 2 == 0))))
         prev = seg.name
         z += 7
     b.append(Bone("body", (0, 3, 0), "root"))
@@ -1628,45 +1922,57 @@ def beast_serpent() -> list:
 
 def beast_dragon() -> list:
     b: list = []
-    eye = hexc("#ff4d6d")
-    by = quad(b, 26, 14, 12, 12, 4, 0.01, eye, tail=0)
-    # replace the tiny head with neck + head chain
-    by["head"].cubes.clear()
+    P = PALS["dragon"]
+    by = quad(b, P, 26, 14, 12, 12, 4, 0.01, tail=0)
     neck = Bone("neck", (0, 20, -13), "body", rotation=(30, 0, 0))
     b.append(neck)
-    neck.cubes.append(Cube((-3, 18, -21), (6, 6, 9), shadow_fur(base=hexc("#1a1022"), seed=31)))
+    neck.cubes.append(Cube((-3, 18, -21), (6, 6, 9), pelt(P, seed=31)))
     dh = Bone("dhead", (0, 21, -21), "neck", rotation=(-25, 0, 0))
     b.append(dh)
-    dh.cubes.append(Cube((-4.5, 18, -32), (9, 7, 11), only(("north",), beast_eyes(eye, eye_w=0.16, y=0.3, gap=0.3), shadow_fur(base=hexc("#1a1022"), seed=32))))
-    dh.cubes.append(Cube((-3.5, 15.5, -31), (7, 2.5, 9), shadow_fur(base=hexc("#1a1022"), seed=33)))                 # jaw
-    dh.cubes.append(Cube((-3.2, 23.2, -32.05), (6.4, 1.2, 0), glow_plane(eye), faces=("north",)))
+    hc = Cube((-4.5, 18, -32), (9, 7, 11), only(("north",), beast_face(P, eye_w=0.16, y=0.3, gap=0.3), pelt(P, seed=32)))
+    dh.cubes.append(hc)
+    dh.cubes.append(glow_crop(hc, P, 7 * 0.3 - 1.5, 3.0))
+    jaw = Bone("jaw", (0, 18, -22), "dhead")
+    b.append(jaw)
+    jaw.cubes.append(Cube((-3.5, 15.5, -31), (7, 2.5, 9), jaw_paint(P, teeth=True)))
+    membrane = hexc("#7a3aa8")
+
+    def wing_skin(img: Image.Image, face: str) -> None:
+        w, h = img.size
+        d = ImageDraw.Draw(img)
+        d.rectangle([0, 0, w, h], fill=membrane)
+        for i in range(1, 5):                                  # finger bones / veins
+            x = int(w * i / 5)
+            d.line([(x, 0), (x + (3 if face == "up" else -3), h)], fill=shade(membrane, 0.62), width=1)
+        d.line([(0, 0), (w, 0)], fill=shade(membrane, 0.5), width=2)
     for sx in (-1, 1):
-        dh.cubes.append(Cube((sx * 3 - 0.75, 25, -25), (1.5, 5, 1.5), ivory()))                                    # horns
+        dh.cubes.append(Cube((sx * 3 - 0.75, 25, -25), (1.5, 5, 1.5), horn()))                                   # horns
         wing = Bone("wing_l" if sx > 0 else "wing_r", (sx * 7, 23, -6), "body")
         b.append(wing)
         x0 = sx * 7 - (26 if sx < 0 else 0)
-        wing.cubes.append(Cube((x0, 23, -8), (26, 1, 3), shadow_fur(base=hexc("#251536"), seed=34)))             # arm bone
-        wing.cubes.append(Cube((x0 + (0 if sx > 0 else 1), 22.6, -5), (25, 0.6, 16), flat(hexc("#3a1f5c"), 1.2, 0.8)))  # membrane
+        wing.cubes.append(Cube((x0, 23, -8), (26, 1, 3), pelt(P, seed=34, belly=False)))                         # arm bone
+        wing.cubes.append(Cube((x0 + (0 if sx > 0 else 1), 22.6, -5), (25, 0.6, 16), wing_skin))                   # membrane
     prev = "body"
     z = 13
     for i in range(4):
         w = 6 - i * 1.2
         seg = Bone(f"tail{i}" if i else "tail", (0, 16, z), prev)
         b.append(seg)
-        seg.cubes.append(Cube((-w / 2, 16 - w / 2, z), (w, w, 8), shadow_fur(base=hexc("#1a1022"), seed=35 + i, rune=hexc("#ff6b9c"))))
+        seg.cubes.append(Cube((-w / 2, 16 - w / 2, z), (w, w, 8), pelt(P, seed=35 + i)))
         prev = seg.name
         z += 8
     for i in range(5):
-        by["body"].cubes.append(Cube((-0.75, 24, -10 + i * 5), (1.5, 2.5, 2), ivory()))                             # spines
+        by["body"].cubes.append(Cube((-0.75, 24, -10 + i * 5), (1.5, 2.5, 2), horn()))                             # spines
     return b
 
 
 def beast_colossus() -> list:
     b: list = []
+    P = PALS["colossus"]
     b.append(Bone("root", (0, 0, 0)))
     body = Bone("body", (0, 34, 0), "root")
     b.append(body)
-    body.cubes.append(Cube((-10, 22, -6), (20, 20, 12), shadow_fur(base=hexc("#120e1a"), seed=41)))
+    body.cubes.append(Cube((-10, 22, -6), (20, 20, 12), pelt(P, seed=41)))
 
     def core(img: Image.Image, face: str) -> None:
         w, h = img.size
@@ -1676,20 +1982,21 @@ def beast_colossus() -> list:
         d.ellipse([w // 4, h // 4, 3 * w // 4, 3 * h // 4], fill=(230, 255, 255, 220))
     body.cubes.append(Cube((-2.5, 32, -6.1), (5, 5, 0), core, faces=("north",)))
     for i in range(4):
-        body.cubes.append(Cube((-1, 42 - i * 4, 6), (2, 2.5, 4), ivory()))                                          # back spikes
+        body.cubes.append(Cube((-1, 42 - i * 4, 6), (2, 2.5, 4), plain(P.det(), "stone", 40 + i)))                   # back spikes
     head = Bone("head", (0, 42, 0), "body")
     b.append(head)
-    head.cubes.append(Cube((-5, 42, -5), (10, 10, 10), only(("north",), beast_eyes(hexc("#6ff0ff"), eye_w=0.18, y=0.45, gap=0.22), shadow_fur(seed=42))))
-    head.cubes.append(Cube((-3.6, 46.4, -5.05), (7.2, 1.2, 0), glow_plane(hexc("#6ff0ff")), faces=("north",)))
+    hc = Cube((-5, 42, -5), (10, 10, 10), only(("north",), beast_face(P, eye_w=0.18, y=0.45, gap=0.22, belly=False), pelt(P, seed=42, belly=False)))
+    head.cubes.append(hc)
+    head.cubes.append(glow_crop(hc, P, 10 * 0.45 - 1.5, 3.0))
     for sx in (-1, 1):
-        head.cubes.append(Cube((sx * 4 - 1, 52, -1), (2, 4, 2), ivory()))                                          # crown spikes
+        head.cubes.append(Cube((sx * 4 - 1, 52, -1), (2, 4, 2), plain(P.det(), "stone", 46)))                           # crown spikes
         arm = Bone("arm_l" if sx > 0 else "arm_r", (sx * 12, 40, 0), "body")
         b.append(arm)
-        arm.cubes.append(Cube((sx * 12 - 4, 16, -4), (8, 24, 8), shadow_fur(base=hexc("#120e1a"), seed=43)))
-        arm.cubes.append(Cube((sx * 12 - 4.5, 13, -4.5), (9, 4, 9), shadow_fur(base=SHADOW_LIGHT, seed=44)))       # fists
+        arm.cubes.append(Cube((sx * 12 - 4, 16, -4), (8, 24, 8), pelt(P, seed=43, belly=False)))
+        arm.cubes.append(Cube((sx * 12 - 4.5, 13, -4.5), (9, 4, 9), pelt(P, seed=44, base=P.det(), belly=False)))       # fists
         leg = Bone("leg_l" if sx > 0 else "leg_r", (sx * 5, 22, 0), "root")
         b.append(leg)
-        leg.cubes.append(Cube((sx * 5 - 4, 0, -4), (8, 22, 8), shadow_fur(base=hexc("#120e1a"), seed=45)))
+        leg.cubes.append(Cube((sx * 5 - 4, 0, -4), (8, 22, 8), pelt(P, seed=45, belly=False, paw=True)))
     return b
 
 
@@ -1698,6 +2005,20 @@ BEAST_BUILDERS = [
     ("elephant", beast_elephant), ("rabbit", beast_rabbit), ("deer", beast_deer), ("bull", beast_bull),
     ("tiger", beast_tiger), ("lion", beast_lion), ("dragon", beast_dragon), ("colossus", beast_colossus),
 ]
+
+
+def build_beast(sp: str, builder) -> tuple:
+    """Smallest atlas that fits, painted at up to 512 px (64 units x 8 px or 128 units x 4 px)."""
+    for tex in (64, 128, 256):
+        scale = max(2, 512 // tex)
+        PAINT_SCALE[0] = scale
+        try:
+            geo, img = build_model(f"beast_{sp}", split_glow(builder()), tex=tex, scale=scale, bounds=(5, 5), light=True)
+            return geo, img, scale
+        except RuntimeError:
+            continue
+    raise RuntimeError(f"beast {sp} does not fit")
+
 
 # --------------------------------------------------------------------------------------
 # Small 2D assets
@@ -1856,12 +2177,11 @@ def main() -> None:
 
     beast_previews = []
     for sp, builder in BEAST_BUILDERS:
-        bones = split_glow(builder())
-        geo, tex = build_model(f"beast_{sp}", bones, tex=256, scale=2, bounds=(5, 5))
+        geo, tex, bscale = build_beast(sp, builder)
         with open(os.path.join(RP, "models", "entity", f"shadowbound_beast_{sp}.geo.json"), "w") as f:
             json.dump(geo, f, indent=1)
         tex.save(os.path.join(RP, "textures", "entity", "shadowbound", f"beast_{sp}.png"))
-        pv = render_side(geo, tex, px_per_unit=4, scale=2, canvas=(80, 64))
+        pv = render_side(geo, tex, px_per_unit=4, scale=bscale, canvas=(80, 64))
         pv.save(os.path.join(DOCS, f"beast_{sp}.png"))
         beast_previews.append(pv)
     sheet = Image.new("RGBA", (4 * 320, 3 * 256), hexc("#1a1426"))

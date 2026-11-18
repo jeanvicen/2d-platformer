@@ -88,4 +88,9 @@
 - Pintores marcados `hires` (rosto, cabelo) são pintados direto na resolução final, com supersampling 4×.
 - O rosto inteiro é renderizado por `face_render(olhos, sobrancelhas)`; cada expressão (olhos brilhando, piscar,
   feliz, brava) é um **recorte** desse render, então as camadas encaixam pixel a pixel.
+- Criaturas: cada espécie tem paleta e textura próprias (`PALS` + `pelt`: pelo, penas, escamas, pele ou pedra, com
+  padrões como listras, pintas, losangos, verrugas, rugas e rachaduras); atlas no menor tamanho que cabe, até 512 px.
 - `generate_anims.py` gera animações, controladores, render controllers e entidades de cliente; o validador cruza tudo.
+- Cada criatura tem **seu próprio conjunto de animações** (parada, andar, correr, ataque, habilidade, guarda, invocação e
+  uma camada sempre ativa de respiração/rabo/orelhas/asas). Um único controlador começa no estado `start` e vai para
+  os estados da espécie certa pela propriedade `shadowbound:species` (e volta se ela mudar).

@@ -9,7 +9,7 @@ npm run build       # valida os pacotes e gera dist/*.mcaddon
 ```
 
 ## Resultado automático (registrado em 2026-11-18, v2.0)
-Typecheck: **0 erros**. Validador de pacotes: **OK** (18 geometrias, 30 animações, 2 partículas, 0 avisos).
+Typecheck: **0 erros**. Validador de pacotes: **OK** (18 geometrias, 129 animações, 2 partículas, 0 avisos).
 
 ```
 ✔ inventário: empilha, respeita capacidade e devolve o que não coube
@@ -75,6 +75,7 @@ Typecheck: **0 erros**. Validador de pacotes: **OK** (18 geometrias, 30 animaç�
 7. (v2.0) Ordens no plural ("sigam", "protejam", "parem") não eram entendidas. Agora são.
 8. (v2.0) Criaturas não usavam habilidades enquanto protegiam. Agora usam.
 9. (v2.0, arte) As camadas de expressão do rosto (piscar, sobrancelha brava) deixavam contorno fantasma e sobrancelha dupla. Agora cada expressão é um recorte do mesmo rosto renderizado, encaixando pixel a pixel.
+10. (v2.0, arte) As criaturas eram quase pretas (#211a30) e viravam silhuetas no jogo; a faixa de brilho tapava os olhos. Agora cada uma tem cores e textura próprias e o brilho é um recorte exato do rosto.
 
 ## Mapa dos testes obrigatórios (seção 18 do prompt)
 | # | Teste | Automático (simulador) | No jogo |
@@ -114,6 +115,7 @@ Typecheck: **0 erros**. Validador de pacotes: **OK** (18 geometrias, 30 animaç�
 12. `raven, me proteja` → só a Raven muda de modo.
 13. `/sombra invocar 2 lobos` e `/sombra invocar dragao` → aparecem com a animação de invocação; num zumbi, usam as habilidades. `desinvocar lobos` → somem.
 14. Mandar um lobo `pegar madeira` → ele recusa (criaturas não coletam).
+14b. **Criaturas**: invocar uma de cada → todas coloridas (nenhuma preta/sem textura), olhos brilhando à noite, e cada uma com animação própria parada, andando, atacando e usando a habilidade (lobo uiva, leão ruge, dragão cospe fogo, sapo estica a língua...).
 15. `consiga comida` longe de plantações → caça, assa a carne numa fornalha e entrega.
 16. `construa uma casa grande` sem material → ela busca troncos/pedra, fabrica as peças, limpa o terreno e constrói; confere ≥ 97% dos blocos.
 17. Durante uma coleta, um monstro aparece perto de você → ela protege e depois **volta para a coleta** de onde parou.
