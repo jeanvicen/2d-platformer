@@ -10,6 +10,7 @@ import { masteryLevel } from "./canon";
 import { addXp, depositHeld, giveItem, maxEnergyOf, refund, saveSorcerer, sorcerer, spend, usesVigor, type SorcererRecord } from "./sorcerer";
 import { ahead, aura, beam, burst, enemiesNear, head, lineHits, look, orb, ring, targetAhead, vanilla } from "./fx";
 import { getBlock, isPassableBlock, particle } from "../core/mc";
+import { currentOverlay, eyeGlow, setOverlay } from "./overlay";
 
 const WHITE: Rgb = { red: 1, green: 1, blue: 1 };
 const BLUE: Rgb = { red: 0.3, green: 0.65, blue: 1 };
@@ -89,6 +90,10 @@ export function cast(p: Player, id: string): boolean {
   const r = sorcerer(p.id);
   const a = ABILITIES[id];
   if (!a) return false;
+  if (r.possessedUntil && r.possessedUntil > Date.now()) {
+    p.sendMessage("§4Sukuna está no controle do seu corpo.");
+    return false;
+  }
   const why = blocked(r, a);
   if (why) {
     p.sendMessage(`§7${a.name}: ${why.replace(/§./g, "")}.`);
@@ -134,6 +139,7 @@ export function cast(p: Player, id: string): boolean {
       p.sendMessage("§5O contragolpe da Fala Amaldiçoada machucou sua garganta.");
     }
   }
+  if (r.tech === "limitless") r.lastGojoCast = Date.now();
   saveSorcerer(p.id);
   addXp(p.id, 2);
   return true;
@@ -488,6 +494,11 @@ export function abilityTick(p: Player, r: SorcererRecord): number {
     eff(p, "strength", 1, 60); eff(p, "speed", 1, 60); eff(p, "resistance", 0, 60); eff(p, "jump_boost", 1, 60); eff(p, "night_vision", 0, 400);
   }
   domainTick(p, r);
+  if (r.tech === "limitless" && !r.possessedUntil) {
+    const glow = !!r.toggles.infinito || (r.domain?.kind === "vazio" && r.domain.until > Date.now()) || (r.lastGojoCast ?? 0) + 4000 > Date.now();
+    setOverlay(p, glow ? "eyes" : undefined);
+    if (glow) eyeGlow(p);
+  } else if (!r.possessedUntil && currentOverlay(p) === "eyes") setOverlay(p, undefined);
   return drain;
 }
 

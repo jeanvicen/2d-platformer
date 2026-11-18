@@ -20,7 +20,9 @@
 | Textura das humanas | 1024 px usa mais memória de vídeo | 6 texturas ≈ 24 MB de VRAM; se pesar num celular fraco, dá pra gerar em 512 trocando `HUMAN_UPSCALE` para 1 |
 | Esquadrão grande | cada sombra roda IA e caminho próprios | limite padrão 12 (até 40 no menu); acima disso o celular pode travar |
 | Criaturas | são lutadoras | não coletam, não fabricam e não constroem (de propósito) |
-| Possessão de Sukuna | um add-on não pode tirar o controle da câmera/movimento do jogador | durante a possessão o corpo fica muito mais forte e corta tudo ao redor sozinho; o jogador continua se mexendo |
+| Possessão de Sukuna | a API estável trava movimento e pulo e muda a câmera, mas o jogador ainda pode girar a câmera | durante a possessão você não anda nem pula, a câmera vai para a terceira pessoa e o corpo se move sozinho (teleportes curtos) atacando tudo; agachar várias vezes devolve o controle |
+| Marcas de Sukuna / Seis Olhos | não dá para pintar a pele do jogador sem substituir o modelo dele | as marcas e os olhos são uma "peça de capacete" transparente colocada sozinha (o capacete que você usava volta depois); dependem do formato do rosto da skin |
+| Botões de poder | botões novos na tela (HUD) exigem mexer na interface JSON do jogo, que quebra entre versões | cada poder é um item na barra (estável em qualquer versão); a recarga aparece no slot |
 | Roupas | só peças de armadura (attachables) mudam o visual do jogador | uniformes como jaqueta/calça/venda; cabelo e rosto do jogador não mudam |
 | Maldições | não há inimigos próprios ainda | os monstros do Minecraft fazem o papel de espíritos amaldiçoados (drops e alvos das técnicas) |
 | Testes no jogo | esta sessão não tem Minecraft | testado com typings oficiais, validador de pacotes e simulador. Checklist manual em `TESTES.md` |

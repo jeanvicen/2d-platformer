@@ -15,6 +15,7 @@ import { SHIKIGAMI, masteryLevel, shikigamiLimit } from "./canon";
 import { TECHS, type ClanId, type TechId } from "./clans";
 import { abilityTick } from "./abilities";
 import { sukunaTick } from "./sukuna";
+import { syncKit } from "./skills";
 
 export interface SorcererRecord {
   v: 1;
@@ -39,6 +40,10 @@ export interface SorcererRecord {
   influence: number;
   throat: number;
   possessedUntil?: number;
+  resist?: number;                 // struggle meter while Sukuna is in control (0..100)
+  destruction?: boolean;           // Sukuna breaks natural blocks while in control (default on)
+  savedHelmet?: StoredItem | null; // helmet put aside while an overlay (marks/six eyes) is shown
+  lastGojoCast?: number;
   domain?: { kind: string; until: number; dim: string; x: number; y: number; z: number };
 }
 
@@ -110,6 +115,7 @@ export function addXp(pid: string, n: number): void {
   saveSorcerer(pid);
   if (after > before) {
     const p = world.getAllPlayers().find((x) => x.id === pid);
+    if (p) syncKit(p); // newly unlocked abilities get their hotbar button
     if (p) {
       safe(() => p.sendMessage(`§5✦ Domínio subiu para o nível ${after}!§r ${energyName(r)} máxima: ${maxEnergyOf(r)}. §7(+1 giro na roleta de clã)`), undefined);
       sound(p.dimension, "random.levelup", p.location, 0.6, 0.8);

@@ -18,6 +18,7 @@ import { energyName, maxEnergyOf, saveSorcerer, sorcerer, summonDivineDogs, summ
 import { GEAR, forge, missing, prettyId, type GearInfo } from "./arsenal";
 import { FINGERS_TOTAL, fingersInWorld, isPossessed, meditate } from "./sukuna";
 import { spin } from "./roulette";
+import { syncKit } from "./skills";
 
 const CAT_PT = { ativa: "Ativa", alternavel: "Alternável", passiva: "Passiva", dominio: "Domínio" } as const;
 
@@ -63,7 +64,12 @@ export function openSeal(p: Player): void {
     const innate = abilitiesFor(r).filter((a) => TECHS[r.tech!].abilities.includes(a.id) && a.kind !== "passiva").slice(0, 4);
     m.header(usesVigor(r) ? "Habilidades" : "Técnica inata");
     for (const a of innate) abilityButton(m, p, a);
-    m.button("§lTodas as técnicas§r\n§7domínio · gerais · rápida", ICON.hand, () => openTechniques(p)).divider();
+    m.button("§lTodas as técnicas§r\n§7domínio · gerais · rápida", ICON.hand, () => openTechniques(p))
+      .button("§lBotões de poder na barra§r\n§7receber de novo os itens de técnica", ICON.ability, () => {
+        const n = syncKit(p);
+        p.sendMessage(n ? `§5${n} botão(ões) de poder colocados no inventário.` : "§7Seus botões de poder já estão no inventário.");
+      })
+      .divider();
   }
   m.header("Jujutsu");
   if (r.tech === "ten_shadows") {
@@ -403,6 +409,10 @@ function openConfig(p: Player): void {
     .header("Shikigamis (Dez Sombras)")
     .label("§aCânone§7: shikigami destruído não volta e o poder é herdado. §dLivre§7: eles voltam.")
     .button(r.canonMode ? "§lModo Cânone§r\n§7tocar para mudar para Livre" : "§lModo Livre§r\n§7tocar para mudar para Cânone", r.canonMode ? ICON.on : ICON.off, toggle(() => (r.canonMode = !r.canonMode)))
+    .divider()
+    .header("Sukuna")
+    .label("§7Quando Sukuna assume o corpo, ele destrói blocos naturais em volta (terra, pedra, areia, folhas, troncos, flores). Atenção: construções feitas com esses blocos também podem ser atingidas.")
+    .button(r.destruction !== false ? "§lDestruição do Sukuna: ligada" : "§lDestruição do Sukuna: desligada", r.destruction !== false ? ICON.on : ICON.off, toggle(() => (r.destruction = r.destruction === false)))
     .divider()
     .header("Tela")
     .button(r.hud ? "§lBarra de energia: ligada" : "§lBarra de energia: desligada", r.hud ? ICON.on : ICON.off, toggle(() => (r.hud = !r.hud)))

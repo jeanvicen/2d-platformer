@@ -8,7 +8,8 @@ import { dismiss, squadOf } from "../ai/agent_manager";
 import { CLANS, CLAN_ORDER, TECHS, rollClan, type ClanId, type TechId } from "./clans";
 import { giveItem, saveSorcerer, sorcerer } from "./sorcerer";
 import { ring } from "./fx";
-import { SYRUP_ITEM } from "./sukuna";
+import { SYRUP_ITEM } from "./ids";
+import { syncKit } from "./skills";
 
 const spinning = new Set<string>();
 const DELAYS = [2, 2, 2, 2, 3, 3, 3, 4, 4, 5, 6, 7, 8, 10, 12, 15];
@@ -27,6 +28,7 @@ export function applyClan(p: Player, clan: ClanId, tech: TechId): void {
   r.quick = undefined;
   r.rolled = true;
   saveSorcerer(p.id);
+  syncKit(p); // the new clan's power buttons replace the old ones
 }
 
 /**

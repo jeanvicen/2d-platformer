@@ -23,7 +23,9 @@ import { openSeal } from "./jujutsu/seal_menu";
 import { addXp, onShikigamiDestroyed, sorcerer, sorcererTick } from "./jujutsu/sorcerer";
 import { cast, abilitiesFor, onPlayerMelee } from "./jujutsu/abilities";
 import { onToolHit, onPlayerHurt } from "./jujutsu/arsenal";
-import { FINGER_ITEM, SYRUP_ITEM, isPossessed, onEnemyKilled, onFingerEaten, onSyrup } from "./jujutsu/sukuna";
+import { FINGER_ITEM, SYRUP_ITEM, isPossessed, onEnemyKilled, onFingerEaten, onSyrup, possessionTick, releaseIfStuck } from "./jujutsu/sukuna";
+import { isSkillItem, onSkillUse, syncKit } from "./jujutsu/skills";
+import { cleanStrayOverlays } from "./jujutsu/overlay";
 import { firstJoin } from "./jujutsu/roulette";
 import { openReveal } from "./jujutsu/seal_menu";
 import { TECHS } from "./jujutsu/clans";
@@ -64,6 +66,11 @@ world.afterEvents.playerSpawn.subscribe((ev) => {
   }
   onJoin(p);
   system.runTimeout(() => firstJoin(p, openReveal), 60); // clan roulette on the first visit
+  system.runTimeout(() => {
+    releaseIfStuck(p);
+    cleanStrayOverlays(p);
+    syncKit(p); // power buttons in the hotbar
+  }, 80);
 });
 
 world.afterEvents.playerLeave.subscribe((ev) => onLeave(ev.playerId));
@@ -73,6 +80,15 @@ world.afterEvents.playerLeave.subscribe((ev) => onLeave(ev.playerId));
 // ---------------------------------------------------------------------------------------------
 const lastUse = new Map<string, number>();
 world.afterEvents.itemUse.subscribe((ev) => {
+  const p0 = ev.source;
+  if (isPossessed(p0.id)) {
+    p0.onScreenDisplay.setActionBar("§4Sukuna está no controle. §fAgache várias vezes para lutar!");
+    return;
+  }
+  if (isSkillItem(ev.itemStack.typeId)) {
+    onSkillUse(p0, ev.itemStack);
+    return;
+  }
   if (ev.itemStack.typeId !== SUMMONER_ITEM) return;
   const p = ev.source;
   const now = Date.now();
@@ -190,6 +206,17 @@ system.afterEvents.scriptEventReceive.subscribe((ev) => {
 // ---------------------------------------------------------------------------------------------
 // Scheduler
 // ---------------------------------------------------------------------------------------------
+system.runInterval(() => {
+  for (const p of world.getAllPlayers()) {
+    if (!isPossessed(p.id)) continue;
+    try {
+      possessionTick(p);
+    } catch (e) {
+      log("possession", String(e));
+    }
+  }
+}, 2);
+
 system.runInterval(() => {
   for (const a of agents.values()) {
     if (a.mover.status === "moving") {

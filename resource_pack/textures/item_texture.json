@@ -40,6 +40,132 @@
     },
     "sb_cursed_fragment": {
       "textures": "textures/items/sb_cursed_fragment"
+    },
+    "sb_sukuna_marks": {
+      "textures": "textures/items/sb_sukuna_marks"
+    },
+    "sb_six_eyes": {
+      "textures": "textures/items/sb_six_eyes"
+    },
+    "sb_skill_reforco": {
+      "textures": "textures/ui/shadowbound/a_reforco"
+    },
+    "sb_skill_dominio_simples": {
+      "textures": "textures/ui/shadowbound/a_dominio_simples"
+    },
+    "sb_skill_rct": {
+      "textures": "textures/ui/shadowbound/a_rct"
+    },
+    "sb_skill_infinito": {
+      "textures": "textures/ui/shadowbound/a_infinito"
+    },
+    "sb_skill_azul": {
+      "textures": "textures/ui/shadowbound/a_azul"
+    },
+    "sb_skill_vermelho": {
+      "textures": "textures/ui/shadowbound/a_vermelho"
+    },
+    "sb_skill_roxo": {
+      "textures": "textures/ui/shadowbound/a_roxo"
+    },
+    "sb_skill_vazio": {
+      "textures": "textures/ui/shadowbound/a_vazio"
+    },
+    "sb_skill_mergulho": {
+      "textures": "textures/ui/shadowbound/a_mergulho"
+    },
+    "sb_skill_dominio": {
+      "textures": "textures/ui/shadowbound/a_jardim"
+    },
+    "sb_skill_quadros": {
+      "textures": "textures/ui/shadowbound/a_quadros"
+    },
+    "sb_skill_aceleracao": {
+      "textures": "textures/ui/shadowbound/a_aceleracao"
+    },
+    "sb_skill_quadro_congelado": {
+      "textures": "textures/ui/shadowbound/a_quadro_congelado"
+    },
+    "sb_skill_investida_celestial": {
+      "textures": "textures/ui/shadowbound/a_investida"
+    },
+    "sb_skill_salto_celestial": {
+      "textures": "textures/ui/shadowbound/a_salto"
+    },
+    "sb_skill_sangue_perfurante": {
+      "textures": "textures/ui/shadowbound/a_sangue_perfurante"
+    },
+    "sb_skill_amarracao": {
+      "textures": "textures/ui/shadowbound/a_amarracao"
+    },
+    "sb_skill_supernova": {
+      "textures": "textures/ui/shadowbound/a_supernova"
+    },
+    "sb_skill_escamas": {
+      "textures": "textures/ui/shadowbound/a_escamas"
+    },
+    "sb_skill_nao_se_mexa": {
+      "textures": "textures/ui/shadowbound/a_fala"
+    },
+    "sb_skill_exploda": {
+      "textures": "textures/ui/shadowbound/a_exploda"
+    },
+    "sb_skill_durma": {
+      "textures": "textures/ui/shadowbound/a_durma"
+    },
+    "sb_skill_esmague": {
+      "textures": "textures/ui/shadowbound/a_esmague"
+    },
+    "sb_skill_pregos": {
+      "textures": "textures/ui/shadowbound/a_pregos"
+    },
+    "sb_skill_ressonancia": {
+      "textures": "textures/ui/shadowbound/a_ressonancia"
+    },
+    "sb_skill_grampo": {
+      "textures": "textures/ui/shadowbound/a_grampo"
+    },
+    "sb_skill_palmas": {
+      "textures": "textures/ui/shadowbound/a_palmas"
+    },
+    "sb_skill_troca_confusa": {
+      "textures": "textures/ui/shadowbound/a_troca"
+    },
+    "sb_skill_golpe_73": {
+      "textures": "textures/ui/shadowbound/a_golpe_73"
+    },
+    "sb_skill_hora_extra": {
+      "textures": "textures/ui/shadowbound/a_hora_extra"
+    },
+    "sb_skill_colapso": {
+      "textures": "textures/ui/shadowbound/a_colapso"
+    },
+    "sb_skill_criar_municao": {
+      "textures": "textures/ui/shadowbound/a_municao"
+    },
+    "sb_skill_criar_lamina": {
+      "textures": "textures/ui/shadowbound/a_lamina"
+    },
+    "sb_skill_criar_escudo": {
+      "textures": "textures/ui/shadowbound/a_escudo"
+    },
+    "sb_skill_desmantelar": {
+      "textures": "textures/ui/shadowbound/a_desmantelar"
+    },
+    "sb_skill_clivar": {
+      "textures": "textures/ui/shadowbound/a_clivar"
+    },
+    "sb_skill_fuga": {
+      "textures": "textures/ui/shadowbound/a_fuga"
+    },
+    "sb_skill_santuario": {
+      "textures": "textures/ui/shadowbound/a_santuario"
+    },
+    "sb_skill_caes_divinos": {
+      "textures": "textures/ui/shadowbound/dogs"
+    },
+    "sb_skill_shikigamis": {
+      "textures": "textures/ui/shadowbound/summon"
     }
   }
 }

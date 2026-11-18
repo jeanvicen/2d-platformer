@@ -16,7 +16,8 @@ import { ICON, shikiIcon } from "../scripts/ui/icons";
 import { BEASTS } from "../scripts/core/species";
 import { ABILITIES, CLANS, TECHS, rollClan } from "../scripts/jujutsu/clans";
 import { GEAR, forge } from "../scripts/jujutsu/arsenal";
-import { TUNING_SUKUNA } from "../scripts/jujutsu/sukuna";
+import { TUNING_SUKUNA, isPossessed, startPossession } from "../scripts/jujutsu/sukuna";
+import { syncKit } from "../scripts/jujutsu/skills";
 import { abilitiesFor } from "../scripts/jujutsu/abilities";
 import { maxEnergyOf } from "../scripts/jujutsu/sorcerer";
 import { abilityIcon, clanIcon, techCrest, itemIcon } from "../scripts/ui/icons";
@@ -317,6 +318,45 @@ test("Arsenal: forjar consome material; a katana fere a alma", () => {
   const hp = z.health!.currentValue;
   mc.world.afterEvents.entityHitEntity.fire({ damagingEntity: B, hitEntity: z });
   assert.ok(z.health!.currentValue <= hp - 5 || !z.isValid, "dano na alma aplicado");
+});
+
+test("botões de poder: o kit vai para o inventário e usar o botão solta a técnica", () => {
+  asTech(B, "gojo", "limitless");
+  syncKit(B as never);
+  assert.equal(B.inventory.count("shadowbound:skill_azul"), 1, "botão do Azul no inventário");
+  assert.equal(B.inventory.count("shadowbound:skill_kokusen"), 0, "passivas não viram botão");
+  const z = zombieAhead(B, 5);
+  mc.world.afterEvents.itemUse.fire({ itemStack: new mc.ItemStack("shadowbound:skill_azul"), source: B });
+  assert.ok(!z.isValid || z.health!.currentValue < 10, "usar o botão soltou o Azul");
+  asTech(B, "zenin", "heavenly");
+  syncKit(B as never);
+  assert.equal(B.inventory.count("shadowbound:skill_azul"), 0, "trocou de clã: botões antigos saem");
+  assert.equal(B.inventory.count("shadowbound:skill_investida_celestial"), 1, "botões da nova técnica entram");
+});
+
+test("possessão: Sukuna toma o corpo, ataca sozinho e agachar devolve o controle", () => {
+  const r = asTech(B, "none", "ratio");
+  r.vessel = true;
+  r.fingersEaten = 5;
+  r.influence = 50;
+  r.destruction = false;
+  const z = zombieAhead(B, 4);
+  startPossession(B as never, r);
+  assert.ok(isPossessed(B.id), "Sukuna assumiu");
+  assert.ok(B.movementLocked, "o jogador perdeu o controle do movimento");
+  run(B, "desmantelar");
+  assert.ok(B.messages.some((m) => m.includes("Sukuna está no controle")), "técnicas bloqueadas durante a possessão");
+  mc.__advance(30);
+  assert.ok(!z.isValid || z.health!.currentValue < 10, "Sukuna atacou sozinho");
+  for (let i = 0; i < 25 && isPossessed(B.id); i++) {
+    B.isSneaking = true;
+    mc.__advance(2);
+    B.isSneaking = false;
+    mc.__advance(2);
+  }
+  assert.ok(!isPossessed(B.id), "agachar repetidamente devolveu o controle");
+  assert.ok(!B.movementLocked, "movimento devolvido");
+  assert.ok(r.influence < 50, "vencer Sukuna reduz a influência");
 });
 
 test("16) funciona sem internet (nenhuma chamada de rede) e sem erros de script", () => {

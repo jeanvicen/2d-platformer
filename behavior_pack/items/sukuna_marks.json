@@ -1,0 +1,29 @@
+{
+  "format_version": "1.21.40",
+  "minecraft:item": {
+    "description": {
+      "identifier": "shadowbound:sukuna_marks",
+      "menu_category": {
+        "category": "none"
+      }
+    },
+    "components": {
+      "minecraft:icon": "sb_sukuna_marks",
+      "minecraft:display_name": {
+        "value": "item.shadowbound:sukuna_marks.name"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:wearable": {
+        "slot": "slot.armor.head",
+        "protection": 0
+      },
+      "minecraft:durability": {
+        "max_durability": 400
+      },
+      "minecraft:enchantable": {
+        "slot": "armor_head",
+        "value": 10
+      }
+    }
+  }
+}

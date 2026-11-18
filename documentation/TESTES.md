@@ -8,9 +8,8 @@ npm test            # unitários + integração (cérebro real rodando no simula
 npm run build       # valida os pacotes e gera dist/*.mcaddon
 ```
 
-## Resultado automático (registrado em 2026-11-18, v4.0 Jujutsu Kaisen: Legado)
-Typecheck: **0 erros**. Validador de pacotes: **OK** (14 geometrias, 128 animações, 2 partículas, 13 itens, 0 avisos).
-As companheiras humanas e os testes delas saíram na v4.
+## Resultado automático (registrado em 2026-11-18, v4.1)
+Typecheck: **0 erros**. Validador de pacotes: **OK** (14 geometrias, 128 animações, 2 partículas, 55 itens, 0 avisos).
 
 ```
 ✔ inventário: empilha, respeita capacidade e devolve o que não coube
@@ -45,6 +44,8 @@ As companheiras humanas e os testes delas saíram na v4.
 ✔ Restrição Celestial: usa Vigor e não tem técnicas de energia
 ✔ Dedo de Sukuna: virar receptáculo libera o Santuário
 ✔ Arsenal: forjar consome material; a katana fere a alma
+✔ botões de poder: o kit vai para o inventário e usar o botão solta a técnica
+✔ possessão: Sukuna toma o corpo, ataca sozinho e agachar devolve o controle
 ✔ 16) funciona sem internet (nenhuma chamada de rede) e sem erros de script
 ✔ normalização: acentos e números por extenso
 ✔ frases diferentes para madeira viram o mesmo pedido (seção 5)
@@ -57,8 +58,8 @@ As companheiras humanas e os testes delas saíram na v4.
 ✔ combate e caça exigem ordem explícita para passivos
 ✔ comer e frases de conversa
 ✔ 'depois...' adiciona à fila em vez de substituir
-ℹ tests 44
-ℹ pass 44
+ℹ tests 46
+ℹ pass 46
 ℹ fail 0
 ```
 
@@ -144,3 +145,11 @@ As companheiras humanas e os testes delas saíram na v4.
 39. Comer o dedo: ou vira receptáculo (título vermelho, Desmantelar liberado) ou leva o veneno e sobrevive com pouca vida.
 40. Arsenal: forjar a Katana com 8 fragmentos + 4 ferro + 1 graveto; o golpe dela tira mais vida.
 41. Clã e roleta: girar de novo troca o clã (usa 1 giro).
+
+### Checklist v4.1 (no jogo)
+42. Ao entrar, os **botões de poder** aparecem na barra; tocar no slot e usar solta a técnica e o slot mostra a recarga.
+43. Trocar de clã na roleta: os botões antigos somem e entram os da nova técnica.
+44. Receptáculo com influência alta: Sukuna assume; você não anda, a câmera vai para a 3ª pessoa, as marcas aparecem no rosto, ele ataca e abre crateras (se a destruição estiver ligada).
+45. Agachar várias vezes enche a barra de luta e devolve o controle; o capacete que você usava volta.
+46. Gojo com Infinito ligado: olhos azuis brilhando (Seis Olhos) e partículas nos olhos.
+47. Itens novos (katana, lança, Nuvem Brincalhona, dedo, xarope, uniformes) com o visual novo na barra e na mão.

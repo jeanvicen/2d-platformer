@@ -1733,106 +1733,323 @@ def jjk_icons() -> None:
             _save_icon(img, prefix + name)
 
 
-# Item textures (32 px, drawn at 128 and reduced) ---------------------------------------------
 ITEMS_DIR = os.path.join(RP, "textures", "items")
 
 
-def _item(name: str, draw) -> None:
-    img = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
-    draw(ImageDraw.Draw(img))
-    img.convert("RGBa").resize((32, 32), Image.LANCZOS).convert("RGBA").save(os.path.join(ITEMS_DIR, f"{name}.png"))
+# --------------------------------------------------------------------------------------
+# Item pixel art (64x64, aliased like vanilla): shaded polygons, outlines and highlights.
+# --------------------------------------------------------------------------------------
+OUTLINE = (20, 12, 24, 255)
 
 
-def _outline_line(d, pts, col, w):
-    d.line(pts, fill=hexc("#120c1c"), width=w + 8)
-    d.line(pts, fill=col, width=w)
+class PixelArt:
+    def __init__(self, n: int = 64):
+        self.n = n
+        self.img = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+        self.d = ImageDraw.Draw(self.img)
+        self.px = self.img.load()
+
+    def put(self, x: float, y: float, c: Color) -> None:
+        x, y = int(round(x)), int(round(y))
+        if 0 <= x < self.n and 0 <= y < self.n:
+            self.px[x, y] = c
+
+    def shaded(self, poly: list, a: tuple, b: tuple, ramp: list) -> None:
+        """Fill a polygon and colour each pixel by its side of the axis a->b (light side first)."""
+        mask = Image.new("L", (self.n, self.n), 0)
+        ImageDraw.Draw(mask).polygon(poly, fill=255)
+        m = mask.load()
+        ax, ay = a
+        bx, by = b
+        L = math.hypot(bx - ax, by - ay) or 1
+        nx, ny = -(by - ay) / L, (bx - ax) / L          # normal
+        ds = []
+        for y in range(self.n):
+            for x in range(self.n):
+                if m[x, y]:
+                    ds.append(((x + 0.5 - ax) * nx + (y + 0.5 - ay) * ny, x, y))
+        if not ds:
+            return
+        lo, hi = min(t for t, _, _ in ds), max(t for t, _, _ in ds)
+        span = (hi - lo) or 1
+        for t, x, y in ds:
+            k = min(len(ramp) - 1, int((t - lo) / span * len(ramp)))
+            self.px[x, y] = ramp[k]
+
+    def rod(self, a: tuple, b: tuple, w: float, ramp: list) -> None:
+        """A cylinder (handle, staff) from a to b."""
+        L = math.hypot(b[0] - a[0], b[1] - a[1]) or 1
+        nx, ny = -(b[1] - a[1]) / L * w / 2, (b[0] - a[0]) / L * w / 2
+        self.shaded([(a[0] + nx, a[1] + ny), (b[0] + nx, b[1] + ny), (b[0] - nx, b[1] - ny), (a[0] - nx, a[1] - ny)], a, b, ramp)
+
+    def blade(self, a: tuple, b: tuple, w0: float, w1: float, ramp: list, curve: float = 0.0, steps: int = 24) -> list:
+        """Tapered (optionally curved) blade from a (base) to b (tip). Returns the centre line."""
+        L = math.hypot(b[0] - a[0], b[1] - a[1]) or 1
+        nx, ny = -(b[1] - a[1]) / L, (b[0] - a[0]) / L
+        left, right, centre = [], [], []
+        for i in range(steps + 1):
+            u = i / steps
+            off = curve * math.sin(math.pi * u * 0.9)
+            cx, cy = a[0] + (b[0] - a[0]) * u + nx * off, a[1] + (b[1] - a[1]) * u + ny * off
+            w = (w0 + (w1 - w0) * u) / 2 * (1 - max(0, u - 0.85) / 0.15 * 0.9)
+            left.append((cx + nx * w, cy + ny * w))
+            right.append((cx - nx * w, cy - ny * w))
+            centre.append((cx, cy))
+        self.shaded(left + right[::-1], a, b, ramp)
+        return centre
+
+    def outline(self, c: Color = OUTLINE) -> None:
+        src = self.img.copy().load()
+        for y in range(self.n):
+            for x in range(self.n):
+                if src[x, y][3]:
+                    continue
+                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    xx, yy = x + dx, y + dy
+                    if 0 <= xx < self.n and 0 <= yy < self.n and src[xx, yy][3] > 0 and src[xx, yy][:3] != c[:3]:
+                        self.px[x, y] = c
+                        break
+
+    def save(self, path: str) -> None:
+        self.img.save(path)
+
+
+def ramp_of(*hexes: str) -> list:
+    return [hexc(h) for h in hexes]
+
+
+STEEL = ramp_of("#ffffff", "#e3e9f2", "#bcc6d6", "#8d98ac", "#5f6a80")
+GOLD = ramp_of("#fff2b0", "#f0cf5e", "#c99a2e", "#8a6418")
+BLACK_WRAP = ramp_of("#3a3446", "#221d2c", "#120e18")
+RED_LAQ = ramp_of("#ff7a86", "#e0263c", "#a8102a", "#6a0818")
+BONE = ramp_of("#fff8e6", "#efe2c2", "#d6c398", "#b09a6c", "#7e6a46")
+NAVY = ramp_of("#3a4868", "#28334e", "#1c2438", "#121828")
+LEATHER = ramp_of("#8a5a35", "#6a4226", "#4a2c18")
+
+
+def px_grimoire() -> PixelArt:
+    a = PixelArt()
+    cover = ramp_of("#5a3a78", "#432a5c", "#2e1c42", "#1c1028")
+    a.shaded([(14, 8), (52, 4), (54, 54), (16, 60)], (14, 8), (54, 54), cover)
+    a.shaded([(16, 60), (54, 54), (56, 58), (18, 63)], (16, 60), (56, 58), ramp_of("#fbf3dc", "#e8dcbc", "#c9b88f"))   # page block
+    a.shaded([(8, 10), (14, 8), (16, 60), (10, 61)], (8, 10), (16, 60), ramp_of("#3a2450", "#24163a", "#140a22"))      # spine
+    for y in (16, 30, 44, 56):
+        a.d.line([(9, y), (15, y - 1)], fill=GOLD[1])
+    for (x, y) in ((50, 6), (52, 52), (17, 56), (16, 10)):                                                           # gold corners
+        a.d.rectangle([x - 2, y - 2, x + 2, y + 2], fill=GOLD[1])
+        a.put(x - 1, y - 1, GOLD[0])
+    a.d.ellipse([24, 18, 44, 38], fill=hexc("#7a1020"))
+    a.d.ellipse([26, 20, 42, 36], fill=hexc("#c4122f"))
+    a.d.line([(34, 21), (34, 35)], fill=hexc("#ffd6a0"))
+    a.d.line([(27, 28), (41, 28)], fill=hexc("#ffd6a0"))
+    a.d.ellipse([30, 24, 38, 32], outline=hexc("#ffd6a0"))
+    a.d.rectangle([28, 42, 40, 50], fill=hexc("#efe6d2"))                                                             # talisman label
+    for y in (44, 46, 48):
+        a.d.line([(30, y), (38, y)], fill=hexc("#7a1020"))
+    a.d.line([(46, 54), (47, 63)], fill=hexc("#c4122f"), width=2)                                                    # ribbon
+    a.outline()
+    return a
+
+
+def px_katana() -> PixelArt:
+    a = PixelArt()
+    centre = a.blade((21, 43), (60, 4), 6, 3, STEEL, curve=-2.2)
+    for i in range(2, len(centre) - 3, 2):                                   # hamon (temper line) along the edge
+        cx, cy = centre[i]
+        a.put(cx - 1 + (i % 4 == 0), cy - 1, hexc("#ffffff"))
+    a.rod((6, 58), (19, 45), 5, BLACK_WRAP)
+    for t in range(2, 13, 3):                                                # tsuka-ito diamonds
+        x, y = 6 + t, 58 - t
+        a.put(x, y, hexc("#e8e2d0"))
+        a.put(x + 1, y - 1, hexc("#e8e2d0"))
+    a.d.ellipse([15, 40, 25, 50], fill=GOLD[2])
+    a.d.ellipse([16, 41, 24, 49], fill=GOLD[1])
+    a.put(18, 43, GOLD[0])
+    a.d.rectangle([3, 59, 6, 62], fill=GOLD[2])
+    a.outline()
+    return a
+
+
+def px_inverted_spear() -> PixelArt:
+    a = PixelArt()
+    a.rod((9, 55), (29, 35), 4, ramp_of("#5a4030", "#3a2a20", "#22180f"))
+    for t in range(2, 20, 4):
+        a.d.line([(9 + t, 55 - t - 2), (11 + t, 55 - t)], fill=GOLD[1])
+    a.blade((30, 34), (58, 6), 7, 2, STEEL)
+    for s in (1, -1):                                                        # the two hooked prongs at the base
+        bx, by = 30 + s * 4, 34 + s * 4
+        a.d.line([(30, 34), (bx, by), (bx - 3, by + 3 * (1 if s > 0 else -1) * 0 + 3)], fill=STEEL[2], width=2)
+        a.put(bx, by, STEEL[0])
+    a.d.ellipse([3, 54, 11, 62], outline=hexc("#c9ccd6"), width=2)            # chain ring
+    for i in range(3):
+        a.d.ellipse([i * 3, 59 + (i % 2), i * 3 + 3, 62 + (i % 2)], outline=hexc("#9aa0b0"))
+    a.outline()
+    return a
+
+
+def px_playful_cloud() -> PixelArt:
+    a = PixelArt()
+    segs = [((5, 58), (20, 43)), ((24, 39), (39, 24)), ((43, 20), (58, 5))]
+    for s0, s1 in segs:
+        a.rod(s0, s1, 6, RED_LAQ)
+        for p_, q in ((s0, 0.12), (s1, 0.88)):                                # gold caps
+            cx, cy = s0[0] + (s1[0] - s0[0]) * q, s0[1] + (s1[1] - s0[1]) * q
+            a.d.ellipse([cx - 3, cy - 3, cx + 3, cy + 3], fill=GOLD[1])
+            a.put(cx - 1, cy - 1, GOLD[0])
+    for gx, gy in ((22, 41), (41, 22)):                                       # chain links in the gaps
+        a.d.ellipse([gx - 2, gy - 2, gx + 2, gy + 2], outline=hexc("#c9ccd6"), width=1)
+    a.outline()
+    return a
+
+
+def px_dragon_bone() -> PixelArt:
+    a = PixelArt()
+    centre = a.blade((20, 44), (59, 5), 13, 7, BONE)
+    for i in range(3, len(centre) - 2, 3):                                    # bone ridges on the spine
+        cx, cy = centre[i]
+        a.d.polygon([(cx - 5, cy - 5), (cx - 8, cy - 8), (cx - 3, cy - 6)], fill=BONE[3])
+    for i in range(1, len(centre) - 1):                                       # cold edge
+        cx, cy = centre[i]
+        a.put(cx + 4, cy + 4, hexc("#bfe3ff"))
+    a.rod((6, 58), (19, 45), 5, LEATHER)
+    for t in range(2, 13, 3):
+        a.put(6 + t, 58 - t, LEATHER[0])
+    a.d.ellipse([3, 57, 9, 63], fill=BONE[2])
+    a.outline()
+    return a
+
+
+def px_slaughter_demon() -> PixelArt:
+    a = PixelArt()
+    a.blade((28, 36), (54, 10), 6, 2, STEEL)
+    a.d.rectangle([24, 34, 30, 40], fill=GOLD[2])
+    a.rod((14, 50), (26, 38), 5, RED_LAQ)
+    for t in range(1, 12, 3):
+        a.put(14 + t, 50 - t, hexc("#ffb0b8"))
+    a.d.ellipse([10, 50, 16, 56], fill=GOLD[1])
+    a.outline()
+    return a
+
+
+def px_jacket(ramp: list, trim: Color, piping: Optional[Color] = None) -> PixelArt:
+    a = PixelArt()
+    body = [(18, 12), (28, 8), (36, 8), (46, 12), (52, 30), (46, 32), (46, 58), (18, 58), (18, 32), (12, 30)]
+    a.shaded(body, (14, 20), (50, 20), ramp)
+    a.shaded([(26, 6), (38, 6), (38, 14), (26, 14)], (26, 6), (38, 6), [mix(ramp[0], hexc("#ffffff"), 0.15), ramp[0], ramp[1]])   # standing collar
+    a.d.line([(32, 14), (32, 57)], fill=ramp[-1])
+    for y in (20, 28, 36, 44, 52):                                          # gold swirl buttons
+        a.d.ellipse([30, y - 2, 34, y + 2], fill=trim)
+        a.put(31, y - 1, mix(trim, hexc("#ffffff"), 0.6))
+        a.put(32, y, shade(trim, 0.55))
+    for x in (22, 42):                                                       # fabric folds
+        a.d.line([(x, 34), (x + 1, 56)], fill=ramp[-1])
+    if piping:
+        a.d.line([(18, 57), (46, 57)], fill=piping)
+        a.d.line([(26, 14), (38, 14)], fill=piping)
+    a.outline()
+    return a
+
+
+def px_pants() -> PixelArt:
+    a = PixelArt()
+    a.shaded([(18, 8), (46, 8), (50, 60), (36, 60), (32, 26), (28, 60), (14, 60)], (14, 20), (50, 20), NAVY)
+    a.d.rectangle([18, 8, 46, 12], fill=NAVY[0])
+    for x in (22, 30, 34, 42):
+        a.d.line([(x, 8), (x, 12)], fill=NAVY[-1])
+    a.d.rectangle([30, 9, 34, 11], fill=GOLD[1])
+    a.outline()
+    return a
+
+
+def px_blindfold() -> PixelArt:
+    a = PixelArt()
+    band = ramp_of("#3a3848", "#22202c", "#121018")
+    a.shaded([(4, 24), (52, 20), (54, 34), (6, 38)], (4, 24), (6, 38), band)
+    for x in range(8, 50, 7):
+        a.d.line([(x, 25), (x + 3, 35)], fill=band[0])
+    a.shaded([(50, 24), (60, 34), (56, 46), (50, 34)], (50, 24), (56, 46), band)   # knot tails
+    a.shaded([(52, 30), (62, 50), (58, 56), (52, 38)], (52, 30), (58, 56), band)
+    a.outline()
+    return a
+
+
+def px_syrup() -> PixelArt:
+    a = PixelArt()
+    a.shaded([(18, 24), (46, 24), (48, 58), (16, 58)], (16, 30), (48, 30), ramp_of("#f0d0ff", "#c77dff", "#9a4fd8", "#6a2aa8"))
+    a.d.rectangle([26, 12, 38, 24], fill=hexc("#dfe8f2"))
+    a.d.rectangle([24, 6, 40, 12], fill=hexc("#c4122f"))
+    a.d.line([(25, 7), (39, 7)], fill=hexc("#ff6a7a"))
+    a.d.rectangle([20, 34, 44, 48], fill=hexc("#fbf3dc"))
+    a.d.rectangle([30, 36, 34, 46], fill=hexc("#e2453c"))
+    a.d.rectangle([27, 39, 37, 43], fill=hexc("#e2453c"))
+    a.d.line([(21, 27), (21, 55)], fill=(255, 255, 255, 210))
+    a.d.line([(22, 27), (22, 31)], fill=(255, 255, 255, 210))
+    a.outline()
+    return a
+
+
+def px_finger() -> PixelArt:
+    a = PixelArt()
+    paper = ramp_of("#fff6dc", "#f0e2bc", "#d8c698")
+    a.shaded([(14, 4), (50, 4), (50, 60), (14, 60)], (14, 4), (50, 4), paper)
+    for y in range(10, 58, 8):
+        a.d.line([(18, y), (46, y)], fill=hexc("#c4122f"))
+    a.d.ellipse([24, 40, 40, 56], outline=hexc("#c4122f"), width=2)
+    flesh = ramp_of("#a0605a", "#7a3e3a", "#552624", "#361414")
+    a.blade((28, 54), (36, 12), 12, 9, flesh)                                   # the finger (mummified)
+    for y in (24, 38):                                                          # knuckle creases
+        a.d.line([(28, y), (38, y - 1)], fill=flesh[-1])
+    a.d.ellipse([30, 8, 40, 18], fill=hexc("#1a1014"))                            # long black nail
+    a.put(33, 10, hexc("#5a4a50"))
+    a.outline()
+    return a
+
+
+def px_fragment() -> PixelArt:
+    a = PixelArt()
+    a.shaded([(32, 4), (48, 22), (42, 58), (22, 54), (16, 22)], (16, 22), (48, 22), ramp_of("#e2c8ff", "#b48cff", "#8a52d8", "#5a2a9a", "#3a1868"))
+    a.d.line([(32, 4), (30, 54)], fill=hexc("#d6b8ff"))
+    a.d.line([(16, 22), (30, 30), (48, 22)], fill=hexc("#6a32b0"))
+    for (x, y) in ((24, 18), (38, 40), (28, 46)):
+        a.put(x, y, hexc("#ffffff"))
+    a.outline()
+    return a
+
+
+def px_marks_icon() -> PixelArt:
+    a = PixelArt()
+    skin = ramp_of("#f2c7a8", "#e2b090", "#c99478")
+    a.shaded([(14, 8), (50, 8), (50, 56), (14, 56)], (14, 8), (50, 8), skin)
+    ink = hexc("#1a0a10")
+    for (x0, x1, y) in ((18, 28, 30), (36, 46, 30), (16, 26, 38), (38, 48, 38), (16, 24, 42), (40, 48, 42)):
+        a.d.line([(x0, y), (x1, y)], fill=ink, width=2)
+    for x in (22, 42):
+        a.d.rectangle([x - 3, 22, x + 3, 25], fill=hexc("#3a1a1a"))
+    a.d.line([(26, 14), (38, 14)], fill=ink, width=2)
+    a.d.line([(32, 10), (32, 15)], fill=ink, width=2)
+    a.outline()
+    return a
+
+
+def px_six_eyes_icon() -> PixelArt:
+    a = PixelArt()
+    a.shaded([(14, 14), (50, 14), (50, 50), (14, 50)], (14, 14), (50, 14), ramp_of("#2a2836", "#1a1824", "#100e18"))
+    for x in (24, 40):
+        _radial(a.d, x, 32, 8, 6, hexc("#e8fbff"), hexc("#3a9ae0"), steps=6)
+        a.d.ellipse([x - 2, 30, x + 2, 34], fill=hexc("#ffffff"))
+    a.outline()
+    return a
 
 
 def jjk_items() -> None:
     os.makedirs(ITEMS_DIR, exist_ok=True)
-
-    def grimoire(d):
-        d.rounded_rectangle([18, 12, 108, 116], radius=8, fill=hexc("#1a1424"), outline=hexc("#05030a"), width=4)
-        d.rectangle([24, 14, 34, 114], fill=hexc("#7a1020"))
-        d.rectangle([100, 18, 106, 110], fill=hexc("#efe6d2"))
-        d.ellipse([46, 36, 92, 82], outline=hexc("#e2453c"), width=6)
-        d.line([(69, 40), (69, 78)], fill=hexc("#e2453c"), width=5)
-        d.line([(50, 59), (88, 59)], fill=hexc("#e2453c"), width=5)
-        d.rectangle([56, 88, 82, 108], fill=hexc("#efe6d2"))
-        for y in (92, 98, 104):
-            d.line([(59, y), (79, y)], fill=hexc("#7a1020"), width=2)
-
-    def playful_cloud(d):
-        for i, (a, b) in enumerate((((14, 108), (44, 78)), ((50, 72), (80, 42)), ((86, 36), (116, 8)))):
-            _outline_line(d, [a, b], hexc("#c4122f"), 14)
-            d.line([(a[0] + 4, a[1] - 4), (b[0] + 2, b[1] + 2)], fill=hexc("#ff5a6a"), width=3)
-        for (x, y) in ((47, 75), (83, 39)):
-            d.ellipse([x - 6, y - 6, x + 6, y + 6], fill=hexc("#c9ccd6"), outline=hexc("#120c1c"), width=2)
-
-    def inverted_spear(d):
-        _outline_line(d, [(18, 110), (66, 62)], hexc("#3a2a20"), 10)
-        d.polygon([(62, 52), (76, 66), (110, 18), (118, 10), (108, 22)], fill=hexc("#dfe3f0"), outline=hexc("#120c1c"))
-        d.polygon([(62, 52), (50, 40), (40, 30), (54, 44)], fill=hexc("#dfe3f0"), outline=hexc("#120c1c"))
-        d.ellipse([12, 104, 26, 118], outline=hexc("#c9ccd6"), width=3)
-
-    def katana(d):
-        _outline_line(d, [(16, 112), (40, 88)], hexc("#1a1424"), 12)
-        d.rounded_rectangle([34, 80, 50, 96], radius=4, fill=hexc("#e2c26a"), outline=hexc("#120c1c"), width=2)
-        d.line([(46, 82), (100, 30), (116, 10)], fill=hexc("#120c1c"), width=14)
-        d.line([(46, 82), (100, 30), (116, 10)], fill=hexc("#e8ecf2"), width=8)
-        d.line([(50, 76), (102, 26)], fill=hexc("#ffffff"), width=2)
-
-    def dragon_bone(d):
-        d.polygon([(30, 100), (44, 112), (114, 30), (104, 14), (92, 26)], fill=hexc("#ebe3cf"), outline=hexc("#120c1c"))
-        d.line([(44, 106), (108, 30)], fill=hexc("#6fa8e0"), width=4)
-        _outline_line(d, [(14, 118), (34, 98)], hexc("#3a2a20"), 10)
-
-    def slaughter_demon(d):
-        _outline_line(d, [(30, 104), (54, 80)], hexc("#7a1020"), 12)
-        d.polygon([(52, 78), (62, 88), (104, 40), (96, 32)], fill=hexc("#dfe3f0"), outline=hexc("#120c1c"))
-
-    def jacket(col, trim):
-        def f(d):
-            d.polygon([(30, 30), (54, 20), (74, 20), (98, 30), (110, 70), (94, 74), (92, 112), (36, 112), (34, 74), (18, 70)], fill=col, outline=hexc("#05030a"))
-            d.rectangle([58, 20, 70, 34], fill=shade(col, 1.25))
-            for y in (46, 64, 82, 100):
-                d.ellipse([60, y - 5, 68, y + 3], fill=trim)
-        return f
-
-    def pants(d):
-        col = hexc("#1c2233")
-        d.polygon([(34, 14), (94, 14), (100, 116), (72, 116), (64, 52), (56, 116), (28, 116)], fill=col, outline=hexc("#05030a"))
-        d.rectangle([34, 14, 94, 24], fill=shade(col, 1.3))
-
-    def blindfold(d):
-        d.rounded_rectangle([10, 48, 118, 76], radius=12, fill=hexc("#111018"), outline=hexc("#2a2836"), width=3)
-        d.line([(20, 58), (108, 58)], fill=hexc("#2a2836"), width=3)
-
-    def syrup(d):
-        d.rounded_rectangle([40, 40, 88, 116], radius=12, fill=hexc("#c77dff"), outline=hexc("#120c1c"), width=4)
-        d.rectangle([50, 22, 78, 42], fill=hexc("#efe6d2"), outline=hexc("#120c1c"), width=3)
-        d.rectangle([46, 66, 82, 92], fill=hexc("#ffffff"))
-        d.line([(52, 79), (76, 79)], fill=hexc("#ff4a7a"), width=4)
-
-    def finger(d):
-        d.rectangle([20, 16, 108, 112], fill=hexc("#efe6d2"))
-        for y in range(26, 106, 14):
-            d.line([(30, y), (98, y)], fill=hexc("#c4122f"), width=3)
-        d.rounded_rectangle([46, 22, 82, 106], radius=16, fill=hexc("#5a2a2a"), outline=hexc("#120c1c"), width=4)
-        d.rounded_rectangle([52, 22, 76, 40], radius=8, fill=hexc("#120c1c"))
-        for y in (58, 78):
-            d.line([(48, y), (80, y)], fill=hexc("#3a1818"), width=3)
-
-    def fragment(d):
-        d.polygon([(64, 10), (96, 48), (80, 118), (44, 104), (34, 46)], fill=hexc("#6b2fa0"), outline=hexc("#120c1c"))
-        d.polygon([(64, 10), (74, 50), (58, 96), (44, 46)], fill=hexc("#b48cff"))
-
-    for name, fn in (("shadow_summoner", grimoire), ("sb_playful_cloud", playful_cloud), ("sb_inverted_spear", inverted_spear),
-                     ("sb_split_soul_katana", katana), ("sb_dragon_bone", dragon_bone), ("sb_slaughter_demon", slaughter_demon),
-                     ("sb_uniform_tokyo_chest", jacket(hexc("#1c2233"), hexc("#e2c26a"))), ("sb_uniform_tokyo_legs", pants),
-                     ("sb_uniform_kyoto_chest", jacket(hexc("#4a5068"), hexc("#d8d8e0"))), ("sb_gojo_blindfold", blindfold),
-                     ("sb_throat_syrup", syrup), ("sb_sukuna_finger", finger), ("sb_cursed_fragment", fragment)):
-        _item(name, fn)
+    for name, fn in (("shadow_summoner", px_grimoire), ("sb_playful_cloud", px_playful_cloud), ("sb_inverted_spear", px_inverted_spear),
+                     ("sb_split_soul_katana", px_katana), ("sb_dragon_bone", px_dragon_bone), ("sb_slaughter_demon", px_slaughter_demon),
+                     ("sb_uniform_tokyo_chest", lambda: px_jacket(NAVY, hexc("#e8c45a"))), ("sb_uniform_tokyo_legs", px_pants),
+                     ("sb_uniform_kyoto_chest", lambda: px_jacket(ramp_of("#7a8098", "#5e6680", "#4a5068", "#343a50"), hexc("#e8e8f0"), hexc("#e8e8f0"))),
+                     ("sb_gojo_blindfold", px_blindfold), ("sb_throat_syrup", px_syrup), ("sb_sukuna_finger", px_finger),
+                     ("sb_cursed_fragment", px_fragment), ("sb_sukuna_marks", px_marks_icon), ("sb_six_eyes", px_six_eyes_icon)):
+        fn().save(os.path.join(ITEMS_DIR, f"{name}.png"))
 
 
 # Armor layers (64x32 armor UV layout, painted at 2x = 128x64) -------------------------------
@@ -1895,12 +2112,59 @@ def armor_blindfold(path: str) -> None:
     img.save(path)
 
 
+def armor_marks(path: str) -> None:
+    """Sukuna's markings painted over the face: the second pair of eyes under the eyes, cheek and forehead lines.
+    Head front face = (8,8)-(16,16) in the 64x32 layout (painted at 2x)."""
+    img, _ = _armor_canvas()
+    px = img.load()
+    ink = (22, 8, 14, 255)
+    red = (150, 20, 30, 255)
+    def P(x, y, c):   # 2x canvas pixel helper (face coordinates in 1/2 skin pixels)
+        px[x, y] = c
+    fx, fy = 16, 16                       # face origin at 2x
+    for x in range(fx + 2, fx + 7):       # lower eye (left), just under the eyes row
+        P(x, fy + 11, ink)
+    for x in range(fx + 9, fx + 14):      # lower eye (right)
+        P(x, fy + 11, ink)
+    P(fx + 4, fy + 12, red)
+    P(fx + 11, fy + 12, red)
+    for y, x0, x1 in ((fy + 13, fx + 0, fx + 4), (fy + 14, fx + 1, fx + 4), (fy + 13, fx + 12, fx + 16), (fy + 14, fx + 12, fx + 15)):
+        for x in range(x0, x1):           # cheek stripes
+            P(x, y, ink)
+    for x in range(fx + 5, fx + 11):      # forehead line
+        P(x, fy + 3, ink)
+    for y in range(fy + 1, fy + 4):
+        P(fx + 7, y, ink)
+        P(fx + 8, y, ink)
+    for side in (0, 24):                  # side-of-head stripes (right/left faces at x 0..8 and 16..24)
+        for x in range(side + 4, side + 12):
+            P(x, fy + 13, ink)
+    img.save(path)
+
+
+def armor_six_eyes(path: str) -> None:
+    """Glowing blue eyes over the usual eye row of a skin (face rows 4-5 of 8)."""
+    img, _ = _armor_canvas()
+    px = img.load()
+    fx, fy = 16, 16
+    core, glow = (210, 245, 255, 255), (90, 190, 255, 255)
+    for ex in (fx + 2, fx + 10):
+        for x in range(ex, ex + 4):
+            for y in range(fy + 8, fy + 11):
+                px[x, y] = glow
+        px[ex + 1, fy + 9] = core
+        px[ex + 2, fy + 9] = core
+    img.save(path)
+
+
 def jjk_armor() -> None:
     os.makedirs(ARMOR_DIR, exist_ok=True)
     armor_jacket(os.path.join(ARMOR_DIR, "jjk_tokyo_1.png"), hexc("#1c2233"), hexc("#e2c26a"))
     armor_pants(os.path.join(ARMOR_DIR, "jjk_tokyo_2.png"), hexc("#1c2233"))
     armor_jacket(os.path.join(ARMOR_DIR, "jjk_kyoto_1.png"), hexc("#4a5068"), hexc("#d8d8e0"))
     armor_blindfold(os.path.join(ARMOR_DIR, "jjk_blindfold_1.png"))
+    armor_marks(os.path.join(ARMOR_DIR, "jjk_marks_1.png"))
+    armor_six_eyes(os.path.join(ARMOR_DIR, "jjk_sixeyes_1.png"))
 
 
 def jjk_art_all() -> None:

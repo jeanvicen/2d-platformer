@@ -115,6 +115,8 @@ export class MolangVariableMap {
 export class EntityHealthComponent {}
 
 const DURABILITY: Record<string, number> = { wooden: 59, stone: 131, iron: 250, golden: 32, diamond: 1561, netherite: 2031 };
+export const ItemLockMode = { inventory: "inventory", none: "none", slot: "slot" };
+export const InputPermissionCategory = { Camera: 1, Movement: 2, LateralMovement: 4, Sneak: 5, Jump: 6 };
 export class ItemStack {
   typeId: string;
   amount: number;
@@ -395,6 +397,9 @@ export class Player extends Entity {
   selectedSlotIndex = 0;
   viewBlock?: { x: number; y: number; z: number };
   onScreenDisplay = { setActionBar: (t: string) => this.actionbars.push(t) };
+  movementLocked = false;
+  inputPermissions = { setPermissionCategory: (c: number, enabled: boolean) => { if (c === 2) this.movementLocked = !enabled; } };
+  camera = { setCamera: () => undefined, clear: () => undefined };
   constructor(public name: string, dim: Dimension, loc: any) {
     super("minecraft:player", dim, loc);
   }

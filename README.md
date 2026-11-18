@@ -1,4 +1,4 @@
-# Jujutsu Kaisen: Legado 🌑 — v4.0
+# Jujutsu Kaisen: Legado 🌑 — v4.1
 
 **Mod de fã para Minecraft Bedrock (Android e Windows) inspirado em Jujutsu Kaisen.**
 Na primeira vez que você entra, a **roleta de clã** gira e sorteia seu clã e sua técnica inata. Você domina
@@ -39,10 +39,22 @@ Todo feiticeiro (menos a Restrição Celestial) também tem: **Reforço com Ener
 acertar), **Domínio Simples** e **Técnica Reversa**. Cada habilidade tem partículas da cor da técnica: esferas,
 raios, anéis, auras e explosões. Nenhuma habilidade destrói blocos.
 
+## Botões de poder (sem abrir menu)
+Cada habilidade da sua técnica vira um **item na barra de itens**: toque no slot e use, a técnica sai na hora e o
+próprio slot mostra a recarga. Os botões ficam presos no inventário (não caem nem somem ao morrer), trocam sozinhos
+quando você troca de clã e ganham botões novos a cada habilidade liberada.
+
 ## Dedos de Sukuna
 São 20 por mundo e caem raramente de inimigos. Comer um é arriscado: 25% de chance de virar **receptáculo** (libera
-o Santuário); senão o veneno quase te mata. A influência de Sukuna cresce a cada dedo e, com ela alta, ele pode
-**assumir o seu corpo** por alguns segundos. Meditar empurra ele de volta.
+o Santuário); senão o veneno quase te mata. A influência de Sukuna cresce a cada dedo, e com ela a chance de ele
+**tomar o seu corpo**:
+- você perde o controle e a câmera vai para a terceira pessoa;
+- as **marcas de Sukuna aparecem no seu rosto**;
+- ele avança sozinho, corta tudo o que estiver vivo em volta e destrói blocos naturais (dá para desligar a destruição nas Configurações);
+- para pegar o controle de volta, **agache várias vezes** até encher a barra de luta;
+- se você vencer, a influência dele cai.
+
+Com as técnicas do Gojo (Infinito, Vazio Infinito ou logo depois de usar uma técnica), seus **olhos brilham em azul** (Seis Olhos).
 
 ## Arsenal
 Forje direto no Grimório, sem bancada, usando Fragmentos Amaldiçoados (caem de inimigos):
@@ -51,7 +63,7 @@ Forje direto no Grimório, sem bancada, usando Fragmentos Amaldiçoados (caem de
 - **Consumível:** Xarope para Garganta.
 
 ## Interface
-O **Grimório Jujutsu** abre com o clã e a técnica no topo, a barra de energia e as habilidades com **ícone** para
+Os itens foram redesenhados em pixel art 64×64 com sombreamento. O **Grimório Jujutsu** abre com o clã e a técnica no topo, a barra de energia e as habilidades com **ícone** para
 usar com um toque. Ele tem seções para Técnicas, Shikigamis (Dez Sombras), Arsenal, Dedos de Sukuna, Clã e roleta,
 Caderno e Configurações. **Agachar e usar o Grimório** solta a sua habilidade rápida. Os comandos `/sombra` são opcionais.
 
@@ -64,7 +76,7 @@ Passo a passo para celular e PC: **[INSTALAR.md](INSTALAR.md)**. Requer Minecraf
 ## Qualidade e testes
 - Typecheck estrito contra `@minecraft/server` 2.3.0 / `@minecraft/server-ui` 2.1.0 (as versões do manifest).
 - Validador cruzado dos pacotes: geometrias, animações, itens (ícone, nome e attachable), partículas e propriedades.
-- **44 testes automáticos**: roleta, técnicas de vários clãs, dedos, arsenal, Dez Sombras (rituais, herança, Mahoraga) e interface.
+- **46 testes automáticos**: roleta, técnicas de vários clãs, botões de poder, possessão do Sukuna, dedos, arsenal, Dez Sombras (rituais, herança, Mahoraga) e interface.
 - O que ainda falta testar dentro do jogo: [documentation/TESTES.md](documentation/TESTES.md).
 
 ```bash

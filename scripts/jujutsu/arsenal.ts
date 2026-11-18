@@ -7,7 +7,7 @@ import { safe } from "../core/mc";
 import type { Origin } from "./canon";
 import { burst } from "./fx";
 import { giveItem, heldItemId, sorcerer, usesVigor } from "./sorcerer";
-import { FINGER_ITEM, FRAGMENT_ITEM, SYRUP_ITEM } from "./sukuna";
+import { FINGER_ITEM, FRAGMENT_ITEM, SYRUP_ITEM } from "./ids";
 
 export interface GearInfo {
   id: string;

@@ -88,7 +88,7 @@ Os conceitos são da obra. Números (dano, custo, raio, duração) e a forma de 
 | A alma de Sukuna foi selada em 20 dedos indestrutíveis | cânone | 20 por mundo, caem raramente (1,2%) de inimigos derrotados por você ou seus shikigamis |
 | Comer um dedo é veneno mortal para quase todos; Yuji é uma exceção | cânone | 25% de chance de virar receptáculo; se falhar, você sobrevive com pouca vida (original) |
 | Mais dedos = mais poder de Sukuna | cânone | Cada dedo: +10 de energia máxima e +4% de influência; libera Clivar (3), Fuga (10) e o domínio (15) |
-| Sukuna assume o corpo do receptáculo | cânone (com Yuji e Megumi) | Possessão de 12 s com influência alta e vida baixa; meditar reduz a influência (original) |
+| Sukuna assume o corpo do receptáculo; as marcas dele aparecem no rosto | cânone (com Yuji e Megumi) | Possessão de até 25 s: você perde o controle, marcas no rosto, ataques e destruição em volta; agachar repetidamente para retomar; chances e números são originais |
 
 ## Ferramentas amaldiçoadas e uniformes
 | Item | Confirmado | Efeito no jogo |
