@@ -1,0 +1,553 @@
+{
+  "format_version": "1.21.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "eclipse:lyra",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "properties": {
+        "eclipse:state": {
+          "type": "enum",
+          "values": [
+            "follow",
+            "stay",
+            "guard",
+            "explore",
+            "rest",
+            "recover"
+          ],
+          "default": "follow",
+          "client_sync": true
+        },
+        "eclipse:phase": {
+          "type": "enum",
+          "values": [
+            "idle",
+            "manifest",
+            "recall",
+            "special",
+            "interact"
+          ],
+          "default": "manifest",
+          "client_sync": true
+        },
+        "eclipse:action": {
+          "type": "enum",
+          "values": [
+            "idle",
+            "walk",
+            "run",
+            "chop",
+            "mine",
+            "build",
+            "eat",
+            "attack",
+            "cast",
+            "sit",
+            "wave",
+            "float",
+            "carry",
+            "dig"
+          ],
+          "default": "idle",
+          "client_sync": true
+        }
+      }
+    },
+    "component_groups": {
+      "eclipse:follow": {
+        "minecraft:behavior.follow_owner": {
+          "priority": 4,
+          "speed_multiplier": 1.15,
+          "start_distance": 6,
+          "stop_distance": 2.5
+        },
+        "minecraft:behavior.random_stroll": {
+          "priority": 8,
+          "speed_multiplier": 0.7,
+          "xz_dist": 3
+        },
+        "minecraft:behavior.hurt_by_target": {
+          "priority": 1
+        },
+        "minecraft:behavior.owner_hurt_by_target": {
+          "priority": 1
+        },
+        "minecraft:behavior.melee_attack": {
+          "priority": 3,
+          "speed_multiplier": 1.25,
+          "track_target": true
+        },
+        "minecraft:behavior.look_at_player": {
+          "priority": 7,
+          "look_distance": 8,
+          "probability": 0.05
+        },
+        "minecraft:behavior.random_look_around": {
+          "priority": 9
+        },
+        "minecraft:physics": {
+          "has_gravity": true,
+          "has_collision": true
+        }
+      },
+      "eclipse:guard": {
+        "minecraft:behavior.follow_owner": {
+          "priority": 5,
+          "speed_multiplier": 1.25,
+          "start_distance": 5,
+          "stop_distance": 2
+        },
+        "minecraft:behavior.owner_hurt_target": {
+          "priority": 2
+        },
+        "minecraft:behavior.owner_hurt_by_target": {
+          "priority": 1
+        },
+        "minecraft:behavior.hurt_by_target": {
+          "priority": 1
+        },
+        "minecraft:behavior.nearest_attackable_target": {
+          "priority": 3,
+          "must_see": true,
+          "reselect_targets": true,
+          "within_radius": 14,
+          "entity_types": [
+            {
+              "filters": {
+                "all_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "monster"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "operator": "!=",
+                    "value": "creeper"
+                  }
+                ]
+              },
+              "max_dist": 14
+            }
+          ]
+        },
+        "minecraft:behavior.melee_attack": {
+          "priority": 3,
+          "speed_multiplier": 1.3,
+          "track_target": true
+        },
+        "minecraft:behavior.look_at_player": {
+          "priority": 7,
+          "look_distance": 8
+        },
+        "minecraft:physics": {
+          "has_gravity": true,
+          "has_collision": true
+        }
+      },
+      "eclipse:stay": {
+        "minecraft:behavior.look_at_player": {
+          "priority": 7,
+          "look_distance": 8
+        },
+        "minecraft:behavior.random_look_around": {
+          "priority": 9
+        },
+        "minecraft:physics": {
+          "has_gravity": true,
+          "has_collision": true
+        }
+      },
+      "eclipse:explore": {
+        "minecraft:behavior.random_stroll": {
+          "priority": 6,
+          "speed_multiplier": 0.9,
+          "xz_dist": 12
+        },
+        "minecraft:behavior.look_at_player": {
+          "priority": 7,
+          "look_distance": 8
+        },
+        "minecraft:physics": {
+          "has_gravity": true,
+          "has_collision": true
+        }
+      },
+      "eclipse:scripted": {
+        "minecraft:physics": {
+          "has_gravity": false,
+          "has_collision": false
+        }
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "eclipse",
+          "eclipse_companion",
+          "eclipse_lyra",
+          "npc",
+          "mob"
+        ]
+      },
+      "minecraft:health": {
+        "value": 60,
+        "max": 60
+      },
+      "minecraft:attack": {
+        "damage": 7
+      },
+      "minecraft:movement": {
+        "value": 0.3
+      },
+      "minecraft:collision_box": {
+        "width": 0.6,
+        "height": 1.8
+      },
+      "minecraft:jump.static": {},
+      "minecraft:can_climb": {},
+      "minecraft:navigation.walk": {
+        "can_path_over_water": true,
+        "avoid_water": true,
+        "avoid_damage_blocks": true,
+        "can_pass_doors": true,
+        "can_open_doors": true
+      },
+      "minecraft:movement.basic": {},
+      "minecraft:annotation.open_door": {},
+      "minecraft:pushable": {
+        "is_pushable": false,
+        "is_pushable_by_piston": true
+      },
+      "minecraft:nameable": {
+        "always_show": true,
+        "allow_name_tag_renaming": true
+      },
+      "minecraft:persistent": {},
+      "minecraft:follow_range": {
+        "value": 48,
+        "max": 48
+      },
+      "minecraft:breathable": {
+        "total_supply": 30,
+        "suffocate_time": 0
+      },
+      "minecraft:damage_sensor": {
+        "triggers": [
+          {
+            "on_damage": {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "player"
+              }
+            },
+            "deals_damage": "no"
+          },
+          {
+            "on_damage": {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "eclipse_companion"
+              }
+            },
+            "deals_damage": "no"
+          },
+          {
+            "cause": "fall",
+            "deals_damage": "no"
+          },
+          {
+            "cause": "suffocation",
+            "deals_damage": "no"
+          }
+        ]
+      },
+      "minecraft:tameable": {
+        "probability": 0.0,
+        "tame_event": {
+          "event": "eclipse:on_tamed",
+          "target": "self"
+        }
+      },
+      "minecraft:inventory": {
+        "inventory_size": 36,
+        "container_type": "inventory"
+      },
+      "minecraft:interact": {
+        "interactions": [
+          {
+            "on_interact": {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "player"
+              },
+              "event": "eclipse:interacted",
+              "target": "self"
+            },
+            "interact_text": "action.interact.eclipse.talk",
+            "swing": true
+          }
+        ]
+      },
+      "minecraft:behavior.float": {
+        "priority": 0
+      },
+      "minecraft:conditional_bandwidth_optimization": {},
+      "minecraft:experience_reward": {
+        "on_death": "0"
+      },
+      "minecraft:fire_immune": {},
+      "minecraft:ambient_sound_interval": {
+        "value": 30,
+        "range": 30,
+        "event_name": "ambient"
+      }
+    },
+    "events": {
+      "minecraft:entity_spawned": {
+        "add": {
+          "component_groups": [
+            "eclipse:follow"
+          ]
+        }
+      },
+      "eclipse:state_follow": {
+        "sequence": [
+          {
+            "remove": {
+              "component_groups": [
+                "eclipse:guard",
+                "eclipse:stay",
+                "eclipse:explore",
+                "eclipse:scripted"
+              ]
+            }
+          },
+          {
+            "add": {
+              "component_groups": [
+                "eclipse:follow"
+              ]
+            }
+          },
+          {
+            "set_property": {
+              "eclipse:state": "follow"
+            }
+          }
+        ]
+      },
+      "eclipse:state_stay": {
+        "sequence": [
+          {
+            "remove": {
+              "component_groups": [
+                "eclipse:follow",
+                "eclipse:guard",
+                "eclipse:explore",
+                "eclipse:scripted"
+              ]
+            }
+          },
+          {
+            "add": {
+              "component_groups": [
+                "eclipse:stay"
+              ]
+            }
+          },
+          {
+            "set_property": {
+              "eclipse:state": "stay"
+            }
+          }
+        ]
+      },
+      "eclipse:state_guard": {
+        "sequence": [
+          {
+            "remove": {
+              "component_groups": [
+                "eclipse:follow",
+                "eclipse:stay",
+                "eclipse:explore",
+                "eclipse:scripted"
+              ]
+            }
+          },
+          {
+            "add": {
+              "component_groups": [
+                "eclipse:guard"
+              ]
+            }
+          },
+          {
+            "set_property": {
+              "eclipse:state": "guard"
+            }
+          }
+        ]
+      },
+      "eclipse:state_explore": {
+        "sequence": [
+          {
+            "remove": {
+              "component_groups": [
+                "eclipse:follow",
+                "eclipse:guard",
+                "eclipse:stay",
+                "eclipse:scripted"
+              ]
+            }
+          },
+          {
+            "add": {
+              "component_groups": [
+                "eclipse:explore"
+              ]
+            }
+          },
+          {
+            "set_property": {
+              "eclipse:state": "explore"
+            }
+          }
+        ]
+      },
+      "eclipse:state_rest": {
+        "set_property": {
+          "eclipse:state": "rest"
+        }
+      },
+      "eclipse:state_recover": {
+        "set_property": {
+          "eclipse:state": "recover"
+        }
+      },
+      "eclipse:phase_idle": {
+        "set_property": {
+          "eclipse:phase": "idle"
+        }
+      },
+      "eclipse:phase_manifest": {
+        "set_property": {
+          "eclipse:phase": "manifest"
+        }
+      },
+      "eclipse:phase_recall": {
+        "set_property": {
+          "eclipse:phase": "recall"
+        }
+      },
+      "eclipse:phase_special": {
+        "set_property": {
+          "eclipse:phase": "special"
+        }
+      },
+      "eclipse:phase_interact": {
+        "set_property": {
+          "eclipse:phase": "interact"
+        }
+      },
+      "eclipse:interacted": {},
+      "eclipse:on_tamed": {},
+      "eclipse:script_on": {
+        "sequence": [
+          {
+            "remove": {
+              "component_groups": [
+                "eclipse:follow",
+                "eclipse:guard",
+                "eclipse:stay",
+                "eclipse:explore"
+              ]
+            }
+          },
+          {
+            "add": {
+              "component_groups": [
+                "eclipse:scripted"
+              ]
+            }
+          }
+        ]
+      },
+      "eclipse:act_idle": {
+        "set_property": {
+          "eclipse:action": "idle"
+        }
+      },
+      "eclipse:act_walk": {
+        "set_property": {
+          "eclipse:action": "walk"
+        }
+      },
+      "eclipse:act_run": {
+        "set_property": {
+          "eclipse:action": "run"
+        }
+      },
+      "eclipse:act_chop": {
+        "set_property": {
+          "eclipse:action": "chop"
+        }
+      },
+      "eclipse:act_mine": {
+        "set_property": {
+          "eclipse:action": "mine"
+        }
+      },
+      "eclipse:act_build": {
+        "set_property": {
+          "eclipse:action": "build"
+        }
+      },
+      "eclipse:act_eat": {
+        "set_property": {
+          "eclipse:action": "eat"
+        }
+      },
+      "eclipse:act_attack": {
+        "set_property": {
+          "eclipse:action": "attack"
+        }
+      },
+      "eclipse:act_cast": {
+        "set_property": {
+          "eclipse:action": "cast"
+        }
+      },
+      "eclipse:act_sit": {
+        "set_property": {
+          "eclipse:action": "sit"
+        }
+      },
+      "eclipse:act_wave": {
+        "set_property": {
+          "eclipse:action": "wave"
+        }
+      },
+      "eclipse:act_float": {
+        "set_property": {
+          "eclipse:action": "float"
+        }
+      },
+      "eclipse:act_carry": {
+        "set_property": {
+          "eclipse:action": "carry"
+        }
+      },
+      "eclipse:act_dig": {
+        "set_property": {
+          "eclipse:action": "dig"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "ECLIPSE — Shadow Sovereign (BP)",
+    "description": "§5ECLIPSE — Shadow Sovereign§r §7(Behavior)§r\n§fCriado por §d0neajx§r",
+    "uuid": "9c712459-49a5-4ae0-97dd-2537704fbff8",
+    "version": [
+      1,
+      0,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      26,
+      30
+    ]
+  },
+  "modules": [
+    {
+      "type": "data",
+      "uuid": "12c3bddd-d4a5-44e7-a19b-4c1bf2c0c53e",
+      "version": [
+        1,
+        0,
+        0
+      ],
+      "description": "ECLIPSE behaviors"
+    },
+    {
+      "type": "script",
+      "language": "javascript",
+      "uuid": "5f099323-d48b-441e-afd6-f8c9a31bbdc3",
+      "version": [
+        1,
+        0,
+        0
+      ],
+      "entry": "scripts/main.js",
+      "description": "ECLIPSE gameplay systems"
+    }
+  ],
+  "dependencies": [
+    {
+      "uuid": "661fcfd9-8849-4137-8a0c-0d3cb93c7fc5",
+      "version": [
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "module_name": "@minecraft/server",
+      "version": "2.8.0"
+    },
+    {
+      "module_name": "@minecraft/server-ui",
+      "version": "2.1.0"
+    }
+  ],
+  "metadata": {
+    "authors": [
+      "0neajx"
+    ],
+    "url": "https://github.com/jeanvicen/2d-platformer"
+  }
+}

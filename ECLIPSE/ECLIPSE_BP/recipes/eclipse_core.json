@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "eclipse:core_recipe"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "OAO",
+      "AEA",
+      "OAO"
+    ],
+    "key": {
+      "O": "minecraft:obsidian",
+      "A": "minecraft:amethyst_shard",
+      "E": "minecraft:ender_pearl"
+    },
+    "unlock": [
+      {
+        "item": "minecraft:amethyst_shard"
+      }
+    ],
+    "result": {
+      "item": "eclipse:eclipse_core"
+    }
+  }
+}

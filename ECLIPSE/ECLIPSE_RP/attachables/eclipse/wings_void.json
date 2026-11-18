@@ -1,0 +1,38 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "eclipse:wings_void",
+      "materials": {
+        "default": "entity_emissive_alpha",
+        "enchanted": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/eclipse/wings/wings_void",
+        "enchanted": "textures/misc/enchanted_item_glint"
+      },
+      "geometry": {
+        "default": "geometry.eclipse.wings_void"
+      },
+      "animations": {
+        "closed": "animation.eclipse.wings_void.closed",
+        "opening": "animation.eclipse.wings_void.opening",
+        "flap": "animation.eclipse.wings_void.flap",
+        "glide": "animation.eclipse.wings_void.glide",
+        "closing": "animation.eclipse.wings_void.land",
+        "ctrl": "controller.animation.eclipse.wings_void"
+      },
+      "scripts": {
+        "animate": [
+          "ctrl"
+        ],
+        "pre_animation": [
+          "v.eclipse_air = q.is_on_ground ? 0.0 : ((v.eclipse_air ?? 0.0) + q.delta_time);"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.eclipse.item"
+      ]
+    }
+  }
+}

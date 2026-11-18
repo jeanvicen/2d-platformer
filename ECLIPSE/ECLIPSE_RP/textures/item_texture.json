@@ -1,0 +1,99 @@
+{
+  "resource_pack_name": "eclipse",
+  "texture_name": "atlas.items",
+  "texture_data": {
+    "eclipse_eclipse_hammer": {
+      "textures": "textures/items/eclipse/eclipse_hammer"
+    },
+    "eclipse_eclipse_axe": {
+      "textures": "textures/items/eclipse/eclipse_axe"
+    },
+    "eclipse_shadow_sword": {
+      "textures": "textures/items/eclipse/shadow_sword"
+    },
+    "eclipse_astral_spear": {
+      "textures": "textures/items/eclipse/astral_spear"
+    },
+    "eclipse_eclipse_scythe": {
+      "textures": "textures/items/eclipse/eclipse_scythe"
+    },
+    "eclipse_celestial_bow": {
+      "textures": "textures/items/eclipse/celestial_bow"
+    },
+    "eclipse_guardian_shield": {
+      "textures": "textures/items/eclipse/guardian_shield"
+    },
+    "eclipse_titan_gauntlets": {
+      "textures": "textures/items/eclipse/titan_gauntlets"
+    },
+    "eclipse_shadow_chains": {
+      "textures": "textures/items/eclipse/shadow_chains"
+    },
+    "eclipse_eclipse_core": {
+      "textures": "textures/items/eclipse/eclipse_core"
+    },
+    "eclipse_codex": {
+      "textures": "textures/items/eclipse/codex"
+    },
+    "eclipse_legion_sigil": {
+      "textures": "textures/items/eclipse/legion_sigil"
+    },
+    "eclipse_power_sigil": {
+      "textures": "textures/items/eclipse/power_sigil"
+    },
+    "eclipse_form_essence": {
+      "textures": "textures/items/eclipse/form_essence"
+    },
+    "eclipse_shadow_hand": {
+      "textures": "textures/items/eclipse/shadow_hand"
+    },
+    "eclipse_element_prism": {
+      "textures": "textures/items/eclipse/element_prism"
+    },
+    "eclipse_lyra_bond": {
+      "textures": "textures/items/eclipse/lyra_bond"
+    },
+    "eclipse_relic_recall": {
+      "textures": "textures/items/eclipse/relic_recall"
+    },
+    "eclipse_shadow_pickaxe": {
+      "textures": "textures/items/eclipse/shadow_pickaxe"
+    },
+    "eclipse_shadow_axe_tool": {
+      "textures": "textures/items/eclipse/shadow_axe_tool"
+    },
+    "eclipse_shadow_shovel": {
+      "textures": "textures/items/eclipse/shadow_shovel"
+    },
+    "eclipse_wings_shadow": {
+      "textures": "textures/items/eclipse/wings_shadow"
+    },
+    "eclipse_wings_celestial": {
+      "textures": "textures/items/eclipse/wings_celestial"
+    },
+    "eclipse_wings_void": {
+      "textures": "textures/items/eclipse/wings_void"
+    },
+    "eclipse_wings_dragon": {
+      "textures": "textures/items/eclipse/wings_dragon"
+    },
+    "eclipse_form_wolf": {
+      "textures": "textures/items/eclipse/form_wolf"
+    },
+    "eclipse_form_panther": {
+      "textures": "textures/items/eclipse/form_panther"
+    },
+    "eclipse_form_eagle": {
+      "textures": "textures/items/eclipse/form_eagle"
+    },
+    "eclipse_form_serpent": {
+      "textures": "textures/items/eclipse/form_serpent"
+    },
+    "eclipse_form_titan": {
+      "textures": "textures/items/eclipse/form_titan"
+    },
+    "eclipse_form_guardian": {
+      "textures": "textures/items/eclipse/form_guardian"
+    }
+  }
+}

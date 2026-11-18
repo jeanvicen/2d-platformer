@@ -1,0 +1,58 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "eclipse:nyx",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/eclipse/nyx"
+      },
+      "geometry": {
+        "default": "geometry.eclipse.nyx"
+      },
+      "animations": {
+        "manifest": "animation.eclipse.nyx.manifest",
+        "recall": "animation.eclipse.nyx.recall",
+        "look": "animation.eclipse.nyx.look",
+        "idle": "animation.eclipse.nyx.idle",
+        "walk": "animation.eclipse.nyx.walk",
+        "run": "animation.eclipse.nyx.run",
+        "sit": "animation.eclipse.nyx.rest",
+        "stretch": "animation.eclipse.nyx.stretch",
+        "special": "animation.eclipse.nyx.stalk",
+        "interact": "animation.eclipse.nyx.purr",
+        "ctrl_move": "controller.animation.eclipse.nyx.move",
+        "ctrl_phase": "controller.animation.eclipse.nyx.phase",
+        "ctrl_fidget": "controller.animation.eclipse.nyx.fidget"
+      },
+      "particle_effects": {
+        "manifest": "eclipse:shadow_manifest",
+        "recall": "eclipse:shadow_recall",
+        "burst": "eclipse:violet_burst",
+        "impact": "eclipse:ground_impact",
+        "breath": "eclipse:shadow_breath",
+        "cast": "eclipse:cast_sparks"
+      },
+      "sound_effects": {
+        "manifest": "eclipse.manifest",
+        "recall": "eclipse.recall",
+        "special": "mob.cat.hiss"
+      },
+      "scripts": {
+        "scale": "1.0",
+        "animate": [
+          "look",
+          "ctrl_move",
+          "ctrl_phase",
+          "ctrl_fidget"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.eclipse.creature"
+      ],
+      "enable_attachables": false
+    }
+  }
+}

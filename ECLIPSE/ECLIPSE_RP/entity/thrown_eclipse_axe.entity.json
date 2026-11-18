@@ -1,0 +1,31 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "eclipse:thrown_eclipse_axe",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/eclipse/thrown/eclipse_axe"
+      },
+      "geometry": {
+        "default": "geometry.eclipse.thrown.eclipse_axe"
+      },
+      "animations": {
+        "spin": "animation.eclipse.thrown_eclipse_axe.spin",
+        "rest": "animation.eclipse.thrown_eclipse_axe.rest",
+        "ctrl": "controller.animation.eclipse.thrown_eclipse_axe.state"
+      },
+      "scripts": {
+        "animate": [
+          "ctrl"
+        ],
+        "scale": "1.15"
+      },
+      "render_controllers": [
+        "controller.render.eclipse.thrown"
+      ]
+    }
+  }
+}

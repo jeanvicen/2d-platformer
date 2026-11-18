@@ -1,0 +1,43 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "eclipse:codex",
+      "materials": {
+        "default": "entity_emissive_alpha",
+        "enchanted": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/eclipse/held/codex",
+        "enchanted": "textures/misc/enchanted_item_glint"
+      },
+      "geometry": {
+        "default": "geometry.eclipse.held.codex"
+      },
+      "animations": {
+        "third": "animation.eclipse.held.codex.third",
+        "first": "animation.eclipse.held.codex.first",
+        "materialize": "animation.eclipse.held.codex.materialize",
+        "idle_glow": "animation.eclipse.held.codex.idle_glow",
+        "ctrl": "controller.animation.eclipse.held.codex"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "first": "c.is_first_person"
+          },
+          {
+            "third": "!c.is_first_person"
+          },
+          "ctrl"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.eclipse.item"
+      ],
+      "particle_effects": {
+        "mat": "eclipse:materialize_hand"
+      }
+    }
+  }
+}

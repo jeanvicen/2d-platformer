@@ -1,0 +1,613 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.eclipse.manta.manifest": {
+      "bones": {
+        "root": {
+          "rotation": {
+            "0.0": [
+              0.0,
+              -90.0,
+              0.0
+            ],
+            "1.2": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "position": {
+            "0.0": [
+              0.0,
+              -6.0,
+              0.0
+            ],
+            "0.72": [
+              0.0,
+              0.6,
+              0.0
+            ],
+            "1.2": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "scale": {
+            "0.0": [
+              0.2,
+              0.0,
+              0.2
+            ],
+            "0.54": [
+              0.9,
+              1.15,
+              0.9
+            ],
+            "0.9": [
+              1.05,
+              0.95,
+              1.05
+            ],
+            "1.2": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "loop": "hold_on_last_frame",
+      "animation_length": 1.2,
+      "particle_effects": [
+        {
+          "effect": "manifest",
+          "locator": "ground"
+        }
+      ],
+      "sound_effects": [
+        {
+          "effect": "manifest"
+        }
+      ]
+    },
+    "animation.eclipse.manta.recall": {
+      "bones": {
+        "root": {
+          "rotation": {
+            "0.0": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "0.9": [
+              0.0,
+              120.0,
+              0.0
+            ]
+          },
+          "position": {
+            "0.0": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "0.9": [
+              0.0,
+              -7.0,
+              0.0
+            ]
+          },
+          "scale": {
+            "0.0": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "0.25": [
+              1.08,
+              0.9,
+              1.08
+            ],
+            "0.9": [
+              0.15,
+              0.0,
+              0.15
+            ]
+          }
+        }
+      },
+      "loop": "hold_on_last_frame",
+      "animation_length": 0.9,
+      "particle_effects": [
+        {
+          "effect": "recall",
+          "locator": "ground"
+        }
+      ],
+      "sound_effects": [
+        {
+          "effect": "recall"
+        }
+      ]
+    },
+    "animation.eclipse.manta.look": {
+      "bones": {
+        "body": {
+          "rotation": [
+            0.0,
+            "math.clamp(q.target_y_rotation, -20, 20) * 0.4",
+            0.0
+          ]
+        }
+      },
+      "loop": true
+    },
+    "animation.eclipse.manta.rest": {
+      "bones": {
+        "wing_l": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 50.0) * 4.0"
+          ]
+        },
+        "wingtip_l": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 50.0 + -70.0) * 4.4"
+          ]
+        },
+        "wing_r": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 50.0) * -4.0"
+          ]
+        },
+        "wingtip_r": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 50.0 + -70.0) * -4.4"
+          ]
+        },
+        "tail": {
+          "rotation": [
+            "math.sin(q.anim_time * 50.0 + 180.0) * 5.0",
+            "math.sin(q.anim_time * 25.0) * 6.0",
+            0.0
+          ]
+        },
+        "tail2": {
+          "rotation": [
+            "math.sin(q.anim_time * 50.0 + 230.0) * 8.0",
+            "math.sin(q.anim_time * 25.0 + 60.0) * 10.0",
+            0.0
+          ]
+        },
+        "body": {
+          "position": [
+            0.0,
+            -4.6,
+            0.0
+          ]
+        }
+      },
+      "loop": true
+    },
+    "animation.eclipse.manta.hover": {
+      "bones": {
+        "wing_l": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 160.0) * 22.0"
+          ]
+        },
+        "wingtip_l": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 160.0 + -70.0) * 24.2"
+          ]
+        },
+        "wing_r": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 160.0) * -22.0"
+          ]
+        },
+        "wingtip_r": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 160.0 + -70.0) * -24.2"
+          ]
+        },
+        "tail": {
+          "rotation": [
+            "math.sin(q.anim_time * 160.0 + 180.0) * 5.0",
+            "math.sin(q.anim_time * 80.0) * 6.0",
+            0.0
+          ]
+        },
+        "tail2": {
+          "rotation": [
+            "math.sin(q.anim_time * 160.0 + 230.0) * 8.0",
+            "math.sin(q.anim_time * 80.0 + 60.0) * 10.0",
+            0.0
+          ]
+        },
+        "body": {
+          "position": [
+            0.0,
+            "math.sin(q.anim_time * 160.0 + 90.0) * 1.2",
+            0.0
+          ]
+        }
+      },
+      "loop": true
+    },
+    "animation.eclipse.manta.swim": {
+      "bones": {
+        "wing_l": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 220.0) * 30.0"
+          ]
+        },
+        "wingtip_l": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 220.0 + -70.0) * 33.0"
+          ]
+        },
+        "wing_r": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 220.0) * -30.0"
+          ]
+        },
+        "wingtip_r": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 220.0 + -70.0) * -33.0"
+          ]
+        },
+        "tail": {
+          "rotation": [
+            "math.sin(q.anim_time * 220.0 + 180.0) * 5.0",
+            "math.sin(q.anim_time * 110.0) * 6.0",
+            0.0
+          ]
+        },
+        "tail2": {
+          "rotation": [
+            "math.sin(q.anim_time * 220.0 + 230.0) * 8.0",
+            "math.sin(q.anim_time * 110.0 + 60.0) * 10.0",
+            0.0
+          ]
+        },
+        "body": {
+          "rotation": [
+            "math.clamp(-q.vertical_speed * 3, -25, 25)",
+            0.0,
+            "math.clamp(q.yaw_speed * -0.12, -40, 40)"
+          ],
+          "position": [
+            0.0,
+            "math.sin(q.anim_time * 220.0 + 90.0) * 1.5",
+            0.0
+          ]
+        }
+      },
+      "loop": true
+    },
+    "animation.eclipse.manta.glide": {
+      "bones": {
+        "wing_l": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 70.0) * 6.0"
+          ]
+        },
+        "wingtip_l": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 70.0 + -70.0) * 6.6"
+          ]
+        },
+        "wing_r": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 70.0) * -6.0"
+          ]
+        },
+        "wingtip_r": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 70.0 + -70.0) * -6.6"
+          ]
+        },
+        "tail": {
+          "rotation": [
+            "math.sin(q.anim_time * 70.0 + 180.0) * 5.0",
+            "math.sin(q.anim_time * 35.0) * 6.0",
+            0.0
+          ]
+        },
+        "tail2": {
+          "rotation": [
+            "math.sin(q.anim_time * 70.0 + 230.0) * 8.0",
+            "math.sin(q.anim_time * 35.0 + 60.0) * 10.0",
+            0.0
+          ]
+        },
+        "body": {
+          "rotation": [
+            5.0,
+            0.0,
+            "math.clamp(q.yaw_speed * -0.15, -45, 45)"
+          ]
+        }
+      },
+      "loop": true
+    },
+    "animation.eclipse.manta.takeoff": {
+      "bones": {
+        "body": {
+          "position": {
+            "0": {
+              "post": [
+                0.0,
+                -4.6,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.6": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          }
+        },
+        "wing_l": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 300.0) * 30.0"
+          ]
+        },
+        "wingtip_l": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 300.0 + -70.0) * 33.0"
+          ]
+        },
+        "wing_r": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 300.0) * -30.0"
+          ]
+        },
+        "wingtip_r": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 300.0 + -70.0) * -33.0"
+          ]
+        },
+        "tail": {
+          "rotation": [
+            "math.sin(q.anim_time * 300.0 + 180.0) * 5.0",
+            "math.sin(q.anim_time * 150.0) * 6.0",
+            0.0
+          ]
+        },
+        "tail2": {
+          "rotation": [
+            "math.sin(q.anim_time * 300.0 + 230.0) * 8.0",
+            "math.sin(q.anim_time * 150.0 + 60.0) * 10.0",
+            0.0
+          ]
+        }
+      },
+      "animation_length": 0.6
+    },
+    "animation.eclipse.manta.land": {
+      "bones": {
+        "body": {
+          "position": {
+            "0": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.6": {
+              "post": [
+                0.0,
+                -4.6,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          }
+        }
+      },
+      "animation_length": 0.6
+    },
+    "animation.eclipse.manta.barrel_roll": {
+      "bones": {
+        "body": {
+          "rotation": {
+            "0": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "1.0": {
+              "post": [
+                0.0,
+                0.0,
+                360.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          },
+          "position": {
+            "0": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.5": {
+              "post": [
+                0.0,
+                6.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "1.0": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          }
+        },
+        "tail": {
+          "rotation": [
+            "math.sin(q.anim_time * 300.0 + 180.0) * 5.0",
+            "math.sin(q.anim_time * 150.0) * 6.0",
+            0.0
+          ]
+        },
+        "tail2": {
+          "rotation": [
+            "math.sin(q.anim_time * 300.0 + 230.0) * 8.0",
+            "math.sin(q.anim_time * 150.0 + 60.0) * 10.0",
+            0.0
+          ]
+        }
+      },
+      "animation_length": 1.0,
+      "sound_effects": [
+        {
+          "effect": "special"
+        }
+      ]
+    },
+    "animation.eclipse.manta.dip": {
+      "bones": {
+        "body": {
+          "rotation": {
+            "0": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.4": {
+              "post": [
+                20.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.8": {
+              "post": [
+                -10.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "1.2": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          }
+        },
+        "wing_l": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 240.0) * 20.0"
+          ]
+        },
+        "wingtip_l": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 240.0 + -70.0) * 22.0"
+          ]
+        },
+        "wing_r": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 240.0) * -20.0"
+          ]
+        },
+        "wingtip_r": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 240.0 + -70.0) * -22.0"
+          ]
+        },
+        "tail": {
+          "rotation": [
+            "math.sin(q.anim_time * 240.0 + 180.0) * 5.0",
+            "math.sin(q.anim_time * 120.0) * 6.0",
+            0.0
+          ]
+        },
+        "tail2": {
+          "rotation": [
+            "math.sin(q.anim_time * 240.0 + 230.0) * 8.0",
+            "math.sin(q.anim_time * 120.0 + 60.0) * 10.0",
+            0.0
+          ]
+        }
+      },
+      "animation_length": 1.2
+    }
+  }
+}

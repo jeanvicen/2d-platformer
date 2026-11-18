@@ -1,0 +1,32 @@
+{
+  "format_version": "1.10.0",
+  "animation_controllers": {
+    "controller.animation.eclipse.thrown_eclipse_hammer.state": {
+      "initial_state": "default",
+      "states": {
+        "default": {
+          "animations": [
+            "spin"
+          ],
+          "transitions": [
+            {
+              "rest": "!q.property('eclipse:spin')"
+            }
+          ],
+          "blend_transition": 0.2
+        },
+        "rest": {
+          "animations": [
+            "rest"
+          ],
+          "transitions": [
+            {
+              "default": "q.property('eclipse:spin')"
+            }
+          ],
+          "blend_transition": 0.3
+        }
+      }
+    }
+  }
+}

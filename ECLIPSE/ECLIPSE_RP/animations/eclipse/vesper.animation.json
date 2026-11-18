@@ -1,0 +1,928 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.eclipse.vesper.manifest": {
+      "bones": {
+        "root": {
+          "rotation": {
+            "0.0": [
+              0.0,
+              -90.0,
+              0.0
+            ],
+            "1.2": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "position": {
+            "0.0": [
+              0.0,
+              -6.0,
+              0.0
+            ],
+            "0.72": [
+              0.0,
+              0.6,
+              0.0
+            ],
+            "1.2": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "scale": {
+            "0.0": [
+              0.2,
+              0.0,
+              0.2
+            ],
+            "0.54": [
+              0.9,
+              1.15,
+              0.9
+            ],
+            "0.9": [
+              1.05,
+              0.95,
+              1.05
+            ],
+            "1.2": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "loop": "hold_on_last_frame",
+      "animation_length": 1.2,
+      "particle_effects": [
+        {
+          "effect": "manifest",
+          "locator": "ground"
+        }
+      ],
+      "sound_effects": [
+        {
+          "effect": "manifest"
+        }
+      ]
+    },
+    "animation.eclipse.vesper.recall": {
+      "bones": {
+        "root": {
+          "rotation": {
+            "0.0": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "0.9": [
+              0.0,
+              120.0,
+              0.0
+            ]
+          },
+          "position": {
+            "0.0": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "0.9": [
+              0.0,
+              -7.0,
+              0.0
+            ]
+          },
+          "scale": {
+            "0.0": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "0.25": [
+              1.08,
+              0.9,
+              1.08
+            ],
+            "0.9": [
+              0.15,
+              0.0,
+              0.15
+            ]
+          }
+        }
+      },
+      "loop": "hold_on_last_frame",
+      "animation_length": 0.9,
+      "particle_effects": [
+        {
+          "effect": "recall",
+          "locator": "ground"
+        }
+      ],
+      "sound_effects": [
+        {
+          "effect": "recall"
+        }
+      ]
+    },
+    "animation.eclipse.vesper.look": {
+      "bones": {
+        "head": {
+          "rotation": [
+            "math.clamp(q.target_x_rotation, -35, 35)",
+            "math.clamp(q.target_y_rotation, -80, 80)",
+            0.0
+          ]
+        }
+      },
+      "loop": true
+    },
+    "animation.eclipse.vesper.idle": {
+      "bones": {
+        "wing_l": {
+          "rotation": [
+            0.0,
+            70.0,
+            -10.0
+          ]
+        },
+        "wingtip_l": {
+          "rotation": [
+            0.0,
+            150.0,
+            0.0
+          ]
+        },
+        "wing_r": {
+          "rotation": [
+            0.0,
+            -70.0,
+            10.0
+          ]
+        },
+        "wingtip_r": {
+          "rotation": [
+            0.0,
+            -150.0,
+            0.0
+          ]
+        },
+        "body": {
+          "scale": [
+            1.0,
+            "1.0 + math.sin(q.anim_time * 140.0) * 0.02",
+            1.0
+          ]
+        },
+        "tail": {
+          "rotation": [
+            "math.sin(q.anim_time * 80.0) * 4.0",
+            "math.sin(q.anim_time * 60.0) * 6.0",
+            0.0
+          ]
+        },
+        "head": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 50.0) * 8.0"
+          ]
+        }
+      },
+      "loop": true
+    },
+    "animation.eclipse.vesper.hop": {
+      "bones": {
+        "wing_l": {
+          "rotation": [
+            0.0,
+            70.0,
+            -10.0
+          ]
+        },
+        "wingtip_l": {
+          "rotation": [
+            0.0,
+            150.0,
+            0.0
+          ]
+        },
+        "wing_r": {
+          "rotation": [
+            0.0,
+            -70.0,
+            10.0
+          ]
+        },
+        "wingtip_r": {
+          "rotation": [
+            0.0,
+            -150.0,
+            0.0
+          ]
+        },
+        "body": {
+          "position": [
+            0.0,
+            "math.abs(math.cos(q.modified_distance_moved * 40.0) * 2.0 * math.min(1.0, q.modified_move_speed))",
+            0.0
+          ]
+        },
+        "leg_l": {
+          "rotation": [
+            "math.cos(q.modified_distance_moved * 40.0) * 30.0 * math.min(1.0, q.modified_move_speed)",
+            0.0,
+            0.0
+          ]
+        },
+        "leg_r": {
+          "rotation": [
+            "math.cos(q.modified_distance_moved * 40.0 + 180.0) * 30.0 * math.min(1.0, q.modified_move_speed)",
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "loop": true
+    },
+    "animation.eclipse.vesper.perch": {
+      "bones": {
+        "wing_l": {
+          "rotation": [
+            0.0,
+            70.0,
+            -10.0
+          ]
+        },
+        "wingtip_l": {
+          "rotation": [
+            0.0,
+            150.0,
+            0.0
+          ]
+        },
+        "wing_r": {
+          "rotation": [
+            0.0,
+            -70.0,
+            10.0
+          ]
+        },
+        "wingtip_r": {
+          "rotation": [
+            0.0,
+            -150.0,
+            0.0
+          ]
+        },
+        "body": {
+          "position": [
+            0.0,
+            -2.5,
+            0.0
+          ]
+        },
+        "neck": {
+          "rotation": [
+            20.0,
+            0.0,
+            0.0
+          ]
+        },
+        "tail": {
+          "rotation": [
+            "math.sin(q.anim_time * 40.0) * 3.0",
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "loop": true
+    },
+    "animation.eclipse.vesper.fly": {
+      "bones": {
+        "wing_l": {
+          "rotation": [
+            0.0,
+            0.0,
+            "6.0 + math.sin(q.anim_time * 520.0) * 42.0"
+          ]
+        },
+        "wingtip_l": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 520.0 + -60.0) * 29.4"
+          ]
+        },
+        "wing_r": {
+          "rotation": [
+            0.0,
+            0.0,
+            "-6.0 + math.sin(q.anim_time * 520.0) * -42.0"
+          ]
+        },
+        "wingtip_r": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 520.0 + -60.0) * -29.4"
+          ]
+        },
+        "leg_l": {
+          "rotation": [
+            70.0,
+            0.0,
+            0.0
+          ]
+        },
+        "leg_r": {
+          "rotation": [
+            70.0,
+            0.0,
+            0.0
+          ]
+        },
+        "body": {
+          "rotation": [
+            "math.clamp(-q.vertical_speed * 3, -25, 25)",
+            0.0,
+            "math.clamp(q.yaw_speed * -0.1, -30, 30)"
+          ],
+          "position": [
+            0.0,
+            "math.sin(q.anim_time * 520.0 + 90.0) * 0.8",
+            0.0
+          ]
+        },
+        "tail": {
+          "rotation": [
+            "math.sin(q.anim_time * 520.0 + 180.0) * 5.0",
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "loop": true
+    },
+    "animation.eclipse.vesper.glide": {
+      "bones": {
+        "wing_l": {
+          "rotation": [
+            0.0,
+            0.0,
+            "6.0 + math.sin(q.anim_time * 80.0) * 5.0"
+          ]
+        },
+        "wingtip_l": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 80.0 + -60.0) * 3.5"
+          ]
+        },
+        "wing_r": {
+          "rotation": [
+            0.0,
+            0.0,
+            "-6.0 + math.sin(q.anim_time * 80.0) * -5.0"
+          ]
+        },
+        "wingtip_r": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 80.0 + -60.0) * -3.5"
+          ]
+        },
+        "leg_l": {
+          "rotation": [
+            70.0,
+            0.0,
+            0.0
+          ]
+        },
+        "leg_r": {
+          "rotation": [
+            70.0,
+            0.0,
+            0.0
+          ]
+        },
+        "body": {
+          "rotation": [
+            4.0,
+            0.0,
+            "math.clamp(q.yaw_speed * -0.12, -35, 35)"
+          ]
+        },
+        "tail": {
+          "rotation": [
+            "math.sin(q.anim_time * 60.0) * 4.0",
+            "math.sin(q.anim_time * 50.0) * 5.0",
+            0.0
+          ]
+        }
+      },
+      "loop": true
+    },
+    "animation.eclipse.vesper.hover": {
+      "bones": {
+        "wing_l": {
+          "rotation": [
+            0.0,
+            0.0,
+            "10.0 + math.sin(q.anim_time * 700.0) * 50.0"
+          ]
+        },
+        "wingtip_l": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 700.0 + -60.0) * 35.0"
+          ]
+        },
+        "wing_r": {
+          "rotation": [
+            0.0,
+            0.0,
+            "-10.0 + math.sin(q.anim_time * 700.0) * -50.0"
+          ]
+        },
+        "wingtip_r": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 700.0 + -60.0) * -35.0"
+          ]
+        },
+        "body": {
+          "rotation": [
+            -25.0,
+            0.0,
+            0.0
+          ],
+          "position": [
+            0.0,
+            "math.sin(q.anim_time * 700.0 + 90.0) * 1.0",
+            0.0
+          ]
+        },
+        "leg_l": {
+          "rotation": [
+            20.0,
+            0.0,
+            0.0
+          ]
+        },
+        "leg_r": {
+          "rotation": [
+            20.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "loop": true
+    },
+    "animation.eclipse.vesper.takeoff": {
+      "bones": {
+        "wing_l": {
+          "rotation": {
+            "0": {
+              "post": [
+                0.0,
+                70.0,
+                -10.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.25": {
+              "post": [
+                0.0,
+                0.0,
+                55.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.5": {
+              "post": [
+                0.0,
+                0.0,
+                -35.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          }
+        },
+        "wing_r": {
+          "rotation": {
+            "0": {
+              "post": [
+                0.0,
+                -70.0,
+                10.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.25": {
+              "post": [
+                0.0,
+                0.0,
+                -55.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.5": {
+              "post": [
+                0.0,
+                0.0,
+                35.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          }
+        },
+        "body": {
+          "rotation": {
+            "0": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.25": {
+              "post": [
+                -30.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.5": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          }
+        }
+      },
+      "animation_length": 0.5
+    },
+    "animation.eclipse.vesper.land": {
+      "bones": {
+        "wing_l": {
+          "rotation": {
+            "0": {
+              "post": [
+                0.0,
+                0.0,
+                50.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.35": {
+              "post": [
+                0.0,
+                0.0,
+                60.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.7": {
+              "post": [
+                0.0,
+                70.0,
+                -10.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          }
+        },
+        "wing_r": {
+          "rotation": {
+            "0": {
+              "post": [
+                0.0,
+                0.0,
+                -50.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.35": {
+              "post": [
+                0.0,
+                0.0,
+                -60.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.7": {
+              "post": [
+                0.0,
+                -70.0,
+                10.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          }
+        },
+        "body": {
+          "rotation": {
+            "0": {
+              "post": [
+                -35.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.7": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          }
+        }
+      },
+      "animation_length": 0.7
+    },
+    "animation.eclipse.vesper.rebirth": {
+      "bones": {
+        "root": {
+          "rotation": {
+            "0": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "1.2": {
+              "post": [
+                0.0,
+                720.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          },
+          "position": {
+            "0": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.6": {
+              "post": [
+                0.0,
+                6.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "1.2": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          },
+          "scale": {
+            "0": {
+              "post": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.6": {
+              "post": [
+                1.35,
+                1.35,
+                1.35
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "1.2": {
+              "post": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          }
+        },
+        "wing_l": {
+          "rotation": [
+            0.0,
+            0.0,
+            40.0
+          ]
+        },
+        "wing_r": {
+          "rotation": [
+            0.0,
+            0.0,
+            -40.0
+          ]
+        }
+      },
+      "animation_length": 1.2,
+      "particle_effects": [
+        {
+          "effect": "burst",
+          "locator": "trail"
+        }
+      ],
+      "sound_effects": [
+        {
+          "effect": "special"
+        }
+      ]
+    },
+    "animation.eclipse.vesper.bow": {
+      "bones": {
+        "neck": {
+          "rotation": {
+            "0": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.4": {
+              "post": [
+                40.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "1.0": {
+              "post": [
+                40.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "1.4": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          }
+        },
+        "wing_l": {
+          "rotation": {
+            "0": {
+              "post": [
+                0.0,
+                70.0,
+                -10.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.4": {
+              "post": [
+                0.0,
+                20.0,
+                15.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "1.0": {
+              "post": [
+                0.0,
+                20.0,
+                15.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "1.4": {
+              "post": [
+                0.0,
+                70.0,
+                -10.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          }
+        },
+        "wing_r": {
+          "rotation": {
+            "0": {
+              "post": [
+                0.0,
+                -70.0,
+                10.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.4": {
+              "post": [
+                0.0,
+                -20.0,
+                -15.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "1.0": {
+              "post": [
+                0.0,
+                -20.0,
+                -15.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "1.4": {
+              "post": [
+                0.0,
+                -70.0,
+                10.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          }
+        }
+      },
+      "animation_length": 1.4
+    },
+    "animation.eclipse.vesper.preen": {
+      "bones": {
+        "neck": {
+          "rotation": {
+            "0": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.4": {
+              "post": [
+                10.0,
+                80.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "1.4": {
+              "post": [
+                10.0,
+                80.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "1.8": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          }
+        },
+        "head": {
+          "rotation": [
+            "math.sin(q.anim_time * 900.0) * 10.0",
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "animation_length": 1.8
+    }
+  }
+}

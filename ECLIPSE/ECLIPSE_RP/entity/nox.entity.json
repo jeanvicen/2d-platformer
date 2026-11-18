@@ -1,0 +1,63 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "eclipse:nox",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/eclipse/nox"
+      },
+      "geometry": {
+        "default": "geometry.eclipse.nox"
+      },
+      "animations": {
+        "manifest": "animation.eclipse.nox.manifest",
+        "recall": "animation.eclipse.nox.recall",
+        "look": "animation.eclipse.nox.look",
+        "idle": "animation.eclipse.nox.idle",
+        "walk": "animation.eclipse.nox.walk",
+        "run": "animation.eclipse.nox.walk",
+        "sit": "animation.eclipse.nox.rest",
+        "fly": "animation.eclipse.nox.fly",
+        "glide": "animation.eclipse.nox.glide",
+        "hover": "animation.eclipse.nox.hover",
+        "takeoff": "animation.eclipse.nox.takeoff",
+        "land": "animation.eclipse.nox.land",
+        "special": "animation.eclipse.nox.roar",
+        "interact": "animation.eclipse.nox.bow",
+        "wing_stretch": "animation.eclipse.nox.wing_stretch",
+        "ctrl_move": "controller.animation.eclipse.nox.move",
+        "ctrl_phase": "controller.animation.eclipse.nox.phase",
+        "ctrl_fidget": "controller.animation.eclipse.nox.fidget"
+      },
+      "particle_effects": {
+        "manifest": "eclipse:shadow_manifest",
+        "recall": "eclipse:shadow_recall",
+        "burst": "eclipse:violet_burst",
+        "impact": "eclipse:ground_impact",
+        "breath": "eclipse:shadow_breath",
+        "cast": "eclipse:cast_sparks"
+      },
+      "sound_effects": {
+        "manifest": "eclipse.manifest",
+        "recall": "eclipse.recall",
+        "special": "mob.enderdragon.growl"
+      },
+      "scripts": {
+        "scale": "1.0",
+        "animate": [
+          "look",
+          "ctrl_move",
+          "ctrl_phase",
+          "ctrl_fidget"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.eclipse.creature"
+      ],
+      "enable_attachables": false
+    }
+  }
+}

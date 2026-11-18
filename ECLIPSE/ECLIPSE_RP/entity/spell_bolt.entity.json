@@ -1,0 +1,36 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "eclipse:spell_bolt",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "shadow": "textures/entity/eclipse/bolt_shadow",
+        "light": "textures/entity/eclipse/bolt_light",
+        "fire": "textures/entity/eclipse/bolt_fire",
+        "water": "textures/entity/eclipse/bolt_water",
+        "earth": "textures/entity/eclipse/bolt_earth",
+        "air": "textures/entity/eclipse/bolt_air",
+        "lightning": "textures/entity/eclipse/bolt_lightning",
+        "ice": "textures/entity/eclipse/bolt_ice",
+        "nature": "textures/entity/eclipse/bolt_nature"
+      },
+      "geometry": {
+        "default": "geometry.eclipse.spell_bolt"
+      },
+      "animations": {
+        "spin": "animation.eclipse.spell_bolt.spin"
+      },
+      "scripts": {
+        "animate": [
+          "spin"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.eclipse.bolt"
+      ]
+    }
+  }
+}

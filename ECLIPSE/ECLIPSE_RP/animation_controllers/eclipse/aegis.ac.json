@@ -1,0 +1,162 @@
+{
+  "format_version": "1.10.0",
+  "animation_controllers": {
+    "controller.animation.eclipse.aegis.move": {
+      "initial_state": "default",
+      "states": {
+        "default": {
+          "animations": [
+            "idle"
+          ],
+          "transitions": [
+            {
+              "sit": "q.property('eclipse:state') == 'stay'"
+            },
+            {
+              "run": "q.ground_speed > 3.6"
+            },
+            {
+              "walk": "q.ground_speed > 0.35"
+            }
+          ],
+          "blend_transition": 0.3
+        },
+        "walk": {
+          "animations": [
+            "walk"
+          ],
+          "transitions": [
+            {
+              "sit": "q.property('eclipse:state') == 'stay'"
+            },
+            {
+              "run": "q.ground_speed > 3.6"
+            },
+            {
+              "default": "q.ground_speed < 0.2"
+            }
+          ],
+          "blend_transition": 0.25
+        },
+        "run": {
+          "animations": [
+            "run"
+          ],
+          "transitions": [
+            {
+              "walk": "q.ground_speed < 3.0"
+            }
+          ],
+          "blend_transition": 0.25
+        },
+        "sit": {
+          "animations": [
+            "sit"
+          ],
+          "transitions": [
+            {
+              "default": "q.property('eclipse:state') != 'stay'"
+            }
+          ],
+          "blend_transition": 0.5
+        }
+      }
+    },
+    "controller.animation.eclipse.aegis.phase": {
+      "initial_state": "default",
+      "states": {
+        "default": {
+          "transitions": [
+            {
+              "manifest": "q.property('eclipse:phase') == 'manifest'"
+            },
+            {
+              "recall": "q.property('eclipse:phase') == 'recall'"
+            },
+            {
+              "special": "q.property('eclipse:phase') == 'special'"
+            },
+            {
+              "interact": "q.property('eclipse:phase') == 'interact'"
+            }
+          ]
+        },
+        "manifest": {
+          "animations": [
+            "manifest"
+          ],
+          "transitions": [
+            {
+              "recall": "q.property('eclipse:phase') == 'recall'"
+            },
+            {
+              "default": "q.property('eclipse:phase') != 'manifest'"
+            }
+          ],
+          "blend_transition": 0.1
+        },
+        "recall": {
+          "animations": [
+            "recall"
+          ],
+          "transitions": [
+            {
+              "default": "q.property('eclipse:phase') != 'recall'"
+            }
+          ]
+        },
+        "special": {
+          "animations": [
+            "special"
+          ],
+          "transitions": [
+            {
+              "recall": "q.property('eclipse:phase') == 'recall'"
+            },
+            {
+              "default": "q.all_animations_finished || q.property('eclipse:phase') != 'special'"
+            }
+          ],
+          "blend_transition": 0.25
+        },
+        "interact": {
+          "animations": [
+            "interact"
+          ],
+          "transitions": [
+            {
+              "recall": "q.property('eclipse:phase') == 'recall'"
+            },
+            {
+              "default": "q.all_animations_finished || q.property('eclipse:phase') != 'interact'"
+            }
+          ],
+          "blend_transition": 0.25
+        }
+      }
+    },
+    "controller.animation.eclipse.aegis.fidget": {
+      "initial_state": "default",
+      "states": {
+        "default": {
+          "transitions": [
+            {
+              "scan": "q.ground_speed < 0.1 && q.property('eclipse:phase') == 'idle' && q.property('eclipse:state') != 'stay' && math.random(0, 1) < 0.00160"
+            }
+          ]
+        },
+        "scan": {
+          "animations": [
+            "scan"
+          ],
+          "transitions": [
+            {
+              "default": "q.all_animations_finished || q.ground_speed > 0.4 || q.property('eclipse:phase') != 'idle'"
+            }
+          ],
+          "blend_transition": 0.35
+        }
+      }
+    }
+  }
+}

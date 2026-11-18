@@ -1,0 +1,634 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.eclipse.umbra.manifest": {
+      "bones": {
+        "root": {
+          "rotation": {
+            "0.0": [
+              0.0,
+              -90.0,
+              0.0
+            ],
+            "1.2": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "position": {
+            "0.0": [
+              0.0,
+              -6.0,
+              0.0
+            ],
+            "0.72": [
+              0.0,
+              0.6,
+              0.0
+            ],
+            "1.2": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "scale": {
+            "0.0": [
+              0.2,
+              0.0,
+              0.2
+            ],
+            "0.54": [
+              0.9,
+              1.15,
+              0.9
+            ],
+            "0.9": [
+              1.05,
+              0.95,
+              1.05
+            ],
+            "1.2": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "loop": "hold_on_last_frame",
+      "animation_length": 1.2,
+      "particle_effects": [
+        {
+          "effect": "manifest",
+          "locator": "ground"
+        }
+      ],
+      "sound_effects": [
+        {
+          "effect": "manifest"
+        }
+      ]
+    },
+    "animation.eclipse.umbra.recall": {
+      "bones": {
+        "root": {
+          "rotation": {
+            "0.0": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "0.9": [
+              0.0,
+              120.0,
+              0.0
+            ]
+          },
+          "position": {
+            "0.0": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "0.9": [
+              0.0,
+              -7.0,
+              0.0
+            ]
+          },
+          "scale": {
+            "0.0": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "0.25": [
+              1.08,
+              0.9,
+              1.08
+            ],
+            "0.9": [
+              0.15,
+              0.0,
+              0.15
+            ]
+          }
+        }
+      },
+      "loop": "hold_on_last_frame",
+      "animation_length": 0.9,
+      "particle_effects": [
+        {
+          "effect": "recall",
+          "locator": "ground"
+        }
+      ],
+      "sound_effects": [
+        {
+          "effect": "recall"
+        }
+      ]
+    },
+    "animation.eclipse.umbra.look": {
+      "bones": {
+        "head": {
+          "rotation": [
+            "math.clamp(q.target_x_rotation, -35, 35)",
+            "math.clamp(q.target_y_rotation, -55, 55)",
+            0.0
+          ]
+        }
+      },
+      "loop": true
+    },
+    "animation.eclipse.umbra.idle": {
+      "bones": {
+        "body": {
+          "scale": [
+            1.0,
+            "1.0 + math.sin(q.anim_time * 120.0) * 0.015",
+            1.0
+          ]
+        },
+        "tail": {
+          "rotation": [
+            "math.sin(q.anim_time * 90.0) * 4.0",
+            "math.sin(q.anim_time * 140.0) * 12.0",
+            0.0
+          ]
+        },
+        "tail2": {
+          "rotation": [
+            "math.sin(q.anim_time * 90.0 + 40.0) * 6.0",
+            "math.sin(q.anim_time * 140.0 + 60.0) * 10.0",
+            0.0
+          ]
+        },
+        "jaw": {
+          "rotation": [
+            "2.0 + math.sin(q.anim_time * 120.0) * 2.0",
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "loop": true
+    },
+    "animation.eclipse.umbra.walk": {
+      "bones": {
+        "leg_fl": {
+          "rotation": [
+            "math.cos(q.modified_distance_moved * 38.17) * 38.0 * math.min(1.0, q.modified_move_speed)",
+            0.0,
+            0.0
+          ]
+        },
+        "leg_fr": {
+          "rotation": [
+            "math.cos(q.modified_distance_moved * 38.17 + 180.0) * 38.0 * math.min(1.0, q.modified_move_speed)",
+            0.0,
+            0.0
+          ]
+        },
+        "leg_bl": {
+          "rotation": [
+            "math.cos(q.modified_distance_moved * 38.17 + 180.0) * 34.0 * math.min(1.0, q.modified_move_speed)",
+            0.0,
+            0.0
+          ]
+        },
+        "leg_br": {
+          "rotation": [
+            "math.cos(q.modified_distance_moved * 38.17) * 34.0 * math.min(1.0, q.modified_move_speed)",
+            0.0,
+            0.0
+          ]
+        },
+        "body": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.cos(q.modified_distance_moved * 38.17) * 2.0 * math.min(1.0, q.modified_move_speed)"
+          ],
+          "position": [
+            0.0,
+            "math.cos(q.modified_distance_moved * 76.34) * 0.4 * math.min(1.0, q.modified_move_speed)",
+            0.0
+          ]
+        },
+        "neck": {
+          "rotation": [
+            "math.cos(q.modified_distance_moved * 76.34) * 4.0 * math.min(1.0, q.modified_move_speed)",
+            0.0,
+            0.0
+          ]
+        },
+        "tail": {
+          "rotation": [
+            0.0,
+            "math.cos(q.modified_distance_moved * 38.17) * 14.0 * math.min(1.0, q.modified_move_speed)",
+            0.0
+          ]
+        }
+      },
+      "loop": true
+    },
+    "animation.eclipse.umbra.run": {
+      "bones": {
+        "leg_fl": {
+          "rotation": [
+            "math.cos(q.modified_distance_moved * 30.0) * 62.0 * math.min(1.0, q.modified_move_speed)",
+            0.0,
+            0.0
+          ]
+        },
+        "leg_fr": {
+          "rotation": [
+            "math.cos(q.modified_distance_moved * 30.0 + 40.0) * 62.0 * math.min(1.0, q.modified_move_speed)",
+            0.0,
+            0.0
+          ]
+        },
+        "leg_bl": {
+          "rotation": [
+            "math.cos(q.modified_distance_moved * 30.0 + 180.0) * 58.0 * math.min(1.0, q.modified_move_speed)",
+            0.0,
+            0.0
+          ]
+        },
+        "leg_br": {
+          "rotation": [
+            "math.cos(q.modified_distance_moved * 30.0 + 220.0) * 58.0 * math.min(1.0, q.modified_move_speed)",
+            0.0,
+            0.0
+          ]
+        },
+        "body": {
+          "rotation": [
+            "math.cos(q.modified_distance_moved * 30.0 + 90.0) * 7.0 * math.min(1.0, q.modified_move_speed)",
+            0.0,
+            0.0
+          ],
+          "position": [
+            0.0,
+            "math.cos(q.modified_distance_moved * 60.0) * 1.0 * math.min(1.0, q.modified_move_speed)",
+            0.0
+          ]
+        },
+        "neck": {
+          "rotation": [
+            "8.0 + math.cos(q.modified_distance_moved * 30.0 + 90.0) * -8.0 * math.min(1.0, q.modified_move_speed)",
+            0.0,
+            0.0
+          ]
+        },
+        "tail": {
+          "rotation": [
+            -25.0,
+            "math.cos(q.modified_distance_moved * 30.0) * 8.0 * math.min(1.0, q.modified_move_speed)",
+            0.0
+          ]
+        },
+        "jaw": {
+          "rotation": [
+            12.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "loop": true
+    },
+    "animation.eclipse.umbra.sit": {
+      "bones": {
+        "body": {
+          "rotation": [
+            -22.0,
+            0.0,
+            0.0
+          ],
+          "position": [
+            0.0,
+            -2.6,
+            2.0
+          ]
+        },
+        "leg_bl": {
+          "rotation": [
+            -68.0,
+            0.0,
+            0.0
+          ],
+          "position": [
+            0.0,
+            -1.6,
+            -1.6
+          ]
+        },
+        "leg_br": {
+          "rotation": [
+            -68.0,
+            0.0,
+            0.0
+          ],
+          "position": [
+            0.0,
+            -1.6,
+            -1.6
+          ]
+        },
+        "leg_fl": {
+          "rotation": [
+            22.0,
+            0.0,
+            0.0
+          ],
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "leg_fr": {
+          "rotation": [
+            22.0,
+            0.0,
+            0.0
+          ],
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "neck": {
+          "rotation": [
+            18.0,
+            0.0,
+            0.0
+          ]
+        },
+        "tail": {
+          "rotation": [
+            -45.0,
+            "math.sin(q.anim_time * 120.0) * 10.0",
+            0.0
+          ]
+        }
+      },
+      "loop": true
+    },
+    "animation.eclipse.umbra.sniff": {
+      "bones": {
+        "neck": {
+          "rotation": {
+            "0": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "0.4": [
+              32.0,
+              10.0,
+              0.0
+            ],
+            "0.8": [
+              36.0,
+              -14.0,
+              0.0
+            ],
+            "1.2": [
+              30.0,
+              6.0,
+              0.0
+            ],
+            "1.8": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        "head": {
+          "rotation": [
+            "math.sin(q.anim_time * 900.0) * 4.0",
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "animation_length": 1.8
+    },
+    "animation.eclipse.umbra.howl": {
+      "bones": {
+        "neck": {
+          "rotation": {
+            "0": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.5": {
+              "post": [
+                -55.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "2.2": {
+              "post": [
+                -58.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "2.8": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          }
+        },
+        "jaw": {
+          "rotation": {
+            "0": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.5": {
+              "post": [
+                22.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "2.2": {
+              "post": [
+                24.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "2.8": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          }
+        },
+        "body": {
+          "rotation": {
+            "0": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.5": {
+              "post": [
+                -8.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "2.4": {
+              "post": [
+                -8.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "2.8": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          }
+        }
+      },
+      "animation_length": 2.8,
+      "sound_effects": [
+        {
+          "effect": "special"
+        }
+      ]
+    },
+    "animation.eclipse.umbra.interact": {
+      "bones": {
+        "tail": {
+          "rotation": [
+            -20.0,
+            "math.sin(q.anim_time * 900.0) * 35.0",
+            0.0
+          ]
+        },
+        "tail2": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 900.0 + 60.0) * 25.0",
+            0.0
+          ]
+        },
+        "body": {
+          "rotation": {
+            "0": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "0.3": [
+              10.0,
+              0.0,
+              0.0
+            ],
+            "0.9": [
+              10.0,
+              0.0,
+              0.0
+            ],
+            "1.3": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        "leg_fl": {
+          "rotation": {
+            "0": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "0.3": [
+              -30.0,
+              0.0,
+              0.0
+            ],
+            "0.9": [
+              -30.0,
+              0.0,
+              0.0
+            ],
+            "1.3": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        "leg_fr": {
+          "rotation": {
+            "0": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "0.3": [
+              -30.0,
+              0.0,
+              0.0
+            ],
+            "0.9": [
+              -30.0,
+              0.0,
+              0.0
+            ],
+            "1.3": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          }
+        }
+      },
+      "animation_length": 1.3
+    }
+  }
+}

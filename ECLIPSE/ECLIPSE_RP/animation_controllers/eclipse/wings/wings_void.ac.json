@@ -1,0 +1,78 @@
+{
+  "format_version": "1.10.0",
+  "animation_controllers": {
+    "controller.animation.eclipse.wings_void": {
+      "initial_state": "closed",
+      "states": {
+        "closed": {
+          "animations": [
+            "closed"
+          ],
+          "transitions": [
+            {
+              "opening": "v.eclipse_air > 0.7"
+            }
+          ],
+          "blend_transition": 0.2
+        },
+        "opening": {
+          "animations": [
+            "opening"
+          ],
+          "transitions": [
+            {
+              "closing": "q.is_on_ground"
+            },
+            {
+              "flap": "q.all_animations_finished && q.vertical_speed > 0.6"
+            },
+            {
+              "glide": "q.all_animations_finished"
+            }
+          ]
+        },
+        "flap": {
+          "animations": [
+            "flap"
+          ],
+          "transitions": [
+            {
+              "closing": "q.is_on_ground"
+            },
+            {
+              "glide": "q.vertical_speed < 0.2"
+            }
+          ],
+          "blend_transition": 0.3
+        },
+        "glide": {
+          "animations": [
+            "glide"
+          ],
+          "transitions": [
+            {
+              "closing": "q.is_on_ground"
+            },
+            {
+              "flap": "q.vertical_speed > 0.8"
+            }
+          ],
+          "blend_transition": 0.35
+        },
+        "closing": {
+          "animations": [
+            "closing"
+          ],
+          "transitions": [
+            {
+              "opening": "!q.is_on_ground && v.eclipse_air > 0.7"
+            },
+            {
+              "closed": "q.all_animations_finished"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

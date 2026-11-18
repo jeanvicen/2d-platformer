@@ -1,0 +1,58 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "eclipse:aegis",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/eclipse/aegis"
+      },
+      "geometry": {
+        "default": "geometry.eclipse.aegis"
+      },
+      "animations": {
+        "manifest": "animation.eclipse.aegis.manifest",
+        "recall": "animation.eclipse.aegis.recall",
+        "look": "animation.eclipse.aegis.look",
+        "idle": "animation.eclipse.aegis.idle",
+        "walk": "animation.eclipse.aegis.walk",
+        "run": "animation.eclipse.aegis.run",
+        "sit": "animation.eclipse.aegis.vigil",
+        "special": "animation.eclipse.aegis.shield_slam",
+        "interact": "animation.eclipse.aegis.salute",
+        "scan": "animation.eclipse.aegis.scan",
+        "ctrl_move": "controller.animation.eclipse.aegis.move",
+        "ctrl_phase": "controller.animation.eclipse.aegis.phase",
+        "ctrl_fidget": "controller.animation.eclipse.aegis.fidget"
+      },
+      "particle_effects": {
+        "manifest": "eclipse:shadow_manifest",
+        "recall": "eclipse:shadow_recall",
+        "burst": "eclipse:violet_burst",
+        "impact": "eclipse:ground_impact",
+        "breath": "eclipse:shadow_breath",
+        "cast": "eclipse:cast_sparks"
+      },
+      "sound_effects": {
+        "manifest": "eclipse.manifest",
+        "recall": "eclipse.recall",
+        "special": "random.anvil_land"
+      },
+      "scripts": {
+        "scale": "1.0",
+        "animate": [
+          "look",
+          "ctrl_move",
+          "ctrl_phase",
+          "ctrl_fidget"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.eclipse.creature"
+      ],
+      "enable_attachables": false
+    }
+  }
+}

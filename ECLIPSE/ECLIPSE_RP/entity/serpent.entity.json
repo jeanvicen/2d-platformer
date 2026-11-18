@@ -1,0 +1,55 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "eclipse:serpent",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/eclipse/serpent"
+      },
+      "geometry": {
+        "default": "geometry.eclipse.serpent"
+      },
+      "animations": {
+        "manifest": "animation.eclipse.serpent.manifest",
+        "recall": "animation.eclipse.serpent.recall",
+        "look": "animation.eclipse.serpent.look",
+        "idle": "animation.eclipse.serpent.idle",
+        "walk": "animation.eclipse.serpent.slither",
+        "run": "animation.eclipse.serpent.slither_fast",
+        "sit": "animation.eclipse.serpent.coil",
+        "special": "animation.eclipse.serpent.rise",
+        "interact": "animation.eclipse.serpent.nuzzle",
+        "ctrl_move": "controller.animation.eclipse.serpent.move",
+        "ctrl_phase": "controller.animation.eclipse.serpent.phase"
+      },
+      "particle_effects": {
+        "manifest": "eclipse:shadow_manifest",
+        "recall": "eclipse:shadow_recall",
+        "burst": "eclipse:violet_burst",
+        "impact": "eclipse:ground_impact",
+        "breath": "eclipse:shadow_breath",
+        "cast": "eclipse:cast_sparks"
+      },
+      "sound_effects": {
+        "manifest": "eclipse.manifest",
+        "recall": "eclipse.recall",
+        "special": "mob.cat.hiss"
+      },
+      "scripts": {
+        "scale": "1.0",
+        "animate": [
+          "look",
+          "ctrl_move",
+          "ctrl_phase"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.eclipse.creature"
+      ],
+      "enable_attachables": false
+    }
+  }
+}

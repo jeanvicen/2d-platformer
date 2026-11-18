@@ -168,3 +168,7 @@ Inside this template repository (which has no `tests/autopilot/`), the cheapest 
 - The HUD level label and the pause menu "Area" text are static in every room.
 - AudioManager is a stub with no audio files.
 - `scenes/levels/`, the level_select / victory / level_complete UI and the gem / checkpoint / bounce_pad / one_way_platform / level_end systems are legacy linear-platformer content that nothing loads.
+
+## Unrelated subproject: `ECLIPSE/`
+
+`ECLIPSE/` is a separate Minecraft Bedrock add-on (ECLIPSE — Shadow Sovereign), not part of the Godot game. It contains a `.gdignore`, so the Godot editor never imports its files. See `ECLIPSE/README.md` (build: `python3 ECLIPSE/tools/build_assets.py`, validate: `ECLIPSE/tools/validate_project.py`, package: `ECLIPSE/tools/package_mcaddon.py`).

@@ -1,0 +1,713 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.eclipse.serpent.manifest": {
+      "bones": {
+        "root": {
+          "rotation": {
+            "0.0": [
+              0.0,
+              -90.0,
+              0.0
+            ],
+            "1.2": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "position": {
+            "0.0": [
+              0.0,
+              -6.0,
+              0.0
+            ],
+            "0.72": [
+              0.0,
+              0.6,
+              0.0
+            ],
+            "1.2": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "scale": {
+            "0.0": [
+              0.2,
+              0.0,
+              0.2
+            ],
+            "0.54": [
+              0.9,
+              1.15,
+              0.9
+            ],
+            "0.9": [
+              1.05,
+              0.95,
+              1.05
+            ],
+            "1.2": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "loop": "hold_on_last_frame",
+      "animation_length": 1.2,
+      "particle_effects": [
+        {
+          "effect": "manifest",
+          "locator": "ground"
+        }
+      ],
+      "sound_effects": [
+        {
+          "effect": "manifest"
+        }
+      ]
+    },
+    "animation.eclipse.serpent.recall": {
+      "bones": {
+        "root": {
+          "rotation": {
+            "0.0": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "0.9": [
+              0.0,
+              120.0,
+              0.0
+            ]
+          },
+          "position": {
+            "0.0": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "0.9": [
+              0.0,
+              -7.0,
+              0.0
+            ]
+          },
+          "scale": {
+            "0.0": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "0.25": [
+              1.08,
+              0.9,
+              1.08
+            ],
+            "0.9": [
+              0.15,
+              0.0,
+              0.15
+            ]
+          }
+        }
+      },
+      "loop": "hold_on_last_frame",
+      "animation_length": 0.9,
+      "particle_effects": [
+        {
+          "effect": "recall",
+          "locator": "ground"
+        }
+      ],
+      "sound_effects": [
+        {
+          "effect": "recall"
+        }
+      ]
+    },
+    "animation.eclipse.serpent.look": {
+      "bones": {
+        "head": {
+          "rotation": [
+            "math.clamp(q.target_x_rotation, -35, 35)",
+            "math.clamp(q.target_y_rotation, -60, 60)",
+            0.0
+          ]
+        }
+      },
+      "loop": true
+    },
+    "animation.eclipse.serpent.idle": {
+      "bones": {
+        "seg0": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 60.0) * 3.0",
+            0.0
+          ]
+        },
+        "seg1": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 60.0 + -40.0) * 3.48",
+            0.0
+          ]
+        },
+        "seg2": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 60.0 + -80.0) * 3.96",
+            0.0
+          ]
+        },
+        "seg3": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 60.0 + -120.0) * 4.44",
+            0.0
+          ]
+        },
+        "seg4": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 60.0 + -160.0) * 4.92",
+            0.0
+          ]
+        },
+        "seg5": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 60.0 + -200.0) * 5.4",
+            0.0
+          ]
+        },
+        "seg6": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 60.0 + -240.0) * 5.88",
+            0.0
+          ]
+        },
+        "seg7": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 60.0 + -280.0) * 6.36",
+            0.0
+          ]
+        },
+        "seg8": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 60.0 + -320.0) * 6.84",
+            0.0
+          ]
+        },
+        "neck": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 60.0 + 40.0) * -2.4",
+            0.0
+          ]
+        },
+        "tongue": {
+          "scale": [
+            "1",
+            "1",
+            "math.sin(q.anim_time * 400) > 0.7 ? 1.0 : 0.01"
+          ]
+        },
+        "head": {
+          "rotation": [
+            "math.sin(q.anim_time * 70.0) * 4.0",
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "loop": true
+    },
+    "animation.eclipse.serpent.slither": {
+      "bones": {
+        "seg0": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 300.0) * 10.0",
+            0.0
+          ]
+        },
+        "seg1": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 300.0 + -55.0) * 11.6",
+            0.0
+          ]
+        },
+        "seg2": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 300.0 + -110.0) * 13.2",
+            0.0
+          ]
+        },
+        "seg3": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 300.0 + -165.0) * 14.8",
+            0.0
+          ]
+        },
+        "seg4": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 300.0 + -220.0) * 16.4",
+            0.0
+          ]
+        },
+        "seg5": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 300.0 + -275.0) * 18.0",
+            0.0
+          ]
+        },
+        "seg6": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 300.0 + -330.0) * 19.6",
+            0.0
+          ]
+        },
+        "seg7": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 300.0 + -385.0) * 21.2",
+            0.0
+          ]
+        },
+        "seg8": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 300.0 + -440.0) * 22.8",
+            0.0
+          ]
+        },
+        "neck": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 300.0 + 40.0) * -8.0",
+            0.0
+          ]
+        }
+      },
+      "loop": true
+    },
+    "animation.eclipse.serpent.slither_fast": {
+      "bones": {
+        "seg0": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 520.0) * 13.0",
+            0.0
+          ]
+        },
+        "seg1": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 520.0 + -55.0) * 15.08",
+            0.0
+          ]
+        },
+        "seg2": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 520.0 + -110.0) * 17.16",
+            0.0
+          ]
+        },
+        "seg3": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 520.0 + -165.0) * 19.24",
+            0.0
+          ]
+        },
+        "seg4": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 520.0 + -220.0) * 21.32",
+            0.0
+          ]
+        },
+        "seg5": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 520.0 + -275.0) * 23.4",
+            0.0
+          ]
+        },
+        "seg6": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 520.0 + -330.0) * 25.48",
+            0.0
+          ]
+        },
+        "seg7": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 520.0 + -385.0) * 27.56",
+            0.0
+          ]
+        },
+        "seg8": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 520.0 + -440.0) * 29.64",
+            0.0
+          ]
+        },
+        "neck": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 520.0 + 40.0) * -10.4",
+            0.0
+          ]
+        }
+      },
+      "loop": true
+    },
+    "animation.eclipse.serpent.coil": {
+      "bones": {
+        "seg0": {
+          "rotation": [
+            0.0,
+            10.0,
+            0.0
+          ]
+        },
+        "seg1": {
+          "rotation": [
+            0.0,
+            34.0,
+            0.0
+          ]
+        },
+        "seg2": {
+          "rotation": [
+            0.0,
+            34.0,
+            0.0
+          ]
+        },
+        "seg3": {
+          "rotation": [
+            0.0,
+            34.0,
+            0.0
+          ]
+        },
+        "seg4": {
+          "rotation": [
+            0.0,
+            34.0,
+            0.0
+          ]
+        },
+        "seg5": {
+          "rotation": [
+            0.0,
+            34.0,
+            0.0
+          ]
+        },
+        "seg6": {
+          "rotation": [
+            0.0,
+            34.0,
+            0.0
+          ]
+        },
+        "seg7": {
+          "rotation": [
+            0.0,
+            34.0,
+            0.0
+          ]
+        },
+        "seg8": {
+          "rotation": [
+            0.0,
+            34.0,
+            0.0
+          ]
+        },
+        "neck": {
+          "rotation": [
+            -35.0,
+            -60.0,
+            0.0
+          ]
+        },
+        "head": {
+          "rotation": [
+            25.0,
+            0.0,
+            0.0
+          ]
+        },
+        "tongue": {
+          "scale": [
+            "1",
+            "1",
+            "math.sin(q.anim_time * 400) > 0.7 ? 1.0 : 0.01"
+          ]
+        }
+      },
+      "loop": true
+    },
+    "animation.eclipse.serpent.rise": {
+      "bones": {
+        "seg0": {
+          "rotation": {
+            "0": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.5": {
+              "post": [
+                -55.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "2.0": {
+              "post": [
+                -55.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "2.6": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          }
+        },
+        "seg1": {
+          "rotation": {
+            "0": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.5": {
+              "post": [
+                20.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "2.0": {
+              "post": [
+                20.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "2.6": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          }
+        },
+        "neck": {
+          "rotation": {
+            "0": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.5": {
+              "post": [
+                45.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "2.0": {
+              "post": [
+                45.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "2.6": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          }
+        },
+        "hood": {
+          "scale": {
+            "0": {
+              "post": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.6": {
+              "post": [
+                1.9,
+                1.5,
+                1.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "2.0": {
+              "post": [
+                1.9,
+                1.5,
+                1.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "2.6": {
+              "post": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          }
+        },
+        "jaw": {
+          "rotation": {
+            "0.4": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.7": {
+              "post": [
+                40.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "1.3": {
+              "post": [
+                40.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "1.6": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          }
+        }
+      },
+      "animation_length": 2.6,
+      "sound_effects": [
+        {
+          "effect": "special"
+        }
+      ]
+    },
+    "animation.eclipse.serpent.nuzzle": {
+      "bones": {
+        "neck": {
+          "rotation": {
+            "0": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "0.4": {
+              "post": [
+                -30.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "1.0": {
+              "post": [
+                -30.0,
+                0.0,
+                20.0
+              ],
+              "lerp_mode": "catmullrom"
+            },
+            "1.4": {
+              "post": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "lerp_mode": "catmullrom"
+            }
+          }
+        },
+        "head": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(q.anim_time * 300.0) * 12.0"
+          ]
+        }
+      },
+      "animation_length": 1.4
+    }
+  }
+}

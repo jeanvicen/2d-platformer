@@ -1,0 +1,67 @@
+{
+  "format_version": "1.21.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "eclipse:thrown_eclipse_hammer",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "properties": {
+        "eclipse:spin": {
+          "type": "bool",
+          "default": true,
+          "client_sync": true
+        }
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "eclipse",
+          "eclipse_thrown",
+          "inanimate"
+        ]
+      },
+      "minecraft:collision_box": {
+        "width": 0.6,
+        "height": 0.6
+      },
+      "minecraft:physics": {
+        "has_gravity": false,
+        "has_collision": false
+      },
+      "minecraft:pushable": {
+        "is_pushable": false,
+        "is_pushable_by_piston": false
+      },
+      "minecraft:damage_sensor": {
+        "triggers": [
+          {
+            "cause": "all",
+            "deals_damage": "no"
+          }
+        ]
+      },
+      "minecraft:health": {
+        "value": 1000,
+        "max": 1000
+      },
+      "minecraft:knockback_resistance": {
+        "value": 1.0
+      },
+      "minecraft:fire_immune": {},
+      "minecraft:conditional_bandwidth_optimization": {}
+    },
+    "events": {
+      "eclipse:spin_on": {
+        "set_property": {
+          "eclipse:spin": true
+        }
+      },
+      "eclipse:spin_off": {
+        "set_property": {
+          "eclipse:spin": false
+        }
+      }
+    }
+  }
+}

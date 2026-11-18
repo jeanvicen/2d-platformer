@@ -1,0 +1,59 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "eclipse:stag",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/eclipse/stag"
+      },
+      "geometry": {
+        "default": "geometry.eclipse.stag"
+      },
+      "animations": {
+        "manifest": "animation.eclipse.stag.manifest",
+        "recall": "animation.eclipse.stag.recall",
+        "look": "animation.eclipse.stag.look",
+        "idle": "animation.eclipse.stag.idle",
+        "walk": "animation.eclipse.stag.walk",
+        "run": "animation.eclipse.stag.trot",
+        "sit": "animation.eclipse.stag.lie",
+        "graze": "animation.eclipse.stag.graze",
+        "special": "animation.eclipse.stag.leap",
+        "antler_manifest": "animation.eclipse.stag.antler_manifest",
+        "interact": "animation.eclipse.stag.bow",
+        "ctrl_move": "controller.animation.eclipse.stag.move",
+        "ctrl_phase": "controller.animation.eclipse.stag.phase",
+        "ctrl_fidget": "controller.animation.eclipse.stag.fidget"
+      },
+      "particle_effects": {
+        "manifest": "eclipse:shadow_manifest",
+        "recall": "eclipse:shadow_recall",
+        "burst": "eclipse:violet_burst",
+        "impact": "eclipse:ground_impact",
+        "breath": "eclipse:shadow_breath",
+        "cast": "eclipse:cast_sparks"
+      },
+      "sound_effects": {
+        "manifest": "eclipse.manifest",
+        "recall": "eclipse.recall",
+        "special": "eclipse.materialize"
+      },
+      "scripts": {
+        "scale": "1.0",
+        "animate": [
+          "look",
+          "ctrl_move",
+          "ctrl_phase",
+          "ctrl_fidget"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.eclipse.creature"
+      ],
+      "enable_attachables": false
+    }
+  }
+}

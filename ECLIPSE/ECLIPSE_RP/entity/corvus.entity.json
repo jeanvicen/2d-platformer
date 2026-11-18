@@ -1,0 +1,60 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "eclipse:corvus",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/eclipse/corvus"
+      },
+      "geometry": {
+        "default": "geometry.eclipse.corvus"
+      },
+      "animations": {
+        "manifest": "animation.eclipse.corvus.manifest",
+        "recall": "animation.eclipse.corvus.recall",
+        "look": "animation.eclipse.corvus.look",
+        "idle": "animation.eclipse.corvus.idle",
+        "walk": "animation.eclipse.corvus.hop",
+        "run": "animation.eclipse.corvus.hop",
+        "sit": "animation.eclipse.corvus.perch",
+        "fly": "animation.eclipse.corvus.fly",
+        "glide": "animation.eclipse.corvus.glide",
+        "hover": "animation.eclipse.corvus.hover",
+        "takeoff": "animation.eclipse.corvus.takeoff",
+        "land": "animation.eclipse.corvus.land",
+        "special": "animation.eclipse.corvus.caw",
+        "interact": "animation.eclipse.corvus.hop_happy",
+        "ctrl_move": "controller.animation.eclipse.corvus.move",
+        "ctrl_phase": "controller.animation.eclipse.corvus.phase"
+      },
+      "particle_effects": {
+        "manifest": "eclipse:shadow_manifest",
+        "recall": "eclipse:shadow_recall",
+        "burst": "eclipse:violet_burst",
+        "impact": "eclipse:ground_impact",
+        "breath": "eclipse:shadow_breath",
+        "cast": "eclipse:cast_sparks"
+      },
+      "sound_effects": {
+        "manifest": "eclipse.manifest",
+        "recall": "eclipse.recall",
+        "special": "mob.parrot.idle"
+      },
+      "scripts": {
+        "scale": "1.0",
+        "animate": [
+          "look",
+          "ctrl_move",
+          "ctrl_phase"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.eclipse.creature"
+      ],
+      "enable_attachables": false
+    }
+  }
+}

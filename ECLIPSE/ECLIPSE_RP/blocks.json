@@ -1,0 +1,33 @@
+{
+  "format_version": "1.21.40",
+  "eclipse:shadow_block": {
+    "sound": "amethyst_block"
+  },
+  "eclipse:radiant_block": {
+    "sound": "amethyst_block"
+  },
+  "eclipse:ember_block": {
+    "sound": "amethyst_block"
+  },
+  "eclipse:tide_block": {
+    "sound": "amethyst_block"
+  },
+  "eclipse:earth_block": {
+    "sound": "amethyst_block"
+  },
+  "eclipse:gale_block": {
+    "sound": "amethyst_block"
+  },
+  "eclipse:storm_block": {
+    "sound": "amethyst_block"
+  },
+  "eclipse:frost_block": {
+    "sound": "amethyst_block"
+  },
+  "eclipse:root_block": {
+    "sound": "grass"
+  },
+  "eclipse:shadow_lantern": {
+    "sound": "amethyst_block"
+  }
+}

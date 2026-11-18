@@ -1,0 +1,117 @@
+{
+  "format_version": "1.21.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "eclipse:spell_bolt",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "properties": {
+        "eclipse:element_id": {
+          "type": "int",
+          "range": [
+            0,
+            8
+          ],
+          "default": 0,
+          "client_sync": true
+        }
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "eclipse",
+          "eclipse_bolt",
+          "projectile"
+        ]
+      },
+      "minecraft:collision_box": {
+        "width": 0.3,
+        "height": 0.3
+      },
+      "minecraft:projectile": {
+        "on_hit": {
+          "impact_damage": {
+            "damage": 5,
+            "knockback": true,
+            "destroy_on_hit": true
+          },
+          "remove_on_hit": {}
+        },
+        "power": 2.0,
+        "gravity": 0.0,
+        "inertia": 1.0,
+        "liquid_inertia": 1.0,
+        "uncertainty_base": 0,
+        "uncertainty_multiplier": 0,
+        "anchor": 1,
+        "offset": [
+          0,
+          -0.1,
+          0
+        ],
+        "should_bounce": false,
+        "hit_sound": "bow.hit"
+      },
+      "minecraft:physics": {},
+      "minecraft:pushable": {
+        "is_pushable": false,
+        "is_pushable_by_piston": true
+      },
+      "minecraft:conditional_bandwidth_optimization": {
+        "default_values": {
+          "max_optimized_distance": 80.0,
+          "max_dropped_ticks": 7,
+          "use_motion_prediction_hints": true
+        }
+      }
+    },
+    "events": {
+      "eclipse:element_shadow": {
+        "set_property": {
+          "eclipse:element_id": 0
+        }
+      },
+      "eclipse:element_light": {
+        "set_property": {
+          "eclipse:element_id": 1
+        }
+      },
+      "eclipse:element_fire": {
+        "set_property": {
+          "eclipse:element_id": 2
+        }
+      },
+      "eclipse:element_water": {
+        "set_property": {
+          "eclipse:element_id": 3
+        }
+      },
+      "eclipse:element_earth": {
+        "set_property": {
+          "eclipse:element_id": 4
+        }
+      },
+      "eclipse:element_air": {
+        "set_property": {
+          "eclipse:element_id": 5
+        }
+      },
+      "eclipse:element_lightning": {
+        "set_property": {
+          "eclipse:element_id": 6
+        }
+      },
+      "eclipse:element_ice": {
+        "set_property": {
+          "eclipse:element_id": 7
+        }
+      },
+      "eclipse:element_nature": {
+        "set_property": {
+          "eclipse:element_id": 8
+        }
+      }
+    }
+  }
+}

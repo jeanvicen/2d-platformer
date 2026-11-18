@@ -1,0 +1,46 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "ECLIPSE — Shadow Sovereign (RP)",
+    "description": "§5ECLIPSE — Shadow Sovereign§r §7(Recursos)§r\n§fCriado por §d0neajx§r",
+    "uuid": "661fcfd9-8849-4137-8a0c-0d3cb93c7fc5",
+    "version": [
+      1,
+      0,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      26,
+      30
+    ]
+  },
+  "modules": [
+    {
+      "type": "resources",
+      "uuid": "9a8aa4a0-f181-4649-9d1c-eff8f103168b",
+      "version": [
+        1,
+        0,
+        0
+      ],
+      "description": "ECLIPSE resources"
+    }
+  ],
+  "dependencies": [
+    {
+      "uuid": "9c712459-49a5-4ae0-97dd-2537704fbff8",
+      "version": [
+        1,
+        0,
+        0
+      ]
+    }
+  ],
+  "metadata": {
+    "authors": [
+      "0neajx"
+    ],
+    "url": "https://github.com/jeanvicen/2d-platformer"
+  }
+}

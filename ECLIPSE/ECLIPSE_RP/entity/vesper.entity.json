@@ -1,0 +1,63 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "eclipse:vesper",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/eclipse/vesper"
+      },
+      "geometry": {
+        "default": "geometry.eclipse.vesper"
+      },
+      "animations": {
+        "manifest": "animation.eclipse.vesper.manifest",
+        "recall": "animation.eclipse.vesper.recall",
+        "look": "animation.eclipse.vesper.look",
+        "idle": "animation.eclipse.vesper.idle",
+        "walk": "animation.eclipse.vesper.hop",
+        "run": "animation.eclipse.vesper.hop",
+        "sit": "animation.eclipse.vesper.perch",
+        "fly": "animation.eclipse.vesper.fly",
+        "glide": "animation.eclipse.vesper.glide",
+        "hover": "animation.eclipse.vesper.hover",
+        "takeoff": "animation.eclipse.vesper.takeoff",
+        "land": "animation.eclipse.vesper.land",
+        "special": "animation.eclipse.vesper.rebirth",
+        "interact": "animation.eclipse.vesper.bow",
+        "preen": "animation.eclipse.vesper.preen",
+        "ctrl_move": "controller.animation.eclipse.vesper.move",
+        "ctrl_phase": "controller.animation.eclipse.vesper.phase",
+        "ctrl_fidget": "controller.animation.eclipse.vesper.fidget"
+      },
+      "particle_effects": {
+        "manifest": "eclipse:shadow_manifest",
+        "recall": "eclipse:shadow_recall",
+        "burst": "eclipse:violet_burst",
+        "impact": "eclipse:ground_impact",
+        "breath": "eclipse:shadow_breath",
+        "cast": "eclipse:cast_sparks"
+      },
+      "sound_effects": {
+        "manifest": "eclipse.manifest",
+        "recall": "eclipse.recall",
+        "special": "eclipse.divine_pulse"
+      },
+      "scripts": {
+        "scale": "1.0",
+        "animate": [
+          "look",
+          "ctrl_move",
+          "ctrl_phase",
+          "ctrl_fidget"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.eclipse.creature"
+      ],
+      "enable_attachables": false
+    }
+  }
+}

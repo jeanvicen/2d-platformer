@@ -1,0 +1,25 @@
+{
+  "format_version": "1.10.0",
+  "animation_controllers": {
+    "controller.animation.eclipse.held.eclipse_core": {
+      "initial_state": "materialize",
+      "states": {
+        "materialize": {
+          "animations": [
+            "materialize"
+          ],
+          "transitions": [
+            {
+              "hold": "q.all_animations_finished"
+            }
+          ]
+        },
+        "hold": {
+          "animations": [
+            "idle_glow"
+          ]
+        }
+      }
+    }
+  }
+}

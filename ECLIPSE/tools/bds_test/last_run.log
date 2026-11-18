@@ -1,0 +1,46 @@
+NO LOG FILE! - Failed to up file descriptor limit Operation not permitted
+NO LOG FILE! - setting up server logging...
+[2026-11-18 19:05:31:431 INFO] Starting Server
+[2026-11-18 19:05:31:431 INFO] Version: 1.26.65.1
+[2026-11-18 19:05:31:431 INFO] Session ID: 125c0b5f-3a1d-4b77-ac03-8d355a5b5797
+[2026-11-18 19:05:31:431 INFO] Build ID: 53624744
+[2026-11-18 19:05:31:431 INFO] Branch: r/26_u6
+[2026-11-18 19:05:31:431 INFO] Commit ID: cdafb75c90a160d7dd40adc9769f2485a4a76a05
+[2026-11-18 19:05:31:431 INFO] Configuration: Publish
+[2026-11-18 19:05:31:431 INFO] Contents of server.properties: {"allow-cheats":"true","allow-inbound-script-debugging":"false","allow-list":"false","allow-outbound-script-debugging":"false","block-network-ids-are-hashes":"true","chat-restriction":"None","client-side-chunk-generation-enabled":"true","compression-algorithm":"zlib","compression-threshold":"1","content-log-console-output-enabled":"true","content-log-file-enabled":"true","content-log-level":"info","default-player-permission-level":"member","difficulty":"easy","disable-custom-skins":"false","disable-persona":"false","disable-player-interaction":"false","enable-lan-visibility":"false","force-gamemode":"false","gamemode":"survival","level-name":"eclipse_test","max-players":"10","max-threads":"8","online-mode":"false","persistent-ticking-area-max-chunks":"100","persistent-ticking-area-max-count":"10","player-idle-timeout":"30","player-movement-action-direction-threshold":"0.85","player-position-acceptance-threshold":"0.5","script-debugger-auto-attach":"disabled","server-authoritative-block-breaking-pick-range-scalar":"1.5","server-authoritative-dismount-strict":"false","server-authoritative-entity-attack-range-tolerance":"0.5","server-authoritative-entity-attack-range-validation":"disabled","server-authoritative-entity-attack-request-validation":"disabled","server-authoritative-entity-interactions-strict":"false","server-authoritative-movement-strict":"false","server-build-radius-ratio":"Disabled","server-name":"Dedicated Server","server-port":"19142","server-portv6":"19143","server-udp-ports":"19132","texturepack-required":"false","tick-distance":"4","transient-ticking-area-max-chunks":"300","transport":"raknet","view-distance":"32"}
+[2026-11-18 19:05:31:431 INFO] Level Name: eclipse_test
+[2026-11-18 19:05:31:431 INFO] Profiler config ('bootstrap.json') load result: success=1, errorMessage=(null)
+[2026-11-18 19:05:31:432 INFO] No CDN config file found at: cdn_config.json for dedicated server
+[2026-11-18 19:05:31:432 INFO] Game mode: 0 Survival
+[2026-11-18 19:05:31:432 INFO] Difficulty: 1 EASY
+[2026-11-18 19:05:31:434 INFO] Content logging to console is enabled.
+[2026-11-18 19:05:31:436 INFO] 
+
+#####################################################
+#                                                   #
+#              CREATING VANILLA WORLD               #
+#                                                   #
+#####################################################
+[2026-11-18 19:05:31:785 INFO] Content logging to disk is enabled. Writing log to: ./ContentLog2026-11-18_19-05-31.txt
+[2026-11-18 19:05:31:786 INFO] Opening level 'worlds/eclipse_test/db'
+[2026-11-18 19:05:31:821 INFO] Pack Stack - [00] ECLIPSE — Shadow Sovereign (BP) (id: 9c712459-49a5-4ae0-97dd-2537704fbff8, version: 1.0.0) @ behavior_packs/ECLIPSE_BP
+[2026-11-18 19:05:32:054 INFO] Signed in to signaling service successfully
+[2026-11-18 19:05:32:721 ERROR] Port [19142] may be in use by another process. Free up port and re-run program or adjust server.properties file to use alternate ports for server
+[2026-11-18 19:05:32:722 ERROR] Port [19143] may be in use by another process. Free up port and re-run program or adjust server.properties file to use alternate ports for server
+[2026-11-18 19:05:32:722 ERROR] Exiting program
+libc++abi: terminating due to uncaught exception of type std::__1::system_error: thread::join failed: Resource deadlock avoided
+[2026-11-18 19:05:32:812 INFO] Package: com.mojang.minecraft.dedicatedserver
+Version: 1.26.65.1
+OS: Linux
+Server start: 2026-11-18 19:05:31 UTC
+Dmp timestamp: 2026-11-18 19:05:32 UTC
+Upload Date: 2026-11-18 19:05:32 UTC
+Session ID: 125c0b5f-3a1d-4b77-ac03-8d355a5b5797
+Commit hash: cdafb75c90a160d7dd40adc9769f2485a4a76a05
+Build id: 53624744
+CrashReporter Key: 8c4937c1-64cb-3532-a8dc-1deb28f67293
+
+Crash
+[2026-11-18 19:05:32:813 INFO] 	at pthread_kill (UnknownFile:?)
+	at gsignal (UnknownFile:?)
+	at abort (UnknownFile:?)

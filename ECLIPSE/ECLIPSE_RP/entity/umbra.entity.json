@@ -1,0 +1,59 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "eclipse:umbra",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/eclipse/umbra"
+      },
+      "geometry": {
+        "default": "geometry.eclipse.umbra"
+      },
+      "animations": {
+        "manifest": "animation.eclipse.umbra.manifest",
+        "recall": "animation.eclipse.umbra.recall",
+        "look": "animation.eclipse.umbra.look",
+        "idle": "animation.eclipse.umbra.idle",
+        "walk": "animation.eclipse.umbra.walk",
+        "run": "animation.eclipse.umbra.run",
+        "sit": "animation.eclipse.umbra.sit",
+        "sniff": "animation.eclipse.umbra.sniff",
+        "howl": "animation.eclipse.umbra.howl",
+        "special": "animation.eclipse.umbra.howl",
+        "interact": "animation.eclipse.umbra.interact",
+        "ctrl_move": "controller.animation.eclipse.umbra.move",
+        "ctrl_phase": "controller.animation.eclipse.umbra.phase",
+        "ctrl_fidget": "controller.animation.eclipse.umbra.fidget"
+      },
+      "particle_effects": {
+        "manifest": "eclipse:shadow_manifest",
+        "recall": "eclipse:shadow_recall",
+        "burst": "eclipse:violet_burst",
+        "impact": "eclipse:ground_impact",
+        "breath": "eclipse:shadow_breath",
+        "cast": "eclipse:cast_sparks"
+      },
+      "sound_effects": {
+        "manifest": "eclipse.manifest",
+        "recall": "eclipse.recall",
+        "special": "eclipse.howl"
+      },
+      "scripts": {
+        "scale": "1.0",
+        "animate": [
+          "look",
+          "ctrl_move",
+          "ctrl_phase",
+          "ctrl_fidget"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.eclipse.creature"
+      ],
+      "enable_attachables": false
+    }
+  }
+}

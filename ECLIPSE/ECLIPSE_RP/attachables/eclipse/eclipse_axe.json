@@ -1,0 +1,43 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "eclipse:eclipse_axe",
+      "materials": {
+        "default": "entity_emissive_alpha",
+        "enchanted": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/eclipse/held/eclipse_axe",
+        "enchanted": "textures/misc/enchanted_item_glint"
+      },
+      "geometry": {
+        "default": "geometry.eclipse.held.eclipse_axe"
+      },
+      "animations": {
+        "third": "animation.eclipse.held.eclipse_axe.third",
+        "first": "animation.eclipse.held.eclipse_axe.first",
+        "materialize": "animation.eclipse.held.eclipse_axe.materialize",
+        "idle_glow": "animation.eclipse.held.eclipse_axe.idle_glow",
+        "ctrl": "controller.animation.eclipse.held.eclipse_axe"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "first": "c.is_first_person"
+          },
+          {
+            "third": "!c.is_first_person"
+          },
+          "ctrl"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.eclipse.item"
+      ],
+      "particle_effects": {
+        "mat": "eclipse:materialize_hand"
+      }
+    }
+  }
+}

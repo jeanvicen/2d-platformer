@@ -1,0 +1,43 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "eclipse:power_sigil",
+      "materials": {
+        "default": "entity_emissive_alpha",
+        "enchanted": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/eclipse/held/power_sigil",
+        "enchanted": "textures/misc/enchanted_item_glint"
+      },
+      "geometry": {
+        "default": "geometry.eclipse.held.power_sigil"
+      },
+      "animations": {
+        "third": "animation.eclipse.held.power_sigil.third",
+        "first": "animation.eclipse.held.power_sigil.first",
+        "materialize": "animation.eclipse.held.power_sigil.materialize",
+        "idle_glow": "animation.eclipse.held.power_sigil.idle_glow",
+        "ctrl": "controller.animation.eclipse.held.power_sigil"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "first": "c.is_first_person"
+          },
+          {
+            "third": "!c.is_first_person"
+          },
+          "ctrl"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.eclipse.item"
+      ],
+      "particle_effects": {
+        "mat": "eclipse:materialize_hand"
+      }
+    }
+  }
+}

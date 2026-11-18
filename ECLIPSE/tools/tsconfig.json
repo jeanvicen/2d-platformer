@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "es2022",
+    "moduleResolution": "node",
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "lib": ["es2022"],
+    "types": [],
+    "baseUrl": ".",
+    "paths": {
+      "@minecraft/server": ["node_modules/@minecraft/server"],
+      "@minecraft/server-ui": ["node_modules/@minecraft/server-ui"]
+    }
+  },
+  "include": ["../ECLIPSE_BP/scripts/**/*.js", "env.d.ts"]
+}

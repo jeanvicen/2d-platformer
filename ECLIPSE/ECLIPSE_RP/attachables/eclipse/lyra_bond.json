@@ -1,0 +1,43 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "eclipse:lyra_bond",
+      "materials": {
+        "default": "entity_emissive_alpha",
+        "enchanted": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/eclipse/held/lyra_bond",
+        "enchanted": "textures/misc/enchanted_item_glint"
+      },
+      "geometry": {
+        "default": "geometry.eclipse.held.lyra_bond"
+      },
+      "animations": {
+        "third": "animation.eclipse.held.lyra_bond.third",
+        "first": "animation.eclipse.held.lyra_bond.first",
+        "materialize": "animation.eclipse.held.lyra_bond.materialize",
+        "idle_glow": "animation.eclipse.held.lyra_bond.idle_glow",
+        "ctrl": "controller.animation.eclipse.held.lyra_bond"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "first": "c.is_first_person"
+          },
+          {
+            "third": "!c.is_first_person"
+          },
+          "ctrl"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.eclipse.item"
+      ],
+      "particle_effects": {
+        "mat": "eclipse:materialize_hand"
+      }
+    }
+  }
+}

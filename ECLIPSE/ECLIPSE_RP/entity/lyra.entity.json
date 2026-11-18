@@ -1,0 +1,66 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "eclipse:lyra",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/eclipse/lyra"
+      },
+      "geometry": {
+        "default": "geometry.eclipse.lyra"
+      },
+      "animations": {
+        "manifest": "animation.eclipse.lyra.manifest",
+        "recall": "animation.eclipse.lyra.recall",
+        "look": "animation.eclipse.lyra.look",
+        "idle": "animation.eclipse.lyra.idle",
+        "walk": "animation.eclipse.lyra.walk",
+        "walk_scripted": "animation.eclipse.lyra.walk_scripted",
+        "run": "animation.eclipse.lyra.run",
+        "chop": "animation.eclipse.lyra.chop",
+        "mine": "animation.eclipse.lyra.mine",
+        "dig": "animation.eclipse.lyra.mine",
+        "build": "animation.eclipse.lyra.build",
+        "float": "animation.eclipse.lyra.float",
+        "eat": "animation.eclipse.lyra.eat",
+        "attack": "animation.eclipse.lyra.attack",
+        "cast": "animation.eclipse.lyra.cast",
+        "sit": "animation.eclipse.lyra.sit",
+        "wave": "animation.eclipse.lyra.wave",
+        "carry": "animation.eclipse.lyra.carry",
+        "special": "animation.eclipse.lyra.shadow_burst",
+        "interact": "animation.eclipse.lyra.wave",
+        "ctrl_move": "controller.animation.eclipse.lyra.move",
+        "ctrl_phase": "controller.animation.eclipse.lyra.phase"
+      },
+      "particle_effects": {
+        "manifest": "eclipse:shadow_manifest",
+        "recall": "eclipse:shadow_recall",
+        "burst": "eclipse:violet_burst",
+        "impact": "eclipse:ground_impact",
+        "breath": "eclipse:shadow_breath",
+        "cast": "eclipse:cast_sparks"
+      },
+      "sound_effects": {
+        "manifest": "eclipse.manifest",
+        "recall": "eclipse.recall",
+        "special": "eclipse.shadow_cast"
+      },
+      "scripts": {
+        "scale": "0.95",
+        "animate": [
+          "look",
+          "ctrl_move",
+          "ctrl_phase"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.eclipse.creature"
+      ],
+      "enable_attachables": true
+    }
+  }
+}

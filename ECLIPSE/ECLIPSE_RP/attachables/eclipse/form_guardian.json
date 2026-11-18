@@ -1,0 +1,43 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "eclipse:form_guardian",
+      "materials": {
+        "default": "entity_emissive_alpha",
+        "enchanted": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/eclipse/forms/guardian",
+        "enchanted": "textures/misc/enchanted_item_glint"
+      },
+      "geometry": {
+        "default": "geometry.eclipse.form_guardian"
+      },
+      "animations": {
+        "idle": "animation.eclipse.form_guardian.aegis.idle",
+        "walk": "animation.eclipse.form_guardian.aegis.walk",
+        "run": "animation.eclipse.form_guardian.aegis.run",
+        "air": "animation.eclipse.form_guardian.air",
+        "hide_fp": "animation.eclipse.form_guardian.hide_fp",
+        "shift": "animation.eclipse.form_guardian.shift",
+        "ctrl": "controller.animation.eclipse.form_guardian.move"
+      },
+      "scripts": {
+        "animate": [
+          "ctrl",
+          "shift",
+          {
+            "hide_fp": "c.is_first_person"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.eclipse.item"
+      ],
+      "particle_effects": {
+        "shift": "eclipse:form_shift"
+      }
+    }
+  }
+}

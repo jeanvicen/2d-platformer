@@ -1,0 +1,301 @@
+{
+  "format_version": "1.10.0",
+  "animation_controllers": {
+    "controller.animation.eclipse.lyra.move": {
+      "initial_state": "default",
+      "states": {
+        "default": {
+          "animations": [
+            "idle"
+          ],
+          "transitions": [
+            {
+              "sit_native": "q.property('eclipse:state') == 'stay' && q.property('eclipse:action') == 'idle'"
+            },
+            {
+              "walk": "q.property('eclipse:action') == 'walk'"
+            },
+            {
+              "run": "q.property('eclipse:action') == 'run'"
+            },
+            {
+              "chop": "q.property('eclipse:action') == 'chop'"
+            },
+            {
+              "mine": "q.property('eclipse:action') == 'mine'"
+            },
+            {
+              "build": "q.property('eclipse:action') == 'build'"
+            },
+            {
+              "eat": "q.property('eclipse:action') == 'eat'"
+            },
+            {
+              "attack": "q.property('eclipse:action') == 'attack'"
+            },
+            {
+              "cast": "q.property('eclipse:action') == 'cast'"
+            },
+            {
+              "sit": "q.property('eclipse:action') == 'sit'"
+            },
+            {
+              "wave": "q.property('eclipse:action') == 'wave'"
+            },
+            {
+              "float": "q.property('eclipse:action') == 'float'"
+            },
+            {
+              "carry": "q.property('eclipse:action') == 'carry'"
+            },
+            {
+              "dig": "q.property('eclipse:action') == 'dig'"
+            },
+            {
+              "native_walk": "q.ground_speed > 0.35"
+            }
+          ],
+          "blend_transition": 0.25
+        },
+        "walk": {
+          "animations": [
+            "walk_scripted"
+          ],
+          "transitions": [
+            {
+              "default": "q.property('eclipse:action') != 'walk'"
+            }
+          ],
+          "blend_transition": 0.2
+        },
+        "run": {
+          "animations": [
+            "run"
+          ],
+          "transitions": [
+            {
+              "default": "q.property('eclipse:action') != 'run'"
+            }
+          ],
+          "blend_transition": 0.2
+        },
+        "chop": {
+          "animations": [
+            "chop"
+          ],
+          "transitions": [
+            {
+              "default": "q.property('eclipse:action') != 'chop'"
+            }
+          ],
+          "blend_transition": 0.2
+        },
+        "mine": {
+          "animations": [
+            "mine"
+          ],
+          "transitions": [
+            {
+              "default": "q.property('eclipse:action') != 'mine'"
+            }
+          ],
+          "blend_transition": 0.2
+        },
+        "build": {
+          "animations": [
+            "build"
+          ],
+          "transitions": [
+            {
+              "default": "q.property('eclipse:action') != 'build'"
+            }
+          ],
+          "blend_transition": 0.2
+        },
+        "eat": {
+          "animations": [
+            "eat"
+          ],
+          "transitions": [
+            {
+              "default": "q.property('eclipse:action') != 'eat'"
+            }
+          ],
+          "blend_transition": 0.2
+        },
+        "attack": {
+          "animations": [
+            "attack"
+          ],
+          "transitions": [
+            {
+              "default": "q.property('eclipse:action') != 'attack'"
+            }
+          ],
+          "blend_transition": 0.2
+        },
+        "cast": {
+          "animations": [
+            "cast"
+          ],
+          "transitions": [
+            {
+              "default": "q.property('eclipse:action') != 'cast'"
+            }
+          ],
+          "blend_transition": 0.2
+        },
+        "sit": {
+          "animations": [
+            "sit"
+          ],
+          "transitions": [
+            {
+              "default": "q.property('eclipse:action') != 'sit'"
+            }
+          ],
+          "blend_transition": 0.2
+        },
+        "wave": {
+          "animations": [
+            "wave"
+          ],
+          "transitions": [
+            {
+              "default": "q.property('eclipse:action') != 'wave'"
+            }
+          ],
+          "blend_transition": 0.2
+        },
+        "float": {
+          "animations": [
+            "float"
+          ],
+          "transitions": [
+            {
+              "default": "q.property('eclipse:action') != 'float'"
+            }
+          ],
+          "blend_transition": 0.2
+        },
+        "carry": {
+          "animations": [
+            "carry"
+          ],
+          "transitions": [
+            {
+              "default": "q.property('eclipse:action') != 'carry'"
+            }
+          ],
+          "blend_transition": 0.2
+        },
+        "dig": {
+          "animations": [
+            "dig"
+          ],
+          "transitions": [
+            {
+              "default": "q.property('eclipse:action') != 'dig'"
+            }
+          ],
+          "blend_transition": 0.2
+        },
+        "native_walk": {
+          "animations": [
+            "walk"
+          ],
+          "transitions": [
+            {
+              "default": "q.ground_speed < 0.2 || q.property('eclipse:action') != 'idle'"
+            }
+          ],
+          "blend_transition": 0.25
+        },
+        "sit_native": {
+          "animations": [
+            "sit"
+          ],
+          "transitions": [
+            {
+              "default": "q.property('eclipse:state') != 'stay' || q.property('eclipse:action') != 'idle'"
+            }
+          ],
+          "blend_transition": 0.4
+        }
+      }
+    },
+    "controller.animation.eclipse.lyra.phase": {
+      "initial_state": "default",
+      "states": {
+        "default": {
+          "transitions": [
+            {
+              "manifest": "q.property('eclipse:phase') == 'manifest'"
+            },
+            {
+              "recall": "q.property('eclipse:phase') == 'recall'"
+            },
+            {
+              "special": "q.property('eclipse:phase') == 'special'"
+            },
+            {
+              "interact": "q.property('eclipse:phase') == 'interact'"
+            }
+          ]
+        },
+        "manifest": {
+          "animations": [
+            "manifest"
+          ],
+          "transitions": [
+            {
+              "recall": "q.property('eclipse:phase') == 'recall'"
+            },
+            {
+              "default": "q.property('eclipse:phase') != 'manifest'"
+            }
+          ],
+          "blend_transition": 0.1
+        },
+        "recall": {
+          "animations": [
+            "recall"
+          ],
+          "transitions": [
+            {
+              "default": "q.property('eclipse:phase') != 'recall'"
+            }
+          ]
+        },
+        "special": {
+          "animations": [
+            "special"
+          ],
+          "transitions": [
+            {
+              "recall": "q.property('eclipse:phase') == 'recall'"
+            },
+            {
+              "default": "q.all_animations_finished || q.property('eclipse:phase') != 'special'"
+            }
+          ],
+          "blend_transition": 0.25
+        },
+        "interact": {
+          "animations": [
+            "interact"
+          ],
+          "transitions": [
+            {
+              "recall": "q.property('eclipse:phase') == 'recall'"
+            },
+            {
+              "default": "q.all_animations_finished || q.property('eclipse:phase') != 'interact'"
+            }
+          ],
+          "blend_transition": 0.25
+        }
+      }
+    }
+  }
+}
