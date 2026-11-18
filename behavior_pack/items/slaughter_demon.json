@@ -1,0 +1,30 @@
+{
+  "format_version": "1.21.40",
+  "minecraft:item": {
+    "description": {
+      "identifier": "shadowbound:slaughter_demon",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:icon": "sb_slaughter_demon",
+      "minecraft:display_name": {
+        "value": "item.shadowbound:slaughter_demon.name"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": true,
+      "minecraft:damage": {
+        "value": 6
+      },
+      "minecraft:durability": {
+        "max_durability": 1500
+      },
+      "minecraft:enchantable": {
+        "slot": "sword",
+        "value": 14
+      },
+      "minecraft:can_destroy_in_creative": false
+    }
+  }
+}

@@ -1,62 +1,267 @@
 /**
- * Selo das Dez Sombras: the touch-first control center of the technique.
- * Organized in sections (header / label / divider), every button has an icon, texts are short.
+ * Grimório Jujutsu: the touch-first hub. Sections with headers, icon buttons, short texts.
+ * Innate abilities are cast with one tap from the main screen; sneak + use the Grimório casts the quick ability.
  */
 import { Player } from "@minecraft/server";
 import { BEAST_INFO, type BeastSpecies } from "../core/species";
 import { dismiss, squadOf } from "../ai/agent_manager";
 import type { Agent } from "../ai/agent";
 import { beastTick } from "../combat/beasts";
-import { openMain, order } from "../ui/menus";
+import { order } from "../ui/menus";
 import { Menu } from "../ui/menu_kit";
-import { ICON, shikiIcon, techIcon } from "../ui/icons";
-import { CATEGORY_PT, CLANS, MANUAL, ORIGIN_TAG, SHIKIGAMI, SHIKIGAMI_ORDER, TECHNIQUES, masteryLevel, maxEnergy, shikigamiLimit, type TechCategory } from "./canon";
+import { ICON, abilityIcon, clanIcon, itemIcon, shikiIcon, techCrest } from "../ui/icons";
+import { MANUAL, ORIGIN_TAG, SHIKIGAMI, SHIKIGAMI_ORDER, masteryLevel, shikigamiLimit } from "./canon";
+import { ABILITIES, CLANS, CLAN_ORDER, TECHS, type AbilityInfo } from "./clans";
+import { abilitiesFor, abilityState, blocked, cast } from "./abilities";
 import { activeRitual, adaptedTo, startRitual } from "./ritual";
-import { domainActive, saveSorcerer, sorcerer, summonDivineDogs, summonShikigami, techniqueState, useTechnique, withdraw } from "./sorcerer";
+import { energyName, maxEnergyOf, saveSorcerer, sorcerer, summonDivineDogs, summonShikigami, usesVigor, withdraw } from "./sorcerer";
+import { GEAR, forge, missing, prettyId, type GearInfo } from "./arsenal";
+import { FINGERS_TOTAL, fingersInWorld, isPossessed, meditate } from "./sukuna";
+import { spin } from "./roulette";
 
-function energyBar(p: Player, len = 14): string {
+const CAT_PT = { ativa: "Ativa", alternavel: "Alternável", passiva: "Passiva", dominio: "Domínio" } as const;
+
+function energyLines(m: Menu, p: Player): Menu {
   const r = sorcerer(p.id);
-  const max = maxEnergy(r.xp);
-  const n = Math.round((r.energy / max) * len);
-  return `§d${"█".repeat(n)}§8${"█".repeat(len - n)}  §f${Math.floor(r.energy)}§7/${max}`;
+  const max = maxEnergyOf(r);
+  const n = Math.round((r.energy / max) * 14);
+  const col = usesVigor(r) ? "§6" : "§d";
+  m.label(`${col}${"█".repeat(n)}§8${"█".repeat(14 - n)}  §f${Math.floor(r.energy)}§7/${max} ${energyName(r).toLowerCase()}`);
+  const extra: string[] = [];
+  if (r.tech === "speech") extra.push(`§5garganta ${Math.round(r.throat)}%`);
+  if (r.vessel) extra.push(`§cSukuna ${Math.round(r.influence)}% · ${r.fingersEaten} dedo(s)`);
+  if (r.domain && r.domain.until > Date.now()) extra.push("§5☯ domínio aberto");
+  if (activeRitual(p.id)) extra.push(`§c✠ ritual: ${SHIKIGAMI[activeRitual(p.id)!.species].name}`);
+  if (extra.length) m.label(extra.join("§7 · "));
+  return m;
 }
 
-function statusLine(p: Player): string {
+function header(m: Menu, p: Player): Menu {
   const r = sorcerer(p.id);
-  const field = squadOf(p.id, true).filter((m) => m.isBeast).length;
-  return `§7Domínio §f${masteryLevel(r.xp)}§7 · Em campo §f${field}/${shikigamiLimit(r.xp)}§7 · ${r.canonMode ? "§aCânone" : "§dLivre"}`;
+  if (!r.clan || !r.tech) return m.header("§7Clã ainda não sorteado").label("§7A roleta começa sozinha ao entrar no mundo.");
+  const c = CLANS[r.clan];
+  m.header(`${c.tag}${c.name}§r · ${TECHS[r.tech].name}`)
+    .label(`§7${c.rarity} · domínio §f${masteryLevel(r.xp)}§7 · giros §f${r.spins}`);
+  return energyLines(m, p).divider();
 }
 
-function energyBlock(m: Menu, p: Player): Menu {
-  m.header("§5✦ Energia amaldiçoada").label(energyBar(p)).label(statusLine(p));
-  const rt = activeRitual(p.id);
-  if (domainActive(p.id)) m.label("§5☯ Jardim Sombrio da Quimera ATIVO");
-  if (rt) m.label(`§c✠ Ritual em andamento: ${SHIKIGAMI[rt.species].name}`);
-  return m.divider();
+function abilityButton(m: Menu, p: Player, a: AbilityInfo, after?: () => void): void {
+  m.button(`§l${a.name}§r\n${abilityState(p, a.id)}`, abilityIcon(a.icon), () => {
+    cast(p, a.id);
+    after?.();
+  });
 }
 
 export function openSeal(p: Player): void {
-  const m = energyBlock(new Menu("§5§lSelo das Dez Sombras"), p);
-  m.header("Técnica das Dez Sombras")
-    .button("§lShikigamis§r\n§7invocar · rituais · ordens", ICON.dogs, () => openShikigamiList(p))
-    .button("§lTécnicas e Habilidades§r\n§7passivas · ativas · domínio", ICON.hand, () => openTechniques(p))
-    .button("§lOrdens rápidas§r\n§7para todas as invocações", ICON.sword, () => openQuickOrders(p))
-    .divider()
-    .header("Você")
-    .button("§lEsquadrão§r\n§7companheiras feiticeiras", ICON.squad, () => openMain(p))
-    .button("§lSombra§r\n§7guardar itens", ICON.shadow, () => openStorage(p))
-    .button("§lClã e origem§r\n§7Zenin", ICON.clan, () => openClan(p))
+  const r = sorcerer(p.id);
+  if (isPossessed(p.id)) {
+    p.sendMessage("§c[Sukuna]§r Este corpo é meu agora. Espere.");
+    return;
+  }
+  const m = header(new Menu("§5§lGrimório Jujutsu"), p);
+  if (r.tech) {
+    const innate = abilitiesFor(r).filter((a) => TECHS[r.tech!].abilities.includes(a.id) && a.kind !== "passiva").slice(0, 4);
+    m.header(usesVigor(r) ? "Habilidades" : "Técnica inata");
+    for (const a of innate) abilityButton(m, p, a);
+    m.button("§lTodas as técnicas§r\n§7domínio · gerais · rápida", ICON.hand, () => openTechniques(p)).divider();
+  }
+  m.header("Jujutsu");
+  if (r.tech === "ten_shadows") {
+    m.button("§lShikigamis§r\n§7invocar · rituais · ordens", ICON.dogs, () => openShikigamiList(p))
+      .button("§lOrdens rápidas§r\n§7para as invocações", ICON.sword, () => openQuickOrders(p))
+      .button("§lSombra§r\n§7guardar itens", ICON.shadow, () => openStorage(p));
+  }
+  m.button("§lArsenal§r\n§7forjar armas e uniformes", itemIcon("sb_split_soul_katana"), () => openArsenal(p))
+    .button(`§lDedos de Sukuna§r\n§7${fingersInWorld()}/${FINGERS_TOTAL} encontrados no mundo`, itemIcon("sb_sukuna_finger"), () => openFingers(p))
+    .button(`§lClã e roleta§r\n§7${r.spins} giro(s)`, r.clan ? clanIcon(r.clan) : ICON.clan, () => openClan(p))
     .divider()
     .button("§lCaderno§r\n§7tutorial e cânone", ICON.book, () => openManual(p))
-    .button("§lConfigurações", ICON.gear, () => openConfig(p))
-    .button("§lRecolher tudo§r\n§7todas voltam para a sombra", ICON.recall, () => {
+    .button("§lConfigurações", ICON.gear, () => openConfig(p));
+  if (r.tech === "ten_shadows") {
+    m.button("§lRecolher invocações", ICON.recall, () => {
       const beasts = squadOf(p.id, true).filter((x) => x.isBeast);
       beasts.forEach((x, i) => dismiss(x, i > 0));
       p.sendMessage(beasts.length ? `§8${beasts.length} invocação(ões) voltaram para a sombra.` : "§7Nenhuma invocação em campo.");
-    })
+    });
+  }
+  m.open(p);
+}
+
+/** Shown after the roulette lands. */
+export function openReveal(p: Player): void {
+  const r = sorcerer(p.id);
+  if (!r.clan || !r.tech) return;
+  const c = CLANS[r.clan];
+  const t = TECHS[r.tech];
+  const m = new Menu("§5§lRoleta de Clã")
+    .header(`${c.tag}§l${c.name}`)
+    .label(`${ORIGIN_TAG[c.origin]} §7${c.rarity} · chance ${c.weight}%`)
+    .label(`§7${c.desc}`)
+    .divider()
+    .header(`§f${t.name}`)
+    .label(`${ORIGIN_TAG[t.origin]} §7${t.desc}`)
+    .divider()
+    .header("Habilidades");
+  for (const id of [...t.abilities, ...(t.domain ? [t.domain] : [])]) {
+    const a = ABILITIES[id];
+    m.label(`§f${a.name}§7 · ${CAT_PT[a.kind]}${a.mastery ? ` · domínio ${a.mastery}` : ""}`);
+  }
+  m.divider()
+    .button("§lComeçar§r\n§7abrir o Grimório", clanIcon(r.clan), () => openSeal(p))
+    .button("§lCaderno§r\n§7como funciona", ICON.book, () => openManual(p))
     .open(p);
 }
 
+export function openTechniques(p: Player): void {
+  const r = sorcerer(p.id);
+  const all = abilitiesFor(r);
+  const m = header(new Menu("§5§lTécnicas e Habilidades"), p);
+  const groups: [string, AbilityInfo[]][] = [];
+  if (r.tech) groups.push([`§fTécnica inata: ${TECHS[r.tech].name}`, all.filter((a) => TECHS[r.tech!].abilities.includes(a.id))]);
+  if (r.vessel) groups.push(["§cSantuário (Sukuna)", all.filter((a) => TECHS.shrine.abilities.includes(a.id))]);
+  groups.push(["§5Expansão de Domínio", all.filter((a) => a.kind === "dominio")]);
+  groups.push(["Técnicas gerais", all.filter((a) => ["reforco", "kokusen", "dominio_simples", "rct"].includes(a.id))]);
+  for (const [title, list] of groups) {
+    if (!list.length) continue;
+    m.header(title);
+    for (const a of list) abilityButton(m, p, a);
+    m.divider();
+  }
+  if (r.tech && !TECHS[r.tech].domain && !r.vessel) m.label("§7Sua técnica não tem Expansão de Domínio conhecida na obra.");
+  m.button(`§lHabilidade rápida§r\n§7agachar + usar o Grimório: ${r.quick ? ABILITIES[r.quick]?.name ?? "-" : "escolher"}`, ICON.ability, () => openQuick(p))
+    .button("Como funciona cada uma", ICON.info, () => openAbilityInfo(p))
+    .button("Voltar", ICON.back, () => openSeal(p))
+    .open(p);
+}
+
+function openQuick(p: Player): void {
+  const r = sorcerer(p.id);
+  const m = new Menu("§lHabilidade rápida").header("Toque na habilidade que sai ao agachar e usar o Grimório").divider();
+  for (const a of abilitiesFor(r).filter((x) => x.kind !== "passiva" && !blocked(r, x))) {
+    m.button(`§l${a.name}${r.quick === a.id ? " §a(atual)" : ""}`, abilityIcon(a.icon), () => {
+      r.quick = a.id;
+      saveSorcerer(p.id);
+      p.sendMessage(`§5Habilidade rápida:§f ${a.name}`);
+      openTechniques(p);
+    });
+  }
+  m.divider().button("Voltar", ICON.back, () => openTechniques(p)).open(p);
+}
+
+function openAbilityInfo(p: Player): void {
+  const r = sorcerer(p.id);
+  const m = new Menu("Habilidades: como funcionam");
+  for (const a of abilitiesFor(r)) {
+    m.header(a.name)
+      .label(`${ORIGIN_TAG[a.origin]} §7efeito no jogo: ${ORIGIN_TAG[a.effectOrigin]}`)
+      .label(`§7${CAT_PT[a.kind]} · domínio ${a.mastery}${a.fingers ? ` · ${a.fingers} dedos` : ""}${a.cost ? ` · custo ${a.cost}` : ""}${a.drain ? ` · ${a.drain}/s` : ""}${a.cooldown ? ` · recarga ${a.cooldown}s` : ""}${a.hp ? ` · ${a.hp} de vida` : ""}${a.throat ? ` · garganta +${a.throat}` : ""}`)
+      .label(a.desc)
+      .divider();
+  }
+  m.button("Voltar", ICON.back, () => openTechniques(p)).open(p);
+}
+
+// ------------------------------------------------------------------------------------------
+// Clan & roulette
+// ------------------------------------------------------------------------------------------
+export function openClan(p: Player): void {
+  const r = sorcerer(p.id);
+  const m = new Menu("§lClã e roleta");
+  if (r.clan && r.tech) m.header(`Seu clã: ${CLANS[r.clan].tag}${CLANS[r.clan].name}`).label(`§f${TECHS[r.tech].name}`);
+  m.label(`§7Giros: §f${r.spins}§7 (ganhe +1 a cada nível de domínio). Girar troca o clã e a técnica; domínio, dedos e itens continuam.`)
+    .button(`§lGirar a roleta§r\n§7${r.spins} giro(s) disponível(is)`, ICON.canon, () => {
+      new Menu("§lGirar a roleta?")
+        .header("Trocar de clã e técnica?")
+        .label("§7Você perde o clã atual e as técnicas dele. Isso usa 1 giro.")
+        .button("§lGirar!", ICON.canon, () => void spin(p, false, () => openReveal(p)))
+        .button("Cancelar", ICON.back, () => openClan(p))
+        .open(p);
+    })
+    .divider()
+    .header("Todos os clãs");
+  for (const id of CLAN_ORDER) {
+    const c = CLANS[id];
+    m.button(`${c.tag}§l${c.name}§r\n§7${c.rarity} · ${c.weight}%`, clanIcon(id), () => openClanInfo(p, id));
+  }
+  m.divider().button("Voltar", ICON.back, () => openSeal(p)).open(p);
+}
+
+function openClanInfo(p: Player, id: keyof typeof CLANS): void {
+  const c = CLANS[id];
+  const total = c.techs.reduce((s, t) => s + t.weight, 0);
+  const m = new Menu(`§l${c.name}`).header(`${c.tag}${c.name}`).label(`${ORIGIN_TAG[c.origin]} §7${c.desc}`).divider();
+  for (const t of c.techs) {
+    const ti = TECHS[t.tech];
+    m.button(`§l${ti.name}§r\n§7${Math.round((t.weight / total) * 100)}% dentro do clã`, techCrest(t.tech), () => {
+      const g = new Menu(ti.name).header(ti.name).label(`${ORIGIN_TAG[ti.origin]} §7${ti.desc}`).divider();
+      for (const aid of [...ti.abilities, ...(ti.domain ? [ti.domain] : [])]) {
+        const a = ABILITIES[aid];
+        g.label(`§f${a.name}§7 · ${CAT_PT[a.kind]} ${ORIGIN_TAG[a.origin]}`).label(`§7${a.desc}`);
+      }
+      g.divider().button("Voltar", ICON.back, () => openClanInfo(p, id)).open(p);
+    });
+  }
+  m.divider().button("Voltar", ICON.back, () => openClan(p)).open(p);
+}
+
+// ------------------------------------------------------------------------------------------
+// Arsenal & Sukuna's fingers
+// ------------------------------------------------------------------------------------------
+export function openArsenal(p: Player): void {
+  const m = new Menu("§lArsenal").label("§7Forje com os materiais do seu inventário. Fragmentos Amaldiçoados caem de inimigos derrotados.");
+  const sections: [GearInfo["kind"], string][] = [["ferramenta", "Ferramentas amaldiçoadas"], ["uniforme", "Uniformes e roupas"], ["consumivel", "Consumíveis"]];
+  for (const [kind, title] of sections) {
+    m.divider().header(title);
+    for (const g of GEAR.filter((x) => x.kind === kind)) {
+      const miss = Object.keys(g.cost).length ? missing(p, g) : ["não forjável"];
+      m.button(`§l${g.name}§r\n${miss.length ? `§7falta: ${miss.slice(0, 2).join(", ")}` : "§apronto para forjar"}`, itemIcon(g.icon), () => openGear(p, g));
+    }
+  }
+  m.divider().button("Voltar", ICON.back, () => openSeal(p)).open(p);
+}
+
+function openGear(p: Player, g: GearInfo): void {
+  const m = new Menu(`§l${g.name}`).header(g.name).label(`${ORIGIN_TAG[g.origin]} §7efeito no jogo: ${ORIGIN_TAG[g.effectOrigin]}`).label(g.desc).divider();
+  const cost = Object.entries(g.cost);
+  if (cost.length) {
+    m.header("Materiais");
+    for (const [id, n] of cost) m.label(`§f${n}× ${prettyId(id)}`);
+    m.divider().button("§lForjar", ICON.hand, () => {
+      forge(p, g);
+      openArsenal(p);
+    });
+  }
+  m.button("Voltar", ICON.back, () => openArsenal(p)).open(p);
+}
+
+export function openFingers(p: Player): void {
+  const r = sorcerer(p.id);
+  const m = new Menu("§lDedos de Sukuna")
+    .header(`§c${fingersInWorld()}/${FINGERS_TOTAL}§r encontrados neste mundo`)
+    .label("§7São 20 dedos, indestrutíveis, com a alma do Rei das Maldições. Caem raramente de inimigos derrotados. Para comer, segure o dedo e use (como comida).")
+    .divider();
+  if (r.vessel) {
+    m.header("§cVocê é o receptáculo")
+      .label(`§fDedos comidos: §c${r.fingersEaten}§f · influência de Sukuna: §c${Math.round(r.influence)}%`)
+      .label("§7Com influência alta (e vida baixa), Sukuna pode assumir seu corpo por alguns segundos. Meditar empurra ele de volta.")
+      .label("§fLiberado: Desmantelar · Clivar (3) · Fuga (10) · Santuário Malevolente (15)")
+      .button("§lMeditar§r\n§7-12% de influência · 40 de energia", ICON.energy, () => {
+        meditate(p);
+        openFingers(p);
+      });
+  } else {
+    m.header("Você ainda não é um receptáculo")
+      .label("§7Na obra, quase todo mundo morre ao comer um dedo. No mod: 25% de chance de o corpo aceitar; se não aceitar, você sobrevive por pouco.");
+  }
+  m.label(`§8Cânone: os 20 dedos e o veneno ${ORIGIN_TAG.canon} · chance e influência ${ORIGIN_TAG.original}`)
+    .divider()
+    .button("Voltar", ICON.back, () => openSeal(p))
+    .open(p);
+}
+
+// ------------------------------------------------------------------------------------------
+// Ten Shadows: shikigami, orders, storage
+// ------------------------------------------------------------------------------------------
 type Bucket = "field" | "ready" | "ritual" | "locked" | "forge" | "destroyed";
 function bucketOf(p: Player, sp: BeastSpecies): Bucket {
   const r = sorcerer(p.id);
@@ -87,11 +292,14 @@ const SECTIONS: [Bucket, string][] = [
 ];
 
 export function openShikigamiList(p: Player): void {
-  const m = energyBlock(new Menu("§5§lShikigamis"), p);
   const r = sorcerer(p.id);
-  if (!r.destroyed.includes("wolf") || !r.destroyed.includes("dog_white")) {
-    m.button("§lCães Divinos§r\n§7invocar o par", ICON.dogs, () => void summonDivineDogs(p));
+  if (r.tech !== "ten_shadows") {
+    p.sendMessage("§7Só quem herdou a §fTécnica das Dez Sombras§7 tem shikigamis.");
+    return;
   }
+  const m = header(new Menu("§5§lShikigamis"), p);
+  m.label(`§7Em campo: §f${squadOf(p.id, true).filter((x) => x.isBeast).length}/${shikigamiLimit(r.xp)}`);
+  if (!r.destroyed.includes("wolf") || !r.destroyed.includes("dog_white")) m.button("§lCães Divinos§r\n§7invocar o par", ICON.dogs, () => void summonDivineDogs(p));
   for (const [bucket, title] of SECTIONS) {
     const list = SHIKIGAMI_ORDER.filter((sp) => bucketOf(p, sp) === bucket);
     if (!list.length) continue;
@@ -114,7 +322,7 @@ export function openShikigami(p: Player, sp: BeastSpecies): void {
   const bucket = bucketOf(p, sp);
   const adapted = a && sp === "colossus" && a.body() ? adaptedTo(a.body()!) : [];
   const m = new Menu(`§l${info.name}`);
-  m.header(`${info.name}`)
+  m.header(info.name)
     .label(`${ORIGIN_TAG[info.origin]}  ${shortState(p, sp)}`)
     .label(`§7${info.lore}`)
     .divider()
@@ -155,59 +363,21 @@ function openQuickOrders(p: Player): void {
     .open(p);
 }
 
-const CAT_ORDER: [TechCategory, string][] = [["passiva", "Passivas"], ["alternavel", "Alternáveis  §8(ligam e desligam)"], ["ativa", "Ativas  §8(toque para usar)"], ["suprema", "§5Suprema"]];
-
-export function openTechniques(p: Player): void {
-  const m = energyBlock(new Menu("§5§lTécnicas e Habilidades"), p);
-  for (const [cat, title] of CAT_ORDER) {
-    const list = TECHNIQUES.filter((t) => t.cat === cat);
-    if (!list.length) continue;
-    m.header(title);
-    for (const t of list) {
-      m.button(`§l${t.name}§r\n§7${techniqueState(p, t.id)}`, techIcon(t.id), () => (t.id === "guardar" ? openStorage(p) : void useTechnique(p, t.id)));
-    }
-    m.divider();
-  }
-  m.button("Como funciona cada uma", ICON.info, () => openTechniqueInfo(p))
-    .button("Voltar", ICON.back, () => openSeal(p))
-    .open(p);
-}
-
-function openTechniqueInfo(p: Player): void {
-  const m = new Menu("Técnicas: como funcionam");
-  for (const t of TECHNIQUES) {
-    m.header(t.name)
-      .label(`${ORIGIN_TAG[t.origin]} §7efeito no jogo: ${ORIGIN_TAG[t.effectOrigin]}`)
-      .label(`§7${CATEGORY_PT[t.cat]} · domínio ${t.mastery}${t.cost ? ` · custo ${t.cost}` : ""}${t.drain ? ` · ${t.drain}/s` : ""}${t.cooldown ? ` · recarga ${t.cooldown}s` : ""}`)
-      .label(t.desc)
-      .divider();
-  }
-  m.button("Voltar", ICON.back, () => openTechniques(p)).open(p);
-}
-
 function openStorage(p: Player): void {
   const r = sorcerer(p.id);
   const m = new Menu("§lSombra")
     .header(`Itens na sua sombra: ${r.store.length}/9`)
     .label("§7Guardar custa 5 de energia. Tirar é grátis.")
     .divider()
-    .button("§lGuardar o item da mão", techIcon("guardar"), () => void useTechnique(p, "guardar"));
+    .button("§lGuardar o item da mão", abilityIcon("guardar"), () => void cast(p, "guardar"));
   if (r.store.length) m.divider().header("Tocar para tirar");
-  r.store.forEach((s, i) => m.button(`${s.n}× ${s.id.replace("minecraft:", "").replace(/_/g, " ")}`, ICON.shadow, () => void withdraw(p, i)));
+  r.store.forEach((s, i) => m.button(`${s.n}× ${s.id.replace(/^\w+:/, "").replace(/_/g, " ")}`, ICON.shadow, () => void withdraw(p, i)));
   m.divider().button("Voltar", ICON.back, () => openSeal(p)).open(p);
 }
 
-function openClan(p: Player): void {
-  const m = new Menu("§lClã e origem")
-    .header("§5Zenin · Técnica das Dez Sombras")
-    .label("§7Sua origem: feiticeiro(a) herdeiro(a) das Dez Sombras.")
-    .divider();
-  for (const c of CLANS) m.header(c.name).label(`${ORIGIN_TAG.canon} §7${c.techniques}`).label(c.implemented);
-  m.divider().label("§7Outras origens (usuário de maldição, espírito amaldiçoado, receptáculo) ainda não estão no mod.")
-    .button("Voltar", ICON.back, () => openSeal(p))
-    .open(p);
-}
-
+// ------------------------------------------------------------------------------------------
+// Manual & settings
+// ------------------------------------------------------------------------------------------
 export function openManual(p: Player, page = -1): void {
   const pg = MANUAL[page];
   if (pg) {
@@ -230,9 +400,8 @@ function openConfig(p: Player): void {
     openConfig(p);
   };
   new Menu("§lConfigurações")
-    .header("Modo de jogo")
-    .label("§aCânone§7: shikigami destruído não volta e o poder é herdado.")
-    .label("§dLivre§7: eles voltam depois de um tempo.")
+    .header("Shikigamis (Dez Sombras)")
+    .label("§aCânone§7: shikigami destruído não volta e o poder é herdado. §dLivre§7: eles voltam.")
     .button(r.canonMode ? "§lModo Cânone§r\n§7tocar para mudar para Livre" : "§lModo Livre§r\n§7tocar para mudar para Cânone", r.canonMode ? ICON.on : ICON.off, toggle(() => (r.canonMode = !r.canonMode)))
     .divider()
     .header("Tela")

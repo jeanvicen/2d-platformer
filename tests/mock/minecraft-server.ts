@@ -437,6 +437,7 @@ export const world = {
     playerSpawn: new Signal(),
     playerLeave: new Signal(),
     itemUse: new Signal(),
+    itemCompleteUse: new Signal(),
     entityDie: new Signal(),
     entityHurt: new Signal(),
     entityHitEntity: new Signal(),

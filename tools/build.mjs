@@ -33,8 +33,26 @@ console.log("dist/Shadowbound.mcaddon pronto");
 import { readFileSync, writeFileSync, statSync } from "node:fs";
 const BRANCH = process.env.SITE_BRANCH ?? "ccr-4bf51eb6-zchos1";
 const url = `https://github.com/jeanvicen/2d-platformer/raw/${BRANCH}/dist/Shadowbound.mcaddon`;
-const img = (n) => "data:image/png;base64," + readFileSync(`documentation/img/preview_${n}.png`).toString("base64");
+const icon = (p) => "data:image/png;base64," + readFileSync(`resource_pack/${p}.png`).toString("base64");
 const kb = Math.round(statSync("dist/Shadowbound.mcaddon").size / 1024);
+function clanCards() {
+  const src = readFileSync("scripts/jujutsu/clans.ts", "utf8");
+  const clans = [...src.matchAll(/^  (\w+): \{ id: "\w+", name: "([^"]+)", rarity: "([^"]+)", tag: "[^"]+", weight: (\d+)/gm)];
+  const techName = Object.fromEntries([...src.matchAll(/^  (\w+): \{ id: "\w+", name: "([^"]+)", origin:/gm)].map((m) => [m[1], m[2]]));
+  return clans
+    .map(([, id, name, rarity, weight]) => {
+      const block = src.slice(src.indexOf(`  ${id}: { id: "${id}"`));
+      const techs = [...block.slice(0, block.indexOf("desc:")).matchAll(/tech: "(\w+)"/g)].map((m) => techName[m[1]] ?? m[1]);
+      return `      <article class="who"><img alt="${name}" src="${icon(`textures/ui/shadowbound/clan_${id}`)}"><span class="tag">${rarity} · ${weight}%</span><h3>${name}</h3><p>${techs.join(" · ")}</p></article>`;
+    })
+    .join("\n");
+}
+function gearCards() {
+  const src = readFileSync("scripts/jujutsu/arsenal.ts", "utf8");
+  return [...src.matchAll(/\{ id: [^,]+, name: "([^"]+)", kind: "(ferramenta|uniforme)"[^}]*?icon: "(\w+)"/gs)]
+    .map(([, name, , ic]) => `      <div class="beast"><img alt="${name}" src="${icon(`textures/items/${ic}`)}"><b>${name}</b></div>`)
+    .join("\n");
+}
 function beastCards() {
   const src = readFileSync("scripts/core/species.ts", "utf8");
   const rows = [...src.matchAll(/^  (\w+): \{ pt: "([^"]+)".*?ability: "([^"]+)"/gm)];
@@ -49,12 +67,8 @@ let html = readFileSync("site/template.html", "utf8")
   .replace("__DOWNLOAD_URL__", url)
   .replace("__SIZE__", `${kb} KB`)
   .replace("__PACK_B64__", readFileSync("dist/Shadowbound.mcaddon").toString("base64"))
-  .replace("__IMG_LUNA__", img("luna"))
-  .replace("__IMG_RAVEN__", img("raven"))
-  .replace("__IMG_SORA__", img("sora"))
-  .replace("__IMG_YUKI__", img("yuki"))
-  .replace("__IMG_HANA__", img("hana"))
-  .replace("__IMG_AIKO__", img("aiko"))
+  .replace("__CLAN_CARDS__", clanCards())
+  .replace("__GEAR_CARDS__", gearCards())
   .replace("__BEAST_CARDS__", beastCards());
 if (/__[A-Z_]+__/.test(html)) throw new Error("placeholder left in site");
 writeFileSync("site/index.html", html);

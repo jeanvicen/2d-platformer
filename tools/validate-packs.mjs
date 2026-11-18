@@ -27,11 +27,10 @@ for (const f of walk("resource_pack/models")) {
 const allBones = new Set();
 for (const g of geos.values()) for (const b of g.bones) allBones.add(b.name);
 const PAIRS = [
-  ["behavior_pack/entities/shadowbound_companion.json", "resource_pack/entity/shadowbound_companion.entity.json"],
   ["behavior_pack/entities/shadowbound_beast.json", "resource_pack/entity/shadowbound_beast.entity.json"],
 ];
 let animCount = 0;
-let bpe; // companion entity (used by later checks)
+let bpe; // shikigami entity (used by later checks)
 for (const [bpPath, rpPath] of PAIRS) {
   const be = J(bpPath)["minecraft:entity"];
   const rpe = J(rpPath)["minecraft:client_entity"].description;
@@ -118,7 +117,7 @@ for (const m of enumBlock.matchAll(/(\w+) = (\d+)/g)) {
 // events triggered by scripts exist
 const src = walk("scripts").map((f) => readFileSync(f, "utf8")).join("\n");
 const beastEvents = Object.keys(J("behavior_pack/entities/shadowbound_beast.json")["minecraft:entity"].events);
-const events = Object.keys(bpe.events).filter((e) => Object.keys(J("behavior_pack/entities/shadowbound_beast.json")["minecraft:entity"].events).includes(e));
+const events = beastEvents;
 for (const m of src.matchAll(/shadowbound:(mode_\$\{m\}|mode_\w+|on_tame)/g)) {
   if (m[1].includes("${")) { for (const x of ["follow", "guard", "scripted"]) if (!events.includes(`shadowbound:mode_${x}`)) errors.push(`evento mode_${x} ausente`); }
   else if (m[1] === "mode_wild") { if (!beastEvents.includes("shadowbound:mode_wild")) errors.push("evento mode_wild ausente na criatura"); } // ritual: beast only
@@ -131,16 +130,32 @@ for (const p of walk("resource_pack/particles")) {
   const tex = J(p).particle_effect.description.basic_render_parameters.texture;
   if (!existsSync(`resource_pack/${tex}.png`)) errors.push(`textura de partícula ${tex} ausente`);
 }
-// item icon + lang
-const item = J("behavior_pack/items/shadow_summoner.json")["minecraft:item"];
+// every item: icon in the atlas, png exists, name in pt_BR.lang; wearables have an attachable
 const atlas = J("resource_pack/textures/item_texture.json").texture_data;
-const icon = item.components["minecraft:icon"];
-if (!atlas[icon]) errors.push(`ícone ${icon} não está no item_texture.json`);
-else if (!existsSync(`resource_pack/${atlas[icon].textures}.png`)) errors.push("png do ícone ausente");
 const lang = readFileSync("resource_pack/texts/pt_BR.lang", "utf8");
-if (!lang.includes(item.components["minecraft:display_name"].value)) errors.push("chave de nome do item ausente no pt_BR.lang");
+const attachables = existsSync("resource_pack/attachables") ? walk("resource_pack/attachables").map((f) => J(f)["minecraft:attachable"].description) : [];
+let itemCount = 0;
+for (const f of walk("behavior_pack/items")) {
+  const item = J(f)["minecraft:item"];
+  const id = item.description.identifier;
+  itemCount++;
+  const ic = item.components["minecraft:icon"];
+  const icon = typeof ic === "string" ? ic : ic?.textures?.default;
+  if (!atlas[icon]) errors.push(`${id}: ícone ${icon} não está no item_texture.json`);
+  else if (!existsSync(`resource_pack/${atlas[icon].textures}.png`)) errors.push(`${id}: png do ícone ausente`);
+  if (!lang.includes(`item.${id}.name=`) && !lang.includes(`item.${id}=`)) errors.push(`${id}: nome ausente no pt_BR.lang`);
+  if (item.components["minecraft:wearable"]) {
+    const att = attachables.find((a) => a.identifier === id);
+    if (!att) errors.push(`${id}: vestível sem attachable`);
+    else for (const t of Object.values(att.textures)) if (!t.startsWith("textures/misc") && !existsSync(`resource_pack/${t}.png`)) errors.push(`${id}: textura ${t} ausente`);
+  }
+}
+for (const f of existsSync("behavior_pack/recipes") ? walk("behavior_pack/recipes") : []) {
+  const txt = readFileSync(f, "utf8");
+  for (const m of txt.matchAll(/"(shadowbound:[a-z_]+)"/g)) if (!walk("behavior_pack/items").some((x) => J(x)["minecraft:item"].description.identifier === m[1])) errors.push(`receita ${f} usa item ${m[1]} inexistente`);
+}
 if (!lang.includes(`entity.${bpe.description.identifier}.name`)) errors.push("nome da entidade ausente no pt_BR.lang");
 
 for (const w of warns) console.log("aviso:", w);
 if (errors.length) { for (const e of errors) console.log("ERRO:", e); process.exit(1); }
-console.log(`packs OK (${geos.size} geometrias, ${animCount} animações, ${particles.length} partículas, ${warns.length} avisos)`);
+console.log(`packs OK (${geos.size} geometrias, ${animCount} animações, ${particles.length} partículas, ${itemCount} itens, ${warns.length} avisos)`);

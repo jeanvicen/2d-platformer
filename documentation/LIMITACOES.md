@@ -20,4 +20,7 @@
 | Textura das humanas | 1024 px usa mais memória de vídeo | 6 texturas ≈ 24 MB de VRAM; se pesar num celular fraco, dá pra gerar em 512 trocando `HUMAN_UPSCALE` para 1 |
 | Esquadrão grande | cada sombra roda IA e caminho próprios | limite padrão 12 (até 40 no menu); acima disso o celular pode travar |
 | Criaturas | são lutadoras | não coletam, não fabricam e não constroem (de propósito) |
+| Possessão de Sukuna | um add-on não pode tirar o controle da câmera/movimento do jogador | durante a possessão o corpo fica muito mais forte e corta tudo ao redor sozinho; o jogador continua se mexendo |
+| Roupas | só peças de armadura (attachables) mudam o visual do jogador | uniformes como jaqueta/calça/venda; cabelo e rosto do jogador não mudam |
+| Maldições | não há inimigos próprios ainda | os monstros do Minecraft fazem o papel de espíritos amaldiçoados (drops e alvos das técnicas) |
 | Testes no jogo | esta sessão não tem Minecraft | testado com typings oficiais, validador de pacotes e simulador. Checklist manual em `TESTES.md` |

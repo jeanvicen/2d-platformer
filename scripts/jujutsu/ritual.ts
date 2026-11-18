@@ -9,7 +9,7 @@ import { BEASTS, type BeastSpecies } from "../core/species";
 import { dist, isValid, particle, safe, sound } from "../core/mc";
 import { summonFx } from "../ai/agent_manager";
 import { SHIKIGAMI, masteryLevel } from "./canon";
-import { addXp, saveSorcerer, sorcerer, spend } from "./sorcerer";
+import { addXp, heldItemId, saveSorcerer, sorcerer, spend } from "./sorcerer";
 
 export const DP_RITUAL = "sb:ritual";
 export const DP_DECOY = "sb:decoy_until";
@@ -96,7 +96,9 @@ export function onRitualHurt(e: Entity, attacker: Entity | undefined, cause: str
       return;
     }
   }
-  if (rt.species === "colossus") adaptHit(e, cause, damage, world.getAllPlayers().find((x) => x.id === rt.ownerId));
+  // the Inverted Spear of Heaven nullifies techniques: its hits ignore Mahoraga's adaptation
+  const spear = attacker instanceof Player && heldItemId(attacker) === "shadowbound:inverted_spear";
+  if (rt.species === "colossus") adaptHit(e, cause, damage, world.getAllPlayers().find((x) => x.id === rt.ownerId), spear);
 }
 
 export function onRitualDie(e: Entity): void {
@@ -189,8 +191,8 @@ export function adaptedTo(e: Entity): string[] {
   return adaptMap.get(e.id)?.adapted ?? [];
 }
 
-export function adaptHit(e: Entity, rawCause: string, damage: number, notify?: Player): void {
-  if (damage <= 0) return;
+export function adaptHit(e: Entity, rawCause: string, damage: number, notify?: Player, bypass = false): void {
+  if (damage <= 0 || bypass) return;
   const cause = FAMILY[rawCause] ?? rawCause;
   const st = adaptMap.get(e.id) ?? { counts: {}, adapted: [], wheel: 0 };
   adaptMap.set(e.id, st);

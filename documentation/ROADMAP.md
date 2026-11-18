@@ -1,23 +1,17 @@
 # Roadmap
 
-## v1.0
-Invocação, dono exclusivo, seguir/proteger/guarda, ordens em PT-BR (comando + menus), madeira, comida, mineração com
-escada segura, fabricação, fornalha real, construção por plantas, quebrar blocos, inventário/equipamento, fome,
-morte e ressurreição sem duplicação, persistência, IA externa opcional (BDS).
+## v1.0–v3.0
+Companheiras de sombra com IA de tarefas (v1–v2), visual semi-realista (v2) e a Técnica das Dez Sombras (v3).
 
-## v2.0 (atual)
-- Esquadrão: várias sombras por dono, ordens para todas ou por nome, divisão de trabalho por especialidade, troca de itens, socorro em combate e conversa entre elas.
-- Novas companheiras: Hana (fazendeira) e Aiko (construtora).
-- 12 criaturas das sombras com habilidades (lutam e caçam, não coletam), invocar/desinvocar à vontade.
-- Mais inteligência: comida por caça quando não há plantação, exploração, passo sombrio, quantidade exata, volta à tarefa depois de proteger.
-- Obras grandes: casa grande e mansão com chão e decoração; materiais calculados e buscados antes.
-- Invocação mais bonita e animações refeitas.
-- Visual semi-realista das seis humanas (textura 1024 px com luz pintada, olhos amendoados, nariz 3D, cabelo em camadas).
+## v4.0 (atual) — Jujutsu Kaisen: Legado
+Roleta de clã; 5 clãs e 10 técnicas inatas com efeitos; 3 Expansões de Domínio; Restrição Celestial com Vigor;
+Dedos de Sukuna (receptáculo, influência, possessão); 5 ferramentas amaldiçoadas, uniformes vestíveis e forja;
+Grimório Jujutsu com ícones. As companheiras humanas foram removidas.
 
-## Próximos passos (só depois de validar a v2.0 no jogo — ver TESTES.md)
-1. Corrigir o que o checklist manual mostrar (física, animações, IA nativa no aparelho real, desempenho com esquadrão grande).
-2. Pesca (vara de pescar), tosquia (tesoura), plantio em terra arada com enxada.
-3. Escadas de mão / andaimes para alcançar árvores e construções altas.
-4. Construção a partir de um arquivo de estrutura.
-5. Baús de depósito: guardar o excedente num baú marcado pelo dono.
-6. Sons de voz próprios para cada persona.
+## Próximas fases
+1. Validar tudo no jogo (checklist em TESTES.md) e ajustar números de dano/custo.
+2. Maldições próprias com graus (4º ao especial) e drops por grau.
+3. Missões, mapa e locais (escolas de Tóquio e Kyoto), com reputação e graduação.
+4. Personagens da obra como NPCs (professores, colegas) com diálogos.
+5. Fusões de shikigamis e outras técnicas da obra (Copiar, Manipulação de Espíritos Amaldiçoados, Ferramentas de Toji).
+6. Forja de Sombras com editor por texto (Modo Livre).

@@ -20,7 +20,13 @@ import { refreshCombatEffects } from "./combat/combat";
 import { survivalTick } from "./survival/survival_manager";
 import { giveHeldItem, openMember } from "./ui/menus";
 import { openSeal } from "./jujutsu/seal_menu";
-import { addXp, onPlayerHit, onShikigamiDestroyed, sorcererTick } from "./jujutsu/sorcerer";
+import { addXp, onShikigamiDestroyed, sorcerer, sorcererTick } from "./jujutsu/sorcerer";
+import { cast, abilitiesFor, onPlayerMelee } from "./jujutsu/abilities";
+import { onToolHit, onPlayerHurt } from "./jujutsu/arsenal";
+import { FINGER_ITEM, SYRUP_ITEM, isPossessed, onEnemyKilled, onFingerEaten, onSyrup } from "./jujutsu/sukuna";
+import { firstJoin } from "./jujutsu/roulette";
+import { openReveal } from "./jujutsu/seal_menu";
+import { TECHS } from "./jujutsu/clans";
 import { isRitualBody, onRitualDie, onRitualHurt, ritualTick } from "./jujutsu/ritual";
 import { setBeastDeathHook } from "./ai/agent_manager";
 import { registerCommands } from "./ui/commands";
@@ -53,16 +59,11 @@ world.afterEvents.playerSpawn.subscribe((ev) => {
       const left = cont ? safe(() => cont.addItem(new ItemStack(SUMMONER_ITEM, 1)), undefined) : undefined;
       if (left) safe(() => p.dimension.spawnItem(left, p.location), undefined);
       safe(() => p.setDynamicProperty(DP_GOT_ITEM, true), undefined);
-      safe(
-        () =>
-          p.sendMessage(
-            "§5[Legado das Dez Sombras]§r Você herdou a §fTécnica das Dez Sombras§r e recebeu o §5Selo das Dez Sombras§r! Segure e use (toque e segure) para abrir o Selo: invocações, técnicas, energia e o caderno. Comece com §f/sombra invocar caes divinos§r.",
-          ),
-        undefined,
-      );
+      safe(() => p.sendMessage("§5[Jujutsu Kaisen: Legado]§r Você recebeu o §5Grimório Jujutsu§r. Toque e segure para abrir; agache + use para a habilidade rápida."), undefined);
     }, 40);
   }
   onJoin(p);
+  system.runTimeout(() => firstJoin(p, openReveal), 60); // clan roulette on the first visit
 });
 
 world.afterEvents.playerLeave.subscribe((ev) => onLeave(ev.playerId));
@@ -77,7 +78,19 @@ world.afterEvents.itemUse.subscribe((ev) => {
   const now = Date.now();
   if ((lastUse.get(p.id) ?? 0) + 600 > now) return;
   lastUse.set(p.id, now);
+  if (p.isSneaking) {
+    const r = sorcerer(p.id);
+    const quick = r.quick ?? (r.tech ? abilitiesFor(r).find((a) => TECHS[r.tech!].abilities.includes(a.id) && a.kind !== "passiva")?.id : undefined);
+    if (quick && !isPossessed(p.id)) cast(p, quick);
+    return;
+  }
   openSeal(p);
+});
+
+world.afterEvents.itemCompleteUse.subscribe((ev) => {
+  const id = ev.itemStack.typeId;
+  if (id === FINGER_ITEM) onFingerEaten(ev.source);
+  else if (id === SYRUP_ITEM) onSyrup(ev.source);
 });
 
 world.beforeEvents.playerInteractWithEntity.subscribe((ev) => {
@@ -105,7 +118,13 @@ setBeastDeathHook(onShikigamiDestroyed);
 
 world.afterEvents.entityDie.subscribe((ev) => {
   const e = ev.deadEntity;
-  if (!BODY_TYPES.includes(safe(() => e.typeId, ""))) return;
+  const killer = ev.damageSource.damagingEntity;
+  if (!BODY_TYPES.includes(safe(() => e.typeId, ""))) {
+    // fragments and Sukuna's fingers: enemies defeated by a player or by their shikigami
+    const by = killer instanceof Player ? killer : killer ? agentByBody(killer)?.owner() : undefined;
+    if (by) onEnemyKilled(e, by);
+    return;
+  }
   if (isRitualBody(e)) onRitualDie(e);
   else onDeath(e);
 });
@@ -114,6 +133,7 @@ world.afterEvents.entityHurt.subscribe((ev) => {
   const hurt = ev.hurtEntity;
   const attacker = ev.damageSource.damagingEntity;
   if (hurt instanceof Player) {
+    onPlayerHurt(hurt, ev.damage);
     if (!attacker || attacker instanceof Player || BODY_TYPES.includes(safe(() => attacker.typeId, ""))) return;
     for (const a of squadOf(hurt.id, true)) {
       a.rt.ownerHurtAt = Date.now();
@@ -143,7 +163,8 @@ world.afterEvents.entityHurt.subscribe((ev) => {
 world.afterEvents.entityHitEntity.subscribe((ev) => {
   const d = ev.damagingEntity;
   if (d instanceof Player) {
-    onPlayerHit(d, ev.hitEntity);
+    onPlayerMelee(d, ev.hitEntity);
+    onToolHit(d, ev.hitEntity);
     return;
   }
   if (!BODY_TYPES.includes(safe(() => d.typeId, ""))) return;

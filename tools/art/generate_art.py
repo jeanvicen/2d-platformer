@@ -218,280 +218,11 @@ def only(faces: tuple, painter: Painter, other: Optional[Painter] = None) -> Pai
     return p
 
 
-# --------------------------------------------------------------------------------------
-# Anime face pieces
-# --------------------------------------------------------------------------------------
-@dataclass
-class FaceStyle:
-    skin: Color
-    iris_dark: Color
-    iris_light: Color
-    lash: Color = hexc("#1b1020")
-    blush: Color = hexc("#ff8fa8", 170)
-    mouth: Color = hexc("#7a2a3a")
-    tongue: Color = hexc("#ff7f8f")
-    sharp: bool = False   # sharper, cooler eye shape (Raven)
-    brow: Color = hexc("#3a2a30")
-
-
-SS = 4  # supersampling factor for smooth, anti-aliased face drawing
-
-
-def _canvas(w: int, h: int, fill: Color = (0, 0, 0, 0)) -> tuple:
-    img = Image.new("RGBA", (w * SS, h * SS), fill)
-    return img, ImageDraw.Draw(img)
-
-
-def _down(img: Image.Image, w: int, h: int) -> Image.Image:
-    return img.convert("RGBa").resize((w, h), Image.LANCZOS).convert("RGBA")
-
-
+# Shared painting helper
 def _radial(d: ImageDraw.ImageDraw, cx: float, cy: float, rx: float, ry: float, inner: Color, outer: Color, steps: int = 14) -> None:
     for i in range(steps, 0, -1):
         t = i / steps
         d.ellipse([cx - rx * t, cy - ry * t, cx + rx * t, cy + ry * t], fill=mix(inner, outer, t))
-
-
-def _eye_boxes(w: int, h: int) -> list:
-    """Two eye boxes inside a w x h eyes area (fractions match the 36px face layout)."""
-    ew = w * 0.36
-    gap = w - 2 * ew
-    lx = gap * 0.28
-    return [(lx, ew, False), (w - lx - ew, ew, True)]
-
-
-def _bez(p0: tuple, p1: tuple, p2: tuple, n: int = 28) -> list:
-    pts = []
-    for i in range(n + 1):
-        t = i / n
-        a, b, c = (1 - t) ** 2, 2 * (1 - t) * t, t * t
-        pts.append((a * p0[0] + b * p1[0] + c * p2[0], a * p0[1] + b * p1[1] + c * p2[1]))
-    return pts
-
-
-def _eye_geom(X: float, Y: float, E: float, H: float, st: FaceStyle, right: bool) -> dict:
-    """Almond eye inside box (X, Y, E, H) at canvas resolution. u runs from the inner corner (0) to the outer corner (1)."""
-    def P(u: float, v: float) -> tuple:
-        return (X + (E * u if right else E * (1 - u)), Y + H * v)
-    inner = P(0.0, 0.6)
-    outer = P(1.0, 0.42 if st.sharp else 0.5)
-    upper = _bez(inner, P(0.42, -0.1 if st.sharp else -0.2), outer)
-    lower = _bez(inner, P(0.52, 1.1 if st.sharp else 1.16), outer)
-    rx = min(E * 0.37, H * 0.42)
-    ry = rx * 1.1
-    icx, icy = P(0.52, 0.52)
-    return {"P": P, "inner": inner, "outer": outer, "upper": upper, "lower": lower, "iris": (icx, icy, rx, ry)}
-
-
-def _eye_mask(size: tuple, g: dict, grow: float = 0.0) -> Image.Image:
-    m = Image.new("L", size, 0)
-    md = ImageDraw.Draw(m)
-    md.polygon(g["upper"] + g["lower"][::-1], fill=255)
-    if grow > 0:
-        md.line(g["upper"], fill=255, width=int(grow))
-        md.line(g["lower"], fill=255, width=int(grow))
-    return m
-
-
-def _tapered(d: ImageDraw.ImageDraw, pts: list, w0: float, w1: float, col: Color) -> None:
-    n = len(pts) - 1
-    for i in range(n):
-        t = i / max(1, n - 1)
-        wd = w0 + (w1 - w0) * t
-        d.line([pts[i], pts[i + 1]], fill=col, width=max(1, int(wd)))
-        r = wd / 2
-        d.ellipse([pts[i + 1][0] - r, pts[i + 1][1] - r, pts[i + 1][0] + r, pts[i + 1][1] + r], fill=col)
-
-
-def draw_eye_hd(cv: Image.Image, X: float, Y: float, E: float, H: float, st: FaceStyle, right: bool) -> dict:
-    """Semi-realistic anime eye: almond lids, soft lid shadow, layered iris, catchlights, tapered lash line."""
-    g = _eye_geom(X, Y, E, H, st, right)
-    P = g["P"]
-    layer = Image.new("RGBA", cv.size, (0, 0, 0, 0))
-    d = ImageDraw.Draw(layer)
-    # sclera: warm off-white, slightly darker towards the corners
-    xs = [p[0] for p in g["upper"]]
-    _radial(d, (min(xs) + max(xs)) / 2, Y + H * 0.62, E * 0.62, H * 0.55, hexc("#fbf8fc"), hexc("#e6dde9"), steps=10)
-    # iris
-    icx, icy, rx, ry = g["iris"]
-    rim = shade(st.iris_dark, 0.5)
-    _radial(d, icx, icy + ry * 0.15, rx, ry, mix(st.iris_light, st.iris_dark, 0.25), rim, steps=16)
-    d.chord([icx - rx * 0.82, icy - ry * 0.05, icx + rx * 0.82, icy + ry * 0.9], start=0, end=180,
-            fill=mix(st.iris_light, hexc("#ffffff"), 0.12))                     # lit lower half
-    for k in range(18):                                                          # iris fibres
-        a = k / 18 * math.tau
-        d.line([icx + math.cos(a) * rx * 0.34, icy + math.sin(a) * ry * 0.34, icx + math.cos(a) * rx * 0.86, icy + math.sin(a) * ry * 0.86],
-               fill=mix(st.iris_dark, st.iris_light, 0.45), width=max(1, int(rx * 0.06)))
-    d.ellipse([icx - rx, icy - ry, icx + rx, icy + ry], outline=rim, width=max(1, int(rx * 0.1)))   # limbal ring
-    pd = shade(st.iris_dark, 0.28)
-    d.ellipse([icx - rx * 0.3, icy - ry * 0.34, icx + rx * 0.3, icy + ry * 0.34], fill=pd)
-    # soft shadow cast by the upper lid over sclera and iris
-    sh = Image.new("RGBA", cv.size, (0, 0, 0, 0))
-    sd = ImageDraw.Draw(sh)
-    band = [(x, y + H * 0.2) for x, y in g["upper"]][::-1]
-    sd.polygon(g["upper"] + band, fill=(*shade(st.iris_dark, 0.35)[:3], 120))
-    sh = sh.filter(ImageFilter.GaussianBlur(H * 0.06))
-    layer.alpha_composite(sh)
-    # catchlights (on top of the shadow)
-    d.ellipse([icx - rx * 0.68, icy - ry * 0.7, icx - rx * 0.12, icy - ry * 0.18], fill=(255, 255, 255, 250))
-    d.ellipse([icx + rx * 0.22, icy + ry * 0.3, icx + rx * 0.5, icy + ry * 0.56], fill=(255, 255, 255, 190))
-    cv.paste(layer, (0, 0), ImageChops.multiply(layer.getchannel("A"), _eye_mask(cv.size, g)))
-    fd = ImageDraw.Draw(cv)
-    # double-eyelid crease
-    crease = [(x, y - H * 0.13) for x, y in g["upper"][4:-6]]
-    fd.line(crease, fill=shade(st.skin, 0.82), width=max(1, int(H * 0.03)), joint="curve")
-    # inner corner (caruncle)
-    ix, iy = g["inner"]
-    fd.ellipse([ix - E * 0.035, iy - H * 0.035, ix + E * 0.035, iy + H * 0.035], fill=mix(st.skin, hexc("#e88a9a"), 0.5))
-    # upper lash line: thin at the inner corner, heavy at the outer corner, plus a wing
-    _tapered(fd, g["upper"], H * 0.045, H * 0.12, st.lash)
-    ox, oy = g["outer"]
-    sgn = 1 if right else -1
-    wing = (ox + sgn * E * (0.16 if st.sharp else 0.11), oy - H * (0.17 if st.sharp else 0.1))
-    _tapered(fd, [(ox - sgn * E * 0.06, oy - H * 0.02), (ox, oy), wing], H * 0.1, H * 0.03, st.lash)
-    for t in (0.72, 0.86):
-        x, y = g["upper"][int(t * (len(g["upper"]) - 1))]
-        _tapered(fd, [(x, y), (x + sgn * E * 0.05, y - H * 0.1)], H * 0.04, H * 0.015, st.lash)
-    # lower lash: thin, outer half only, lighter
-    lw = g["lower"][int(len(g["lower"]) * 0.45):]
-    fd.line(lw, fill=mix(st.lash, st.skin, 0.45), width=max(1, int(H * 0.028)), joint="curve")
-    return g
-
-
-EYES_BOX = (4 / 36, 15 / 36, 28 / 36, 14 / 36)   # eye area inside the head front face (fractions x, y, w, h)
-EYES_BOX_PX = (4, 15, 28, 14)                    # the same box on the base 36px face (geometry placement)
-_FACE_CACHE: dict = {}
-
-
-def _eye_boxes_in_face(W: float, H: float) -> list:
-    ex, ey, ew, eh = EYES_BOX
-    out = []
-    for x0, e, right in _eye_boxes(ew * W, eh * H):
-        out.append((ex * W + x0, ey * H + 0.05 * eh * H, e, 0.9 * eh * H, right))
-    return out
-
-
-def _closed_eye(d: ImageDraw.ImageDraw, X: float, Y: float, E: float, EH: float, st: FaceStyle, right: bool, happy: bool) -> None:
-    g = _eye_geom(X, Y, E, EH, st, right)
-    P = g["P"]
-    sgn = 1 if right else -1
-    if happy:   # smiling ^ ^
-        _tapered(d, _bez(P(0.0, 0.72), P(0.5, 0.05), P(1.0, 0.62), n=20), EH * 0.05, EH * 0.11, st.lash)
-        return
-    pts = _bez(g["inner"], P(0.5, 0.86), g["outer"], n=20)    # relaxed closed lid, lashes pointing down
-    _tapered(d, pts, EH * 0.045, EH * 0.11, st.lash)
-    for t in (0.55, 0.75, 0.92):
-        x, y = pts[int(t * 20)]
-        _tapered(d, [(x, y), (x + sgn * E * 0.04, y + EH * 0.1)], EH * 0.035, EH * 0.012, st.lash)
-    d.line(_bez(P(0.1, 0.45), P(0.5, 0.25), P(0.9, 0.35), n=16), fill=shade(st.skin, 0.84), width=max(1, int(EH * 0.03)), joint="curve")
-
-
-def face_render(st: FaceStyle, w: int, h: int, eyes: str = "open", brows: str = "neutral") -> tuple:
-    """Whole head front face at w x h px -> (RGBA, iris glow mask). eyes: open|closed|happy; brows: neutral|angry.
-    Every expression overlay is a crop of one of these renders, so overlays always match the face pixel for pixel."""
-    key = (id(st), w, h, eyes, brows)
-    if key in _FACE_CACHE:
-        return _FACE_CACHE[key]
-    W, H = w * SS, h * SS
-    cv = Image.new("RGBA", (W, H), st.skin)
-    d = ImageDraw.Draw(cv)
-    # volume: lit forehead/centre, cooler sides, rosy cheeks, jaw shadow
-    _radial(d, W * 0.5, H * 0.4, W * 0.78, H * 0.82, shade(st.skin, 1.045), shade(st.skin, 0.9), steps=20)
-    for cxr in (0.2, 0.8):
-        _radial(d, W * cxr, H * 0.79, W * 0.12, H * 0.055, mix(st.skin, hexc("#ffa3b2"), 0.16), shade(st.skin, 0.985), steps=10)
-    for i in range(8):
-        d.rectangle([0, H * (0.92 + 0.01 * i), W, H], fill=mix(shade(st.skin, 0.97), shade(st.skin, 0.86), i / 8))
-    d.ellipse([W * 0.46, H * 0.805, W * 0.54, H * 0.84], fill=shade(st.skin, 0.9))   # shadow under the 3D nose
-    mask = Image.new("L", (W, H), 0)
-    for X, Y, E, EH, right in _eye_boxes_in_face(W, H):
-        if eyes == "open":
-            g = draw_eye_hd(cv, X, Y, E, EH, st, right)
-            icx, icy, rx, ry = g["iris"]
-            iris = Image.new("L", (W, H), 0)
-            ImageDraw.Draw(iris).ellipse([icx - rx, icy - ry, icx + rx, icy + ry], fill=255)
-            mask.paste(255, (0, 0), ImageChops.multiply(iris, _eye_mask((W, H), g)))
-        else:
-            _closed_eye(ImageDraw.Draw(cv), X, Y, E, EH, st, right, happy=(eyes == "happy"))
-    d = ImageDraw.Draw(cv)
-    for X, Y, E, EH, right in _eye_boxes_in_face(W, H):
-        def B(u: float, v: float) -> tuple:
-            return (X + (E * u if right else E * (1 - u)), Y + EH * v)
-        if brows == "angry":   # determined: inner ends low, outer ends high
-            _tapered(d, _bez(B(-0.04, -0.06), B(0.5, -0.12), B(1.0, -0.26), n=20), EH * 0.11, EH * 0.045, st.brow)
-        else:                  # soft neutral arch
-            _tapered(d, _bez(B(-0.02, -0.12), B(0.45, -0.3), B(1.02, -0.14), n=20), EH * 0.085, EH * 0.035, st.brow)
-    out = (_down(cv, w, h), mask.resize((w, h), Image.LANCZOS))
-    _FACE_CACHE[key] = out
-    return out
-
-
-def face_region(st: FaceStyle, region: tuple, eyes: str = "open", brows: str = "neutral", glow: bool = False) -> Painter:
-    """Painter for a face overlay plane covering `region` = (x0, y0, w, h) in model units on the head front
-    (head front spans x 4.5 .. -4.5 left to right on screen, y 29 .. 20 top to bottom)."""
-    x0u, y0u, wu, hu = region
-
-    def p(img: Image.Image, face: str) -> None:
-        w, h = img.size
-        k = w / wu                                   # px per model unit
-        fw = int(round(9 * k))
-        full, mask = face_render(st, fw, fw, eyes, brows)
-        left = int(round((4.5 - (x0u + wu)) * k))
-        top = int(round((29 - (y0u + hu)) * k))
-        box = (left, top, left + w, top + h)
-        crop = full.crop(box)
-        if glow:   # emissive_alpha material: keep the face opaque, lower the iris alpha so it glows
-            rgb = crop.convert("RGB")
-            rgb.putalpha(mask.crop(box).point(lambda v: 255 - int(v * 145 / 255)))
-            crop = rgb
-        img.paste(crop, (0, 0))
-    p.hires = True  # type: ignore[attr-defined]
-    return p
-
-
-def head_front(st: FaceStyle) -> Painter:
-    """Face with painted volume, semi-realistic eyes and soft brows."""
-    def p(img: Image.Image, face: str) -> None:
-        w, h = img.size
-        img.paste(face_render(st, w, h)[0], (0, 0))
-    p.hires = True  # type: ignore[attr-defined]
-    return p
-
-
-def mouth_overlay(st: FaceStyle, kind: str) -> Painter:
-    def p(img: Image.Image, face: str) -> None:
-        w, h = img.size
-        cv, d = _canvas(w, h)
-        W, H = w * SS, h * SS
-        lip = mix(st.skin, hexc("#e8778a"), 0.55)
-        if kind == "smile":
-            d.arc([W * 0.18, -H * 0.35, W * 0.82, H * 0.7], start=25, end=155, fill=st.mouth, width=int(H * 0.12))
-            d.chord([W * 0.36, H * 0.55, W * 0.64, H * 0.85], start=0, end=180, fill=lip)
-        elif kind == "open":
-            d.chord([W * 0.28, H * 0.05, W * 0.72, H * 0.98], start=0, end=180, fill=shade(st.mouth, 0.8))
-            d.rectangle([W * 0.3, H * 0.47, W * 0.7, H * 0.56], fill=hexc("#fbf6f2"))  # teeth
-            d.chord([W * 0.36, H * 0.6, W * 0.64, H * 0.95], start=0, end=180, fill=st.tongue)
-        elif kind == "flat":
-            d.line([(W * 0.3, H * 0.5), (W * 0.7, H * 0.52)], fill=st.mouth, width=int(H * 0.12))
-            d.chord([W * 0.38, H * 0.56, W * 0.62, H * 0.78], start=0, end=180, fill=lip)
-        img.paste(_down(cv, w, h), (0, 0))
-    p.hires = True  # type: ignore[attr-defined]
-    return p
-
-
-def blush_overlay(st: FaceStyle) -> Painter:
-    def p(img: Image.Image, face: str) -> None:
-        w, h = img.size
-        cv, d = _canvas(w, h)
-        W, H = w * SS, h * SS
-        for cxr in (0.12, 0.88):
-            for i in range(10, 0, -1):
-                t = i / 10
-                a = int(st.blush[3] * (1 - t) * 0.9)
-                d.ellipse([W * cxr - W * 0.1 * t, H * 0.5 - H * 0.45 * t, W * cxr + W * 0.1 * t, H * 0.5 + H * 0.45 * t], fill=(st.blush[0], st.blush[1], st.blush[2], a))
-        img.paste(_down(cv, w, h), (0, 0))
-    p.hires = True  # type: ignore[attr-defined]
-    return p
-
 
 # --------------------------------------------------------------------------------------
 # Clothing details
@@ -700,659 +431,6 @@ def build_model(persona: str, bones: list, tex: int = TEX_W, scale: int = SCALE,
         }],
     }
     return geo, atlas.img
-
-
-def nose_paint(st: FaceStyle) -> Painter:
-    def p(img: Image.Image, face: str) -> None:
-        w, h = img.size
-        d = ImageDraw.Draw(img)
-        col = {"north": st.skin, "east": shade(st.skin, 0.9), "west": shade(st.skin, 0.94),
-               "down": shade(st.skin, 0.78), "up": shade(st.skin, 1.04)}.get(face, st.skin)
-        d.rectangle([0, 0, w, h], fill=col)
-        if face == "north":
-            d.rectangle([0, h - max(1, h // 4), w, h], fill=shade(st.skin, 0.9))
-    return p
-
-
-def layer_hair(bones: list, hair_c: Color, seed: int) -> None:
-    """Second, darker bangs layer behind the front bangs: strand depth/parallax through the gaps."""
-    for b in bones:
-        if b.name == "bangs" and b.cubes:
-            (ox, oy, _oz), (sx, sy, _sz) = b.cubes[0].origin, b.cubes[0].size
-            b.cubes.append(Cube((ox + 0.15, oy + 0.35, -4.62), (sx - 0.3, sy - 0.35, 0), jagged_bangs(shade(hair_c, 0.78), seed=seed),
-                                faces=("north",)))
-            return
-
-
-# --------------------------------------------------------------------------------------
-# Personas
-# --------------------------------------------------------------------------------------
-def common_body(bones: list, st: FaceStyle, hair_c: Color, top: Painter, arm: Painter, hand: Painter,
-                leg: Painter, boot: Painter) -> dict:
-    """Shared humanoid skeleton with anime proportions. Returns bones by name."""
-    by = {}
-    if st.brow == FaceStyle.brow:
-        st.brow = mix(shade(hair_c, 0.7), st.lash, 0.3)   # brows follow the hair colour
-
-    def add(b: Bone) -> Bone:
-        bones.append(b)
-        by[b.name] = b
-        return b
-
-    add(Bone("root", (0, 0, 0)))
-    add(Bone("waist", (0, 11, 0), "root"))
-    body = add(Bone("body", (0, 15.5, 0), "waist"))
-    body.cubes.append(Cube((-3.5, 11, -2), (7, 9, 4), top))
-
-    head = add(Bone("head", (0, 20, 0), "body"))
-    head.cubes.append(Cube((-4.5, 20, -4.5), (9, 9, 9), only(("north",), head_front(st), skin(st.skin))))
-    # small 3D nose, shaded per face (top lit, underside in shadow)
-    head.cubes.append(Cube((-0.3, 21.75, -4.78), (0.6, 0.7, 0.28), nose_paint(st), faces=("north", "east", "west", "down", "up")))
-
-    # Face overlays (planes slightly in front of the face).
-    ex, ey, ew, eh = EYES_BOX_PX
-    # convert px box inside the 36x36 face into model units
-    fx0 = 4.5 - (ex + ew) / SCALE      # model x of the box's right edge (screen left)
-    fy1 = 29 - ey / SCALE              # top of box
-    fw = ew / SCALE
-    fh = eh / SCALE
-    eye_origin = (fx0, fy1 - fh, -4.52)
-    eye_reg = (fx0, fy1 - fh, fw, fh)
-    brow_reg = (fx0, fy1 - 0.2, fw, 1.3)
-    add(Bone("glow_eyes", (0, fy1, -4.5), "head")).cubes.append(
-        Cube(eye_origin, (fw, fh, 0), face_region(st, eye_reg, glow=True), faces=("north",)))
-    add(Bone("lids", (0, fy1, -4.5), "head")).cubes.append(
-        Cube((fx0, fy1 - fh, -4.55), (fw, fh, 0), face_region(st, eye_reg, eyes="closed"), faces=("north",)))
-    add(Bone("eyes_happy", (0, fy1, -4.5), "head")).cubes.append(
-        Cube((fx0, fy1 - fh, -4.56), (fw, fh, 0), face_region(st, eye_reg, eyes="happy"), faces=("north",)))
-    add(Bone("brows", (0, fy1 + 0.6, -4.5), "head")).cubes.append(
-        Cube((fx0, fy1 - 0.2, -4.57), (fw, 1.3, 0), face_region(st, brow_reg, brows="angry"), faces=("north",)))
-    add(Bone("blush", (0, 21.9, -4.5), "head")).cubes.append(
-        Cube((-3.6, 21.2, -4.53), (7.2, 1.0, 0), blush_overlay(st), faces=("north",)))
-    for kind in ("smile", "open", "flat"):
-        add(Bone(f"mouth_{kind}", (0, 20.9, -4.5), "head")).cubes.append(
-            Cube((-1.25, 20.5, -4.54), (2.5, 1.0, 0), mouth_overlay(st, kind), faces=("north",)))
-
-    # hair shell around the head (no front, no bottom)
-    head.cubes.append(Cube((-4.5, 19.6, -4.5), (9, 9.6, 9), hair(hair_c, seed=11),
-                           faces=("up", "east", "west", "south"), inflate=0.3))
-
-    ra = add(Bone("rightArm", (-4.75, 19.5, 0), "body"))
-    ra.cubes.append(Cube((-6, 12, -1.25), (2.5, 8, 2.5), arm))
-    ra.cubes.append(Cube((-6, 10, -1.25), (2.5, 2, 2.5), hand))
-    add(Bone("rightItem", (-4.75, 11, 0.5), "rightArm"))
-    la = add(Bone("leftArm", (4.75, 19.5, 0), "body"))
-    la.cubes.append(Cube((3.5, 12, -1.25), (2.5, 8, 2.5), arm))
-    la.cubes.append(Cube((3.5, 10, -1.25), (2.5, 2, 2.5), hand))
-    add(Bone("leftItem", (4.75, 11, 0.5), "leftArm"))
-
-    rl = add(Bone("rightLeg", (-1.75, 11, 0), "root"))
-    rl.cubes.append(Cube((-3.3, 4, -1.5), (3.1, 7, 3), leg))
-    rl.cubes.append(Cube((-3.3, 0, -1.5), (3.1, 4, 3), boot, inflate=0.2))
-    ll = add(Bone("leftLeg", (1.75, 11, 0), "root"))
-    ll.cubes.append(Cube((0.2, 4, -1.5), (3.1, 7, 3), leg))
-    ll.cubes.append(Cube((0.2, 0, -1.5), (3.1, 4, 3), boot, inflate=0.2))
-    return by
-
-
-def persona_luna() -> list:
-    """Luna: cute little witch. Lilac hair, violet eyes, black witch dress, striped stockings, broom."""
-    st = FaceStyle(skin=hexc("#ffe6d8"), iris_dark=hexc("#5a2bb0"), iris_light=hexc("#d7a8ff"))
-    hair_c = hexc("#c6a4ff")
-    dress = hexc("#2a1f3d")
-    trim = hexc("#8e5cff")
-    gold = hexc("#ffd36b")
-
-    def top(img: Image.Image, face: str) -> None:
-        flat(dress)(img, face)
-        w, h = img.size
-        d = ImageDraw.Draw(img)
-        if face == "north":
-            # white sailor-ish collar + purple bow + buttons
-            d.polygon([(0, 0), (w, 0), (w // 2, 9)], fill=hexc("#f4efff"))
-            d.line([(0, 0), (w // 2, 9), (w, 0)], fill=trim, width=1)
-            d.polygon([(w // 2 - 6, 7), (w // 2, 10), (w // 2 - 6, 13)], fill=trim)
-            d.polygon([(w // 2 + 6, 7), (w // 2, 10), (w // 2 + 6, 13)], fill=trim)
-            d.rectangle([w // 2 - 1, 9, w // 2 + 1, 11], fill=shade(trim, 0.7))
-            for y in range(16, h - 4, 5):
-                d.ellipse([w // 2 - 1, y, w // 2 + 1, y + 2], fill=gold)
-            d.rectangle([0, h - 5, w, h - 3], fill=trim)  # waist ribbon
-        elif face == "south":
-            d.polygon([(0, 0), (w, 0), (w, 7), (0, 7)], fill=hexc("#f4efff"))
-            d.line([(0, 7), (w, 7)], fill=trim)
-            d.rectangle([0, h - 5, w, h - 3], fill=trim)
-            # big bow at the back
-            d.polygon([(w // 2, h - 4), (w // 2 - 7, h - 9), (w // 2 - 7, h + 1)], fill=trim)
-            d.polygon([(w // 2, h - 4), (w // 2 + 7, h - 9), (w // 2 + 7, h + 1)], fill=trim)
-        elif face in ("east", "west"):
-            d.rectangle([0, 0, w, 3], fill=hexc("#f4efff"))
-            d.rectangle([0, h - 5, w, h - 3], fill=trim)
-
-    arm = compose(flat(dress), lambda img, f: ImageDraw.Draw(img).rectangle([0, 0, img.size[0], 3], fill=shade(dress, 1.15)) if f not in ("up", "down") else None)
-    hand = skin(st.skin)
-    leg = stripes(hexc("#1c1428"), hexc("#a67cff"), 6)
-    boot = boots(hexc("#5b3a2a"), hexc("#2b1a12"), laces=gold)
-
-    bones: list = []
-    by = common_body(bones, st, hair_c, top, arm, hand, leg, boot)
-
-    # Wide witch sleeves at the wrists
-    sleeve = compose(flat(dress), lambda img, f: ImageDraw.Draw(img).rectangle([0, img.size[1] - 3, img.size[0], img.size[1]], fill=trim) if f not in ("up", "down") else None)
-    by["rightArm"].cubes.append(Cube((-6.5, 11.5, -1.75), (3.5, 3, 3.5), sleeve))
-    by["leftArm"].cubes.append(Cube((3, 11.5, -1.75), (3.5, 3, 3.5), sleeve))
-
-    # Skirt (two tiers + frill)
-    skirt = Bone("skirt", (0, 12, 0), "waist")
-    bones.append(skirt)
-
-    def skirt_paint(img: Image.Image, face: str) -> None:
-        flat(dress, 1.1, 0.7)(img, face)
-        w, h = img.size
-        d = ImageDraw.Draw(img)
-        if face not in ("up", "down"):
-            for x in range(3, w, 6):
-                d.line([x, 2, x - 1, h], fill=shade(dress, 0.78))   # pleats
-            d.rectangle([0, h - 3, w, h], fill=trim)
-            for x in range(0, w, 6):
-                star(d, x + 3, h - 7, 1.6, gold) if (x // 6) % 3 == 1 else None
-    skirt.cubes.append(Cube((-4.0, 9.0, -2.5), (8.0, 3.0, 5.0), skirt_paint))
-    skirt.cubes.append(Cube((-4.6, 7.2, -3.1), (9.2, 2.3, 6.2), skirt_paint))
-
-    def frill(img: Image.Image, face: str) -> None:
-        w, h = img.size
-        d = ImageDraw.Draw(img)
-        d.rectangle([0, 0, w, h], fill=hexc("#f4efff"))
-        for x in range(0, w, 4):
-            d.pieslice([x - 1, h - 4, x + 4, h + 2], 180, 360, fill=hexc("#d9ccff"))
-    skirt.cubes.append(Cube((-4.8, 6.6, -3.3), (9.6, 0.7, 6.6), frill, faces=("north", "south", "east", "west")))
-
-    # Hair: bangs, side locks, long fluffy back hair, ahoge
-    head_n = "head"
-    bangs = Bone("bangs", (0, 28, -4.5), head_n)
-    bones.append(bangs)
-    bangs.cubes.append(Cube((-4.8, 24.6, -4.95), (9.6, 4.6, 0.45), jagged_bangs(hair_c, seed=21),
-                            faces=("north", "up", "east", "west")))
-    for sx in (-1, 1):
-        side = Bone("lock_r" if sx < 0 else "lock_l", (sx * 4.6, 27, -2.5), head_n)
-        bones.append(side)
-        x0 = -5.4 if sx < 0 else 4.4
-        side.cubes.append(Cube((x0, 14.5, -4.2), (1.0, 13, 3.0), hair(hair_c, seed=31 + sx)))
-    back = Bone("hair_back", (0, 28.5, 4.6), head_n)
-    bones.append(back)
-    back.cubes.append(Cube((-4.9, 11.5, 4.4), (9.8, 17.5, 1.4), hair(hair_c, seed=41)))
-    back.cubes.append(Cube((-4.2, 10.0, 4.6), (8.4, 2.0, 1.0), hair(shade(hair_c, 0.9), seed=42)))
-    ahoge = Bone("ahoge", (0.5, 29, -1), head_n, rotation=(-20, 0, 15))
-    bones.append(ahoge)
-    ahoge.cubes.append(Cube((0.5, 29, -1), (0, 3, 2), hair(hair_c, seed=5), faces=("east", "west")))
-
-    # Witch hat with floppy tip
-    hat_c = hexc("#1f1630")
-    hat = Bone("hat", (0, 29, 0), head_n, rotation=(-6, 0, 4))
-    bones.append(hat)
-
-    def brim(img: Image.Image, face: str) -> None:
-        flat(hat_c, 1.25, 0.8)(img, face)
-        if face == "up":
-            w, h = img.size
-            ImageDraw.Draw(img).ellipse([4, 4, w - 5, h - 5], outline=shade(hat_c, 1.3))
-    hat.cubes.append(Cube((-7.5, 28.6, -7.5), (15, 0.7, 15), brim))
-
-    def hat_cone(img: Image.Image, face: str) -> None:
-        flat(hat_c, 1.25, 0.85)(img, face)
-    hat.cubes.append(Cube((-4.3, 29.3, -4.3), (8.6, 2.8, 8.6), hat_cone))
-
-    def band(img: Image.Image, face: str) -> None:
-        w, h = img.size
-        d = ImageDraw.Draw(img)
-        d.rectangle([0, 0, w, h], fill=trim)
-        d.line([0, 0, w, 0], fill=shade(trim, 1.3))
-        if face == "north":
-            # golden crescent buckle + star
-            moon(d, w // 2 - 2, h // 2, 2.6, gold, trim)
-            star(d, w // 2 + 4, h // 2, 2.0, gold)
-    hat.cubes.append(Cube((-4.45, 29.3, -4.45), (8.9, 1.2, 8.9), band, faces=("north", "south", "east", "west")))
-    hat.cubes.append(Cube((-3.2, 32.0, -2.8), (6.4, 2.6, 6.4), hat_cone))
-    tip = Bone("hat_tip", (0, 34.4, 0.4), "hat", rotation=(-28, 0, 12))
-    bones.append(tip)
-    tip.cubes.append(Cube((-2.1, 34.4, -1.4), (4.2, 2.6, 4.2), hat_cone))
-    tip.cubes.append(Cube((-1.1, 36.8, -0.4), (2.2, 2.2, 2.2), hat_cone))
-
-    def tip_star(img: Image.Image, face: str) -> None:
-        d = ImageDraw.Draw(img)
-        d.rectangle([0, 0, img.size[0], img.size[1]], fill=(0, 0, 0, 0))
-        star(d, img.size[0] / 2, img.size[1] / 2, img.size[0] / 2 - 0.5, gold)
-    tip.cubes.append(Cube((-0.9, 38.9, 0.6), (1.8, 1.8, 0), tip_star, faces=("north", "south")))
-
-    # Broom on the back
-    broom = Bone("broom", (0, 15.5, 2.6), "body", rotation=(0, 0, 38))
-    bones.append(broom)
-    wood = hexc("#8a5a35")
-    broom.cubes.append(Cube((-0.5, 8.5, 2.3), (1, 17, 1), flat(wood, 1.2, 0.7)))
-
-    def bristles(img: Image.Image, face: str) -> None:
-        w, h = img.size
-        d = ImageDraw.Draw(img)
-        d.rectangle([0, 0, w, h], fill=hexc("#e8c46a"))
-        for x in range(0, w, 2):
-            d.line([x, 0, x + (1 if x % 4 else -1), h], fill=hexc("#c49a3e"))
-        d.rectangle([0, 0, w, 3], fill=trim)
-    broom.cubes.append(Cube((-1.7, 4.5, 1.8), (3.4, 4.6, 2.0), bristles))
-    return bones
-
-
-def persona_raven() -> list:
-    """Raven: confident shadow blade-dancer. Silver hair ponytail, crimson eyes, black/red outfit, scarf."""
-    st = FaceStyle(skin=hexc("#f6dccb"), iris_dark=hexc("#7d0a1e"), iris_light=hexc("#ff6a7c"),
-                   lash=hexc("#140c14"), sharp=True, blush=hexc("#ff8f9c", 140))
-    hair_c = hexc("#e9e7f3")
-    suit = hexc("#16131c")
-    red = hexc("#c4122f")
-    metal = hexc("#4a4656")
-
-    def top(img: Image.Image, face: str) -> None:
-        flat(suit, 1.15, 0.75)(img, face)
-        w, h = img.size
-        d = ImageDraw.Draw(img)
-        if face == "north":
-            # high collar jacket, red cross straps, silver clasp
-            d.line([(2, 2), (w - 3, h - 6)], fill=red, width=2)
-            d.line([(w - 3, 2), (2, h - 6)], fill=red, width=2)
-            d.ellipse([w // 2 - 2, h // 2 - 4, w // 2 + 2, h // 2], fill=hexc("#d8d8e8"))
-            d.rectangle([0, h - 5, w, h - 2], fill=hexc("#2a2430"))  # belt
-            d.rectangle([w // 2 - 2, h - 5, w // 2 + 2, h - 2], fill=hexc("#c9c9d9"))
-        elif face == "south":
-            d.line([(2, 2), (w - 3, h - 6)], fill=red, width=2)
-            d.line([(w - 3, 2), (2, h - 6)], fill=red, width=2)
-            d.rectangle([0, h - 5, w, h - 2], fill=hexc("#2a2430"))
-        elif face in ("east", "west"):
-            d.rectangle([0, h - 5, w, h - 2], fill=hexc("#2a2430"))
-
-    def arm(img: Image.Image, face: str) -> None:
-        flat(suit, 1.15, 0.75)(img, face)
-        if face not in ("up", "down"):
-            w, h = img.size
-            ImageDraw.Draw(img).rectangle([0, h - 3, w, h - 1], fill=red)
-
-    def hand(img: Image.Image, face: str) -> None:   # fingerless gloves
-        w, h = img.size
-        d = ImageDraw.Draw(img)
-        d.rectangle([0, 0, w, h], fill=hexc("#221d28"))
-        if face not in ("up", "down"):
-            d.rectangle([0, h - 3, w, h], fill=st.skin)
-
-    leg = flat(hexc("#2b2533"), 1.1, 0.8)
-    boot = boots(hexc("#0f0d12"), hexc("#000000"), laces=red)
-
-    bones: list = []
-    by = common_body(bones, st, hair_c, top, arm, hand, leg, boot)
-    # thigh-high boots: taller boot cube over the leg
-    for name, x0 in (("rightLeg", -3.3), ("leftLeg", 0.2)):
-        by[name].cubes.append(Cube((x0, 4, -1.5), (3.1, 3.5, 3), boots(hexc("#0f0d12"), hexc("#0f0d12"), None), inflate=0.15,
-                                   faces=("north", "south", "east", "west")))
-
-    # Coat tails (back) + belt pouch
-    tails = Bone("coat_tail", (0, 11.5, 2.0), "waist")
-    bones.append(tails)
-
-    def tail_paint(img: Image.Image, face: str) -> None:
-        flat(suit, 1.1, 0.7)(img, face)
-        w, h = img.size
-        d = ImageDraw.Draw(img)
-        if face in ("north", "south"):
-            d.polygon([(w // 2 - 2, h), (w // 2 + 2, h), (w // 2, h - 8)], fill=(0, 0, 0, 0))  # split
-            d.rectangle([0, h - 2, w, h], fill=red)
-    tails.cubes.append(Cube((-3.8, 4.0, 2.0), (7.6, 7.5, 0.5), tail_paint))
-    shorts = Bone("skirt", (0, 12, 0), "waist")
-    bones.append(shorts)
-    shorts.cubes.append(Cube((-3.6, 9.0, -1.8), (7.2, 2.4, 3.6), flat(hexc("#1e1a24"), 1.1, 0.8)))
-
-    # Shoulder guard (left)
-    pauld = Bone("pauldron", (4.75, 19.5, 0), "leftArm")
-    bones.append(pauld)
-
-    def plate(img: Image.Image, face: str) -> None:
-        flat(metal, 1.3, 0.7)(img, face)
-        w, h = img.size
-        if face not in ("down",):
-            ImageDraw.Draw(img).rectangle([0, h - 2, w, h], fill=red)
-    pauld.cubes.append(Cube((3.2, 18.2, -1.75), (3.6, 2.2, 3.5), plate))
-
-    # Scarf + flowing tail
-    scarf_c = red
-
-    def scarf_paint(img: Image.Image, face: str) -> None:
-        flat(scarf_c, 1.2, 0.7)(img, face)
-        w, h = img.size
-        d = ImageDraw.Draw(img)
-        for y in range(2, h, 4):
-            d.line([0, y, w, y], fill=shade(scarf_c, 0.8))
-    scarf = Bone("scarf", (0, 19.5, 0), "body")
-    bones.append(scarf)
-    scarf.cubes.append(Cube((-3.9, 18.4, -2.4), (7.8, 1.8, 4.8), scarf_paint))
-    st_tail = Bone("scarf_tail", (1.8, 19.2, 2.4), "scarf")
-    bones.append(st_tail)
-    st_tail.cubes.append(Cube((0.8, 9.5, 2.4), (2.0, 9.7, 0.4), scarf_paint))
-
-    # Hair: side-swept bangs, short sides, high ponytail with red ribbon
-    bangs = Bone("bangs", (0, 28, -4.5), "head")
-    bones.append(bangs)
-    bangs.cubes.append(Cube((-4.8, 24.9, -4.95), (9.6, 4.3, 0.45), jagged_bangs(hair_c, seed=77, sweep=0.6),
-                            faces=("north", "up", "east", "west")))
-    for sx in (-1, 1):
-        side = Bone("lock_r" if sx < 0 else "lock_l", (sx * 4.6, 27, -2.5), "head")
-        bones.append(side)
-        x0 = -5.3 if sx < 0 else 4.4
-        side.cubes.append(Cube((x0, 18.0, -4.3), (0.9, 9.5, 2.6), hair(hair_c, seed=81 + sx)))
-    pony = Bone("ponytail", (0, 27.6, 4.8), "head", rotation=(18, 0, 0))
-    bones.append(pony)
-
-    def ribbon(img: Image.Image, face: str) -> None:
-        flat(red, 1.3, 0.7)(img, face)
-    pony.cubes.append(Cube((-1.1, 26.6, 4.6), (2.2, 2.0, 1.4), ribbon))
-    pony.cubes.append(Cube((-1.9, 19.0, 5.0), (3.8, 8.0, 2.4), hair(hair_c, seed=91)))
-    pony.cubes.append(Cube((-1.3, 14.0, 5.4), (2.6, 5.2, 1.8), hair(hair_c, seed=92)))
-    # Crescent hairpin
-    pin = Bone("hairpin", (3.5, 27, -3), "head")
-    bones.append(pin)
-
-    def pin_paint(img: Image.Image, face: str) -> None:
-        d = ImageDraw.Draw(img)
-        d.rectangle([0, 0, img.size[0], img.size[1]], fill=(0, 0, 0, 0))
-        moon(d, img.size[0] / 2, img.size[1] / 2, img.size[0] / 2 - 0.5, hexc("#ffd36b"), (0, 0, 0, 0))
-    pin.cubes.append(Cube((2.4, 26.3, -5.0), (2.0, 2.0, 0), pin_paint, faces=("north",)))
-
-    # Twin daggers crossed on the lower back
-    for i, rz in enumerate((35, -35)):
-        dg = Bone(f"dagger_{i}", (0, 11.5, 2.6), "waist", rotation=(0, 0, rz))
-        bones.append(dg)
-        dg.cubes.append(Cube((-0.4, 8.0, 2.55), (0.8, 2.2, 0.6), flat(hexc("#3a2a20"), 1.2, 0.7)))   # grip
-        dg.cubes.append(Cube((-0.8, 10.1, 2.5), (1.6, 0.5, 0.7), flat(hexc("#c9c9d9"), 1.2, 0.7)))   # guard
-        dg.cubes.append(Cube((-0.35, 10.6, 2.6), (0.7, 4.2, 0.4), flat(hexc("#dfe3f0"), 1.3, 0.8)))  # blade
-    return bones
-
-
-def long_skirt(base: Color, accent: Color, slit: bool) -> Painter:
-    """Ankle-length dress skirt with pleats; optional discreet side slit (shows black tights, not skin)."""
-    def p(img: Image.Image, face: str) -> None:
-        flat(base, 1.1, 0.7)(img, face)
-        if face in ("up", "down"):
-            return
-        w, h = img.size
-        d = ImageDraw.Draw(img)
-        for x in range(4, w, 7):
-            d.line([x, 1, x - 1, h], fill=shade(base, 0.8))
-        d.rectangle([0, h - 2, w, h], fill=accent)
-        if slit and face == "north":
-            x0 = int(w * 0.68)
-            top = int(h * 0.45)
-            d.polygon([(x0, top), (x0 + 3, h), (x0 - 3, h)], fill=hexc("#1a1a1a"))
-            d.line([(x0, top), (x0 + 3, h)], fill=accent)
-            d.line([(x0, top), (x0 - 3, h)], fill=accent)
-    return p
-
-
-def persona_sora() -> list:
-    """Sora: confident esper. Fluffy curly green hair, green eyes, long black dress, floats a little."""
-    st = FaceStyle(skin=hexc("#ffe9dd"), iris_dark=hexc("#11734a"), iris_light=hexc("#8dffbf"), sharp=True,
-                   blush=hexc("#ff97a8", 150))
-    hair_c = hexc("#33c47a")
-    dress = hexc("#151515")
-    trim = hexc("#1f7a4c")
-
-    def top(img: Image.Image, face: str) -> None:
-        flat(dress, 1.15, 0.75)(img, face)
-        w, h = img.size
-        d = ImageDraw.Draw(img)
-        if face in ("north", "south", "east", "west"):
-            d.rectangle([0, 0, w, 3], fill=trim)          # high collar
-        if face == "north":
-            d.polygon([(w // 2 - 3, 3), (w // 2 + 3, 3), (w // 2, 8)], fill=trim)
-            for y in range(11, h - 3, 6):
-                d.line([w // 2, y, w // 2, y + 3], fill=shade(dress, 1.6))
-            d.rectangle([0, h - 4, w, h - 3], fill=trim)  # waist line
-
-    def cuff(img: Image.Image, face: str) -> None:
-        flat(dress, 1.15, 0.75)(img, face)
-        if face not in ("up", "down"):
-            w, h = img.size
-            ImageDraw.Draw(img).rectangle([0, h - 2, w, h], fill=trim)
-
-    bones: list = [Bone("levitate", (0, 0, 0))]
-    by = common_body(bones, st, hair_c, top, flat(dress, 1.15, 0.75), skin(st.skin), flat(hexc("#1a1a1a"), 1.1, 0.8),
-                     boots(hexc("#0b0b0b"), hexc("#000000"), None))
-    by["root"].parent = "levitate"
-    by["rightArm"].cubes.append(Cube((-6.6, 10, -1.85), (3.7, 3.2, 3.7), cuff))
-    by["leftArm"].cubes.append(Cube((2.9, 10, -1.85), (3.7, 3.2, 3.7), cuff))
-    sk = Bone("skirt", (0, 12, 0), "waist")
-    bones.append(sk)
-    sk.cubes.append(Cube((-3.9, 7.0, -2.4), (7.8, 5.0, 4.8), long_skirt(dress, trim, False)))
-    sk.cubes.append(Cube((-4.4, 1.6, -2.9), (8.8, 5.6, 5.8), long_skirt(dress, trim, True)))
-    # hair: big curly volume
-    bangs = Bone("bangs", (0, 28, -4.5), "head")
-    bones.append(bangs)
-    bangs.cubes.append(Cube((-4.9, 24.6, -4.95), (9.8, 4.7, 0.45), jagged_bangs(hair_c, seed=55, sweep=-0.3),
-                            faces=("north", "up", "east", "west")))
-    puff = Bone("hair_top", (0, 28, 0), "head")
-    bones.append(puff)
-    puff.cubes.append(Cube((-5.3, 27.6, -4.7), (10.6, 2.8, 9.8), hair(hair_c, seed=56)))
-    for sx in (-1, 1):
-        lk = Bone("lock_r" if sx < 0 else "lock_l", (sx * 4.8, 27, -2.0), "head")
-        bones.append(lk)
-        x0 = -6.2 if sx < 0 else 4.6
-        lk.cubes.append(Cube((x0, 18.6, -4.0), (1.6, 8.6, 5.0), hair(hair_c, seed=60 + sx)))
-        cx = -7.3 if sx < 0 else 5.8
-        lk.cubes.append(Cube((cx, 18.0, -3.2), (1.5, 1.8, 3.6), hair(shade(hair_c, 0.9), seed=62 + sx)))  # outward curl
-    back = Bone("hair_back", (0, 28.5, 4.6), "head")
-    bones.append(back)
-    back.cubes.append(Cube((-5.4, 16.0, 3.8), (10.8, 13.0, 2.2), hair(hair_c, seed=64)))
-    back.cubes.append(Cube((-6.0, 16.6, 3.4), (12.0, 1.8, 2.8), hair(shade(hair_c, 0.88), seed=65)))  # curled ends
-    return bones
-
-
-def persona_yuki() -> list:
-    """Yuki: elegant older-sister type. Dark bob hair, green eyes, long green dress, white fur stole."""
-    st = FaceStyle(skin=hexc("#fde3d6"), iris_dark=hexc("#1d6b45"), iris_light=hexc("#a6efc6"))
-    hair_c = hexc("#25332c")
-    dress = hexc("#1f5a3c")
-    fur = hexc("#f2f2ef")
-
-    def top(img: Image.Image, face: str) -> None:
-        flat(dress, 1.15, 0.75)(img, face)
-        w, h = img.size
-        d = ImageDraw.Draw(img)
-        if face == "north":
-            for x in range(3, w - 2, 3):
-                d.ellipse([x, 4, x + 1, 5], fill=hexc("#ffffff"))  # pearl necklace
-            d.rectangle([0, h - 4, w, h - 3], fill=shade(dress, 0.7))
-
-    def fur_paint(img: Image.Image, face: str) -> None:
-        w, h = img.size
-        d = ImageDraw.Draw(img)
-        d.rectangle([0, 0, w, h], fill=fur)
-        rnd = random.Random(len(face) * 7 + w)
-        for _ in range(w * h // 6):
-            x, y = rnd.randrange(w), rnd.randrange(h)
-            d.point([x, y], fill=shade(fur, rnd.choice((0.85, 0.9, 1.0))))
-        if face not in ("up", "down"):
-            d.line([0, h - 1, w, h - 1], fill=shade(fur, 0.8))
-
-    bones: list = []
-    by = common_body(bones, st, hair_c, top, flat(dress, 1.15, 0.75), skin(st.skin), flat(hexc("#1a1a1a"), 1.1, 0.8),
-                     boots(hexc("#101010"), hexc("#000000"), None))
-    sk = Bone("skirt", (0, 12, 0), "waist")
-    bones.append(sk)
-    sk.cubes.append(Cube((-3.9, 7.0, -2.4), (7.8, 5.0, 4.8), long_skirt(dress, shade(dress, 0.7), False)))
-    sk.cubes.append(Cube((-4.4, 1.6, -2.9), (8.8, 5.6, 5.8), long_skirt(dress, shade(dress, 0.7), False)))
-    coat = Bone("coat", (0, 19.5, 0), "body")
-    bones.append(coat)
-    coat.cubes.append(Cube((-5.4, 17.4, -2.9), (10.8, 2.8, 5.8), fur_paint))           # fur stole
-    coat.cubes.append(Cube((-4.8, 9.0, 2.2), (9.6, 8.6, 0.8), fur_paint))              # back of the coat
-    cape = Bone("coat_tail", (0, 11.5, 2.0), "waist")
-    bones.append(cape)
-    cape.cubes.append(Cube((-4.6, 5.0, 2.6), (9.2, 4.2, 0.6), fur_paint))
-    # hair: straight bob with outward flare
-    bangs = Bone("bangs", (0, 28, -4.5), "head")
-    bones.append(bangs)
-    bangs.cubes.append(Cube((-4.8, 25.2, -4.95), (9.6, 4.0, 0.45), jagged_bangs(hair_c, seed=88),
-                            faces=("north", "up", "east", "west")))
-    for sx in (-1, 1):
-        lk = Bone("lock_r" if sx < 0 else "lock_l", (sx * 4.6, 27, -2.5), "head")
-        bones.append(lk)
-        x0 = -5.6 if sx < 0 else 4.4
-        lk.cubes.append(Cube((x0, 19.4, -4.3), (1.2, 8.0, 4.2), hair(hair_c, seed=90 + sx)))
-        fx = -6.7 if sx < 0 else 5.2
-        lk.cubes.append(Cube((fx, 19.0, -3.6), (1.5, 1.4, 3.4), hair(hair_c, seed=93 + sx)))
-    back = Bone("hair_back", (0, 28.5, 4.6), "head")
-    bones.append(back)
-    back.cubes.append(Cube((-5.0, 19.0, 3.8), (10.0, 9.6, 1.4), hair(hair_c, seed=95)))
-    return bones
-
-
-
-# --------------------------------------------------------------------------------------
-# New companions: Hana (farmer) and Aiko (builder)
-# --------------------------------------------------------------------------------------
-def persona_hana() -> list:
-    """Hana: cheerful farmer. Brown twin braids, amber eyes, straw hat, green overall dress, basket."""
-    st = FaceStyle(skin=hexc("#fbe0cf"), iris_dark=hexc("#8a4b12"), iris_light=hexc("#ffc46b"))
-    hair_c = hexc("#7a4a2a")
-    green = hexc("#3f7d4a")
-    blouse = hexc("#f6f1e6")
-    straw = hexc("#e8c46a")
-
-    def top(img: Image.Image, face: str) -> None:
-        flat(blouse, 1.05, 0.85)(img, face)
-        w, h = img.size
-        d = ImageDraw.Draw(img)
-        if face in ("north", "south"):
-            d.rectangle([4, int(h * 0.35), w - 5, h], fill=green)          # overall bib
-            d.rectangle([4, 0, 7, int(h * 0.35)], fill=green)               # straps
-            d.rectangle([w - 8, 0, w - 5, int(h * 0.35)], fill=green)
-            if face == "north":
-                d.rectangle([w // 2 - 4, int(h * 0.5), w // 2 + 4, int(h * 0.7)], fill=shade(green, 0.8))  # pocket
-                for x in (5, w - 7):
-                    d.ellipse([x, int(h * 0.33), x + 2, int(h * 0.33) + 2], fill=hexc("#ffd36b"))
-        elif face in ("east", "west"):
-            d.rectangle([0, int(h * 0.35), w, h], fill=green)
-
-    def arm(img: Image.Image, face: str) -> None:
-        flat(blouse, 1.05, 0.85)(img, face)
-        if face not in ("up", "down"):
-            w, h = img.size
-            ImageDraw.Draw(img).rectangle([0, h - 3, w, h - 1], fill=hexc("#e2d6c2"))   # rolled sleeves
-
-    bones: list = []
-    by = common_body(bones, st, hair_c, top, arm, skin(st.skin), skin(st.skin), boots(hexc("#6b4428"), hexc("#3b2416"), None))
-    sk = Bone("skirt", (0, 12, 0), "waist")
-    bones.append(sk)
-    sk.cubes.append(Cube((-4.0, 7.0, -2.5), (8.0, 5.0, 5.0), long_skirt(green, shade(green, 0.7), False)))
-    bangs = Bone("bangs", (0, 28, -4.5), "head")
-    bones.append(bangs)
-    bangs.cubes.append(Cube((-4.8, 25.0, -4.95), (9.6, 4.2, 0.45), jagged_bangs(hair_c, seed=101), faces=("north", "up", "east", "west")))
-    for sx in (-1, 1):
-        br = Bone("lock_r" if sx < 0 else "lock_l", (sx * 4.2, 24, 0), "head")
-        bones.append(br)
-        x0 = -5.6 if sx < 0 else 3.6
-        br.cubes.append(Cube((x0, 13.0, -1.0), (2.0, 11.0, 2.0), hair(hair_c, seed=110 + sx)))        # braid
-        br.cubes.append(Cube((x0 + 0.2, 12.2, -0.8), (1.6, 1.0, 1.6), flat(hexc("#d94b4b"), 1.2, 0.8)))  # ribbon
-    back = Bone("hair_back", (0, 28.5, 4.6), "head")
-    bones.append(back)
-    back.cubes.append(Cube((-4.8, 19.5, 3.9), (9.6, 9.0, 1.2), hair(hair_c, seed=112)))
-    hat = Bone("hat", (0, 29, 0), "head", rotation=(-4, 0, -3))
-    bones.append(hat)
-
-    def straw_paint(img: Image.Image, face: str) -> None:
-        w, h = img.size
-        d = ImageDraw.Draw(img)
-        d.rectangle([0, 0, w, h], fill=straw)
-        for x in range(0, w, 3):
-            d.line([x, 0, x, h], fill=shade(straw, 0.85))
-        for y in range(0, h, 3):
-            d.line([0, y, w, y], fill=shade(straw, 0.9))
-    hat.cubes.append(Cube((-8.0, 28.6, -8.0), (16, 0.6, 16), straw_paint))
-    hat.cubes.append(Cube((-4.4, 29.2, -4.4), (8.8, 3.0, 8.8), straw_paint))
-    hat.cubes.append(Cube((-4.5, 29.2, -4.5), (9.0, 1.0, 9.0), flat(hexc("#d94b4b"), 1.2, 0.8), faces=("north", "south", "east", "west")))
-    basket = Bone("broom", (0, 15.5, 2.6), "body")
-    bones.append(basket)
-
-    def wicker(img: Image.Image, face: str) -> None:
-        w, h = img.size
-        d = ImageDraw.Draw(img)
-        d.rectangle([0, 0, w, h], fill=hexc("#a8743c"))
-        for y in range(0, h, 3):
-            d.line([0, y, w, y], fill=hexc("#7d5226"))
-        for x in range(0, w, 4):
-            d.line([x, 0, x, h], fill=hexc("#c99256"))
-    basket.cubes.append(Cube((-3.0, 12.0, 2.1), (6.0, 6.0, 3.0), wicker))
-    basket.cubes.append(Cube((-2.6, 17.6, 2.6), (1.0, 1.4, 2.0), flat(hexc("#ff6b6b"), 1.2, 0.8)))   # apples
-    basket.cubes.append(Cube((1.0, 17.6, 2.6), (1.2, 1.2, 1.8), flat(hexc("#ffb347"), 1.2, 0.8)))
-    return bones
-
-
-def persona_aiko() -> list:
-    """Aiko: energetic builder. Short orange hair, goggles, navy-orange work jacket, tool belt, hammer."""
-    st = FaceStyle(skin=hexc("#fde1d0"), iris_dark=hexc("#1d4f8a"), iris_light=hexc("#8cc8ff"))
-    hair_c = hexc("#f08a3c")
-    navy = hexc("#243453")
-    orange = hexc("#ff8c2b")
-    yellow = hexc("#ffd84d")
-
-    def top(img: Image.Image, face: str) -> None:
-        flat(navy, 1.15, 0.8)(img, face)
-        w, h = img.size
-        d = ImageDraw.Draw(img)
-        if face in ("north", "south", "east", "west"):
-            d.rectangle([0, int(h * 0.45), w, int(h * 0.45) + 2], fill=yellow)   # reflective stripe
-        if face == "north":
-            d.line([w // 2, 0, w // 2, h], fill=shade(navy, 0.7))
-            d.rectangle([0, 0, w, 2], fill=orange)
-            d.rectangle([0, h - 5, w, h - 2], fill=hexc("#6b4a2a"))                # tool belt
-            d.rectangle([3, h - 6, 6, h - 1], fill=hexc("#9e9e9e"))                # wrench
-        elif face == "south":
-            d.rectangle([0, h - 5, w, h - 2], fill=hexc("#6b4a2a"))
-
-    def arm(img: Image.Image, face: str) -> None:
-        flat(orange, 1.1, 0.8)(img, face)
-        if face not in ("up", "down"):
-            w, h = img.size
-            ImageDraw.Draw(img).rectangle([0, int(h * 0.5), w, int(h * 0.5) + 1], fill=yellow)
-
-    def gloves(img: Image.Image, face: str) -> None:
-        flat(hexc("#c79b52"), 1.1, 0.8)(img, face)
-
-    bones: list = []
-    by = common_body(bones, st, hair_c, top, arm, gloves, flat(navy, 1.1, 0.8), boots(hexc("#4a3524"), hexc("#20160e"), yellow))
-    shorts = Bone("skirt", (0, 12, 0), "waist")
-    bones.append(shorts)
-    shorts.cubes.append(Cube((-3.7, 8.6, -1.9), (7.4, 2.8, 3.8), flat(hexc("#1b2740"), 1.1, 0.8)))
-    bangs = Bone("bangs", (0, 28, -4.5), "head")
-    bones.append(bangs)
-    bangs.cubes.append(Cube((-4.8, 25.2, -4.95), (9.6, 4.0, 0.45), jagged_bangs(hair_c, seed=121, sweep=0.4), faces=("north", "up", "east", "west")))
-    for sx in (-1, 1):
-        lk = Bone("lock_r" if sx < 0 else "lock_l", (sx * 4.6, 27, -2.5), "head")
-        bones.append(lk)
-        x0 = -5.4 if sx < 0 else 4.4
-        lk.cubes.append(Cube((x0, 20.5, -4.0), (1.0, 7.0, 3.0), hair(hair_c, seed=123 + sx)))
-    back = Bone("hair_back", (0, 28.5, 4.6), "head")
-    bones.append(back)
-    back.cubes.append(Cube((-4.9, 21.0, 3.9), (9.8, 8.0, 1.2), hair(hair_c, seed=126)))
-    gog = Bone("hairpin", (0, 28, 0), "head")
-    bones.append(gog)
-    gog.cubes.append(Cube((-4.9, 27.2, -4.9), (9.8, 1.0, 9.8), flat(hexc("#3a3a3a"), 1.2, 0.8), faces=("north", "south", "east", "west")))
-
-    def lens(img: Image.Image, face: str) -> None:
-        w, h = img.size
-        d = ImageDraw.Draw(img)
-        d.rectangle([0, 0, w, h], fill=hexc("#7a5a2a"))
-        d.ellipse([1, 1, w - 2, h - 2], fill=hexc("#7fd6ff"))
-        d.point([2, 2], fill=hexc("#ffffff"))
-    gog.cubes.append(Cube((-3.6, 27.0, -5.3), (3.0, 1.6, 0.5), lens, faces=("north",)))
-    gog.cubes.append(Cube((0.6, 27.0, -5.3), (3.0, 1.6, 0.5), lens, faces=("north",)))
-    ham = Bone("broom", (0, 15.5, 2.6), "body", rotation=(0, 0, -30))
-    bones.append(ham)
-    ham.cubes.append(Cube((-0.5, 7.0, 2.3), (1.0, 11.0, 1.0), flat(hexc("#8a5a35"), 1.2, 0.7)))
-    ham.cubes.append(Cube((-2.2, 17.0, 1.8), (4.4, 2.4, 2.0), flat(hexc("#9aa0a8"), 1.3, 0.7)))
-    return bones
 
 
 # --------------------------------------------------------------------------------------
@@ -2169,29 +1247,27 @@ def render_side(geo: dict, tex: Image.Image, px_per_unit: int = 4, scale: int = 
     return img
 
 
-def pack_icon(path: str, previews: list) -> None:
-    s = 256
-    img = Image.new("RGBA", (s, s), hexc("#140f1f"))
+def pack_icon(path: str, portraits: list) -> None:
+    """Pack icon: night sky, red moon and three shikigami portraits."""
+    sz = 256
+    img = Image.new("RGBA", (sz, sz), hexc("#140f1f"))
     d = ImageDraw.Draw(img)
-    for y in range(s):
-        d.line([0, y, s, y], fill=mix(hexc("#2a1747"), hexc("#0c0814"), y / s))
-    moon(d, 200, 52, 30, hexc("#ffd36b"), mix(hexc("#2a1747"), hexc("#0c0814"), 52 / s))
+    for y in range(sz):
+        d.line([0, y, sz, y], fill=mix(hexc("#3a0f2a"), hexc("#0c0814"), y / sz))
+    d.ellipse([168, 18, 232, 82], fill=hexc("#e2453c"))
     rnd = random.Random(7)
     for _ in range(40):
-        x, y = rnd.randint(0, s), rnd.randint(0, s // 2)
+        x, y = rnd.randint(0, sz), rnd.randint(0, sz // 2)
         d.point([x, y], fill=(255, 255, 255, rnd.randint(80, 220)))
-    for i, pv in enumerate(previews):
-        crop = pv.crop((0, 0, pv.size[0], int(pv.size[1] * 0.62)))
-        k = 0.62 if len(previews) <= 2 else 0.4
-        crop = crop.resize((int(crop.size[0] * k), int(crop.size[1] * k)), Image.LANCZOS)
-        x = 4 + i * (118 if len(previews) <= 2 else 62)
-        img.alpha_composite(crop, (x, s - crop.size[1]))
+    for i, pv in enumerate(portraits[:3]):
+        bb = pv.getbbox()
+        c = pv.crop(bb) if bb else pv
+        k = 100 / max(c.size)
+        c = c.resize((max(1, int(c.size[0] * k)), max(1, int(c.size[1] * k))), Image.NEAREST)
+        img.alpha_composite(c, (10 + i * 82, sz - c.size[1] - 8))
     img.save(path)
 
 
-HUMAN_UPSCALE = 2   # humanoid textures: 128 UV units x 4 px x 2 = 1024 px (semi-realistic detail)
-PERSONA_HAIR = {"luna": hexc("#c6a4ff"), "raven": hexc("#e9e7f3"), "sora": hexc("#33c47a"),
-                "yuki": hexc("#25332c"), "hana": hexc("#7a4a2a"), "aiko": hexc("#f08a3c")}
 
 
 # --------------------------------------------------------------------------------------
@@ -2462,6 +1538,382 @@ def glyph_icons() -> None:
         _save_icon(img, name)
 
 
+# --------------------------------------------------------------------------------------
+# Jujutsu Kaisen content art: ability / clan / technique icons, item textures, armor layers.
+# --------------------------------------------------------------------------------------
+def _font(size: int):
+    for path in ("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", "C:/Windows/Fonts/arialbd.ttf", "/Library/Fonts/Arial Bold.ttf"):
+        if os.path.exists(path):
+            from PIL import ImageFont
+            return ImageFont.truetype(path, size)
+    from PIL import ImageFont
+    try:
+        return ImageFont.load_default(size)
+    except TypeError:
+        return ImageFont.load_default()
+
+
+def _g_orb(d, c):
+    _radial(d, 128, 128, 74, 74, mix(c, hexc("#ffffff"), 0.55), shade(c, 0.6), steps=16)
+    d.ellipse([96, 92, 124, 116], fill=(255, 255, 255, 200))
+
+
+def _g_multi_orb(d, c):
+    for i in range(6):
+        a = i / 6 * math.tau
+        x, y = 128 + math.cos(a) * 62, 128 + math.sin(a) * 62
+        _radial(d, x, y, 24, 24, mix(c, hexc("#ffffff"), 0.4), shade(c, 0.6), steps=8)
+    _radial(d, 128, 128, 30, 30, mix(c, hexc("#ffffff"), 0.4), shade(c, 0.6), steps=8)
+
+
+def _g_beam(d, c):
+    d.line([(44, 212), (212, 44)], fill=shade(c, 0.6), width=46)
+    d.line([(44, 212), (212, 44)], fill=c, width=28)
+    d.line([(44, 212), (212, 44)], fill=mix(c, hexc("#ffffff"), 0.7), width=10)
+
+
+def _g_infinity(d, c):
+    d.ellipse([40, 84, 132, 172], outline=c, width=22)
+    d.ellipse([124, 84, 216, 172], outline=c, width=22)
+
+
+def _g_drop(d, c):
+    d.polygon([(128, 36), (182, 130), (74, 130)], fill=c)
+    d.ellipse([72, 96, 184, 208], fill=c)
+    d.ellipse([100, 130, 124, 166], fill=mix(c, hexc("#ffffff"), 0.5))
+
+
+def _g_lips(d, c):
+    d.chord([48, 92, 208, 196], 0, 180, fill=c)
+    d.chord([48, 70, 128, 150], 180, 360, fill=c)
+    d.chord([128, 70, 208, 150], 180, 360, fill=c)
+    d.line([(52, 128), (204, 128)], fill=hexc("#16101f"), width=8)
+    for x in (88, 168):   # the snake-eye marks of the Inumaki
+        d.ellipse([x - 9, 160, x + 9, 178], fill=hexc("#16101f"))
+
+
+def _g_frame(d, c):
+    d.rectangle([60, 56, 196, 200], outline=c, width=14)
+    for y in range(70, 200, 26):
+        d.rectangle([38, y, 54, y + 12], fill=c)
+        d.rectangle([202, y, 218, y + 12], fill=c)
+    d.line([(82, 176), (174, 80)], fill=c, width=10)
+
+
+def _g_snow_frame(d, c):
+    _g_frame(d, c)
+    for a in range(0, 180, 45):
+        r = math.radians(a)
+        d.line([(128 - math.cos(r) * 34, 128 - math.sin(r) * 34), (128 + math.cos(r) * 34, 128 + math.sin(r) * 34)], fill=hexc("#ffffff"), width=8)
+
+
+def _g_dash(d, c):
+    for i, y in enumerate((88, 128, 168)):
+        d.line([(40 + i * 10, y), (150, y)], fill=shade(c, 0.7 + i * 0.1), width=12)
+    d.polygon([(150, 70), (220, 128), (150, 186)], fill=c)
+
+
+def _g_up(d, c):
+    d.rectangle([114, 110, 142, 206], fill=c)
+    d.polygon([(70, 120), (186, 120), (128, 46)], fill=c)
+
+
+def _g_fist(d, c):
+    d.rounded_rectangle([70, 92, 186, 196], radius=28, fill=c)
+    for x in (78, 106, 134, 162):
+        d.rounded_rectangle([x, 70, x + 26, 118], radius=12, fill=c)
+    d.line([(78, 140), (186, 140)], fill=shade(c, 0.7), width=6)
+
+
+def _g_zz(d, c):
+    f = _font(96)
+    d.text((54, 54), "Zz", font=f, fill=c)
+
+
+def _g_down(d, c):
+    d.rectangle([114, 46, 142, 140], fill=c)
+    d.polygon([(70, 130), (186, 130), (128, 210)], fill=c)
+    d.line([(52, 214), (204, 214)], fill=c, width=10)
+
+
+def _g_nail(d, c):
+    d.polygon([(118, 60), (138, 60), (132, 200), (124, 200)], fill=hexc("#c9ccd6"))
+    d.rounded_rectangle([90, 48, 166, 68], radius=6, fill=hexc("#dfe3f0"))
+    for k in range(6):
+        a = k / 6 * math.tau
+        d.line([(128, 206), (128 + math.cos(a) * 34, 206 + math.sin(a) * 20)], fill=c, width=6)
+
+
+def _g_hammer(d, c):
+    d.line([(80, 200), (160, 104)], fill=hexc("#8a5a35"), width=20)
+    d.rounded_rectangle([118, 52, 214, 104], radius=10, fill=hexc("#c9ccd6"))
+    d.ellipse([46, 150, 100, 204], outline=c, width=10)
+
+
+def _g_star_burst(d, c):
+    pts = []
+    for k in range(16):
+        r = 92 if k % 2 == 0 else 40
+        a = k * math.pi / 8
+        pts.append((128 + math.cos(a) * r, 128 + math.sin(a) * r))
+    d.polygon(pts, fill=c)
+
+
+def _g_clap(d, c):
+    d.rounded_rectangle([70, 64, 122, 200], radius=24, fill=c)
+    d.rounded_rectangle([134, 64, 186, 200], radius=24, fill=shade(c, 0.85))
+    for x, y in ((128, 46), (96, 40), (160, 40)):
+        d.line([(x, y), (x + (x - 128) * 0.2, y - 20)], fill=hexc("#ffffff"), width=6)
+
+
+def _g_swap(d, c):
+    d.line([(52, 98), (188, 98)], fill=c, width=16)
+    d.polygon([(188, 70), (226, 98), (188, 126)], fill=c)
+    d.line([(68, 162), (204, 162)], fill=c, width=16)
+    d.polygon([(68, 134), (30, 162), (68, 190)], fill=c)
+
+
+def _g_ratio(d, c):
+    f = _font(92)
+    d.text((40, 70), "7:3", font=f, fill=c)
+
+
+def _g_crumble(d, c):
+    for i, (x, y, s) in enumerate(((60, 150, 50), (118, 120, 60), (176, 160, 40), (90, 80, 34), (150, 70, 30))):
+        d.rectangle([x - s / 2, y - s / 2, x + s / 2, y + s / 2], fill=shade(c, 0.7 + i * 0.07))
+
+
+def _g_arrows(d, c):
+    for i in range(3):
+        y = 80 + i * 44
+        d.line([(50, y + 30), (190, y - 20)], fill=hexc("#8a5a35"), width=8)
+        d.polygon([(190, y - 36), (214, y - 28), (196, y - 6)], fill=hexc("#c9ccd6"))
+
+
+def _g_x_slash(d, c):
+    d.line([(60, 60), (196, 196)], fill=c, width=16)
+    d.line([(196, 60), (60, 196)], fill=c, width=16)
+
+
+def _g_cube(d, c):
+    d.polygon([(128, 50), (200, 88), (128, 126), (56, 88)], fill=mix(c, hexc("#ffffff"), 0.3))
+    d.polygon([(56, 88), (128, 126), (128, 208), (56, 170)], fill=c)
+    d.polygon([(200, 88), (128, 126), (128, 208), (200, 170)], fill=shade(c, 0.7))
+
+
+ABILITY_ICONS = {
+    "reforco": (_g_flame, "#c77dff", "#8e5cff"), "kokusen": (_g_blackflash, "#ff2a3a", "#ff2a3a"), "dominio_simples": (_g_shield, "#8fe0ff", "#4fb6ff"),
+    "rct": (_g_heart, "#fff2c2", "#ffd36b"), "infinito": (_g_infinity, "#8fd8ff", "#4fb6ff"), "azul": (_g_orb, "#4fa6ff", "#4fa6ff"),
+    "vermelho": (_g_orb, "#ff3a3a", "#ff3a3a"), "roxo": (_g_orb, "#a64dff", "#a64dff"), "vazio": (_g_eye, "#e8f4ff", "#8fd8ff"),
+    "mergulho": (_g_dive, "#b48cff", "#8e5cff"), "guardar": (_g_chest, "#e2c26a", "#8e5cff"), "jardim": (_g_eye, "#c77dff", "#8e5cff"),
+    "quadros": (_g_frame, "#6fffc0", "#3fd69a"), "aceleracao": (_g_dash, "#6fffc0", "#3fd69a"), "quadro_congelado": (_g_snow_frame, "#6fffc0", "#3fd69a"),
+    "investida": (_g_dash, "#ffd36b", "#ffb347"), "salto": (_g_up, "#ffd36b", "#ffb347"), "sangue_perfurante": (_g_beam, "#e01a2a", "#b0101a"),
+    "amarracao": (_g_target, "#e01a2a", "#b0101a"), "supernova": (_g_multi_orb, "#e01a2a", "#b0101a"), "escamas": (_g_flame, "#e01a2a", "#b0101a"),
+    "fala": (_g_lips, "#c77dff", "#8e5cff"), "exploda": (_g_star_burst, "#c77dff", "#8e5cff"), "durma": (_g_zz, "#c77dff", "#8e5cff"),
+    "esmague": (_g_down, "#c77dff", "#8e5cff"), "pregos": (_g_nail, "#ff9a3a", "#ff8c2b"), "ressonancia": (_g_hammer, "#ff9a3a", "#ff8c2b"),
+    "grampo": (_g_star_burst, "#ff9a3a", "#ff8c2b"), "palmas": (_g_clap, "#ffd84d", "#ffb347"), "troca": (_g_swap, "#ffd84d", "#ffb347"),
+    "golpe_73": (_g_ratio, "#fff2c2", "#d8c88a"), "hora_extra": (_g_flame, "#fff2c2", "#d8c88a"), "colapso": (_g_crumble, "#c9b89a", "#d8c88a"),
+    "municao": (_g_arrows, "#9fd8ff", "#6fa8e0"), "lamina": (_g_sword, "#dfe3f0", "#6fa8e0"), "escudo": (_g_shield, "#c9ccd6", "#6fa8e0"),
+    "desmantelar": (_g_beam, "#ffffff", "#e2453c"), "clivar": (_g_x_slash, "#ffffff", "#e2453c"), "fuga": (_g_flame, "#ff7a2a", "#e2453c"),
+    "santuario": (_g_eye, "#ff4a5a", "#e2453c"),
+}
+CLAN_ICONS = {"gojo": (_g_infinity, "#8fd8ff", "#4fb6ff"), "zenin": (_g_dog, "#e8f4e8", "#2f8f4a"), "kamo": (_g_drop, "#e01a2a", "#b0101a"),
+              "inumaki": (_g_lips, "#c77dff", "#8e5cff"), "none": (_g_star, "#f2f0ff", "#9a94aa")}
+TECH_ICONS = {"limitless": (_g_infinity, "#8fd8ff", "#4fb6ff"), "ten_shadows": (_g_dog, "#f2f0ff", "#8e5cff"), "projection": (_g_frame, "#6fffc0", "#3fd69a"),
+              "heavenly": (_g_fist, "#ffd36b", "#ffb347"), "blood": (_g_drop, "#e01a2a", "#b0101a"), "speech": (_g_lips, "#c77dff", "#8e5cff"),
+              "straw_doll": (_g_nail, "#ff9a3a", "#ff8c2b"), "boogie": (_g_clap, "#ffd84d", "#ffb347"), "ratio": (_g_ratio, "#fff2c2", "#d8c88a"),
+              "construction": (_g_cube, "#9fd8ff", "#6fa8e0")}
+
+
+def jjk_icons() -> None:
+    for group, prefix in ((ABILITY_ICONS, "a_"), (CLAN_ICONS, "clan_"), (TECH_ICONS, "tech_")):
+        for name, (fn, col, ring_c) in group.items():
+            img, d = _icon_base(hexc(ring_c))
+            fn(d, hexc(col))
+            _save_icon(img, prefix + name)
+
+
+# Item textures (32 px, drawn at 128 and reduced) ---------------------------------------------
+ITEMS_DIR = os.path.join(RP, "textures", "items")
+
+
+def _item(name: str, draw) -> None:
+    img = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
+    draw(ImageDraw.Draw(img))
+    img.convert("RGBa").resize((32, 32), Image.LANCZOS).convert("RGBA").save(os.path.join(ITEMS_DIR, f"{name}.png"))
+
+
+def _outline_line(d, pts, col, w):
+    d.line(pts, fill=hexc("#120c1c"), width=w + 8)
+    d.line(pts, fill=col, width=w)
+
+
+def jjk_items() -> None:
+    os.makedirs(ITEMS_DIR, exist_ok=True)
+
+    def grimoire(d):
+        d.rounded_rectangle([18, 12, 108, 116], radius=8, fill=hexc("#1a1424"), outline=hexc("#05030a"), width=4)
+        d.rectangle([24, 14, 34, 114], fill=hexc("#7a1020"))
+        d.rectangle([100, 18, 106, 110], fill=hexc("#efe6d2"))
+        d.ellipse([46, 36, 92, 82], outline=hexc("#e2453c"), width=6)
+        d.line([(69, 40), (69, 78)], fill=hexc("#e2453c"), width=5)
+        d.line([(50, 59), (88, 59)], fill=hexc("#e2453c"), width=5)
+        d.rectangle([56, 88, 82, 108], fill=hexc("#efe6d2"))
+        for y in (92, 98, 104):
+            d.line([(59, y), (79, y)], fill=hexc("#7a1020"), width=2)
+
+    def playful_cloud(d):
+        for i, (a, b) in enumerate((((14, 108), (44, 78)), ((50, 72), (80, 42)), ((86, 36), (116, 8)))):
+            _outline_line(d, [a, b], hexc("#c4122f"), 14)
+            d.line([(a[0] + 4, a[1] - 4), (b[0] + 2, b[1] + 2)], fill=hexc("#ff5a6a"), width=3)
+        for (x, y) in ((47, 75), (83, 39)):
+            d.ellipse([x - 6, y - 6, x + 6, y + 6], fill=hexc("#c9ccd6"), outline=hexc("#120c1c"), width=2)
+
+    def inverted_spear(d):
+        _outline_line(d, [(18, 110), (66, 62)], hexc("#3a2a20"), 10)
+        d.polygon([(62, 52), (76, 66), (110, 18), (118, 10), (108, 22)], fill=hexc("#dfe3f0"), outline=hexc("#120c1c"))
+        d.polygon([(62, 52), (50, 40), (40, 30), (54, 44)], fill=hexc("#dfe3f0"), outline=hexc("#120c1c"))
+        d.ellipse([12, 104, 26, 118], outline=hexc("#c9ccd6"), width=3)
+
+    def katana(d):
+        _outline_line(d, [(16, 112), (40, 88)], hexc("#1a1424"), 12)
+        d.rounded_rectangle([34, 80, 50, 96], radius=4, fill=hexc("#e2c26a"), outline=hexc("#120c1c"), width=2)
+        d.line([(46, 82), (100, 30), (116, 10)], fill=hexc("#120c1c"), width=14)
+        d.line([(46, 82), (100, 30), (116, 10)], fill=hexc("#e8ecf2"), width=8)
+        d.line([(50, 76), (102, 26)], fill=hexc("#ffffff"), width=2)
+
+    def dragon_bone(d):
+        d.polygon([(30, 100), (44, 112), (114, 30), (104, 14), (92, 26)], fill=hexc("#ebe3cf"), outline=hexc("#120c1c"))
+        d.line([(44, 106), (108, 30)], fill=hexc("#6fa8e0"), width=4)
+        _outline_line(d, [(14, 118), (34, 98)], hexc("#3a2a20"), 10)
+
+    def slaughter_demon(d):
+        _outline_line(d, [(30, 104), (54, 80)], hexc("#7a1020"), 12)
+        d.polygon([(52, 78), (62, 88), (104, 40), (96, 32)], fill=hexc("#dfe3f0"), outline=hexc("#120c1c"))
+
+    def jacket(col, trim):
+        def f(d):
+            d.polygon([(30, 30), (54, 20), (74, 20), (98, 30), (110, 70), (94, 74), (92, 112), (36, 112), (34, 74), (18, 70)], fill=col, outline=hexc("#05030a"))
+            d.rectangle([58, 20, 70, 34], fill=shade(col, 1.25))
+            for y in (46, 64, 82, 100):
+                d.ellipse([60, y - 5, 68, y + 3], fill=trim)
+        return f
+
+    def pants(d):
+        col = hexc("#1c2233")
+        d.polygon([(34, 14), (94, 14), (100, 116), (72, 116), (64, 52), (56, 116), (28, 116)], fill=col, outline=hexc("#05030a"))
+        d.rectangle([34, 14, 94, 24], fill=shade(col, 1.3))
+
+    def blindfold(d):
+        d.rounded_rectangle([10, 48, 118, 76], radius=12, fill=hexc("#111018"), outline=hexc("#2a2836"), width=3)
+        d.line([(20, 58), (108, 58)], fill=hexc("#2a2836"), width=3)
+
+    def syrup(d):
+        d.rounded_rectangle([40, 40, 88, 116], radius=12, fill=hexc("#c77dff"), outline=hexc("#120c1c"), width=4)
+        d.rectangle([50, 22, 78, 42], fill=hexc("#efe6d2"), outline=hexc("#120c1c"), width=3)
+        d.rectangle([46, 66, 82, 92], fill=hexc("#ffffff"))
+        d.line([(52, 79), (76, 79)], fill=hexc("#ff4a7a"), width=4)
+
+    def finger(d):
+        d.rectangle([20, 16, 108, 112], fill=hexc("#efe6d2"))
+        for y in range(26, 106, 14):
+            d.line([(30, y), (98, y)], fill=hexc("#c4122f"), width=3)
+        d.rounded_rectangle([46, 22, 82, 106], radius=16, fill=hexc("#5a2a2a"), outline=hexc("#120c1c"), width=4)
+        d.rounded_rectangle([52, 22, 76, 40], radius=8, fill=hexc("#120c1c"))
+        for y in (58, 78):
+            d.line([(48, y), (80, y)], fill=hexc("#3a1818"), width=3)
+
+    def fragment(d):
+        d.polygon([(64, 10), (96, 48), (80, 118), (44, 104), (34, 46)], fill=hexc("#6b2fa0"), outline=hexc("#120c1c"))
+        d.polygon([(64, 10), (74, 50), (58, 96), (44, 46)], fill=hexc("#b48cff"))
+
+    for name, fn in (("shadow_summoner", grimoire), ("sb_playful_cloud", playful_cloud), ("sb_inverted_spear", inverted_spear),
+                     ("sb_split_soul_katana", katana), ("sb_dragon_bone", dragon_bone), ("sb_slaughter_demon", slaughter_demon),
+                     ("sb_uniform_tokyo_chest", jacket(hexc("#1c2233"), hexc("#e2c26a"))), ("sb_uniform_tokyo_legs", pants),
+                     ("sb_uniform_kyoto_chest", jacket(hexc("#4a5068"), hexc("#d8d8e0"))), ("sb_gojo_blindfold", blindfold),
+                     ("sb_throat_syrup", syrup), ("sb_sukuna_finger", finger), ("sb_cursed_fragment", fragment)):
+        _item(name, fn)
+
+
+# Armor layers (64x32 armor UV layout, painted at 2x = 128x64) -------------------------------
+ARMOR_DIR = os.path.join(RP, "textures", "models", "armor")
+
+
+def _armor_canvas() -> tuple:
+    img = Image.new("RGBA", (128, 64), (0, 0, 0, 0))
+    return img, ImageDraw.Draw(img)
+
+
+def _R(d, x0, y0, x1, y1, col):
+    d.rectangle([x0 * 2, y0 * 2, x1 * 2 - 1, y1 * 2 - 1], fill=col)
+
+
+def _fabric(img: Image.Image, seed: int) -> None:
+    rnd = random.Random(seed)
+    px = img.load()
+    for y in range(img.size[1]):
+        for x in range(img.size[0]):
+            r, g, b, a = px[x, y]
+            if a:
+                k = rnd.choice((0.94, 1.0, 1.0, 1.05))
+                px[x, y] = (min(255, int(r * k)), min(255, int(g * k)), min(255, int(b * k)), a)
+
+
+def armor_jacket(path: str, col: Color, trim: Color) -> None:
+    img, d = _armor_canvas()
+    # body: top (20,16)-(28,20), bottom (28,16)-(36,20), sides/front/back at y 20..32
+    _R(d, 20, 16, 36, 20, shade(col, 1.1))
+    _R(d, 16, 20, 40, 32, col)
+    _R(d, 20, 20, 28, 22, shade(col, 1.25))                     # high collar
+    for y in (23, 26, 29):                                     # swirl buttons down the front
+        d.ellipse([47, y * 2, 50, y * 2 + 3], fill=trim)
+    _R(d, 20, 31, 28, 32, shade(col, 0.8))
+    # arms (right arm region; the left arm mirrors it)
+    _R(d, 44, 16, 52, 20, shade(col, 1.1))
+    _R(d, 40, 20, 56, 32, col)
+    _R(d, 40, 30, 56, 32, shade(col, 0.75))                     # cuffs
+    _fabric(img, 11)
+    img.save(path)
+
+
+def armor_pants(path: str, col: Color) -> None:
+    img, d = _armor_canvas()
+    _R(d, 16, 20, 40, 32, col)                                 # waist (leggings use the body box)
+    _R(d, 16, 20, 40, 22, shade(col, 1.3))                     # belt
+    _R(d, 4, 16, 12, 20, shade(col, 1.1))
+    _R(d, 0, 20, 16, 32, col)                                  # legs
+    _R(d, 0, 30, 16, 32, shade(col, 0.8))
+    _fabric(img, 12)
+    img.save(path)
+
+
+def armor_blindfold(path: str) -> None:
+    img, d = _armor_canvas()
+    band = hexc("#111018")
+    _R(d, 0, 11, 32, 14, band)                                 # around the head at eye height
+    d.line([(16, 24), (31, 24)], fill=hexc("#2a2836"), width=1)
+    img.save(path)
+
+
+def jjk_armor() -> None:
+    os.makedirs(ARMOR_DIR, exist_ok=True)
+    armor_jacket(os.path.join(ARMOR_DIR, "jjk_tokyo_1.png"), hexc("#1c2233"), hexc("#e2c26a"))
+    armor_pants(os.path.join(ARMOR_DIR, "jjk_tokyo_2.png"), hexc("#1c2233"))
+    armor_jacket(os.path.join(ARMOR_DIR, "jjk_kyoto_1.png"), hexc("#4a5068"), hexc("#d8d8e0"))
+    armor_blindfold(os.path.join(ARMOR_DIR, "jjk_blindfold_1.png"))
+
+
+def jjk_art_all() -> None:
+    jjk_icons()
+    jjk_items()
+    jjk_armor()
+
+
+def jjk_assets() -> None:
+    """Items, armor textures and icons of the Jujutsu Kaisen content (filled in jjk_art section)."""
+    jjk_art_all()
+
+
 def main() -> None:
     os.makedirs(os.path.join(RP, "models", "entity"), exist_ok=True)
     os.makedirs(os.path.join(RP, "textures", "entity", "shadowbound"), exist_ok=True)
@@ -2469,67 +1921,30 @@ def main() -> None:
     os.makedirs(os.path.join(RP, "textures", "particle"), exist_ok=True)
     os.makedirs(DOCS, exist_ok=True)
 
-    previews = []
-    hidden_faces = ("lids", "eyes_happy", "brows", "mouth_open", "mouth_flat", "blush")
-    for persona, builder in (("luna", persona_luna), ("raven", persona_raven), ("sora", persona_sora), ("yuki", persona_yuki), ("hana", persona_hana), ("aiko", persona_aiko)):
-        bones = builder()
-        layer_hair(bones, PERSONA_HAIR[persona], seed=len(persona) * 97)
-        geo, tex = build_model(persona, bones, upscale=HUMAN_UPSCALE)
-        with open(os.path.join(RP, "models", "entity", f"shadowbound_{persona}.geo.json"), "w") as f:
-            json.dump(geo, f, indent=1)
-        tex.save(os.path.join(RP, "textures", "entity", "shadowbound", f"{persona}.png"))
-        pv = render_front(geo, tex, hidden=hidden_faces, scale=SCALE * HUMAN_UPSCALE)
-        pv.save(os.path.join(DOCS, f"preview_{persona}.png"))
-        previews.append(pv)
-        head = render_front(geo, tex, px_per_unit=16, hidden=hidden_faces, scale=SCALE * HUMAN_UPSCALE)
-        head = head.crop((int((15 - 6.5) * 16), int((42 - 33) * 16), int((15 + 6.5) * 16), int((42 - 19.5) * 16)))
-        portrait_icon(head, f"p_{persona}", PERSONA_HAIR[persona])
-        # expression sheet: normal / happy / focused face close-ups
-        sheet = Image.new("RGBA", (3 * 180, 180), hexc("#1a1426"))
-        variants = [
-            hidden_faces,
-            ("lids", "brows", "mouth_smile", "mouth_flat", "glow_eyes"),
-            ("lids", "eyes_happy", "mouth_smile", "mouth_open", "blush"),
-        ]
-        for i, hid in enumerate(variants):
-            full = render_front(geo, tex, px_per_unit=20, hidden=hid, scale=SCALE * HUMAN_UPSCALE)
-            # head region crop
-            box = (int((15 - 8) * 20), int((42 - 32) * 20), int((15 + 8) * 20), int((42 - 19) * 20))
-            face = full.crop(box).resize((180, int(180 * (box[3] - box[1]) / (box[2] - box[0]))), Image.LANCZOS)
-            sheet.alpha_composite(face, (i * 180, 0))
-        sheet.save(os.path.join(DOCS, f"faces_{persona}.png"))
-
     beast_previews = []
+    portraits = {}
     for sp, builder in BEAST_BUILDERS:
         geo, tex, bscale = build_beast(sp, builder)
         with open(os.path.join(RP, "models", "entity", f"shadowbound_beast_{sp}.geo.json"), "w") as f:
             json.dump(geo, f, indent=1)
         tex.save(os.path.join(RP, "textures", "entity", "shadowbound", f"beast_{sp}.png"))
         pv = render_side(geo, tex, px_per_unit=4, scale=bscale, canvas=(80, 64))
-        portrait_icon(beast_portrait(geo, tex, bscale, sp), f"sk_{sp}", PALS[sp].rune)
+        portraits[sp] = beast_portrait(geo, tex, bscale, sp)
+        portrait_icon(portraits[sp], f"sk_{sp}", PALS[sp].rune)
         pv.save(os.path.join(DOCS, f"beast_{sp}.png"))
         beast_previews.append(pv)
-    sheet = Image.new("RGBA", (4 * 320, 3 * 256), hexc("#1a1426"))
+    sheet = Image.new("RGBA", (4 * 320, 4 * 256), hexc("#1a1426"))
     for i, pv in enumerate(beast_previews):
         sheet.alpha_composite(pv, ((i % 4) * 320, (i // 4) * 256))
     sheet.save(os.path.join(DOCS, "beasts_sheet.png"))
 
     glyph_icons()
-    item_icon(os.path.join(RP, "textures", "items", "shadow_summoner.png"))
+    jjk_assets()
     particle_sprite(os.path.join(RP, "textures", "particle", "shadowbound_sparkle.png"))
     wisp_sprite(os.path.join(RP, "textures", "particle", "shadowbound_wisp.png"))
-    pack_icon(os.path.join(RP, "pack_icon.png"), previews)
-    pack_icon(os.path.join(BP, "pack_icon.png"), previews)
-
-    # side-by-side preview for the README
-    W = sum(p.size[0] for p in previews) + 40
-    H = max(p.size[1] for p in previews) + 20
-    card = Image.new("RGBA", (W, H), hexc("#1a1426"))
-    x = 20
-    for p in previews:
-        card.alpha_composite(p, (x, 10))
-        x += p.size[0]
-    card.save(os.path.join(DOCS, "preview_duo.png"))
+    key = [portraits[k] for k in ("dog_white", "colossus", "wolf") if k in portraits]
+    pack_icon(os.path.join(RP, "pack_icon.png"), key)
+    pack_icon(os.path.join(BP, "pack_icon.png"), key)
     print("art generated")
 
 

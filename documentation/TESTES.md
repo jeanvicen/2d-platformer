@@ -8,8 +8,9 @@ npm test            # unitários + integração (cérebro real rodando no simula
 npm run build       # valida os pacotes e gera dist/*.mcaddon
 ```
 
-## Resultado automático (registrado em 2026-11-18, v3.0 Legado das Dez Sombras)
-Typecheck: **0 erros**. Validador de pacotes: **OK** (20 geometrias, 147 animações, 2 partículas, 0 avisos). Testes: **55/55** (inclui a interface: todo botão do Selo tem ícone existente e o menu é dividido em seções).
+## Resultado automático (registrado em 2026-11-18, v4.0 Jujutsu Kaisen: Legado)
+Typecheck: **0 erros**. Validador de pacotes: **OK** (14 geometrias, 128 animações, 2 partículas, 13 itens, 0 avisos).
+As companheiras humanas e os testes delas saíram na v4.
 
 ```
 ✔ inventário: empilha, respeita capacidade e devolve o que não coube
@@ -27,32 +28,23 @@ Typecheck: **0 erros**. Validador de pacotes: **OK** (20 geometrias, 147 animaç
 ✔ plantas grandes: casa grande e mansão têm chão, pilares, janelas, porta, telhado e decoração
 ✔ materiais: calcula quantos troncos/pedras faltam incluindo peças fabricadas
 ✔ linguagem: casa grande, mansão e criaturas
-✔ recebe o Selo das Dez Sombras ao entrar
-✔ 1-3) invocar, vínculo ao dono, impedir segunda invocação
-✔ 4) outro jogador é ignorado e não acessa a sombra
-✔ 5) seguir: modo nativo follow ativo
-✔ 7/11) coleta madeira DE VERDADE, volta e entrega
-✔ 9) come pão sozinha quando está com fome (e o dono pode dar itens)
-✔ 12) cancelar e substituir tarefas
-✔ perguntas: status, inventário, por que parou
-✔ 15) persistência: registro salvo no mundo
-✔ 14) morre e ressuscita sem duplicar itens nem corpos
-✔ construção: casinha de madeira com materiais reais
-✔ 13) falha honesta e recuperação: sem árvores, explica o motivo
-✔ 8) obtém comida DE VERDADE: colhe trigo maduro, replanta e faz pão na bancada
-✔ 10) equipa uma ferramenta suportada
-✔ 6) protege contra inimigos perto do dono
-✔ mineração: fabrica picareta na bancada, cava escada segura e entrega pedra
-✔ 15/13) sai do mundo no meio da tarefa, volta, e ela retoma do estado salvo
-✔ esquadrão: invoca várias, divide a coleta por especialidade e obedece por nome
+✔ recebe o Grimório e a roleta de clã sorteia ao entrar
+✔ 1-3) shikigami: vínculo ao dono e não duplica
+✔ 4) outro jogador é ignorado e não acessa o shikigami
 ✔ criaturas: invoca várias, lutam com habilidades e não coletam
 ✔ dez sombras: shikigami bloqueado exige ritual; vencer sozinho libera
 ✔ dez sombras: ritual anulado quando outra pessoa interfere
 ✔ dez sombras: Cão Divino destruído não volta e o outro vira Totalidade (Modo Cânone)
 ✔ dez sombras: Mahoraga gira a roda e se adapta ao mesmo tipo de dano
-✖ dez sombras: técnicas gastam energia e respeitam o domínio
-✔ comida inteligente: sem plantação, caça animais e entrega a carne
-✔ construção sabe buscar o material que falta antes de construir
+✔ dez sombras: técnicas gastam energia e respeitam o domínio
+✔ interface: todos os ícones do menu existem no pacote visual
+✔ interface: o Grimório abre organizado e todo botão tem ícone
+✔ roleta: os pesos dão clãs e técnicas válidos
+✔ Gojo: Azul puxa e fere, Roxo Oco atravessa, Vazio Infinito abre
+✔ Kamo, Inumaki e Boogie Woogie: sangue, garganta e troca de lugar
+✔ Restrição Celestial: usa Vigor e não tem técnicas de energia
+✔ Dedo de Sukuna: virar receptáculo libera o Santuário
+✔ Arsenal: forjar consome material; a katana fere a alma
 ✔ 16) funciona sem internet (nenhuma chamada de rede) e sem erros de script
 ✔ normalização: acentos e números por extenso
 ✔ frases diferentes para madeira viram o mesmo pedido (seção 5)
@@ -65,11 +57,9 @@ Typecheck: **0 erros**. Validador de pacotes: **OK** (20 geometrias, 147 animaç
 ✔ combate e caça exigem ordem explícita para passivos
 ✔ comer e frases de conversa
 ✔ 'depois...' adiciona à fila em vez de substituir
-ℹ tests 53
-ℹ pass 52
-ℹ fail 1
-✖ failing tests:
-✖ dez sombras: técnicas gastam energia e respeitam o domínio
+ℹ tests 44
+ℹ pass 44
+ℹ fail 0
 ```
 
 ### Bugs reais encontrados pelos testes e corrigidos
@@ -139,3 +129,18 @@ Typecheck: **0 erros**. Validador de pacotes: **OK** (20 geometrias, 147 animaç
 26. Técnicas: Reforço (efeitos ligados e energia caindo), Mergulho nas Sombras (teleporte para onde olha), Técnica Reversa (cura), **Expansão de Domínio** (anel de sombra, inimigos lentos).
 27. Bater em zumbis com a mão várias vezes (domínio 1+) → às vezes aparece **BLACK FLASH**.
 28. Fuga dos Coelhos com inimigos perto → aparecem vários coelhos que somem depois de uns 20 s.
+
+### Checklist v4 (no jogo)
+29. Mundo novo → a roleta gira na tela (nomes passando cada vez mais devagar) e para num clã; abre a tela de revelação.
+30. Recebeu Grimório + jaqueta e calça de Tóquio; vestir as duas mostra o uniforme no personagem.
+31. Grimório: as habilidades da técnica ficam no topo com ícone; um toque usa (partículas da cor da técnica).
+32. Agachar + usar o Grimório solta a habilidade rápida.
+33. Gojo: Azul puxa monstros, Vermelho arremessa, Roxo Oco atravessa a linha, Infinito afasta quem chega perto, Vazio Infinito paralisa.
+34. Restrição Celestial: barra dourada de Vigor, corpo forte sempre ligado, sem Reforço/Técnica Reversa.
+35. Inumaki: ordens enchem a garganta; acima de 100% machuca; o xarope alivia.
+36. Kamo: Sangue Perfurante e Supernova custam um pouco de vida.
+37. Boogie Woogie: troca de lugar com o monstro que você olha.
+38. Matar monstros: às vezes cai Fragmento Amaldiçoado; muito raramente um Dedo de Sukuna.
+39. Comer o dedo: ou vira receptáculo (título vermelho, Desmantelar liberado) ou leva o veneno e sobrevive com pouca vida.
+40. Arsenal: forjar a Katana com 8 fragmentos + 4 ferro + 1 graveto; o golpe dela tira mais vida.
+41. Clã e roleta: girar de novo troca o clã (usa 1 giro).

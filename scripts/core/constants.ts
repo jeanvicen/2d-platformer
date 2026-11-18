@@ -5,7 +5,7 @@
 export const NS = "shadowbound";
 export const ENTITY_ID = "shadowbound:companion";
 export const BEAST_ID = "shadowbound:beast";
-export const BODY_TYPES = [ENTITY_ID, BEAST_ID];
+export const BODY_TYPES = [BEAST_ID]; // v4: only shikigami bodies (the humanoid companions were removed)
 export const SUMMONER_ITEM = "shadowbound:shadow_summoner";
 export const PROP_ANIM = "shadowbound:anim";
 export const PROP_PERSONA = "shadowbound:persona";

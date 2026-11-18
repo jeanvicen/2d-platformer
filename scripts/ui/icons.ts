@@ -13,6 +13,10 @@ export const ICON_NAMES: readonly string[] = NAMES;
 export const shikiIcon = (sp: string): string => `${BASE}sk_${sp}`;
 export const personaIcon = (p: string): string => `${BASE}p_${p}`;
 export const techIcon = (id: string): string => `${BASE}t_${id}`;
+export const abilityIcon = (icon: string): string => `${BASE}a_${icon}`;
+export const clanIcon = (id: string): string => `${BASE}clan_${id}`;
+export const techCrest = (id: string): string => `${BASE}tech_${id}`;
+export const itemIcon = (atlas: string): string => `textures/items/${atlas}`;
 
 /** Best icon for a menu label (used by the older squad menus). */
 export function iconFor(label: string): string {

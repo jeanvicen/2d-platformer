@@ -2,6 +2,44 @@
   "resource_pack_name": "shadowbound",
   "texture_name": "atlas.items",
   "texture_data": {
-    "shadowbound_summoner": { "textures": "textures/items/shadow_summoner" }
+    "shadowbound_summoner": {
+      "textures": "textures/items/shadow_summoner"
+    },
+    "sb_playful_cloud": {
+      "textures": "textures/items/sb_playful_cloud"
+    },
+    "sb_inverted_spear": {
+      "textures": "textures/items/sb_inverted_spear"
+    },
+    "sb_split_soul_katana": {
+      "textures": "textures/items/sb_split_soul_katana"
+    },
+    "sb_dragon_bone": {
+      "textures": "textures/items/sb_dragon_bone"
+    },
+    "sb_slaughter_demon": {
+      "textures": "textures/items/sb_slaughter_demon"
+    },
+    "sb_uniform_tokyo_chest": {
+      "textures": "textures/items/sb_uniform_tokyo_chest"
+    },
+    "sb_uniform_tokyo_legs": {
+      "textures": "textures/items/sb_uniform_tokyo_legs"
+    },
+    "sb_uniform_kyoto_chest": {
+      "textures": "textures/items/sb_uniform_kyoto_chest"
+    },
+    "sb_gojo_blindfold": {
+      "textures": "textures/items/sb_gojo_blindfold"
+    },
+    "sb_sukuna_finger": {
+      "textures": "textures/items/sb_sukuna_finger"
+    },
+    "sb_throat_syrup": {
+      "textures": "textures/items/sb_throat_syrup"
+    },
+    "sb_cursed_fragment": {
+      "textures": "textures/items/sb_cursed_fragment"
+    }
   }
 }

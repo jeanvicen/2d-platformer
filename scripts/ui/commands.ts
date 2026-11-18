@@ -4,13 +4,17 @@
  * The stable chat event is not available, so this command (cheats NOT required) plus the
  * menus are the input methods. Each word arrives as a separate String parameter.
  */
-import { openManual, openSeal, openShikigamiList, openTechniques } from "../jujutsu/seal_menu";
+import { openArsenal, openClan, openFingers, openManual, openReveal, openSeal, openShikigamiList, openTechniques } from "../jujutsu/seal_menu";
+import { spin } from "../jujutsu/roulette";
+import { meditate } from "../jujutsu/sukuna";
+import { cast } from "../jujutsu/abilities";
+import { ABILITIES, CLANS, TECHS } from "../jujutsu/clans";
 import { startRitual } from "../jujutsu/ritual";
-import { sorcerer, summonDivineDogs, summonShikigami, useTechnique } from "../jujutsu/sorcerer";
-import { SHIKIGAMI, masteryLevel, maxEnergy } from "../jujutsu/canon";
+import { energyName, maxEnergyOf, sorcerer, summonDivineDogs, summonShikigami } from "../jujutsu/sorcerer";
+import { SHIKIGAMI, masteryLevel } from "../jujutsu/canon";
 import type { BeastSpecies } from "../core/species";
 import { CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus, Player, system, type StartupEvent } from "@minecraft/server";
-import { addressees, beastFromText, dismiss, personaFromText, squadIndex, squadOf, summon } from "../ai/agent_manager";
+import { addressees, beastFromText, dismiss, squadIndex, squadOf, summon } from "../ai/agent_manager";
 import { dispatchOrder } from "../ai/squad";
 import { openMain, openOrder, openSummon } from "./menus";
 
@@ -59,13 +63,23 @@ function runText(p: Player, text: string): void {
   }
   if (/^(energia|dominio da tecnica|status jujutsu)$/.test(t)) {
     const r = sorcerer(p.id);
-    p.sendMessage(`§5Energia amaldiçoada: §f${Math.floor(r.energy)}/${maxEnergy(r.xp)} §7· domínio ${masteryLevel(r.xp)} (${r.xp} xp) · domados: ${r.unlocked.map((x) => SHIKIGAMI[x as BeastSpecies]?.name ?? x).join(", ")}${r.destroyed.length ? ` · destruídos: ${r.destroyed.map((x) => SHIKIGAMI[x as BeastSpecies]?.name ?? x).join(", ")}` : ""}`);
+    p.sendMessage(`§5${r.clan ? CLANS[r.clan].name : "Sem sorteio"} · ${r.tech ? TECHS[r.tech].name : "-"}§r\n§d${energyName(r)}: §f${Math.floor(r.energy)}/${maxEnergyOf(r)} §7· domínio ${masteryLevel(r.xp)} (${r.xp} xp) · giros ${r.spins}${r.vessel ? ` · §cdedos ${r.fingersEaten} · Sukuna ${Math.round(r.influence)}%` : ""}${r.tech === "ten_shadows" ? ` §7· domados: ${r.unlocked.map((x) => SHIKIGAMI[x as BeastSpecies]?.name ?? x).join(", ")}` : ""}`);
     return;
   }
-  const tech: Record<string, string> = { dominio: "dominio", "expansao de dominio": "dominio", "dominio simples": "dominio_simples", reforco: "reforco", "tecnica reversa": "rct", rct: "rct", mergulho: "mergulho", "mergulho nas sombras": "mergulho", guardar: "guardar", "guardar na sombra": "guardar" };
-  const tm = /^(?:tecnica |usar )?(.+)$/.exec(t);
-  if (tm && tech[tm[1]]) {
-    useTechnique(p, tech[tm[1]]);
+  if (/^(roleta|girar|girar roleta)$/.test(t)) {
+    spin(p, false, () => openReveal(p));
+    return;
+  }
+  if (t === "cla" || t === "clan") return openClan(p);
+  if (t === "arsenal" || t === "forja") return openArsenal(p);
+  if (t === "dedos" || t === "dedos de sukuna") return openFingers(p);
+  if (t === "meditar") {
+    meditate(p);
+    return;
+  }
+  const ab = abilityFromText(p, t.replace(/^(tecnica|usar) /, ""));
+  if (ab) {
+    cast(p, ab);
     return;
   }
   if (t === "tecnicas") {
@@ -81,9 +95,8 @@ function runText(p: Player, text: string): void {
   if (inv) {
     const rest = inv[2];
     const n = Math.max(1, Math.min(10, parseInt((/\b(\d+)\b/.exec(rest) ?? [])[1] ?? "1", 10)));
-    const persona = personaFromText(rest);
     const beast = beastFromText(rest);
-    if (!persona && !beast) {
+    if (!beast) {
       openSummon(p);
       return;
     }
@@ -97,8 +110,8 @@ function runText(p: Player, text: string): void {
       void n;
       return;
     }
-    for (let i = 0; i < 1; i++) {
-      const r = summon(p, { kind: "companion", species: persona! });
+    for (let i = 0; i < 0; i++) {
+      const r = summon(p, { kind: "beast", species: beast });
       if (r === "full") {
         p.sendMessage(`§7Esquadrão no máximo (${squadIndex(p.id).settings.maxMembers}). Aumente o limite em Configurações do esquadrão.`);
         break;
@@ -127,4 +140,16 @@ function runText(p: Player, text: string): void {
     return;
   }
   dispatchOrder(p, text);
+}
+
+/** "dominio" → the player's own domain; otherwise an ability by id or (normalized) name. */
+function abilityFromText(p: Player, t: string): string | undefined {
+  const r = sorcerer(p.id);
+  const norm = (x: string) => x.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/["()]/g, "").trim();
+  if (t === "dominio" || t === "expansao de dominio") return (r.tech && TECHS[r.tech].domain) || (r.vessel ? "santuario" : "dominio");
+  const alias: Record<string, string> = { "tecnica reversa": "rct", "dominio simples": "dominio_simples", "guardar na sombra": "guardar", "mergulho nas sombras": "mergulho", "black flash": "kokusen" };
+  if (alias[t]) return alias[t];
+  if (ABILITIES[t.replace(/ /g, "_")]) return t.replace(/ /g, "_");
+  for (const a of Object.values(ABILITIES)) if (norm(a.name) === t || norm(a.name).startsWith(t + " ")) return a.id;
+  return undefined;
 }

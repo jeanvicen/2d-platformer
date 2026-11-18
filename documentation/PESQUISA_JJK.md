@@ -1,4 +1,4 @@
-# Pesquisa: Jujutsu Kaisen (Técnica das Dez Sombras)
+# Pesquisa: Jujutsu Kaisen (v4: clãs, técnicas, Sukuna, arsenal)
 
 Mod de fã, pessoal e sem fins comerciais. Jujutsu Kaisen pertence a Gege Akutami / Shueisha (anime: MAPPA).
 Nenhum arquivo do anime, mangá ou de jogos foi usado: modelos, texturas, sons e textos do mod são originais.
@@ -58,7 +58,58 @@ Nenhum arquivo do anime, mangá ou de jogos foi usado: modelos, texturas, sons e
 | Kamo | Manipulação de Sangue | Ainda não |
 | Inumaki | Fala Amaldiçoada | Ainda não |
 
-## O que está implementado (v3.0)
+
+## Clãs (v4)
+| Clã | O que é confirmado | No mod | Rótulo |
+|---|---|---|---|
+| Gojo | Um dos Três Grandes; Ilimitado e Seis Olhos | Roleta 3% (lendário) | cânone; chance = original |
+| Zenin | Um dos Três Grandes; valoriza Dez Sombras e Feitiçaria de Projeção; Maki/Toji têm Restrição Celestial | Roleta 22%: Dez Sombras 40%, Projeção 35%, Restrição 25% | cânone; chances = original |
+| Kamo | Um dos Três Grandes; Manipulação de Sangue | Roleta 18% | cânone; chance = original |
+| Inumaki | Fala Amaldiçoada; não é um dos Três Grandes | Roleta 12% | cânone; chance = original |
+| Sem clã | Boneco de Palha (Nobara), Boogie Woogie (Todo), Proporção (Nanami), Construção (Mai) existem na obra | Agrupados como "sem clã", 45% | técnicas = cânone; agrupamento = original |
+
+## Técnicas inatas e habilidades
+Os conceitos são da obra. Números (dano, custo, raio, duração) e a forma de jogar são do mod.
+- **Ilimitado:** Infinito, Azul (atração), Vermelho (repulsão), Roxo (combinação). Domínio: Vazio Infinito. Os Seis Olhos reduzem o gasto de energia (no mod: metade).
+- **Feitiçaria de Projeção:** regra dos 24 quadros por segundo; quem falha fica congelado num quadro.
+- **Restrição Celestial:** sem energia amaldiçoada, com físico sobre-humano. "Vigor" é original do mod.
+- **Manipulação de Sangue:** Sangue Perfurante, Supernova, Amarração Carmesim, Escamas Vermelhas Fluentes.
+- **Fala Amaldiçoada:** ordens com contragolpe na garganta. O usuário toma remédio para a garganta.
+- **Boneco de Palha:** pregos, Ressonância, Grampo.
+- **Boogie Woogie:** troca de posição com uma palma.
+- **Proporção:** ponto 7:3, Hora Extra (voto de restrição), Colapso.
+- **Construção:** cria matéria com custo alto.
+- **Santuário (Sukuna):** Desmantelar (corte básico) e Clivar (ajusta-se à resistência do alvo). Fuga ("Abrir") tem detalhes que as fontes não fecham, então é marcado como interpretação. Domínio: Santuário Malevolente, sem barreira.
+- **Gerais:** Reforço, Black Flash, Domínio Simples, Técnica Reversa.
+
+## Dedos de Sukuna
+| Fato | Fonte | No mod |
+|---|---|---|
+| A alma de Sukuna foi selada em 20 dedos indestrutíveis | cânone | 20 por mundo, caem raramente (1,2%) de inimigos derrotados por você ou seus shikigamis |
+| Comer um dedo é veneno mortal para quase todos; Yuji é uma exceção | cânone | 25% de chance de virar receptáculo; se falhar, você sobrevive com pouca vida (original) |
+| Mais dedos = mais poder de Sukuna | cânone | Cada dedo: +10 de energia máxima e +4% de influência; libera Clivar (3), Fuga (10) e o domínio (15) |
+| Sukuna assume o corpo do receptáculo | cânone (com Yuji e Megumi) | Possessão de 12 s com influência alta e vida baixa; meditar reduz a influência (original) |
+
+## Ferramentas amaldiçoadas e uniformes
+| Item | Confirmado | Efeito no jogo |
+|---|---|---|
+| Nuvem Brincalhona | bastão de três seções sem técnica própria, amplifica a força | empurrão enorme; +dano com Restrição Celestial |
+| Lança Invertida do Céu | anula técnicas ao tocar | tira os efeitos do alvo e fura a adaptação do Mahoraga (interpretação) |
+| Katana Alma Dividida | corta a alma, ignora a resistência física | dano extra que ignora armadura e corta regeneração (interpretação) |
+| Osso de Dragão | mencionado nas fontes, sem detalhe confirmado | guarda o dano recebido e solta no próximo golpe (interpretação) |
+| Demônio Matador | faca amaldiçoada | dano dobrado contra mortos-vivos (original) |
+| Uniformes de Tóquio/Kyoto, venda preta | visual da obra | roupas vestíveis com proteção leve (original) |
+
+## Fontes adicionais (v4)
+- Sportskeeda, técnicas herdadas: https://sportskeeda.com/anime/every-inherited-innate-cursed-technique-jujutsu-kaisen-season-1
+- Epicdope, os três grandes clãs: https://www.epicdope.com/who-are-the-top-3-clans-in-jjk-and-how-do-they-operate
+- AnimeHunch, guia de técnicas: https://animehunch.com/cursed-technique-guide-jujutsu-kaisen/
+- Comicbook, ferramentas amaldiçoadas: https://comicbook.com/anime/list/10-most-powerful-cursed-tools-in-jujutsu-kaisen-ranked
+- Sportskeeda, ferramentas amaldiçoadas: https://www.sportskeeda.com/anime/9-powerful-cursed-tools-jujutsu-kaisen-ranked
+- AnimeHunch, Santuário Malevolente: https://animehunch.com/what-does-sukunas-malevolent-shrine-do-in-jujutsu-kaisen/
+- Sportskeeda, técnica de Sukuna: https://sportskeeda.com/anime/jujutsu-kaisen-ryomen-sukuna-s-cursed-technique-explained
+
+## O que está implementado (v3.0, Dez Sombras)
 **Pronto:** Selo das Dez Sombras com menu por toque (Shikigamis, Técnicas e Habilidades, Ordens, Esquadrão, Sombra,
 Clã, Caderno, Configurações, Recolher tudo); energia amaldiçoada com barra, recarga e domínio da técnica (níveis 0–10);
 14 shikigamis com modelos, texturas e 9 animações próprias cada; rituais de exorcismo; destruição e herança
@@ -85,3 +136,26 @@ travar o celular, ler o chat (por isso o comando `/sombra`).
 - Sportskeeda, capítulos 233 e 234 (Agito, Shinjuku): https://www.sportskeeda.com/anime/jujutsu-kaisen-chapter-233-sukuna-s-new-shikigami-leaves-gojo-uncertain-fate e https://www.sportskeeda.com/anime/jujutsu-kaisen-chapter-234-spoilers-raw-scans-gojo-suffers-major-injury-trying-destroy-sukuna-s-trump-card
 - Sportskeeda, "The idea of taming Mahoraga...": https://sportskeeda.com/anime/the-idea-taming-mahoraga-jujutsu-kaisen-s-biggest-plot-hole
 - AniHK, "Megumi Fushiguro shikigami: Ten Shadows Technique explained": https://anihk.com/en/blogs/characters/megumi-fushiguro-shikigami-ten-shadows-technique-explained
+
+## O que está implementado (v4.0)
+**Pronto:**
+- roleta de clã animada ao entrar, com giros extras;
+- 5 clãs e 10 técnicas inatas com 40 habilidades no total (inclui gerais e Santuário), com efeitos de partículas;
+- 3 Expansões de Domínio;
+- Restrição Celestial com Vigor;
+- garganta e xarope da Fala Amaldiçoada;
+- 20 Dedos de Sukuna: receptáculo, influência, possessão e meditação;
+- 5 ferramentas amaldiçoadas, 4 peças de roupa vestíveis e forja pelo Grimório;
+- Fragmentos Amaldiçoados;
+- Grimório Jujutsu com seções e ícones;
+- Dez Sombras completas (v3);
+- companheiras humanas removidas.
+
+**Ainda não feito:**
+- personagens da obra como NPCs;
+- maldições próprias com graus (os inimigos são os monstros do Minecraft);
+- missões, mapa, escolas e colônias;
+- fusões de shikigamis;
+- a Feitiçaria de Projeção como domínio;
+- outras técnicas da obra (Copiar de Yuta, Manipulação de Espíritos Amaldiçoados etc.);
+- mudar o visual do personagem além das roupas.

@@ -324,6 +324,11 @@ export function respawnTick(): void {
 }
 
 export function onJoin(player: Player): void {
+  // v4: companions no longer exist; old saved companion records are switched off
+  for (const a of squadOf(player.id, true)) if (!a.isBeast) {
+    a.record.active = false;
+    a.save();
+  }
   const members = squadOf(player.id, true);
   if (!members.length) return;
   system.runTimeout(() => {

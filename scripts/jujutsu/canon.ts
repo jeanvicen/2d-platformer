@@ -59,47 +59,6 @@ export const SHIKIGAMI: Record<BeastSpecies, ShikigamiInfo> = {
     lore: "Criação da Forja de Sombras (Modo Livre). Não é um shikigami das Dez Sombras." },
 };
 
-export type TechCategory = "passiva" | "ativa" | "alternavel" | "suprema";
-export const CATEGORY_PT: Record<TechCategory, string> = { passiva: "Passiva", ativa: "Ativa", alternavel: "Alternável", suprema: "Suprema" };
-
-export interface TechniqueInfo {
-  id: string;
-  name: string;
-  cat: TechCategory;
-  origin: Origin;      // the concept
-  effectOrigin: Origin; // how it plays in Minecraft
-  cost: number;        // instant cost
-  drain: number;       // per second while on (toggles)
-  cooldown: number;    // seconds
-  mastery: number;
-  desc: string;
-}
-
-export const TECHNIQUES: TechniqueInfo[] = [
-  { id: "reforco", name: "Reforço com Energia Amaldiçoada", cat: "alternavel", origin: "canon", effectOrigin: "original", cost: 0, drain: 1, cooldown: 0, mastery: 0,
-    desc: "Envolve o corpo com energia: mais força e velocidade enquanto ligado. Gasta 1 de energia por segundo." },
-  { id: "kokusen", name: "Black Flash (Kokusen)", cat: "passiva", origin: "canon", effectOrigin: "incerto", cost: 0, drain: 0, cooldown: 0, mastery: 1,
-    desc: "Ao acertar um golpe corpo a corpo, pequena chance de uma distorção que multiplica o dano. No cânone o dano sobe à potência de 2,5; no jogo é dano extra grande. Também devolve energia (o 'estado de zona')." },
-  { id: "guardar", name: "Armazenar na Sombra", cat: "ativa", origin: "canon", effectOrigin: "original", cost: 5, drain: 0, cooldown: 0, mastery: 0,
-    desc: "Guarda o item da sua mão dentro da sua sombra (até 9 pilhas) e tira de volta quando quiser." },
-  { id: "mergulho", name: "Mergulho nas Sombras", cat: "ativa", origin: "canon", effectOrigin: "incerto", cost: 15, drain: 0, cooldown: 4, mastery: 1,
-    desc: "Afunda na própria sombra e reaparece no ponto para onde você olha (até 16 blocos)." },
-  { id: "dominio_simples", name: "Domínio Simples", cat: "alternavel", origin: "canon", effectOrigin: "original", cost: 0, drain: 2, cooldown: 0, mastery: 3,
-    desc: "Uma pequena barreira que neutraliza ataques garantidos. No jogo: resistência e remoção de efeitos ruins enquanto ligado. 2 de energia por segundo." },
-  { id: "rct", name: "Técnica Reversa", cat: "ativa", origin: "canon", effectOrigin: "original", cost: 50, drain: 0, cooldown: 20, mastery: 4,
-    desc: "Multiplica energia negativa por negativa e gera energia positiva para curar o próprio corpo." },
-  { id: "dominio", name: "Expansão de Domínio: Jardim Sombrio da Quimera", cat: "suprema", origin: "canon", effectOrigin: "original", cost: 120, drain: 0, cooldown: 120, mastery: 6,
-    desc: "Domínio incompleto de Megumi: o chão vira sombra por 30 s. Inimigos ficam lentos e cegos; seus shikigamis ficam mais fortes e invocar custa metade." },
-];
-
-export interface ClanInfo { name: string; techniques: string; implemented: string; }
-export const CLANS: ClanInfo[] = [
-  { name: "Zenin", techniques: "Técnica das Dez Sombras; Feitiçaria de Projeção (nem todo membro tem a mesma técnica)", implemented: "Dez Sombras: jogável. Projeção: ainda não." },
-  { name: "Gojo", techniques: "Técnica do Ilimitado e os Seis Olhos (raros, nascem juntos poucas vezes)", implemented: "Ainda não implementado." },
-  { name: "Kamo", techniques: "Manipulação de Sangue", implemented: "Ainda não implementado." },
-  { name: "Inumaki", techniques: "Fala Amaldiçoada", implemented: "Ainda não implementado." },
-];
-
 /** Mastery level from experience (0..10). */
 export function masteryLevel(xp: number): number {
   return Math.max(0, Math.min(10, Math.floor(xp / 150)));
@@ -121,13 +80,13 @@ export function blackFlashChance(xp: number): number {
 
 export interface ManualPage { title: string; text: string; }
 export const MANUAL: ManualPage[] = [
-  { title: "Como começar", text: "Você herdou a Técnica das Dez Sombras (clã Zenin). Use o §dSelo das Dez Sombras§r para abrir tudo. No começo só os §fCães Divinos§r obedecem a você. Os outros shikigamis precisam ser vencidos num §fritual de exorcismo§r." },
-  { title: "Energia amaldiçoada", text: "Toda invocação e técnica gasta energia amaldiçoada. Ela se recupera sozinha (mais rápido conforme o seu domínio). Segure o Selo para ver a barra. O domínio sobe ao vencer rituais, usar técnicas e quando suas invocações derrotam inimigos." },
-  { title: "Rituais de exorcismo", text: "Escolha um shikigami bloqueado e toque em 'Iniciar ritual'. Ele aparece SELVAGEM e ataca você. Vença-o usando você e seus próprios shikigamis. Se outra pessoa ou suas companheiras atacarem, o ritual é anulado. Se você morrer, se afastar ou passar 5 minutos, o ritual falha." },
-  { title: "Destruição e herança", text: "§fModo Cânone§r (padrão): um shikigami destruído não volta mais. O poder dele é herdado: se um Cão Divino for destruído, o outro vira §fCão Divino: Totalidade§r. Outros shikigamis destruídos fortalecem os que restam. No §fModo Livre§r eles voltam depois de um tempo." },
-  { title: "Mahoraga", text: "General Divino Mahoraga só vem por ritual e exige domínio 5 e 150 de energia. A roda gira a cada golpe de um mesmo tipo; depois de 4 giros ele se ADAPTA e ignora aquele tipo de dano. Mude de ataque! Megumi nunca o dominou no cânone: domá-lo aqui é uma rota original do mod." },
-  { title: "Técnicas", text: "Na aba Técnicas e Habilidades: Passivas funcionam sozinhas, Ativas têm botão, Alternáveis ficam ligadas gastando energia, e a Suprema (Expansão de Domínio) exige domínio 6." },
-  { title: "Ordens", text: "Cada shikigami aceita: seguir, ficar de guarda, proteger você, procurar inimigos e voltar à sombra. Você também pode digitar: §f/sombra invocar nue§r, §f/sombra ritual sapo§r, §f/sombra dominio§r, §f/sombra energia§r." },
-  { title: "Companheiras", text: "Luna, Raven, Sora, Yuki, Hana e Aiko são feiticeiras ORIGINAIS do mod (não são personagens da obra). Elas coletam, constroem, cozinham e lutam ao seu lado. Use 'Esquadrão' no Selo." },
-  { title: "Cânone ou criação do mod?", text: "§a[cânone]§r confirmado na obra. §e[interpretação]§r a obra não deixa claro e o mod escolheu um jeito. §d[original do mod]§r criado aqui. Os detalhes e as fontes estão em documentation/PESQUISA_JJK.md. Mod de fã, sem ligação oficial com Jujutsu Kaisen (Gege Akutami/Shueisha)." },
+  { title: "Como começar", text: "Ao entrar pela primeira vez, a §5roleta de clã§r gira sozinha e sorteia seu clã e sua técnica inata. Use o §5Grimório Jujutsu§r (toque e segure) para abrir tudo. Agachar + usar o Grimório solta a sua §fhabilidade rápida§r." },
+  { title: "Clãs e roleta", text: "Gojo (lendário, 3%), Zenin (raro, 22%: Dez Sombras, Projeção ou Restrição Celestial), Kamo (18%), Inumaki (12%) e sem clã (45%: Boneco de Palha, Boogie Woogie, Proporção ou Construção). Você ganha 1 giro extra a cada nível de domínio e pode girar de novo em 'Clã e roleta'." },
+  { title: "Energia e Vigor", text: "Técnicas gastam §denergia amaldiçoada§r, que recarrega sozinha. Os Seis Olhos (Gojo) cortam o custo pela metade. Quem tem §6Restrição Celestial§r não tem energia: usa §6Vigor§r, tem um corpo sobre-humano e bate muito mais forte com ferramentas amaldiçoadas." },
+  { title: "Habilidades", text: "Ativas: toque para usar. Alternáveis: ficam ligadas gastando energia por segundo. Passivas: funcionam sozinhas (Black Flash). Expansão de Domínio: Vazio Infinito (Gojo), Jardim Sombrio da Quimera (Dez Sombras) e Santuário Malevolente (receptáculo de Sukuna). As outras técnicas não têm domínio conhecido na obra." },
+  { title: "Dez Sombras e rituais", text: "Quem herdou as Dez Sombras começa com os Cães Divinos. Os outros shikigamis vêm por ritual de exorcismo: vença-os sozinho. No Modo Cânone, shikigami destruído não volta e o poder é herdado (Totalidade). Mahoraga adapta-se a cada tipo de dano." },
+  { title: "Dedos de Sukuna", text: "São 20 por mundo e caem raramente de inimigos. Comer um dedo é perigoso: no mod há 25% de chance de virar receptáculo (Santuário: Desmantelar, Clivar, Fuga, Santuário Malevolente). A influência de Sukuna cresce a cada dedo; com influência alta ele pode assumir seu corpo por alguns segundos. Medite para empurrá-lo de volta." },
+  { title: "Arsenal", text: "Forje pelo Grimório (sem bancada): Nuvem Brincalhona, Lança Invertida do Céu, Katana Alma Dividida, Osso de Dragão, Demônio Matador, uniformes de Tóquio e Kyoto, a venda preta e o xarope para garganta. Fragmentos Amaldiçoados caem de inimigos derrotados." },
+  { title: "Fala Amaldiçoada", text: "Cada ordem enche a barra da garganta. Passar de 100% machuca você (o contragolpe da técnica). Ela se recupera sozinha; o Xarope para Garganta alivia na hora." },
+  { title: "Cânone ou criação do mod?", text: "§a[cânone]§r confirmado na obra. §e[interpretação]§r a obra não deixa claro e o mod escolheu um jeito. §d[original do mod]§r criado aqui (por exemplo: números de dano, chance da roleta, chance de virar receptáculo, possessão). Fontes em documentation/PESQUISA_JJK.md. Mod de fã, sem ligação oficial com Jujutsu Kaisen (Gege Akutami/Shueisha)." },
 ];

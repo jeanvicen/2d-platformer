@@ -3,15 +3,14 @@
  * the companion, or with "/sombra menu". Every action goes through handleOrder(), so the
  * same authorization and planning rules apply as for typed orders.
  */
-import { openShikigamiList } from "../jujutsu/seal_menu";
-import { iconFor, personaIcon, shikiIcon } from "./icons";
+import { openSeal, openShikigamiList } from "../jujutsu/seal_menu";
+import { iconFor } from "./icons";
 import { Player, system } from "@minecraft/server";
 import { ActionFormData, FormCancelationReason, ModalFormData } from "@minecraft/server-ui";
 import type { Agent } from "../ai/agent";
-import { dismiss, executorOf, squadIndex, squadOf, summon, type SummonResult } from "../ai/agent_manager";
-import { dispatchOrder, squadStatus } from "../ai/squad";
-import { saveSquadIndex } from "../memory/memory_manager";
-import { PERSONA_ROLE } from "../core/species";
+import { executorOf, squadOf } from "../ai/agent_manager";
+
+
 import { applyIntents, handleOrder, statusText } from "../ai/brain";
 import { isOwner } from "../authorization/owner_auth";
 import { say } from "../communication/comms";
@@ -20,7 +19,7 @@ import { prettyItem } from "../inventory/item_catalog";
 import { equipBestArmor } from "../inventory/equipment";
 import { deliverTo } from "../executor/routines";
 import { bridgeAvailable } from "../ai/llm_bridge";
-import { COLORS, DEFAULT_NAMES, PERSONAS, TUNING } from "../core/constants";
+import { TUNING } from "../core/constants";
 
 type Shown = { canceled: boolean; cancelationReason?: FormCancelationReason };
 
@@ -54,98 +53,7 @@ export function order(a: Agent, p: Player, text: string): void {
 
 /** Squad menu: whole-team orders, members, summoning. */
 export function openMain(player: Player): void {
-  const squad = squadOf(player.id, true);
-  if (!squad.length) {
-    openSummon(player);
-    return;
-  }
-  if (squad.length === 1) {
-    openMember(player, squad[0]);
-    return;
-  }
-  const team = (text: string) => dispatchOrder(player, text, { members: squadOf(player.id, true), fromMenu: true, askForm });
-  const items: [string, () => void][] = [
-    ["§lOrdem para todas (texto)", () => openTeamOrder(player)],
-    ["Escolher uma sombra...", () => openPickMember(player)],
-    ["Todas: me seguir", () => team("me sigam")],
-    ["Todas: me proteger", () => team("me protejam")],
-    ["Todas: guarda aqui", () => team("fiquem de guarda aqui")],
-    ["Todas: ficar paradas", () => team("fiquem aqui")],
-    ["Dividir: madeira", () => openAmountTeam(player, "Quantos troncos no total?", 32, 128, (n) => `pegue ${n} troncos`)],
-    ["Dividir: comida", () => team("consigam 12 de comida")],
-    ["Construir juntas...", () => openBuildTeam(player)],
-    ["Me entreguem tudo", () => team("me deem tudo")],
-    ["Cancelar tudo", () => team("cancela")],
-    ["Invocar companheira", () => openSummon(player)],
-    ["Invocar criatura", () => openSummonBeast(player)],
-    ["Configurações do esquadrão", () => openSquadSettings(player)],
-    ["§cDesinvocar todas", () => squadOf(player.id, true).forEach((m, i) => dismiss(m, i > 0))],
-  ];
-  const f = new ActionFormData().title(`Esquadrão (${squad.length})`).body(squadStatus(player.id));
-  for (const [label] of items) f.button(label, iconFor(label));
-  show(player, () => f.show(player), (r) => {
-    if (r.selection !== undefined) items[r.selection]?.[1]();
-  });
-}
-
-function openTeamOrder(player: Player): void {
-  const f = new ModalFormData()
-    .title("Ordem para o esquadrão")
-    .textField("O que vocês devem fazer? (comece com um nome para falar com uma só)", "ex.: pegue 64 troncos e construa uma casa grande")
-    .submitButton("Enviar");
-  show(player, () => f.show(player), (r) => {
-    const text = r.formValues?.[0];
-    if (typeof text === "string" && text.trim()) dispatchOrder(player, text, { fromMenu: true, askForm });
-  });
-}
-
-function openAmountTeam(player: Player, label: string, def: number, max: number, mk: (n: number) => string): void {
-  const f = new ModalFormData().title("Esquadrão").slider(label, 4, max, { defaultValue: def }).submitButton("Ok");
-  show(player, () => f.show(player), (r) => {
-    const n = Number(r.formValues?.[0] ?? def);
-    dispatchOrder(player, mk(Math.max(1, Math.floor(n))), { members: squadOf(player.id, true), fromMenu: true, askForm });
-  });
-}
-
-function openBuildTeam(player: Player): void {
-  const opts: [string, string][] = [
-    ["Casa grande (com chão, janelas e decoração)", "construam uma casa grande"],
-    ["Mansão de dois andares", "construam uma mansao"],
-    ["Casinha simples", "construam uma casinha"],
-    ["Muro de pedra", "construam um muro de pedra"],
-    ["Torre de vigia", "construam uma torre"],
-  ];
-  const f = new ActionFormData().title("Construir juntas").body("A melhor construtora lidera; as outras buscam o material que faltar.");
-  for (const [l] of opts) f.button(l, iconFor(l));
-  show(player, () => f.show(player), (r) => {
-    const o = r.selection !== undefined ? opts[r.selection] : undefined;
-    if (o) dispatchOrder(player, o[1], { members: squadOf(player.id, true), fromMenu: true, askForm });
-  });
-}
-
-function openPickMember(player: Player): void {
-  const squad = squadOf(player.id, true);
-  const f = new ActionFormData().title("Escolher sombra");
-  for (const m of squad) f.button(`§l${m.color().tag}${m.name}§r${m.record.dead ? " §8(ressurgindo)" : ""}`, m.isBeast ? shikiIcon(m.persona) : personaIcon(m.persona));
-  show(player, () => f.show(player), (r) => {
-    const m = r.selection !== undefined ? squad[r.selection] : undefined;
-    if (m) openMember(player, m);
-  });
-}
-
-function openSquadSettings(player: Player): void {
-  const idx = squadIndex(player.id);
-  const f = new ModalFormData()
-    .title("Configurações do esquadrão")
-    .slider(`Máximo de sombras ao mesmo tempo (celular: até 12 é o mais leve)`, 1, TUNING.hardMaxMembers, { defaultValue: idx.settings.maxMembers })
-    .toggle("Conversas entre elas", { defaultValue: idx.settings.chatter })
-    .submitButton("Salvar");
-  show(player, () => f.show(player), (r) => {
-    idx.settings.maxMembers = Math.max(1, Math.min(TUNING.hardMaxMembers, Number(r.formValues?.[0] ?? idx.settings.maxMembers)));
-    idx.settings.chatter = !!r.formValues?.[1];
-    saveSquadIndex(player.id, idx);
-    player.sendMessage("§d[Shadowbound]§r Configurações do esquadrão salvas.");
-  });
+  openSeal(player); // v4: the Grimório is the only hub (companions were removed)
 }
 
 /** Menu of ONE member (also opened by tapping it). */
@@ -376,26 +284,8 @@ function openSettings(player: Player, a: Agent): void {
   });
 }
 
-function summonReport(player: Player, res: SummonResult): void {
-  if (res === "failed") player.sendMessage("§cNão consegui invocar aqui. Tente num lugar aberto.");
-  if (res === "full") player.sendMessage(`§7Seu esquadrão está no máximo (${squadIndex(player.id).settings.maxMembers}). Desinvoque alguém ou aumente o limite nas configurações do esquadrão.`);
-}
-
 export function openSummon(player: Player): void {
-  const active = new Set(squadOf(player.id, true).filter((m) => !m.isBeast).map((m) => m.persona));
-  const f = new ActionFormData()
-    .title("Invocar companheira")
-    .body("Cada uma tem seu jeito e sua especialidade. Elas só obedecem a você e dividem o trabalho entre si.");
-  for (const p of PERSONAS) f.button(`§l${COLORS[p].tag}${DEFAULT_NAMES[p]}§r${active.has(p) ? " §a(ativa)" : ""}\n§7${PERSONA_ROLE[p]}`, personaIcon(p));
-  f.button("§lShikigamis§r\n§7Dez Sombras", shikiIcon("wolf"));
-  show(player, () => f.show(player), (r) => {
-    if (r.selection === PERSONAS.length) {
-      openShikigamiList(player);
-      return;
-    }
-    const persona = PERSONAS[r.selection ?? 0] ?? "luna";
-    summonReport(player, summon(player, { kind: "companion", species: persona }));
-  });
+  openShikigamiList(player);
 }
 
 export function openSummonBeast(player: Player): void {
