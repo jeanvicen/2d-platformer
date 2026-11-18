@@ -11,6 +11,11 @@ import { agents, squadOf } from "../scripts/ai/agent_manager";
 const ag = (p: { id: string }) => squadOf(p.id, false)[0];
 import { DP_AGENT_PREFIX } from "../scripts/core/constants";
 import { sorcerer } from "../scripts/jujutsu/sorcerer";
+import { existsSync, writeFileSync } from "node:fs";
+import { ICON, personaIcon, shikiIcon, techIcon } from "../scripts/ui/icons";
+import { BEASTS } from "../scripts/core/species";
+import { PERSONAS } from "../scripts/core/constants";
+import { TECHNIQUES } from "../scripts/jujutsu/canon";
 
 const cmds: Record<string, (origin: unknown, ...a: unknown[]) => unknown> = {};
 mc.system.beforeEvents.startup.fire({
@@ -412,13 +417,34 @@ test("dez sombras: técnicas gastam energia e respeitam o domínio", () => {
   r.xp = 6 * 150;
   run(A, "dominio");
   assert.ok(r.domain && r.domain.until > Date.now(), "Jardim Sombrio da Quimera ativo");
-  assert.ok(r.energy <= 80, "custou 120 de energia");
+  assert.ok(r.energy <= 80 + 10, "custou 120 de energia (tolerando um tique de recarga)");
   run(A, "reforco");
   assert.ok(r.toggles.reforco, "reforço ligado");
   const e0 = r.energy;
   mc.__advance(40);
   assert.ok(r.energy < e0 + 1, "alternável drena energia");
   run(A, "reforco");
+});
+
+test("interface: todos os ícones do menu existem no pacote visual", () => {
+  const all = [...Object.values(ICON), ...BEASTS.map(shikiIcon), ...PERSONAS.map(personaIcon), ...TECHNIQUES.map((t) => techIcon(t.id))];
+  for (const ic of all) assert.ok(existsSync(`resource_pack/${ic}.png`), `ícone ausente: ${ic}`);
+});
+
+test("interface: o Selo abre organizado e todo botão tem ícone", async () => {
+  const start = ui.shown.length;
+  ui.answers.push({ canceled: false, selection: 0 }, { canceled: false, selection: 99 });
+  mc.world.afterEvents.itemUse.fire({ itemStack: { typeId: "shadowbound:shadow_summoner" }, source: A });
+  for (let i = 0; i < 5; i++) await new Promise((r) => setImmediate(r));
+  const forms = ui.shown.slice(start);
+  const seal = forms[0];
+  assert.ok(seal.title.includes("Selo das Dez Sombras"), "abriu o Selo");
+  assert.ok(seal.buttons.length >= 9, "seções principais");
+  assert.ok(seal.items.some((x) => x.t === "header") && seal.items.some((x) => x.t === "divider"), "organizado em seções");
+  const list = forms[1];
+  assert.ok(list && list.title.includes("Shikigamis"), "tocar em Shikigamis abre a lista");
+  for (const f of forms) assert.ok(f.icons.every((i) => !!i && existsSync(`resource_pack/${i}.png`)), `todo botão de "${f.title}" tem ícone válido`);
+  if (process.env.MENU_DUMP) writeFileSync(process.env.MENU_DUMP, JSON.stringify(forms.slice(0, 2)));
 });
 
 test("comida inteligente: sem plantação, caça animais e entrega a carne", () => {

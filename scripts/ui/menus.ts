@@ -4,6 +4,7 @@
  * same authorization and planning rules apply as for typed orders.
  */
 import { openShikigamiList } from "../jujutsu/seal_menu";
+import { iconFor, personaIcon, shikiIcon } from "./icons";
 import { Player, system } from "@minecraft/server";
 import { ActionFormData, FormCancelationReason, ModalFormData } from "@minecraft/server-ui";
 import type { Agent } from "../ai/agent";
@@ -81,7 +82,7 @@ export function openMain(player: Player): void {
     ["§cDesinvocar todas", () => squadOf(player.id, true).forEach((m, i) => dismiss(m, i > 0))],
   ];
   const f = new ActionFormData().title(`Esquadrão (${squad.length})`).body(squadStatus(player.id));
-  for (const [label] of items) f.button(label);
+  for (const [label] of items) f.button(label, iconFor(label));
   show(player, () => f.show(player), (r) => {
     if (r.selection !== undefined) items[r.selection]?.[1]();
   });
@@ -115,7 +116,7 @@ function openBuildTeam(player: Player): void {
     ["Torre de vigia", "construam uma torre"],
   ];
   const f = new ActionFormData().title("Construir juntas").body("A melhor construtora lidera; as outras buscam o material que faltar.");
-  for (const [l] of opts) f.button(l);
+  for (const [l] of opts) f.button(l, iconFor(l));
   show(player, () => f.show(player), (r) => {
     const o = r.selection !== undefined ? opts[r.selection] : undefined;
     if (o) dispatchOrder(player, o[1], { members: squadOf(player.id, true), fromMenu: true, askForm });
@@ -125,7 +126,7 @@ function openBuildTeam(player: Player): void {
 function openPickMember(player: Player): void {
   const squad = squadOf(player.id, true);
   const f = new ActionFormData().title("Escolher sombra");
-  for (const m of squad) f.button(`${m.color().tag}${m.name}§r${m.record.dead ? " (ressurgindo)" : ""}`);
+  for (const m of squad) f.button(`§l${m.color().tag}${m.name}§r${m.record.dead ? " §8(ressurgindo)" : ""}`, m.isBeast ? shikiIcon(m.persona) : personaIcon(m.persona));
   show(player, () => f.show(player), (r) => {
     const m = r.selection !== undefined ? squad[r.selection] : undefined;
     if (m) openMember(player, m);
@@ -189,7 +190,7 @@ export function openMember(player: Player, a: Agent): void {
         ["§cDispensar", () => order(a, player, "pode ir")],
       ];
   const f = new ActionFormData().title(`${a.color().tag}${a.name}`).body(statusText(a));
-  for (const [label] of items) f.button(label);
+  for (const [label] of items) f.button(label, iconFor(label));
   show(player, () => f.show(player), (r) => {
     if (r.selection !== undefined) items[r.selection]?.[1]();
   });
@@ -221,7 +222,7 @@ function openAmount(player: Player, a: Agent, label: string, def: number, max: n
 
 function pick(player: Player, a: Agent, title: string, options: [string, string][]): void {
   const f = new ActionFormData().title(title);
-  for (const [l] of options) f.button(l);
+  for (const [l] of options) f.button(l, iconFor(l));
   show(player, () => f.show(player), (r) => {
     const o = r.selection !== undefined ? options[r.selection] : undefined;
     if (o) order(a, player, o[1]);
@@ -385,8 +386,8 @@ export function openSummon(player: Player): void {
   const f = new ActionFormData()
     .title("Invocar companheira")
     .body("Cada uma tem seu jeito e sua especialidade. Elas só obedecem a você e dividem o trabalho entre si.");
-  for (const p of PERSONAS) f.button(`${COLORS[p].tag}${DEFAULT_NAMES[p]}§r - ${PERSONA_ROLE[p]}${active.has(p) ? " §7(ativa)" : ""}`);
-  f.button("§5Shikigamis (Dez Sombras)...");
+  for (const p of PERSONAS) f.button(`§l${COLORS[p].tag}${DEFAULT_NAMES[p]}§r${active.has(p) ? " §a(ativa)" : ""}\n§7${PERSONA_ROLE[p]}`, personaIcon(p));
+  f.button("§lShikigamis§r\n§7Dez Sombras", shikiIcon("wolf"));
   show(player, () => f.show(player), (r) => {
     if (r.selection === PERSONAS.length) {
       openShikigamiList(player);

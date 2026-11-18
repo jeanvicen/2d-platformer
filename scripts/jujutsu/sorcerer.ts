@@ -112,8 +112,8 @@ export function summonShikigami(p: Player, sp: BeastSpecies): GateResult {
     return "destroyed";
   }
   if (!info.freeMode && !r.unlocked.includes(sp)) {
-    if (info.inherited) p.sendMessage(`§7🔒 ${info.name} só aparece por herança: quando um Cão Divino é destruído.`);
-    else p.sendMessage(`§7🔒 ${info.name} ainda não foi domado. Vença o ritual de exorcismo: §f/sombra ritual ${info.name.toLowerCase()}§7 ou pelo Selo.`);
+    if (info.inherited) p.sendMessage(`§7✖ ${info.name} só aparece por herança: quando um Cão Divino é destruído.`);
+    else p.sendMessage(`§7✖ ${info.name} ainda não foi domado. Vença o ritual de exorcismo: §f/sombra ritual ${info.name.toLowerCase()}§7 ou pelo Selo.`);
     return "locked";
   }
   const field = squadOf(p.id, true).filter((m) => m.isBeast);
@@ -187,7 +187,7 @@ function cdLeft(r: SorcererRecord, id: string): number {
 export function techniqueState(p: Player, id: string): string {
   const r = sorcerer(p.id);
   const t = TECHNIQUES.find((x) => x.id === id)!;
-  if (masteryLevel(r.xp) < t.mastery) return `§8🔒 domínio ${t.mastery}`;
+  if (masteryLevel(r.xp) < t.mastery) return `§8✖ domínio ${t.mastery}`;
   if (t.cat === "passiva") return "§apassiva";
   if (t.cat === "alternavel") return r.toggles[id] ? "§aLIGADA" : "§7desligada";
   if (id === "dominio" && domainActive(p.id)) return "§5ATIVO";
@@ -200,7 +200,7 @@ export function useTechnique(p: Player, id: string): boolean {
   const t = TECHNIQUES.find((x) => x.id === id);
   if (!t) return false;
   if (masteryLevel(r.xp) < t.mastery) {
-    p.sendMessage(`§7🔒 ${t.name} exige domínio ${t.mastery} (você está no ${masteryLevel(r.xp)}).`);
+    p.sendMessage(`§7✖ ${t.name} exige domínio ${t.mastery} (você está no ${masteryLevel(r.xp)}).`);
     return false;
   }
   if (t.cat === "passiva") {

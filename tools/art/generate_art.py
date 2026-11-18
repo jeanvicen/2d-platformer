@@ -2194,6 +2194,274 @@ PERSONA_HAIR = {"luna": hexc("#c6a4ff"), "raven": hexc("#e9e7f3"), "sora": hexc(
                 "yuki": hexc("#25332c"), "hana": hexc("#7a4a2a"), "aiko": hexc("#f08a3c")}
 
 
+# --------------------------------------------------------------------------------------
+# UI icons (Selo das Dez Sombras menus): shikigami portraits, companion faces and drawn glyphs.
+# Saved to resource_pack/textures/ui/shadowbound/<name>.png and referenced by scripts/ui/icons.ts.
+# --------------------------------------------------------------------------------------
+UI_DIR = os.path.join(RP, "textures", "ui", "shadowbound")
+ICON_PX = 64
+_IS = 256  # supersampled canvas
+
+
+def _icon_base(ring: Color) -> tuple:
+    img = Image.new("RGBA", (_IS, _IS), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.ellipse([8, 8, _IS - 8, _IS - 8], fill=hexc("#16101f"))
+    _radial(d, _IS / 2, _IS * 0.42, _IS * 0.42, _IS * 0.42, hexc("#2b2140"), hexc("#16101f"), steps=12)
+    d.ellipse([8, 8, _IS - 8, _IS - 8], outline=ring, width=14)
+    return img, d
+
+
+def _save_icon(img: Image.Image, name: str) -> None:
+    os.makedirs(UI_DIR, exist_ok=True)
+    img.convert("RGBa").resize((ICON_PX, ICON_PX), Image.LANCZOS).convert("RGBA").save(os.path.join(UI_DIR, f"{name}.png"))
+
+
+def portrait_icon(src: Image.Image, name: str, ring: Color) -> None:
+    """Fits a rendered model (transparent background) inside the round icon."""
+    bb = src.getbbox()
+    if not bb:
+        return
+    crop = src.crop(bb)
+    k = min(170 / crop.size[0], 170 / crop.size[1])
+    crop = crop.resize((max(1, int(crop.size[0] * k)), max(1, int(crop.size[1] * k))), Image.NEAREST)
+    img, d = _icon_base(ring)
+    mask = Image.new("L", (_IS, _IS), 0)
+    ImageDraw.Draw(mask).ellipse([22, 22, _IS - 22, _IS - 22], fill=255)
+    layer = Image.new("RGBA", (_IS, _IS), (0, 0, 0, 0))
+    layer.alpha_composite(crop, ((_IS - crop.size[0]) // 2, (_IS - crop.size[1]) // 2 + 6))
+    img.paste(layer, (0, 0), ImageChops.multiply(layer.getchannel("A"), mask))
+    d.ellipse([8, 8, _IS - 8, _IS - 8], outline=ring, width=14)
+    _save_icon(img, name)
+
+
+def _g_dog(d, c):
+    d.polygon([(70, 60), (100, 130), (122, 84)], fill=c)
+    d.polygon([(186, 60), (156, 130), (134, 84)], fill=c)
+    d.ellipse([72, 84, 184, 182], fill=c)
+    d.polygon([(100, 150), (156, 150), (128, 206)], fill=c)
+    for x in (104, 152):
+        d.ellipse([x - 8, 118, x + 8, 134], fill=hexc("#16101f"))
+
+
+def _g_hand(d, c):
+    d.rounded_rectangle([82, 118, 174, 200], radius=26, fill=c)
+    for i, x in enumerate((84, 108, 132, 156)):
+        top = (70, 54, 58, 76)[i]
+        d.rounded_rectangle([x, top, x + 20, 140], radius=10, fill=c)
+    d.rounded_rectangle([52, 128, 96, 150], radius=11, fill=c)
+
+
+def _g_sword(d, c):
+    d.polygon([(178, 52), (200, 58), (112, 152), (100, 140)], fill=c)
+    d.rounded_rectangle([70, 140, 132, 156], radius=6, fill=hexc("#e2c26a"))
+    d.line([(96, 156), (66, 196)], fill=hexc("#8a5a35"), width=18)
+
+
+def _g_squad(d, c):
+    for cx, cy, r in ((128, 92, 30), (78, 118, 24), (178, 118, 24)):
+        d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=c)
+        d.pieslice([cx - r * 1.8, cy + r * 0.9, cx + r * 1.8, cy + r * 4.2], 180, 360, fill=c)
+
+
+def _g_shadow(d, c):
+    d.ellipse([52, 150, 204, 200], fill=hexc("#05030a"))
+    d.ellipse([70, 158, 186, 190], fill=hexc("#2a1747"))
+    for i, x in enumerate((92, 128, 164)):
+        d.arc([x - 22, 70 + i * 6, x + 22, 170], 200, 340, fill=c, width=12)
+
+
+def _g_book(d, c):
+    d.polygon([(48, 78), (126, 96), (126, 196), (48, 178)], fill=c)
+    d.polygon([(208, 78), (130, 96), (130, 196), (208, 178)], fill=shade(c, 0.85))
+    for y in (112, 134, 156):
+        d.line([(64, y), (112, y + 8)], fill=hexc("#16101f"), width=5)
+        d.line([(192, y), (144, y + 8)], fill=hexc("#16101f"), width=5)
+
+
+def _g_torii(d, c):
+    red = hexc("#e2453c")
+    d.polygon([(40, 70), (216, 70), (206, 92), (50, 92)], fill=red)
+    d.rectangle([60, 112, 196, 128], fill=red)
+    d.rectangle([76, 92, 96, 206], fill=red)
+    d.rectangle([160, 92, 180, 206], fill=red)
+    d.rectangle([120, 92, 136, 112], fill=red)
+
+
+def _g_gear(d, c):
+    for k in range(8):
+        a = k / 8 * math.tau
+        x, y = 128 + math.cos(a) * 66, 128 + math.sin(a) * 66
+        d.ellipse([x - 20, y - 20, x + 20, y + 20], fill=c)
+    d.ellipse([66, 66, 190, 190], fill=c)
+    d.ellipse([104, 104, 152, 152], fill=hexc("#16101f"))
+
+
+def _g_recall(d, c):
+    d.ellipse([60, 168, 196, 206], fill=hexc("#05030a"))
+    d.rectangle([114, 52, 142, 140], fill=c)
+    d.polygon([(82, 130), (174, 130), (128, 182)], fill=c)
+
+
+def _g_ritual(d, c):
+    red = hexc("#ff4a5a")
+    d.ellipse([56, 56, 200, 200], outline=red, width=14)
+    for k in range(5):
+        a1 = -math.pi / 2 + k * 4 * math.pi / 5
+        a2 = -math.pi / 2 + (k + 1) * 4 * math.pi / 5
+        d.line([(128 + math.cos(a1) * 66, 128 + math.sin(a1) * 66), (128 + math.cos(a2) * 66, 128 + math.sin(a2) * 66)], fill=red, width=10)
+
+
+def _g_bolt(d, c):
+    d.polygon([(146, 40), (82, 140), (124, 140), (104, 216), (176, 108), (132, 108)], fill=hexc("#ffd84d"))
+
+
+def _g_blackflash(d, c):
+    d.polygon([(146, 40), (82, 140), (124, 140), (104, 216), (176, 108), (132, 108)], fill=hexc("#ff2a3a"))
+    d.polygon([(140, 62), (100, 132), (130, 132), (116, 184), (160, 116), (130, 116)], fill=hexc("#05030a"))
+
+
+def _g_paw(d, c):
+    d.ellipse([86, 120, 170, 196], fill=c)
+    for x, y in ((72, 92), (104, 68), (152, 68), (184, 92)):
+        d.ellipse([x - 18, y - 22, x + 18, y + 22], fill=c)
+
+
+def _g_shield(d, c):
+    d.polygon([(128, 46), (200, 72), (192, 150), (128, 210), (64, 150), (56, 72)], fill=c)
+    d.polygon([(128, 70), (176, 88), (170, 146), (128, 186)], fill=shade(c, 0.8))
+
+
+def _g_pin(d, c):
+    d.ellipse([80, 46, 176, 142], fill=c)
+    d.polygon([(88, 116), (168, 116), (128, 208)], fill=c)
+    d.ellipse([108, 74, 148, 114], fill=hexc("#16101f"))
+
+
+def _g_target(d, c):
+    d.ellipse([56, 56, 200, 200], outline=c, width=14)
+    d.ellipse([96, 96, 160, 160], outline=c, width=12)
+    for a, b in (((128, 36), (128, 84)), ((128, 172), (128, 220)), ((36, 128), (84, 128)), ((172, 128), (220, 128))):
+        d.line([a, b], fill=c, width=12)
+
+
+def _g_back(d, c):
+    d.polygon([(64, 128), (128, 72), (128, 108), (196, 108), (196, 148), (128, 148), (128, 184)], fill=c)
+
+
+def _g_lock(d, c):
+    d.arc([86, 52, 170, 150], 180, 360, fill=c, width=18)
+    d.rounded_rectangle([70, 108, 186, 206], radius=16, fill=c)
+    d.ellipse([116, 136, 140, 160], fill=hexc("#16101f"))
+
+
+def _g_skull(d, c):
+    d.ellipse([70, 56, 186, 166], fill=c)
+    d.rounded_rectangle([96, 150, 160, 196], radius=10, fill=c)
+    for x in (100, 156):
+        d.ellipse([x - 18, 98, x + 18, 132], fill=hexc("#16101f"))
+
+
+def _g_flame(d, c):
+    d.polygon([(128, 36), (176, 112), (186, 160), (128, 214), (70, 160), (82, 112)], fill=c)
+    d.polygon([(128, 98), (154, 146), (128, 196), (102, 146)], fill=hexc("#ffe8ff"))
+
+
+def _g_heart(d, c):
+    d.ellipse([58, 70, 132, 144], fill=c)
+    d.ellipse([124, 70, 198, 144], fill=c)
+    d.polygon([(62, 120), (194, 120), (128, 206)], fill=c)
+
+
+def _g_eye(d, c):
+    d.chord([40, 70, 216, 230], 200, 340, fill=c)
+    d.chord([40, 26, 216, 186], 20, 160, fill=c)
+    d.ellipse([96, 96, 160, 160], fill=hexc("#16101f"))
+    d.ellipse([112, 112, 144, 144], fill=hexc("#ff4a5a"))
+
+
+def _g_chest(d, c):
+    d.ellipse([52, 160, 204, 206], fill=hexc("#05030a"))
+    d.rounded_rectangle([72, 82, 184, 170], radius=10, fill=hexc("#a8743c"))
+    d.rectangle([72, 112, 184, 122], fill=hexc("#5a3a1e"))
+    d.rectangle([118, 104, 138, 130], fill=hexc("#e2c26a"))
+
+
+def _g_dive(d, c):
+    d.ellipse([52, 166, 204, 206], fill=hexc("#05030a"))
+    d.arc([60, 40, 200, 220], 200, 300, fill=c, width=18)
+    d.polygon([(150, 150), (196, 150), (172, 196)], fill=c)
+
+
+def _g_star(d, c):
+    pts = []
+    for k in range(10):
+        r = 86 if k % 2 == 0 else 38
+        a = -math.pi / 2 + k * math.pi / 5
+        pts.append((128 + math.cos(a) * r, 128 + math.sin(a) * r))
+    d.polygon(pts, fill=c)
+
+
+def _g_toggle_on(d, c):
+    d.rounded_rectangle([44, 92, 212, 164], radius=36, fill=hexc("#3fbf6a"))
+    d.ellipse([144, 96, 208, 160], fill=hexc("#ffffff"))
+
+
+def _g_toggle_off(d, c):
+    d.rounded_rectangle([44, 92, 212, 164], radius=36, fill=hexc("#5a5566"))
+    d.ellipse([48, 96, 112, 160], fill=hexc("#d8d4e0"))
+
+
+def _g_text(d, c):
+    d.rounded_rectangle([46, 64, 210, 170], radius=22, fill=c)
+    d.polygon([(80, 160), (120, 160), (78, 204)], fill=c)
+    for y in (94, 118, 142):
+        d.line([(72, y), (184, y)], fill=hexc("#16101f"), width=8)
+
+
+GLYPHS = {
+    "dogs": (_g_dog, "#f2f0ff", "#8e5cff"), "hand": (_g_hand, "#f2f0ff", "#8e5cff"), "sword": (_g_sword, "#dfe3f0", "#8e5cff"),
+    "squad": (_g_squad, "#ffd1e8", "#ff7ab8"), "shadow": (_g_shadow, "#b48cff", "#8e5cff"), "book": (_g_book, "#f4ead6", "#c49a3e"),
+    "clan": (_g_torii, "#e2453c", "#e2453c"), "gear": (_g_gear, "#c9c4d6", "#7a7090"), "recall": (_g_recall, "#b48cff", "#5a4a7a"),
+    "ritual": (_g_ritual, "#ff4a5a", "#ff4a5a"), "summon": (_g_hand, "#ffe08a", "#ffd36b"), "ability": (_g_bolt, "#ffd84d", "#ffd84d"),
+    "follow": (_g_paw, "#f2f0ff", "#6fc8ff"), "protect": (_g_shield, "#8fd0ff", "#6fc8ff"), "guard": (_g_pin, "#ff8a99", "#ff8a99"),
+    "hunt": (_g_target, "#ff4a5a", "#ff4a5a"), "back": (_g_back, "#c9c4d6", "#5a5566"), "lock": (_g_lock, "#8a8496", "#5a5566"),
+    "destroyed": (_g_skull, "#8a8496", "#3a3444"), "energy": (_g_flame, "#c77dff", "#8e5cff"), "t_reforco": (_g_flame, "#ff6a5a", "#ff6a5a"),
+    "t_kokusen": (_g_blackflash, "#ff2a3a", "#ff2a3a"), "t_guardar": (_g_chest, "#e2c26a", "#8e5cff"), "t_mergulho": (_g_dive, "#b48cff", "#8e5cff"),
+    "t_dominio_simples": (_g_shield, "#8fe0ff", "#4fb6ff"), "t_rct": (_g_heart, "#fff2c2", "#ffd36b"), "t_dominio": (_g_eye, "#c77dff", "#8e5cff"),
+    "info": (_g_book, "#dfe3f0", "#6fc8ff"), "canon": (_g_star, "#ffd36b", "#ffd36b"), "on": (_g_toggle_on, "#3fbf6a", "#3fbf6a"),
+    "off": (_g_toggle_off, "#5a5566", "#5a5566"), "text": (_g_text, "#f2f0ff", "#ff7ab8"), "build": (_g_hand, "#ffb36b", "#ff8c2b"),
+}
+
+
+PORTRAIT_OFFSET = {"rabbit": 0.42, "deer": 0.22, "dog_white": 0.08, "wolf": 0.08, "totality": 0.08}
+
+
+def beast_portrait(geo: dict, tex: Image.Image, scale: int, sp: str = "") -> Image.Image:
+    """Front view, cropped to the head and shoulders (square from the top), central part for winged ones."""
+    full = render_front(geo, tex, px_per_unit=8, scale=scale, canvas=(80, 70))
+    bb = full.getbbox()
+    if not bb:
+        return full
+    c = full.crop(bb)
+    w, h = c.size
+    if w > 2 * h:                         # wings/ears spread wide: keep the middle
+        keep = int(h * 1.4)
+        c = c.crop(((w - keep) // 2, 0, (w + keep) // 2, h))
+        w, h = c.size
+    if h > w:
+        top = min(h - w, int(h * PORTRAIT_OFFSET.get(sp, 0)))
+        c = c.crop((0, top, w, top + w))
+    return c
+
+
+def glyph_icons() -> None:
+    for name, (fn, col, ring) in GLYPHS.items():
+        img, d = _icon_base(hexc(ring))
+        fn(d, hexc(col))
+        _save_icon(img, name)
+
+
 def main() -> None:
     os.makedirs(os.path.join(RP, "models", "entity"), exist_ok=True)
     os.makedirs(os.path.join(RP, "textures", "entity", "shadowbound"), exist_ok=True)
@@ -2213,6 +2481,9 @@ def main() -> None:
         pv = render_front(geo, tex, hidden=hidden_faces, scale=SCALE * HUMAN_UPSCALE)
         pv.save(os.path.join(DOCS, f"preview_{persona}.png"))
         previews.append(pv)
+        head = render_front(geo, tex, px_per_unit=16, hidden=hidden_faces, scale=SCALE * HUMAN_UPSCALE)
+        head = head.crop((int((15 - 6.5) * 16), int((42 - 33) * 16), int((15 + 6.5) * 16), int((42 - 19.5) * 16)))
+        portrait_icon(head, f"p_{persona}", PERSONA_HAIR[persona])
         # expression sheet: normal / happy / focused face close-ups
         sheet = Image.new("RGBA", (3 * 180, 180), hexc("#1a1426"))
         variants = [
@@ -2235,6 +2506,7 @@ def main() -> None:
             json.dump(geo, f, indent=1)
         tex.save(os.path.join(RP, "textures", "entity", "shadowbound", f"beast_{sp}.png"))
         pv = render_side(geo, tex, px_per_unit=4, scale=bscale, canvas=(80, 64))
+        portrait_icon(beast_portrait(geo, tex, bscale, sp), f"sk_{sp}", PALS[sp].rune)
         pv.save(os.path.join(DOCS, f"beast_{sp}.png"))
         beast_previews.append(pv)
     sheet = Image.new("RGBA", (4 * 320, 3 * 256), hexc("#1a1426"))
@@ -2242,6 +2514,7 @@ def main() -> None:
         sheet.alpha_composite(pv, ((i % 4) * 320, (i // 4) * 256))
     sheet.save(os.path.join(DOCS, "beasts_sheet.png"))
 
+    glyph_icons()
     item_icon(os.path.join(RP, "textures", "items", "shadow_summoner.png"))
     particle_sprite(os.path.join(RP, "textures", "particle", "shadowbound_sparkle.png"))
     wisp_sprite(os.path.join(RP, "textures", "particle", "shadowbound_wisp.png"))

@@ -9,7 +9,7 @@ npm run build       # valida os pacotes e gera dist/*.mcaddon
 ```
 
 ## Resultado automático (registrado em 2026-11-18, v3.0 Legado das Dez Sombras)
-Typecheck: **0 erros**. Validador de pacotes: **OK** (20 geometrias, 147 animações, 2 partículas, 0 avisos).
+Typecheck: **0 erros**. Validador de pacotes: **OK** (20 geometrias, 147 animações, 2 partículas, 0 avisos). Testes: **55/55** (inclui a interface: todo botão do Selo tem ícone existente e o menu é dividido em seções).
 
 ```
 ✔ inventário: empilha, respeita capacidade e devolve o que não coube

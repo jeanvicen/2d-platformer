@@ -95,7 +95,7 @@ function support(a: Agent, e: Entity, owner: Player | undefined, sp: BeastSpecie
     if (hp < 7 && threat && dist(owner.location, e.location) > 4 && dist(owner.location, e.location) < 16 && (force || ready(a, 12000))) {
       line(e, owner, { red: 1, green: 0.4, blue: 0.55 });
       safe(() => owner.teleport({ x: e.location.x + 1, y: e.location.y, z: e.location.z }), undefined);
-      safe(() => owner.sendMessage("§d🐸 O Sapo puxou você para longe do perigo!"), undefined);
+      safe(() => owner.sendMessage("§dO Sapo puxou você para longe do perigo!"), undefined);
       a.setAnim(AnimState.Cast, 600);
       return true;
     }
@@ -126,7 +126,7 @@ export function beastTick(a: Agent, force = false): boolean {
       // tracking: the dogs sniff the enemy out and tell the owner where it is
       if (!cd(sp === "totality" ? 4000 : 7000)) return false;
       line(e, t, sp === "dog_white" ? { red: 0.9, green: 0.95, blue: 1 } : { red: 0.25, green: 0.25, blue: 0.35 });
-      if (owner) safe(() => owner.onScreenDisplay.setActionBar(`§7🐺 ${a.name} farejou ${t.typeId.replace("minecraft:", "")} a ${Math.round(d)} blocos`), undefined);
+      if (owner) safe(() => owner.onScreenDisplay.setActionBar(`§7» ${a.name} farejou ${t.typeId.replace("minecraft:", "")} a ${Math.round(d)} blocos`), undefined);
       if (sp === "totality" && d < 4) {
         hit(t, 8, e);
         safe(() => t.addEffect("slowness", 60, { amplifier: 1 }), undefined);

@@ -12,6 +12,12 @@ Tudo obedece **só a você**.
 ## A Técnica das Dez Sombras
 - **Selo das Dez Sombras** (o item que você ganha ao entrar): abre o menu por toque com Shikigamis, Técnicas e
   Habilidades, Ordens rápidas, Esquadrão, Sombra (armazenamento), Clã, Caderno, Configurações e "Recolher tudo".
+- **Interface por toque, sem precisar digitar**: menus divididos em seções com títulos, cada botão com ícone
+  (retrato de cada shikigami, rosto de cada companheira, ícones para técnicas e ordens) e textos curtos.
+  Os comandos `/sombra` continuam existindo, mas são opcionais.
+
+  ![prévia dos menus](documentation/img/menu_preview.png)
+  *Prévia desenhada a partir da estrutura real dos menus (a aparência exata segue o tema do Minecraft).*
 - **Energia amaldiçoada**: toda invocação e técnica gasta energia; ela recarrega sozinha. Segure o Selo para ver a
   barra. O **domínio da técnica** (nível 0 a 10) sobe vencendo rituais, usando técnicas e quando seus shikigamis
   derrotam inimigos, e aumenta energia, recarga e o limite de shikigamis em campo.
@@ -127,7 +133,7 @@ comunicação, UI e IA opcional. Detalhes e interfaces: **[documentation/ARQUITE
 ## Qualidade e testes
 - Typecheck estrito contra as typings oficiais `@minecraft/server` 2.3.0 / `@minecraft/server-ui` 2.1.0 (as versões declaradas no manifest).
 - Validador cruzado dos dois pacotes (20 geometrias, 147 animações, texturas, propriedades, eventos, partículas, idioma; confere que cada animação de criatura só mexe em ossos que existem no modelo dela).
-- **53 testes automáticos** (incluindo rituais, herança da Totalidade, adaptação do Mahoraga e energia), incluindo testes de integração que rodam o cérebro real num simulador da API.
+- **55 testes automáticos** (incluindo rituais, herança da Totalidade, adaptação do Mahoraga, energia e a interface com ícones), incluindo testes de integração que rodam o cérebro real num simulador da API.
 - O que **ainda falta testar dentro do jogo**: [documentation/TESTES.md](documentation/TESTES.md).
 - Limitações reais da plataforma: [documentation/LIMITACOES.md](documentation/LIMITACOES.md).
 
