@@ -1,0 +1,162 @@
+<title>ECLIPSE Shadow Sovereign</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Manrope:wght@400;600;800&display=swap">
+<style>
+/* Layout: noite violeta de página única — herói com o dragão, passos de instalação, galeria dos modelos reais. Tema escuro por escolha. */
+:root{
+  --bg:#0b0812; --panel:#151023; --line:#2a2140; --fg:#ece6f7; --dim:#a69cbd;
+  --violet:#a46bff; --glow:#d8b9ff; --gold:#e6bd63;
+  --display:"Cinzel", Georgia, serif; --body:"Manrope", system-ui, sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.55;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px;
+  background-image:radial-gradient(60rem 30rem at 70% -10%, #2a1650 0%, transparent 60%)}
+.wrap{max-width:1040px;margin:0 auto}
+h1,h2{font-family:var(--display);letter-spacing:.04em;text-wrap:balance;margin:0}
+h2{font-size:clamp(1.4rem,3.5vw,2rem);margin-bottom:6px}
+p{margin:0}
+.lead{color:var(--dim);max-width:62ch}
+header{display:grid;grid-template-columns:1.1fr .9fr;gap:24px;align-items:center;padding-block:40px 20px}
+header > *{min-width:0}
+.eyebrow{text-transform:uppercase;letter-spacing:.2em;font-size:.75rem;color:var(--glow)}
+h1{font-size:clamp(2.2rem,7vw,4rem);line-height:1.02;margin:10px 0 8px;background:linear-gradient(180deg,#fff, var(--glow));-webkit-background-clip:text;background-clip:text;color:transparent}
+.by{font-size:1.05rem;margin-bottom:18px}.by b{color:var(--glow)}
+.hero-img{width:100%;filter:drop-shadow(0 20px 40px #6a2fd066)}
+.dl{display:flex;flex-wrap:wrap;gap:12px;margin-top:22px}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:14px 20px;border-radius:12px;font-weight:800;text-decoration:none;border:1px solid var(--line);color:var(--fg);background:var(--panel);cursor:pointer;font-family:var(--body);font-size:1rem}
+.btn.primary{background:linear-gradient(135deg,#8a4dff,#5b2fc4);border-color:#a46bff;color:#fff;box-shadow:0 8px 30px #7a3cff55}
+.btn:focus-visible{outline:2px solid var(--glow);outline-offset:3px}
+.note{font-size:.85rem;color:var(--dim);margin-top:10px}
+.status{font-size:.9rem;margin-top:8px;color:var(--glow);min-height:1.4em}
+section{padding-block:34px;border-top:1px solid var(--line)}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px;counter-reset:s}
+.steps li{list-style:none;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;counter-increment:s;min-width:0}
+.steps li::before{content:counter(s);display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--violet);color:#120a20;font-weight:800;margin-bottom:8px}
+.steps{padding:0}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:18px}
+.card{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.card img{width:100%;aspect-ratio:1;object-fit:contain}
+.card figcaption{display:flex;flex-direction:column;font-size:.85rem}.card span{color:var(--dim);font-size:.78rem}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.mini{margin:0;width:110px;text-align:center;font-size:.78rem;color:var(--dim)}
+.mini img{width:100%;aspect-ratio:1;object-fit:contain}
+.mini.wide{width:200px}.mini.wide img{aspect-ratio:2/1}
+.lyra{display:grid;grid-template-columns:.7fr 1.3fr;gap:24px;align-items:center}
+.lyra > *{min-width:0}
+.lyra img{width:100%;max-width:300px}
+.chat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:14px;font-size:.92rem}
+.chat p{margin:4px 0}.me{color:var(--dim)}.ly{color:var(--glow)}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+.tbl{overflow-x:auto;margin-top:14px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}th{color:var(--glow);font-weight:600}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+.facts div{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:.9rem}
+.facts b{display:block;font-family:var(--display);font-size:1.15rem;color:var(--fg)}
+footer{text-align:center;color:var(--dim);padding-top:30px;font-size:.9rem}footer b{color:var(--glow)}
+code{font-size:.85em;background:#1e1730;padding:1px 6px;border-radius:6px}
+@media (max-width:820px){header,.lyra{grid-template-columns:1fr}.steps{grid-template-columns:1fr 1fr}.grid{grid-template-columns:repeat(2,1fr)}.facts{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:no-preference){.hero-img{animation:float 6s ease-in-out infinite}@keyframes float{50%{transform:translateY(-8px)}}}
+</style>
+<div class="wrap">
+<header>
+  <div>
+    <div class="eyebrow">Add-On · Minecraft Bedrock · Android</div>
+    <h1>ECLIPSE<br>Shadow Sovereign</h1>
+    <p class="by">Mod criado por <b>0neajx</b> · v1.0.0</p>
+    <p class="lead">Criaturas 3D que saem da sua sombra, relíquias que você lança e chama de volta, asas, metamorfoses, três linhagens de poder e a Lyra, uma companheira que coleta, caça, explora e constrói por você. Tudo liberado desde o início, sem experimentos.</p>
+    <div class="dl">
+      <a class="btn primary" id="gh" href="%%RAW%%" target="_blank" rel="noopener">⬇ Baixar .mcaddon (%%SIZE%% MB)</a>
+      <button class="btn" id="save" type="button">Salvar aqui (.zip)</button>
+    </div>
+    <p class="status" id="status" aria-live="polite"></p>
+    <p class="note">O botão principal baixa direto do GitHub (entre na sua conta se pedir). O "Salvar aqui" baixa o mesmo pacote como <code>.zip</code>: renomeie para <code>ECLIPSE_Shadow_Sovereign.mcaddon</code> antes de abrir.</p>
+  </div>
+  <img class="hero-img" src="%%NOX%%" alt="Nox, o Dragão Negro">
+</header>
+
+<section>
+  <h2>Instalação no celular</h2>
+  <ol class="steps">
+    <li>Baixe o arquivo <b>.mcaddon</b>.</li>
+    <li>Toque nele e escolha <b>abrir com Minecraft</b>. Os dois pacotes são importados.</li>
+    <li>No mundo, ative <b>ECLIPSE — Shadow Sovereign (BP)</b> em pacotes de comportamento.</li>
+    <li>Entre, toque com o <b>Núcleo do Eclipse</b> e desperte. O Códice ensina o resto.</li>
+  </ol>
+  <div class="facts">
+    <div><b>Bedrock 26.30+</b>Testado no servidor oficial 1.26.65.1</div>
+    <div><b>Sem experimentos</b>Script API estável 2.8.0</div>
+    <div><b>%%SIZE%% MB</b>Leve para celular, com preset Desempenho</div>
+  </div>
+</section>
+
+<section>
+  <h2>A Legião</h2>
+  <p class="lead">Dez espécies com esqueleto, textura e animações próprias. Você invoca, dá ordens e elas seguem, esperam, protegem ou exploram.</p>
+  <div class="grid">%%CARDS%%</div>
+</section>
+
+<section class="lyra">
+  <img src="%%LYRA%%" alt="Lyra, a Sombra Viva">
+  <div>
+    <h2>Lyra, a Sombra Viva</h2>
+    <p class="lead">Fale do seu jeito. Se faltar madeira, ela vai buscar, transforma em tábuas e constrói. Ela contorna obstáculos, replanta árvores, nunca destrói construções e conta o que viu quando explora.</p>
+    <div class="chat">
+      <p class="me">você: faz uma mansão aqui e depois pega comida</p>
+      <p class="ly">[Lyra] Para a Mansão preciso de 497 troncos, 571 pedras e 112 areias. Vou buscar o que falta!</p>
+      <p class="ly">[Lyra] Mansão concluída! 2249 blocos colocados. Ficou linda, né?</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Relíquias em 3D</h2>
+  <p class="lead">O Martelo do Eclipse é lançado com um toque, cai com um raio estilizado e volta voando para a sua mão quando você toca no Chamado. Ele nunca duplica.</p>
+  <div class="row">%%RELICS%%</div>
+</section>
+
+<section>
+  <h2>Asas e formas</h2>
+  <p class="lead">Equipe as asas no peito e faça um pulo duplo para voar. Segure PULO para subir e use AGACHAR para descer. A Essência da Forma transforma você em seis criaturas.</p>
+  <div class="row">%%WINGS%%</div>
+  <div class="row">%%FORMS%%</div>
+</section>
+
+<section>
+  <h2>Controles por toque</h2>
+  <div class="tbl"><table>
+    <tr><th>Item</th><th>Toque</th><th>Agachado + toque</th></tr>
+    <tr><td>Núcleo do Eclipse</td><td>Despertar / Grimório</td><td>Trocar Modo (Eclipse, God, Haze)</td></tr>
+    <tr><td>Selo da Legião</td><td>Invocar ou recolher</td><td>Escolher criatura</td></tr>
+    <tr><td>Selo do Poder</td><td>Usar técnica</td><td>Trocar técnica</td></tr>
+    <tr><td>Essência da Forma</td><td>Transformar / habilidade</td><td>Escolher forma / voltar</td></tr>
+    <tr><td>Mão da Sombra</td><td>Criar plataforma, ponte, escada…</td><td>Trocar construção</td></tr>
+    <tr><td>Laço de Lyra</td><td>Chamar / falar</td><td>Seguir → Esperar → Proteger</td></tr>
+  </table></div>
+</section>
+
+<footer>ECLIPSE — Shadow Sovereign · criado por <b>0neajx</b></footer>
+</div>
+<script id="pkg" type="application/octet-stream">%%B64%%</script>
+<script>
+(function(){
+  var btn=document.getElementById('save'), st=document.getElementById('status'), dl=null;
+  btn.disabled=true; btn.title='Carregando…';
+  Promise.resolve(window.claude && window.claude.use ? window.claude.use('downloads') : null).then(function(d){
+    dl=d; if(!d){btn.hidden=true;} else {btn.disabled=false; btn.title='';}
+  }).catch(function(){btn.hidden=true;});
+  btn.addEventListener('click',function(){
+    if(!dl) return;
+    var b64=document.getElementById('pkg').textContent.trim();
+    var bin=atob(b64), arr=new Uint8Array(bin.length);
+    for(var i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+    st.textContent='Confirme o download…';
+    dl.save({filename:'ECLIPSE_Shadow_Sovereign.zip', data:new Blob([arr])}).then(function(){
+      st.textContent='Salvo. Renomeie para .mcaddon e abra com o Minecraft.';
+    }).catch(function(e){
+      st.textContent = e && e.code==='declined' ? 'Download cancelado.' : 'Não deu para salvar aqui; use o botão principal.';
+    });
+  });
+})();
+</script>
