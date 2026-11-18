@@ -18,7 +18,11 @@ import { onScriptEvent } from "./ai/llm_bridge";
 import { isOwnerOfBody } from "./authorization/owner_auth";
 import { refreshCombatEffects } from "./combat/combat";
 import { survivalTick } from "./survival/survival_manager";
-import { giveHeldItem, openMain, openMember } from "./ui/menus";
+import { giveHeldItem, openMember } from "./ui/menus";
+import { openSeal } from "./jujutsu/seal_menu";
+import { addXp, onPlayerHit, onShikigamiDestroyed, sorcererTick } from "./jujutsu/sorcerer";
+import { isRitualBody, onRitualDie, onRitualHurt, ritualTick } from "./jujutsu/ritual";
+import { setBeastDeathHook } from "./ai/agent_manager";
 import { registerCommands } from "./ui/commands";
 import { AnimState } from "./core/constants";
 import { damageMainhand } from "./inventory/equipment";
@@ -52,7 +56,7 @@ world.afterEvents.playerSpawn.subscribe((ev) => {
       safe(
         () =>
           p.sendMessage(
-            "§d[Shadowbound]§r Você recebeu o §dInvocador das Sombras§r! Segure e use (toque e segure) para invocar sua companheira. Ou digite §f/sombra invocar luna§r.",
+            "§5[Legado das Dez Sombras]§r Você herdou a §fTécnica das Dez Sombras§r e recebeu o §5Selo das Dez Sombras§r! Segure e use (toque e segure) para abrir o Selo: invocações, técnicas, energia e o caderno. Comece com §f/sombra invocar caes divinos§r.",
           ),
         undefined,
       );
@@ -73,7 +77,7 @@ world.afterEvents.itemUse.subscribe((ev) => {
   const now = Date.now();
   if ((lastUse.get(p.id) ?? 0) + 600 > now) return;
   lastUse.set(p.id, now);
-  openMain(p);
+  openSeal(p);
 });
 
 world.beforeEvents.playerInteractWithEntity.subscribe((ev) => {
@@ -97,9 +101,13 @@ world.beforeEvents.playerInteractWithEntity.subscribe((ev) => {
 // ---------------------------------------------------------------------------------------------
 // Combat & life events
 // ---------------------------------------------------------------------------------------------
+setBeastDeathHook(onShikigamiDestroyed);
+
 world.afterEvents.entityDie.subscribe((ev) => {
   const e = ev.deadEntity;
-  if (BODY_TYPES.includes(safe(() => e.typeId, ""))) onDeath(e);
+  if (!BODY_TYPES.includes(safe(() => e.typeId, ""))) return;
+  if (isRitualBody(e)) onRitualDie(e);
+  else onDeath(e);
 });
 
 world.afterEvents.entityHurt.subscribe((ev) => {
@@ -114,10 +122,14 @@ world.afterEvents.entityHurt.subscribe((ev) => {
     return;
   }
   if (!BODY_TYPES.includes(safe(() => hurt.typeId, ""))) return;
+  if (isRitualBody(hurt)) {
+    onRitualHurt(hurt, attacker, String(ev.damageSource.cause), ev.damage);
+    return;
+  }
   const a = agentByBody(hurt);
   if (!a) return;
   a.markDirty();
-  if (a.isBeast) onBeastHurt(a, ev.damage);
+  if (a.isBeast) onBeastHurt(a, ev.damage, String(ev.damageSource.cause));
   if (attacker && !(attacker instanceof Player) && !BODY_TYPES.includes(safe(() => attacker.typeId, ""))) {
     // attacked while working: defend herself (native hurt_by_target in follow mode), friends come to help
     a.rt.protectUntil = Date.now() + 4000;
@@ -130,6 +142,10 @@ world.afterEvents.entityHurt.subscribe((ev) => {
 
 world.afterEvents.entityHitEntity.subscribe((ev) => {
   const d = ev.damagingEntity;
+  if (d instanceof Player) {
+    onPlayerHit(d, ev.hitEntity);
+    return;
+  }
   if (!BODY_TYPES.includes(safe(() => d.typeId, ""))) return;
   const a = agentByBody(d);
   if (!a) return;
@@ -138,7 +154,10 @@ world.afterEvents.entityHitEntity.subscribe((ev) => {
   else damageMainhand(a);
   const hit = ev.hitEntity;
   const hp = safe(() => (hit.getComponent("minecraft:health") as EntityHealthComponent | undefined)?.currentValue ?? 1, 1);
-  if (hp <= 0) a.record.stats.kills++;
+  if (hp <= 0) {
+    a.record.stats.kills++;
+    if (a.isBeast) addXp(a.record.ownerId, 5); // mastery grows as your shikigami exorcise enemies
+  }
 });
 
 world.afterEvents.entitySpawn.subscribe((ev) => onEntitySpawn(ev.entity));
@@ -179,6 +198,12 @@ system.runInterval(() => {
     respawnTick();
   } catch (e) {
     log("respawn", String(e));
+  }
+  try {
+    sorcererTick();
+    ritualTick();
+  } catch (e) {
+    log("jujutsu", String(e));
   }
   for (const a of agents.values()) {
     if (!a.record.active || a.record.dead) continue;

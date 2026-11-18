@@ -10,6 +10,7 @@ import "../scripts/main";
 import { agents, squadOf } from "../scripts/ai/agent_manager";
 const ag = (p: { id: string }) => squadOf(p.id, false)[0];
 import { DP_AGENT_PREFIX } from "../scripts/core/constants";
+import { sorcerer } from "../scripts/jujutsu/sorcerer";
 
 const cmds: Record<string, (origin: unknown, ...a: unknown[]) => unknown> = {};
 mc.system.beforeEvents.startup.fire({
@@ -39,7 +40,7 @@ mc.world.afterEvents.playerSpawn.fire({ player: A, initialSpawn: true });
 mc.world.afterEvents.playerSpawn.fire({ player: B, initialSpawn: true });
 mc.__advance(80);
 
-test("recebe o Invocador das Sombras ao entrar", () => {
+test("recebe o Selo das Dez Sombras ao entrar", () => {
   assert.equal(A.inventory.count("shadowbound:shadow_summoner"), 1);
 });
 
@@ -310,10 +311,11 @@ test("esquadrão: invoca várias, divide a coleta por especialidade e obedece po
 });
 
 test("criaturas: invoca várias, lutam com habilidades e não coletam", () => {
-  run(A, "invocar 2 lobos");
+  run(A, "invocar caes divinos");
   run(A, "invocar dragao");
   mc.__advance(60);
-  assert.equal(beasts().length, 3, "2 lobos + 1 dragão");
+  assert.equal(beasts().length, 3, "Cães Divinos (par) + 1 dragão (criação original)");
+  assert.ok(sorcerer(A.id).energy < 100, "invocar gastou energia amaldiçoada");
   const dragon = squadOf(A.id, true).find((m) => m.persona === "dragon")!;
   assert.ok(dragon.body()!.events.includes("shadowbound:species_dragon"), "status de espécie aplicado");
   run(A, "criaturas, peguem madeira");
@@ -325,6 +327,98 @@ test("criaturas: invoca várias, lutam com habilidades e não coletam", () => {
   run(A, "desinvocar criaturas");
   mc.__advance(40);
   assert.equal(beasts().length, 0, "criaturas desinvocadas");
+});
+
+const ritualBody = () => beasts().find((e) => e.getDynamicProperty("sb:ritual") === A.id);
+
+test("dez sombras: shikigami bloqueado exige ritual; vencer sozinho libera", () => {
+  const before = beasts().length;
+  run(A, "invocar nue");
+  assert.equal(beasts().length, before, "Nue ainda não domada não aparece");
+  assert.ok(A.messages.some((m) => m.includes("ainda não foi domado")), "explica que precisa do ritual");
+  sorcerer(A.id).energy = 200;
+  run(A, "ritual nue");
+  const wild = ritualBody()!;
+  assert.ok(wild, "o shikigami selvagem apareceu");
+  assert.ok(wild.events.includes("shadowbound:mode_wild"), "modo selvagem: ataca o invocador");
+  wild.applyDamage(999, { cause: "entityAttack", damagingEntity: A });
+  mc.__advance(2);
+  assert.ok(sorcerer(A.id).unlocked.includes("owl"), "ritual concluído: Nue domada");
+  run(A, "invocar nue");
+  mc.__advance(5);
+  assert.ok(squadOf(A.id, true).some((m) => m.persona === "owl"), "Nue obedece agora");
+  run(A, "desinvocar criaturas");
+  mc.__advance(20);
+});
+
+test("dez sombras: ritual anulado quando outra pessoa interfere", () => {
+  sorcerer(A.id).energy = 200;
+  run(A, "ritual sapo");
+  const wild = ritualBody()!;
+  assert.ok(wild, "ritual do Sapo aberto");
+  wild.applyDamage(2, { cause: "entityAttack", damagingEntity: B });
+  mc.__advance(2);
+  assert.ok(!wild.isValid, "o shikigami voltou para a sombra");
+  assert.ok(!sorcerer(A.id).unlocked.includes("toad"), "nada foi domado");
+  assert.ok(A.messages.some((m) => m.includes("ANULADO")), "o dono foi avisado");
+});
+
+test("dez sombras: Cão Divino destruído não volta e o outro vira Totalidade (Modo Cânone)", () => {
+  sorcerer(A.id).energy = 200;
+  run(A, "invocar caes divinos");
+  mc.__advance(5);
+  const white = squadOf(A.id, true).find((m) => m.persona === "dog_white")!;
+  assert.ok(white, "Cão Divino Branco em campo");
+  white.body()!.applyDamage(999, { cause: "entityAttack" });
+  mc.__advance(5);
+  const r = sorcerer(A.id);
+  assert.ok(r.destroyed.includes("dog_white"), "registrado como destruído");
+  assert.ok(r.unlocked.includes("totality"), "herança: Totalidade liberada");
+  assert.ok(!squadOf(A.id, false).some((m) => m.persona === "dog_white"), "o cão destruído saiu do esquadrão");
+  mc.__advance(40 * 20);
+  assert.ok(!squadOf(A.id, true).some((m) => m.persona === "dog_white"), "e não ressuscitou");
+  run(A, "invocar totalidade");
+  mc.__advance(5);
+  assert.ok(squadOf(A.id, true).some((m) => m.persona === "totality"), "Cão Divino: Totalidade invocado");
+  run(A, "desinvocar criaturas");
+  mc.__advance(20);
+});
+
+test("dez sombras: Mahoraga gira a roda e se adapta ao mesmo tipo de dano", () => {
+  const r = sorcerer(A.id);
+  r.xp = Math.max(r.xp, 5 * 150);
+  r.energy = 300;
+  run(A, "ritual mahoraga");
+  const wild = ritualBody()!;
+  assert.ok(wild, "ritual de Mahoraga aberto");
+  for (let i = 0; i < 4; i++) wild.applyDamage(5, { cause: "entityAttack", damagingEntity: A });
+  assert.equal(wild.getProperty("shadowbound:adapt"), 4, "a roda girou 4 vezes");
+  const hp = wild.health!.currentValue;
+  wild.applyDamage(5, { cause: "entityAttack", damagingEntity: A });
+  assert.equal(wild.health!.currentValue, hp, "golpe adaptado não causa dano");
+  wild.applyDamage(5, { cause: "fire", damagingEntity: A });
+  assert.ok(wild.health!.currentValue < hp, "outro tipo de ataque ainda funciona");
+  wild.applyDamage(999, { cause: "magic", damagingEntity: A });
+  mc.__advance(2);
+  assert.ok(sorcerer(A.id).unlocked.includes("colossus"), "vencer o ritual doma Mahoraga (rota original do mod)");
+});
+
+test("dez sombras: técnicas gastam energia e respeitam o domínio", () => {
+  const r = sorcerer(A.id);
+  r.xp = 5 * 150;
+  r.energy = 200;
+  run(A, "dominio");
+  assert.ok(!r.domain, "Expansão de Domínio exige domínio 6");
+  r.xp = 6 * 150;
+  run(A, "dominio");
+  assert.ok(r.domain && r.domain.until > Date.now(), "Jardim Sombrio da Quimera ativo");
+  assert.ok(r.energy <= 80, "custou 120 de energia");
+  run(A, "reforco");
+  assert.ok(r.toggles.reforco, "reforço ligado");
+  const e0 = r.energy;
+  mc.__advance(40);
+  assert.ok(r.energy < e0 + 1, "alternável drena energia");
+  run(A, "reforco");
 });
 
 test("comida inteligente: sem plantação, caça animais e entrega a carne", () => {

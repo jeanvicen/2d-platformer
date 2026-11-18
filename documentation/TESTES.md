@@ -8,8 +8,8 @@ npm test            # unitários + integração (cérebro real rodando no simula
 npm run build       # valida os pacotes e gera dist/*.mcaddon
 ```
 
-## Resultado automático (registrado em 2026-11-18, v2.0)
-Typecheck: **0 erros**. Validador de pacotes: **OK** (18 geometrias, 129 animações, 2 partículas, 0 avisos).
+## Resultado automático (registrado em 2026-11-18, v3.0 Legado das Dez Sombras)
+Typecheck: **0 erros**. Validador de pacotes: **OK** (20 geometrias, 147 animações, 2 partículas, 0 avisos).
 
 ```
 ✔ inventário: empilha, respeita capacidade e devolve o que não coube
@@ -27,7 +27,7 @@ Typecheck: **0 erros**. Validador de pacotes: **OK** (18 geometrias, 129 animaç
 ✔ plantas grandes: casa grande e mansão têm chão, pilares, janelas, porta, telhado e decoração
 ✔ materiais: calcula quantos troncos/pedras faltam incluindo peças fabricadas
 ✔ linguagem: casa grande, mansão e criaturas
-✔ recebe o Invocador das Sombras ao entrar
+✔ recebe o Selo das Dez Sombras ao entrar
 ✔ 1-3) invocar, vínculo ao dono, impedir segunda invocação
 ✔ 4) outro jogador é ignorado e não acessa a sombra
 ✔ 5) seguir: modo nativo follow ativo
@@ -46,6 +46,11 @@ Typecheck: **0 erros**. Validador de pacotes: **OK** (18 geometrias, 129 animaç
 ✔ 15/13) sai do mundo no meio da tarefa, volta, e ela retoma do estado salvo
 ✔ esquadrão: invoca várias, divide a coleta por especialidade e obedece por nome
 ✔ criaturas: invoca várias, lutam com habilidades e não coletam
+✔ dez sombras: shikigami bloqueado exige ritual; vencer sozinho libera
+✔ dez sombras: ritual anulado quando outra pessoa interfere
+✔ dez sombras: Cão Divino destruído não volta e o outro vira Totalidade (Modo Cânone)
+✔ dez sombras: Mahoraga gira a roda e se adapta ao mesmo tipo de dano
+✖ dez sombras: técnicas gastam energia e respeitam o domínio
 ✔ comida inteligente: sem plantação, caça animais e entrega a carne
 ✔ construção sabe buscar o material que falta antes de construir
 ✔ 16) funciona sem internet (nenhuma chamada de rede) e sem erros de script
@@ -60,9 +65,11 @@ Typecheck: **0 erros**. Validador de pacotes: **OK** (18 geometrias, 129 animaç
 ✔ combate e caça exigem ordem explícita para passivos
 ✔ comer e frases de conversa
 ✔ 'depois...' adiciona à fila em vez de substituir
-ℹ tests 48
-ℹ pass 48
-ℹ fail 0
+ℹ tests 53
+ℹ pass 52
+ℹ fail 1
+✖ failing tests:
+✖ dez sombras: técnicas gastam energia e respeitam o domínio
 ```
 
 ### Bugs reais encontrados pelos testes e corrigidos
@@ -101,7 +108,7 @@ Typecheck: **0 erros**. Validador de pacotes: **OK** (18 geometrias, 129 animaç
 > agendador, mas não a física, a IA nativa (seguir/atacar), a renderização nem as animações.
 
 ## Checklist manual no jogo (preencha ao testar)
-1. Importar o `.mcaddon`, ativar no mundo, entrar → recebeu o Invocador? Algum erro no **Log de conteúdo** (Configurações → Criador → Log de conteúdo)?
+1. Importar o `.mcaddon`, ativar no mundo, entrar → recebeu o Selo das Dez Sombras? Algum erro no **Log de conteúdo** (Configurações → Criador → Log de conteúdo)?
 2. Invocar a Luna → animação de surgir, olhos brilhando, piscando, nome rosa acima da cabeça.
 3. Andar → ela segue (andando, não deslizando). Afastar 20+ blocos → ela teleporta pra perto.
 4. Zumbi à noite → ela ataca, a Luna solta raios, ela não persegue longe.
@@ -121,3 +128,14 @@ Typecheck: **0 erros**. Validador de pacotes: **OK** (18 geometrias, 129 animaç
 17. Durante uma coleta, um monstro aparece perto de você → ela protege e depois **volta para a coleta** de onde parou.
 18. **Visual**: chegar perto de cada uma → olhos amendoados, nariz 3D, cabelo em camadas, piscando sem contorno estranho; à noite só a íris brilha (o resto do rosto não).
 19. **Desempenho**: 12 sombras ao mesmo tempo num celular → anotar se trava.
+
+### Checklist das Dez Sombras (v3.0, no jogo)
+20. Entrar → ganhou o **Selo das Dez Sombras**? Segurar o Selo mostra a barra de energia?
+21. Selo → Shikigamis → **Cães Divinos (o par)** → aparecem o branco e o preto, e a energia cai.
+22. `/sombra invocar nue` antes do ritual → recusa explicando o ritual. Selo → Nue → **Iniciar ritual** → a Nue aparece selvagem, ataca você, e vencer sozinho libera.
+23. Durante um ritual, outro jogador bate no shikigami → "ritual ANULADO".
+24. Deixar o Cão Divino Branco morrer (Modo Cânone) → não volta, e aparece a mensagem de herança da **Totalidade**; invocar a Totalidade.
+25. Ritual do **Mahoraga** (domínio 5): a roda dourada gira a cada golpe; depois de 4 golpes de espada ele para de tomar dano de espada; flecha/fogo ainda funcionam.
+26. Técnicas: Reforço (efeitos ligados e energia caindo), Mergulho nas Sombras (teleporte para onde olha), Técnica Reversa (cura), **Expansão de Domínio** (anel de sombra, inimigos lentos).
+27. Bater em zumbis com a mão várias vezes (domínio 1+) → às vezes aparece **BLACK FLASH**.
+28. Fuga dos Coelhos com inimigos perto → aparecem vários coelhos que somem depois de uns 20 s.

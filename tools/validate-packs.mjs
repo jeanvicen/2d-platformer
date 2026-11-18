@@ -117,9 +117,11 @@ for (const m of enumBlock.matchAll(/(\w+) = (\d+)/g)) {
 
 // events triggered by scripts exist
 const src = walk("scripts").map((f) => readFileSync(f, "utf8")).join("\n");
+const beastEvents = Object.keys(J("behavior_pack/entities/shadowbound_beast.json")["minecraft:entity"].events);
 const events = Object.keys(bpe.events).filter((e) => Object.keys(J("behavior_pack/entities/shadowbound_beast.json")["minecraft:entity"].events).includes(e));
 for (const m of src.matchAll(/shadowbound:(mode_\$\{m\}|mode_\w+|on_tame)/g)) {
   if (m[1].includes("${")) { for (const x of ["follow", "guard", "scripted"]) if (!events.includes(`shadowbound:mode_${x}`)) errors.push(`evento mode_${x} ausente`); }
+  else if (m[1] === "mode_wild") { if (!beastEvents.includes("shadowbound:mode_wild")) errors.push("evento mode_wild ausente na criatura"); } // ritual: beast only
   else if (!events.includes(`shadowbound:${m[1]}`)) errors.push(`script dispara shadowbound:${m[1]} inexistente`);
 }
 // particles used by scripts exist

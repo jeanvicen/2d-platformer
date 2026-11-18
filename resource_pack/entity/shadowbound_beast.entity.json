@@ -19,7 +19,9 @@
         "tiger": "textures/entity/shadowbound/beast_tiger",
         "lion": "textures/entity/shadowbound/beast_lion",
         "dragon": "textures/entity/shadowbound/beast_dragon",
-        "colossus": "textures/entity/shadowbound/beast_colossus"
+        "colossus": "textures/entity/shadowbound/beast_colossus",
+        "dog_white": "textures/entity/shadowbound/beast_dog_white",
+        "totality": "textures/entity/shadowbound/beast_totality"
       },
       "geometry": {
         "wolf": "geometry.shadowbound.beast_wolf",
@@ -33,7 +35,9 @@
         "tiger": "geometry.shadowbound.beast_tiger",
         "lion": "geometry.shadowbound.beast_lion",
         "dragon": "geometry.shadowbound.beast_dragon",
-        "colossus": "geometry.shadowbound.beast_colossus"
+        "colossus": "geometry.shadowbound.beast_colossus",
+        "dog_white": "geometry.shadowbound.beast_dog_white",
+        "totality": "geometry.shadowbound.beast_totality"
       },
       "animations": {
         "wolf_secondary": "animation.shadowbound_beast.wolf.secondary",
@@ -144,6 +148,24 @@
         "colossus_cast": "animation.shadowbound_beast.colossus.cast",
         "colossus_guard": "animation.shadowbound_beast.colossus.guard",
         "colossus_summon": "animation.shadowbound_beast.colossus.summon",
+        "dog_white_secondary": "animation.shadowbound_beast.dog_white.secondary",
+        "dog_white_idle": "animation.shadowbound_beast.dog_white.idle",
+        "dog_white_move": "animation.shadowbound_beast.dog_white.move",
+        "dog_white_walk": "animation.shadowbound_beast.dog_white.walk",
+        "dog_white_run": "animation.shadowbound_beast.dog_white.run",
+        "dog_white_attack": "animation.shadowbound_beast.dog_white.attack",
+        "dog_white_cast": "animation.shadowbound_beast.dog_white.cast",
+        "dog_white_guard": "animation.shadowbound_beast.dog_white.guard",
+        "dog_white_summon": "animation.shadowbound_beast.dog_white.summon",
+        "totality_secondary": "animation.shadowbound_beast.totality.secondary",
+        "totality_idle": "animation.shadowbound_beast.totality.idle",
+        "totality_move": "animation.shadowbound_beast.totality.move",
+        "totality_walk": "animation.shadowbound_beast.totality.walk",
+        "totality_run": "animation.shadowbound_beast.totality.run",
+        "totality_attack": "animation.shadowbound_beast.totality.attack",
+        "totality_cast": "animation.shadowbound_beast.totality.cast",
+        "totality_guard": "animation.shadowbound_beast.totality.guard",
+        "totality_summon": "animation.shadowbound_beast.totality.summon",
         "look_at": "animation.shadowbound_beast.look_at",
         "despawn": "animation.shadowbound_beast.despawn",
         "main": "controller.animation.shadowbound_beast.main"

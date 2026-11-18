@@ -4,6 +4,11 @@
  * The stable chat event is not available, so this command (cheats NOT required) plus the
  * menus are the input methods. Each word arrives as a separate String parameter.
  */
+import { openManual, openSeal, openShikigamiList, openTechniques } from "../jujutsu/seal_menu";
+import { startRitual } from "../jujutsu/ritual";
+import { sorcerer, summonDivineDogs, summonShikigami, useTechnique } from "../jujutsu/sorcerer";
+import { SHIKIGAMI, masteryLevel, maxEnergy } from "../jujutsu/canon";
+import type { BeastSpecies } from "../core/species";
 import { CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus, Player, system, type StartupEvent } from "@minecraft/server";
 import { addressees, beastFromText, dismiss, personaFromText, squadIndex, squadOf, summon } from "../ai/agent_manager";
 import { dispatchOrder } from "../ai/squad";
@@ -36,8 +41,39 @@ export function registerCommands(ev: StartupEvent): void {
 
 function runText(p: Player, text: string): void {
   const t = text.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  if (t === "menu" || t === "") {
+  if (t === "menu" || t === "" || t === "selo") {
+    openSeal(p);
+    return;
+  }
+  if (t === "esquadrao") {
     openMain(p);
+    return;
+  }
+  // Ten Shadows: rituals, energy, techniques
+  const rit = /^ritual\b(.*)$/.exec(t);
+  if (rit) {
+    const sp = beastFromText(rit[1]);
+    if (sp) startRitual(p, sp);
+    else openShikigamiList(p);
+    return;
+  }
+  if (/^(energia|dominio da tecnica|status jujutsu)$/.test(t)) {
+    const r = sorcerer(p.id);
+    p.sendMessage(`§5Energia amaldiçoada: §f${Math.floor(r.energy)}/${maxEnergy(r.xp)} §7· domínio ${masteryLevel(r.xp)} (${r.xp} xp) · domados: ${r.unlocked.map((x) => SHIKIGAMI[x as BeastSpecies]?.name ?? x).join(", ")}${r.destroyed.length ? ` · destruídos: ${r.destroyed.map((x) => SHIKIGAMI[x as BeastSpecies]?.name ?? x).join(", ")}` : ""}`);
+    return;
+  }
+  const tech: Record<string, string> = { dominio: "dominio", "expansao de dominio": "dominio", "dominio simples": "dominio_simples", reforco: "reforco", "tecnica reversa": "rct", rct: "rct", mergulho: "mergulho", "mergulho nas sombras": "mergulho", guardar: "guardar", "guardar na sombra": "guardar" };
+  const tm = /^(?:tecnica |usar )?(.+)$/.exec(t);
+  if (tm && tech[tm[1]]) {
+    useTechnique(p, tech[tm[1]]);
+    return;
+  }
+  if (t === "tecnicas") {
+    openTechniques(p);
+    return;
+  }
+  if (t === "caderno" || t === "manual") {
+    openManual(p);
     return;
   }
   // summon: "/sombra invocar luna", "/sombra invocar 2 lobos", "/sombra invocar dragao"
@@ -51,8 +87,18 @@ function runText(p: Player, text: string): void {
       openSummon(p);
       return;
     }
-    for (let i = 0; i < (beast ? n : 1); i++) {
-      const r = summon(p, persona ? { kind: "companion", species: persona } : { kind: "beast", species: beast! });
+    if (beast && /\b(caes divinos|cachorros divinos|caes)\b/.test(rest)) {
+      summonDivineDogs(p);
+      return;
+    }
+    if (beast) {
+      // shikigami go through the technique: unlocked, not destroyed, enough cursed energy, field limit
+      summonShikigami(p, beast);
+      void n;
+      return;
+    }
+    for (let i = 0; i < 1; i++) {
+      const r = summon(p, { kind: "companion", species: persona! });
       if (r === "full") {
         p.sendMessage(`§7Esquadrão no máximo (${squadIndex(p.id).settings.maxMembers}). Aumente o limite em Configurações do esquadrão.`);
         break;
@@ -72,7 +118,7 @@ function runText(p: Player, text: string): void {
     return;
   }
   if (!squadOf(p.id, true).length) {
-    p.sendMessage("§7Você ainda não tem sombras ativas. Use o §dInvocador das Sombras§7 ou §f/sombra invocar luna§7.");
+    p.sendMessage("§7Você ainda não tem sombras ativas. Use o §dSelo das Dez Sombras§7 ou §f/sombra invocar luna§7.");
     return;
   }
   if (t === "ordem") {

@@ -42,7 +42,7 @@ export function dispatchOrder(owner: Player, text: string, opts: DispatchOptions
     rest = ad.rest || clean;
   }
   if (!members.length) {
-    safe(() => owner.sendMessage("§7Nenhuma sombra ativa. Use o §dInvocador das Sombras§7 ou §f/sombra invocar luna§7."), undefined);
+    safe(() => owner.sendMessage("§7Nenhuma sombra ativa. Use o §dSelo das Dez Sombras§7 ou §f/sombra invocar luna§7."), undefined);
     return;
   }
   const lead = pickSpeaker(members);

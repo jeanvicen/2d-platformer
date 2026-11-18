@@ -3,13 +3,14 @@
  * the companion, or with "/sombra menu". Every action goes through handleOrder(), so the
  * same authorization and planning rules apply as for typed orders.
  */
+import { openShikigamiList } from "../jujutsu/seal_menu";
 import { Player, system } from "@minecraft/server";
 import { ActionFormData, FormCancelationReason, ModalFormData } from "@minecraft/server-ui";
 import type { Agent } from "../ai/agent";
 import { dismiss, executorOf, squadIndex, squadOf, summon, type SummonResult } from "../ai/agent_manager";
 import { dispatchOrder, squadStatus } from "../ai/squad";
 import { saveSquadIndex } from "../memory/memory_manager";
-import { BEASTS, BEAST_INFO, PERSONA_ROLE } from "../core/species";
+import { PERSONA_ROLE } from "../core/species";
 import { applyIntents, handleOrder, statusText } from "../ai/brain";
 import { isOwner } from "../authorization/owner_auth";
 import { say } from "../communication/comms";
@@ -23,7 +24,7 @@ import { COLORS, DEFAULT_NAMES, PERSONAS, TUNING } from "../core/constants";
 type Shown = { canceled: boolean; cancelationReason?: FormCancelationReason };
 
 /** Show a form, retrying while the player is busy (chat open, another screen). */
-function show<T extends Shown>(player: Player, open: () => Promise<T>, then: (r: T) => void, tries = 12): void {
+export function show<T extends Shown>(player: Player, open: () => Promise<T>, then: (r: T) => void, tries = 12): void {
   open()
     .then((r) => {
       if (r.canceled && r.cancelationReason === FormCancelationReason.UserBusy && tries > 0) {
@@ -46,7 +47,7 @@ const askForm = (a: Agent, question: string, options: { label: string; text: str
   });
 };
 
-function order(a: Agent, p: Player, text: string): void {
+export function order(a: Agent, p: Player, text: string): void {
   handleOrder(a, p, text, { fromMenu: true, askForm });
 }
 
@@ -385,10 +386,10 @@ export function openSummon(player: Player): void {
     .title("Invocar companheira")
     .body("Cada uma tem seu jeito e sua especialidade. Elas só obedecem a você e dividem o trabalho entre si.");
   for (const p of PERSONAS) f.button(`${COLORS[p].tag}${DEFAULT_NAMES[p]}§r - ${PERSONA_ROLE[p]}${active.has(p) ? " §7(ativa)" : ""}`);
-  f.button("§5Criaturas das sombras...");
+  f.button("§5Shikigamis (Dez Sombras)...");
   show(player, () => f.show(player), (r) => {
     if (r.selection === PERSONAS.length) {
-      openSummonBeast(player);
+      openShikigamiList(player);
       return;
     }
     const persona = PERSONAS[r.selection ?? 0] ?? "luna";
@@ -397,14 +398,7 @@ export function openSummon(player: Player): void {
 }
 
 export function openSummonBeast(player: Player): void {
-  const f = new ActionFormData()
-    .title("Criaturas das sombras")
-    .body("Criaturas lutam, caçam e protegem. Elas não coletam nem constroem. Pode invocar várias (até o limite do esquadrão).");
-  for (const b of BEASTS) f.button(`§5${BEAST_INFO[b].pt}§r - ${BEAST_INFO[b].ability}`);
-  show(player, () => f.show(player), (r) => {
-    const b = r.selection !== undefined ? BEASTS[r.selection] : undefined;
-    if (b) summonReport(player, summon(player, { kind: "beast", species: b }));
-  });
+  openShikigamiList(player); // shikigami are summoned through the Selo das Dez Sombras (energy, rituals)
 }
 
 /** Ensure the executor exists so tasks start ticking right after summon. */

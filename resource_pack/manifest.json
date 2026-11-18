@@ -1,17 +1,17 @@
 {
   "format_version": 2,
   "header": {
-    "name": "Shadowbound §d(Visual)",
-    "description": "Modelos, texturas e animações das companheiras Luna e Raven.",
+    "name": "Shadowbound: Legado das Dez Sombras §5(Visual)",
+    "description": "Modelos, texturas e animações dos shikigamis das Dez Sombras e das companheiras.",
     "uuid": "a0618dcb-4a24-42d0-92a1-639fb17dace7",
-    "version": [2, 0, 0],
+    "version": [3, 0, 0],
     "min_engine_version": [1, 26, 40]
   },
   "modules": [
-    { "type": "resources", "uuid": "4a89c3de-123d-4b2d-85ff-9319bdf25ee3", "version": [2, 0, 0] }
+    { "type": "resources", "uuid": "4a89c3de-123d-4b2d-85ff-9319bdf25ee3", "version": [3, 0, 0] }
   ],
   "dependencies": [
-    { "uuid": "766caf2c-5b9d-4f36-9907-d08b8303d7e4", "version": [2, 0, 0] }
+    { "uuid": "766caf2c-5b9d-4f36-9907-d08b8303d7e4", "version": [3, 0, 0] }
   ],
   "metadata": { "authors": ["Shadowbound"], "product_type": "addon" }
 }

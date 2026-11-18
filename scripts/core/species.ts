@@ -6,7 +6,7 @@
 import type { Persona } from "./constants";
 import type { TaskKind } from "./types";
 
-export const BEASTS = ["wolf", "owl", "serpent", "toad", "elephant", "rabbit", "deer", "bull", "tiger", "lion", "dragon", "colossus"] as const;
+export const BEASTS = ["wolf", "owl", "serpent", "toad", "elephant", "rabbit", "deer", "bull", "tiger", "lion", "dragon", "colossus", "dog_white", "totality"] as const;
 export type BeastSpecies = (typeof BEASTS)[number];
 
 export interface BeastInfo {
@@ -23,23 +23,31 @@ export interface BeastInfo {
   big: boolean;
 }
 
+/**
+ * Ids are internal and stable (saved worlds keep working). Display names follow the Ten Shadows
+ * Technique (Jujutsu Kaisen); lion and dragon are ORIGINAL creations of the mod (Forja de Sombras).
+ */
 export const BEAST_INFO: Record<BeastSpecies, BeastInfo> = {
-  wolf: { pt: "Lobo Sombrio", article: "o", sound: "*uivo baixo*", alias: /\b(lobos?|cachorros?|caes|cao)\b/, health: 30, attack: 5, speed: 0.36, width: 0.7, height: 0.9, ability: "rápido, caça em dupla e marca o alvo", big: false },
-  owl: { pt: "Coruja Sombria", article: "a", sound: "*pio grave*", alias: /\b(corujas?|ave|aves|passaro|passaros)\b/, health: 24, attack: 4, speed: 0.34, width: 0.8, height: 1.1, ability: "mergulho que derruba e deixa o alvo lento", big: false },
-  serpent: { pt: "Serpente Sombria", article: "a", sound: "*sibilo*", alias: /\b(serpentes?|cobras?)\b/, health: 50, attack: 6, speed: 0.28, width: 1.2, height: 0.9, ability: "prende o alvo e o envenena", big: true },
-  toad: { pt: "Sapo Sombrio", article: "o", sound: "*croac*", alias: /\b(sapos?|rans?)\b/, health: 36, attack: 4, speed: 0.26, width: 1.0, height: 1.0, ability: "puxa inimigos com a língua", big: false },
-  elephant: { pt: "Elefante Sombrio", article: "o", sound: "*barrido*", alias: /\b(elefantes?)\b/, health: 90, attack: 8, speed: 0.24, width: 1.8, height: 2.3, ability: "jato de água que empurra e apaga fogo", big: true },
-  rabbit: { pt: "Coelho Sombrio", article: "o", sound: "*tump tump*", alias: /\b(coelhos?)\b/, health: 16, attack: 2, speed: 0.42, width: 0.5, height: 0.6, ability: "nuvem de sombra que cega os inimigos", big: false },
-  deer: { pt: "Cervo Sombrio", article: "o", sound: "*bramido suave*", alias: /\b(cervos?|veados?|alces?)\b/, health: 40, attack: 3, speed: 0.32, width: 0.9, height: 1.7, ability: "cura você e o esquadrão", big: false },
-  bull: { pt: "Touro Sombrio", article: "o", sound: "*bufada*", alias: /\b(touros?|bois?)\b/, health: 70, attack: 9, speed: 0.3, width: 1.4, height: 1.6, ability: "investida que arremessa inimigos", big: true },
-  tiger: { pt: "Tigre Sombrio", article: "o", sound: "*rosnado*", alias: /\b(tigres?)\b/, health: 60, attack: 9, speed: 0.36, width: 1.1, height: 1.2, ability: "golpes rápidos e fortes", big: true },
-  lion: { pt: "Leão Sombrio", article: "o", sound: "*rugido*", alias: /\b(leoes|leao)\b/, health: 70, attack: 8, speed: 0.33, width: 1.2, height: 1.4, ability: "rugido que enfraquece inimigos perto", big: true },
-  dragon: { pt: "Dragão Sombrio", article: "o", sound: "*rugido profundo*", alias: /\b(dragoes|dragao)\b/, health: 140, attack: 12, speed: 0.3, width: 2.4, height: 2.6, ability: "sopro de fogo sombrio em área", big: true },
-  colossus: { pt: "Colosso Sombrio", article: "o", sound: "*estrondo*", alias: /\b(colossos?|gigantes?|guardiao)\b/, health: 200, attack: 14, speed: 0.26, width: 1.6, height: 3.4, ability: "se adapta: cada golpe que recebe o deixa mais resistente", big: true },
+  wolf: { pt: "Cão Divino Preto", article: "o", sound: "*rosnado*", alias: /\b(cao divino preto|cachorro preto|lobo preto|cao preto|lobos?|cachorros?|caes|cao|cao divino)\b/, health: 30, attack: 5, speed: 0.38, width: 0.7, height: 0.9, ability: "fareja e rastreia inimigos, mordida que prende", big: false },
+  owl: { pt: "Nue", article: "o", sound: "*grito agudo*", alias: /\b(nue|corujas?|ave|aves|passaro|passaros)\b/, health: 28, attack: 4, speed: 0.36, width: 0.8, height: 1.1, ability: "voa, mergulha com descarga elétrica e amortece sua queda", big: false },
+  serpent: { pt: "Grande Serpente", article: "a", sound: "*sibilo*", alias: /\b(grande serpente|serpentes?|cobras?|orochi)\b/, health: 55, attack: 6, speed: 0.28, width: 1.2, height: 0.9, ability: "surge da sombra embaixo do alvo e o prende", big: true },
+  toad: { pt: "Sapo", article: "o", sound: "*croac*", alias: /\b(sapos?|ras?|gama)\b/, health: 36, attack: 4, speed: 0.26, width: 1.0, height: 1.0, ability: "puxa inimigos com a língua e resgata você do perigo", big: false },
+  elephant: { pt: "Elefante Máximo", article: "o", sound: "*barrido*", alias: /\b(elefante maximo|elefantes?|bansho)\b/, health: 100, attack: 8, speed: 0.24, width: 1.8, height: 2.3, ability: "despeja uma enorme massa de água que empurra tudo", big: true },
+  rabbit: { pt: "Fuga dos Coelhos", article: "a", sound: "*tump tump*", alias: /\b(fuga dos coelhos|coelhos?|datto)\b/, health: 16, attack: 1, speed: 0.42, width: 0.5, height: 0.6, ability: "multiplica-se em vários coelhos que distraem e cegam", big: false },
+  deer: { pt: "Veado Redondo", article: "o", sound: "*bramido suave*", alias: /\b(veado redondo|veados?|cervos?|madoka)\b/, health: 45, attack: 3, speed: 0.32, width: 0.9, height: 1.7, ability: "energia positiva: cura e limpa efeitos ruins", big: false },
+  bull: { pt: "Boi Perfurante", article: "o", sound: "*bufada*", alias: /\b(boi perfurante|bois?|touros?)\b/, health: 70, attack: 9, speed: 0.3, width: 1.4, height: 1.6, ability: "investida em linha reta, mais forte quanto maior a distância", big: true },
+  tiger: { pt: "Funeral do Tigre", article: "o", sound: "*rosnado*", alias: /\b(funeral do tigre|tigres?)\b/, health: 60, attack: 9, speed: 0.36, width: 1.1, height: 1.2, ability: "bote fúnebre (habilidade original do mod)", big: true },
+  lion: { pt: "Leão de Sombra (original)", article: "o", sound: "*rugido*", alias: /\b(leoes|leao)\b/, health: 70, attack: 8, speed: 0.33, width: 1.2, height: 1.4, ability: "criação original: rugido que enfraquece", big: true },
+  dragon: { pt: "Dragão de Sombra (original)", article: "o", sound: "*rugido profundo*", alias: /\b(dragoes|dragao)\b/, health: 140, attack: 12, speed: 0.3, width: 2.4, height: 2.6, ability: "criação original: sopro de fogo sombrio", big: true },
+  colossus: { pt: "Mahoraga", article: "o", sound: "*a roda gira*", alias: /\b(mahoraga|general divino|colossos?|gigantes?)\b/, health: 220, attack: 15, speed: 0.27, width: 1.6, height: 3.4, ability: "adapta-se a cada tipo de ataque (a roda gira); espada de energia positiva", big: true },
+  dog_white: { pt: "Cão Divino Branco", article: "o", sound: "*uivo*", alias: /\b(cao divino branco|cachorro branco|lobo branco|cao branco)\b/, health: 30, attack: 5, speed: 0.38, width: 0.7, height: 0.9, ability: "fareja e rastreia inimigos, mordida que prende", big: false },
+  totality: { pt: "Cão Divino: Totalidade", article: "o", sound: "*uivo profundo*", alias: /\b(totalidade|cao divino totalidade)\b/, health: 80, attack: 11, speed: 0.37, width: 1.2, height: 1.5, ability: "herdou o poder do cão destruído: rastreia e despedaça", big: true },
 };
 
+/** Most specific names first ("cão divino branco" before the generic "cão"). */
+const MATCH_ORDER: BeastSpecies[] = ["totality", "dog_white", "wolf", "owl", "serpent", "toad", "elephant", "rabbit", "deer", "bull", "tiger", "colossus", "lion", "dragon"];
 export function beastFromText(s: string): BeastSpecies | undefined {
-  for (const b of BEASTS) if (BEAST_INFO[b].alias.test(s)) return b;
+  for (const b of MATCH_ORDER) if (BEAST_INFO[b].alias.test(s)) return b;
   return undefined;
 }
 

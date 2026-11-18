@@ -16,7 +16,9 @@
             "Texture.tiger",
             "Texture.lion",
             "Texture.dragon",
-            "Texture.colossus"
+            "Texture.colossus",
+            "Texture.dog_white",
+            "Texture.totality"
           ]
         },
         "geometries": {
@@ -32,7 +34,9 @@
             "Geometry.tiger",
             "Geometry.lion",
             "Geometry.dragon",
-            "Geometry.colossus"
+            "Geometry.colossus",
+            "Geometry.dog_white",
+            "Geometry.totality"
           ]
         }
       },

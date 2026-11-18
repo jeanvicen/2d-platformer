@@ -6,18 +6,20 @@ import os
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 SPECIES = {  # name: (health, attack, speed, width, height)
-    "wolf": (30, 5, 0.36, 0.7, 0.9),
-    "owl": (24, 4, 0.34, 0.8, 1.1),
-    "serpent": (50, 6, 0.28, 1.2, 0.9),
+    "wolf": (30, 5, 0.38, 0.7, 0.9),
+    "owl": (28, 4, 0.36, 0.8, 1.1),
+    "serpent": (55, 6, 0.28, 1.2, 0.9),
     "toad": (36, 4, 0.26, 1.0, 1.0),
-    "elephant": (90, 8, 0.24, 1.8, 2.3),
-    "rabbit": (16, 2, 0.42, 0.5, 0.6),
-    "deer": (40, 3, 0.32, 0.9, 1.7),
+    "elephant": (100, 8, 0.24, 1.8, 2.3),
+    "rabbit": (16, 1, 0.42, 0.5, 0.6),
+    "deer": (45, 3, 0.32, 0.9, 1.7),
     "bull": (70, 9, 0.3, 1.4, 1.6),
     "tiger": (60, 9, 0.36, 1.1, 1.2),
     "lion": (70, 8, 0.33, 1.2, 1.4),
     "dragon": (140, 12, 0.3, 2.4, 2.6),
-    "colossus": (200, 14, 0.26, 1.6, 3.4),
+    "colossus": (220, 15, 0.27, 1.6, 3.4),
+    "dog_white": (30, 5, 0.38, 0.7, 0.9),
+    "totality": (80, 11, 0.37, 1.2, 1.5),
 }
 HOSTILES = [
     {"test": "is_family", "subject": "other", "value": "monster"},
@@ -52,6 +54,19 @@ groups = {
     "shadowbound:mode_follow": combat(14, True),
     "shadowbound:mode_guard": combat(12, False),
     "shadowbound:mode_scripted": {"minecraft:behavior.look_at_player": {"priority": 7, "look_distance": 6, "probability": 0.02}},
+    # exorcism ritual: the untamed shikigami fights the summoner (and can be hurt by players)
+    "shadowbound:mode_wild": {
+        "minecraft:behavior.hurt_by_target": {"priority": 1},
+        "minecraft:behavior.nearest_attackable_target": {
+            "priority": 2, "must_see": False, "reselect_targets": True, "within_radius": 24.0,
+            "entity_types": [{"filters": {"test": "is_family", "subject": "other", "value": "player"}, "max_dist": 24}],
+        },
+        "minecraft:behavior.melee_attack": {"priority": 3, "speed_multiplier": 1.3, "track_target": True, "reach_multiplier": 1.8},
+        "minecraft:damage_sensor": {"triggers": [
+            {"cause": "fall", "deals_damage": "no"},
+            {"cause": "suffocation", "deals_damage": "no"},
+        ]},
+    },
 }
 events = {
     "minecraft:entity_spawned": {"add": {"component_groups": ["shadowbound:mode_follow"]}},
@@ -59,6 +74,7 @@ events = {
     "shadowbound:mode_follow": {"remove": {"component_groups": ["shadowbound:mode_guard", "shadowbound:mode_scripted"]}, "add": {"component_groups": ["shadowbound:mode_follow"]}},
     "shadowbound:mode_guard": {"remove": {"component_groups": ["shadowbound:mode_follow", "shadowbound:mode_scripted"]}, "add": {"component_groups": ["shadowbound:mode_guard"]}},
     "shadowbound:mode_scripted": {"remove": {"component_groups": ["shadowbound:mode_follow", "shadowbound:mode_guard"]}, "add": {"component_groups": ["shadowbound:mode_scripted"]}},
+    "shadowbound:mode_wild": {"remove": {"component_groups": ["shadowbound:mode_follow", "shadowbound:mode_guard", "shadowbound:mode_scripted"]}, "add": {"component_groups": ["shadowbound:mode_wild"]}},
 }
 for name, (hp, atk, spd, w, h) in SPECIES.items():
     groups[f"shadowbound:species_{name}"] = {
@@ -79,6 +95,7 @@ entity = {
             "properties": {
                 "shadowbound:anim": {"type": "int", "range": [0, 15], "default": 0, "client_sync": True},
                 "shadowbound:species": {"type": "int", "range": [0, len(SPECIES) - 1], "default": 0, "client_sync": True},
+                "shadowbound:adapt": {"type": "int", "range": [0, 7], "default": 0, "client_sync": True},   # Mahoraga's wheel position
             },
         },
         "component_groups": groups,

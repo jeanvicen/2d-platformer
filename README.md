@@ -1,14 +1,62 @@
-# SHADOWBOUND 🌙 — v2.0
+# SHADOWBOUND: Legado das Dez Sombras 🌑 — v3.0
 
-**Esquadrão de sombras autônomas para Minecraft Bedrock (Android e Windows).**
+**Mod de fã para Minecraft Bedrock (Android e Windows) inspirado em Jujutsu Kaisen.** Você herda a
+**Técnica das Dez Sombras**: invoca shikigamis, vence rituais de exorcismo para domá-los, usa energia amaldiçoada,
+Black Flash, Técnica Reversa e a Expansão de Domínio, e luta ao lado de companheiras que entendem português.
+Tudo obedece **só a você**.
 
-Você invoca sombras, dá ordens em português normal e elas entendem, planejam, executam ações reais no mundo,
-conferem o resultado e continuam trabalhando sozinhas. Elas obedecem **só a você**.
+> Mod pessoal, sem ligação oficial com Jujutsu Kaisen (Gege Akutami / Shueisha). Modelos, texturas e textos são
+> originais. O que é cânone, interpretação ou criação do mod está em
+> **[documentation/PESQUISA_JJK.md](documentation/PESQUISA_JJK.md)** (com fontes).
 
-Com uma sombra só, ela faz tudo sozinha. Com várias, **cada uma pega uma parte do serviço** pela especialidade
-dela, elas passam itens uma pra outra, correm pra ajudar quem está apanhando e conversam entre si.
+## A Técnica das Dez Sombras
+- **Selo das Dez Sombras** (o item que você ganha ao entrar): abre o menu por toque com Shikigamis, Técnicas e
+  Habilidades, Ordens rápidas, Esquadrão, Sombra (armazenamento), Clã, Caderno, Configurações e "Recolher tudo".
+- **Energia amaldiçoada**: toda invocação e técnica gasta energia; ela recarrega sozinha. Segure o Selo para ver a
+  barra. O **domínio da técnica** (nível 0 a 10) sobe vencendo rituais, usando técnicas e quando seus shikigamis
+  derrotam inimigos, e aumenta energia, recarga e o limite de shikigamis em campo.
+- **Rituais de exorcismo**: no começo só os **Cães Divinos** obedecem. Para os outros, inicie o ritual: o shikigami
+  aparece selvagem e ataca você. Vença usando você e seus shikigamis; se outra pessoa ou suas companheiras atacarem,
+  o ritual é anulado.
+- **Destruição e herança (Modo Cânone)**: shikigami destruído não volta. Se um Cão Divino for destruído, o outro
+  herda o poder e surge o **Cão Divino: Totalidade**. No **Modo Livre** eles voltam.
+- **Mahoraga**: só por ritual (domínio 5). A roda dourada gira a cada golpe; depois de 4 golpes do mesmo tipo ele se
+  **adapta** e aquele dano para de funcionar. Varie os ataques! (Megumi nunca o dominou no cânone: domá-lo aqui é rota original.)
 
-## As seis companheiras
+| Shikigami | Habilidade no jogo |
+|---|---|
+| Cães Divinos (Branco e Preto) | farejam e mostram onde está o inimigo; mordida que prende |
+| Cão Divino: Totalidade | herdou o poder do cão destruído: maior e muito mais forte |
+| Nue | voa, mergulha com descarga elétrica e amortece sua queda |
+| Sapo | puxa inimigos com a língua e resgata você quando está quase morrendo |
+| Grande Serpente | surge da sombra embaixo do alvo e o prende |
+| Fuga dos Coelhos | vira uma multidão de coelhos que distrai e cega |
+| Elefante Máximo | despeja uma massa de água que empurra tudo e apaga fogo |
+| Veado Redondo | energia positiva: cura e limpa efeitos ruins |
+| Boi Perfurante | investida em linha reta, mais forte quanto maior a distância |
+| Funeral do Tigre | bote fúnebre (habilidade original do mod) |
+| Mahoraga | adaptação com a roda + espada de energia positiva |
+| Leão e Dragão de Sombra | criações originais (Forja de Sombras) |
+
+Cada um tem modelo, texturas e **9 animações próprias** (parado, andar, correr, ataque, habilidade, guarda,
+invocação saindo da sombra e uma camada sempre ativa).
+
+### Técnicas e Habilidades
+| Técnica | Tipo | Domínio |
+|---|---|---|
+| Reforço com Energia Amaldiçoada | alternável (1/s) | 0 |
+| Armazenar na Sombra | ativa (5) | 0 |
+| Black Flash | passiva (chance ao acertar) | 1 |
+| Mergulho nas Sombras | ativa (15) | 1 |
+| Domínio Simples | alternável (2/s) | 3 |
+| Técnica Reversa | ativa (50) | 4 |
+| Expansão de Domínio: Jardim Sombrio da Quimera | suprema (120) | 6 |
+
+Comandos (opcionais, tudo também está no Selo): `/sombra selo`, `/sombra invocar caes divinos`,
+`/sombra invocar nue`, `/sombra ritual sapo`, `/sombra energia`, `/sombra dominio`, `/sombra reforco`,
+`/sombra mergulho`, `/sombra tecnica reversa`, `/sombra caderno`, `/sombra esquadrao`.
+
+## As seis companheiras (feiticeiras originais do mod)
 
 | | Quem é | Especialidade |
 |---|---|---|
@@ -78,8 +126,8 @@ comunicação, UI e IA opcional. Detalhes e interfaces: **[documentation/ARQUITE
 
 ## Qualidade e testes
 - Typecheck estrito contra as typings oficiais `@minecraft/server` 2.3.0 / `@minecraft/server-ui` 2.1.0 (as versões declaradas no manifest).
-- Validador cruzado dos dois pacotes (18 geometrias, 129 animações, texturas, propriedades, eventos, partículas, idioma; confere que cada animação de criatura só mexe em ossos que existem no modelo dela).
-- **48 testes automáticos**, incluindo testes de integração que rodam o cérebro real num simulador da API.
+- Validador cruzado dos dois pacotes (20 geometrias, 147 animações, texturas, propriedades, eventos, partículas, idioma; confere que cada animação de criatura só mexe em ossos que existem no modelo dela).
+- **53 testes automáticos** (incluindo rituais, herança da Totalidade, adaptação do Mahoraga e energia), incluindo testes de integração que rodam o cérebro real num simulador da API.
 - O que **ainda falta testar dentro do jogo**: [documentation/TESTES.md](documentation/TESTES.md).
 - Limitações reais da plataforma: [documentation/LIMITACOES.md](documentation/LIMITACOES.md).
 

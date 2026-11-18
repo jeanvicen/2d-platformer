@@ -1,5 +1,5 @@
-item.shadowbound:shadow_summoner.name=Shadow Summoner
-item.shadowbound:shadow_summoner=Shadow Summoner
+item.shadowbound:shadow_summoner.name=Seal of Ten Shadows
+item.shadowbound:shadow_summoner=Seal of Ten Shadows
 entity.shadowbound:companion.name=Shadow
 pack.name=Shadowbound
 pack.description=Smart shadow companions

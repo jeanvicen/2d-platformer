@@ -13,7 +13,7 @@ import {
 import { BEASTS, BEAST_INFO, beastFromText, type BeastSpecies } from "../core/species";
 import { dist, getBlock, isPassableBlock, isSolidGround, isValid, log, particle, safe, sound } from "../core/mc";
 import type { Vec3 } from "../core/types";
-import { defaultRecord, loadRecord, loadSquadIndex, pushHistory, saveSquadIndex, type SquadIndex } from "../memory/memory_manager";
+import { defaultRecord, deleteRecord, loadRecord, loadSquadIndex, pushHistory, saveSquadIndex, type SquadIndex } from "../memory/memory_manager";
 import { refreshVisual } from "../inventory/equipment";
 import { sayKey, setMood } from "../communication/comms";
 import { normalize } from "../nlu/normalize";
@@ -203,6 +203,7 @@ function removeStaleBodies(a: Agent): void {
     for (const type of BODY_TYPES) {
       const list = safe(() => world.getDimension(dimId).getEntities({ type }), [] as Entity[]);
       for (const e of list) {
+        if (isMarked(e)) continue;
         const owner = safe(() => e.getDynamicProperty(DP_OWNER) as string | undefined, undefined);
         const id = safe(() => e.getDynamicProperty(DP_AGENT_ID) as string | undefined, undefined);
         if (owner === a.record.ownerId && id === a.record.id && e.id !== a.bodyId) safe(() => e.remove(), undefined);
@@ -232,9 +233,37 @@ export function dismiss(a: Agent, quiet = false): void {
 
 let deathSweep: { dim: string; loc: Vec3; ids: Set<string>; until: number } | undefined;
 
+/** Set by the jujutsu module: returns true when a destroyed shikigami must not come back (Modo Cânone). */
+let beastDeathHook: ((a: Agent) => boolean) | undefined;
+export function setBeastDeathHook(fn: (a: Agent) => boolean): void {
+  beastDeathHook = fn;
+}
+
+/** Remove a member for good (destroyed shikigami). */
+export function retire(a: Agent): void {
+  executorOf(a).interrupt();
+  a.detach();
+  agents.delete(a.key);
+  const idx = squadIndex(a.record.ownerId);
+  idx.ids = idx.ids.filter((x) => x !== a.record.id);
+  saveSquadIndex(a.record.ownerId, idx);
+  deleteRecord(a.record.ownerId, a.record.id);
+}
+
+/** Ritual shikigami and Rabbit Escape copies are not squad members: the jujutsu module owns them. */
+function isMarked(e: Entity): boolean {
+  return !!safe(() => e.getDynamicProperty("sb:ritual"), undefined) || safe(() => e.getDynamicProperty("sb:decoy_until"), undefined) !== undefined;
+}
+
 export function onDeath(e: Entity): void {
   const a = agentByBody(e);
   if (!a) return;
+  if (a.isBeast && beastDeathHook?.(a)) {
+    const loc = safe(() => ({ ...e.location }), undefined);
+    if (loc) particle(e.dimension, "shadowbound:wisp", loc);
+    retire(a);
+    return;
+  }
   const loc = safe(() => ({ ...e.location }), undefined);
   const dimId = safe(() => e.dimension.id, "minecraft:overworld");
   executorOf(a).interrupt();
@@ -274,7 +303,7 @@ export function onEntitySpawn(e: Entity): void {
     system.runTimeout(() => {
       if (legitBodies.has(eid)) return;
       const b = safe(() => world.getEntity(eid), undefined);
-      if (!isValid(b)) return;
+      if (!isValid(b) || isMarked(b)) return;
       const owner = safe(() => b.getDynamicProperty(DP_OWNER) as string | undefined, undefined);
       if (!owner) safe(() => b.remove(), undefined); // nobody may create an ownerless shadow
     }, 3);
@@ -347,6 +376,7 @@ export function dedupeSweep(): void {
     for (const type of BODY_TYPES) {
       const list = safe(() => world.getDimension(dimId).getEntities({ type }), [] as Entity[]);
       for (const e of list) {
+        if (isMarked(e)) continue;
         const owner = safe(() => e.getDynamicProperty(DP_OWNER) as string | undefined, undefined);
         const id = safe(() => e.getDynamicProperty(DP_AGENT_ID) as string | undefined, undefined);
         const gen = safe(() => e.getDynamicProperty(DP_GEN) as number | undefined, undefined);

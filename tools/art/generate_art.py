@@ -1381,7 +1381,10 @@ class Pal:
 
 
 PALS = {
-    "wolf": Pal(hexc("#4b505e"), hexc("#d9dde5"), hexc("#bfe6ff"), detail=hexc("#b3b8c2"), rune=hexc("#8fb8ff")),
+    "wolf": Pal(hexc("#24252c"), hexc("#4a4c58"), hexc("#ffd23f"), detail=hexc("#3a3c47"), rune=hexc("#8a5cff")),        # Cão Divino Preto
+    "dog_white": Pal(hexc("#eceef3"), hexc("#ffffff"), hexc("#6fc8ff"), detail=hexc("#c9cdd6"), rune=hexc("#8fd0ff")),     # Cão Divino Branco
+    "totality": Pal(hexc("#1b1b22"), hexc("#e9e9ef"), hexc("#ff4a5a"), pattern="stripes", pat=hexc("#d8d8e0"),
+                    detail=hexc("#30303a"), rune=hexc("#ff4a5a")),                                                       # Totalidade: preto com marcas brancas
     "owl": Pal(hexc("#7a5434"), hexc("#ecd9ae"), hexc("#ffc640"), kind="feather", pattern="bars", pat=hexc("#4a301c"),
                detail=hexc("#dcc394"), rune=hexc("#ffb347")),
     "serpent": Pal(hexc("#23744f"), hexc("#e3cf7a"), hexc("#d4ff4a"), kind="scale", pattern="diamonds", pat=hexc("#0f3b28"),
@@ -1399,8 +1402,8 @@ PALS = {
     "lion": Pal(hexc("#d7a64f"), hexc("#f2dda8"), hexc("#ffcf3a"), detail=hexc("#f0dbab"), rune=hexc("#ffcf5a"), pupil="slit"),
     "dragon": Pal(hexc("#4b2572"), hexc("#c28c40"), hexc("#ff4d6d"), kind="scale", pattern="plates", pat=hexc("#2b1245"),
                   detail=hexc("#6d3b9e"), rune=hexc("#ff6b9c"), pupil="slit"),
-    "colossus": Pal(hexc("#514d5a"), hexc("#3e3b46"), hexc("#6ff0ff"), kind="stone", pattern="cracks", pat=hexc("#6ff0ff"),
-                    detail=hexc("#6f6a7a"), rune=hexc("#6ff0ff")),
+    "colossus": Pal(hexc("#d8d2c4"), hexc("#bdb6a6"), hexc("#ffe08a"), kind="skin", pattern="wrinkles", pat=hexc("#b1a996"),
+                    detail=hexc("#3b3644"), rune=hexc("#ffd36b")),                                                       # Mahoraga: pálido, musculoso
 }
 LION_MANE = hexc("#7a4520")
 IVORY = hexc("#ebe3cf")
@@ -1997,13 +2000,56 @@ def beast_colossus() -> list:
         leg = Bone("leg_l" if sx > 0 else "leg_r", (sx * 5, 22, 0), "root")
         b.append(leg)
         leg.cubes.append(Cube((sx * 5 - 4, 0, -4), (8, 22, 8), pelt(P, seed=45, belly=False, paw=True)))
+    mahoraga_extras(b)
     return b
+
+
+def beast_dog_white() -> list:
+    b: list = []
+    P = PALS["dog_white"]
+    by = quad(b, P, 14, 7, 7, 8, 2.6, 7, snout=(3.4, 3, 3.6), tail=9, tail_w=2.4, teeth=True, tail_tip=hexc("#ffffff"))
+    for sx in (-1, 1):
+        by["head"].cubes.append(Cube((sx * 2.2 - 1, 8 + 7 * 0.45 + 7 * 0.85, -7 - 4.2 - 0.6), (2, 3, 1.2), inner_ear(P)))
+    by["body"].cubes.append(Cube((-4.2, 9.5, -7.6), (8.4, 6.5, 4.0), pelt(P, seed=10, base=hexc("#ffffff"))))
+    return b
+
+
+def beast_totality() -> list:
+    """Divine Dog: Totality — bigger, heavier, black with white markings and a white mane-like ruff."""
+    b: list = []
+    P = PALS["totality"]
+    by = quad(b, P, 22, 10, 10, 12, 3.6, 9, snout=(4.6, 4, 4.4), tail=13, tail_w=3, teeth=True, tail_tip=hexc("#e9e9ef"))
+    hy = 12 + 10 * 0.45
+    for sx in (-1, 1):
+        by["head"].cubes.append(Cube((sx * 3 - 1.25, hy + 9 * 0.85, -11 - 5.4 - 0.4), (2.5, 4, 1.4), inner_ear(P)))
+    by["body"].cubes.append(Cube((-6, 13, -12), (12, 10, 6), pelt(P, seed=10, base=hexc("#e9e9ef"), pattern=False)))   # white ruff
+    return b
+
+
+def mahoraga_extras(b: list) -> None:
+    """The eight-handled wheel over the head (turns 45° per adaptation step) and the sword of extermination."""
+    P = PALS["colossus"]
+    gold = hexc("#e2c26a")
+    wheel = Bone("wheel", (0, 57, 0), "head")
+    b.append(wheel)
+    wheel.cubes.append(Cube((-1, 56.5, -1), (2, 1, 2), plain(gold, "stone", 50)))                                     # hub
+    for k in range(8):
+        ang = k * 45
+        wheel.cubes.append(Cube((-0.4, 56.6, 0), (0.8, 0.8, 6), plain(gold, "stone", 51 + k), rotation=(0, ang, 0), pivot=(0, 57, 0)))   # spokes
+        wheel.cubes.append(Cube((-1.6, 56.3, 5.6), (3.2, 1.4, 1.2), plain(shade(gold, 0.85), "stone", 60 + k), rotation=(0, ang, 0), pivot=(0, 57, 0)))  # rim
+        wheel.cubes.append(Cube((-0.5, 56.5, 6.8), (1, 1, 1.6), plain(gold, "stone", 70 + k), rotation=(0, ang, 0), pivot=(0, 57, 0)))  # handle
+    for bone in b:
+        if bone.name == "arm_r":
+            blade = hexc("#e8ecf2")
+            bone.cubes.append(Cube((-12.6, 14.2, -4.5 - 18), (1.2, 2.6, 18), plain(blade, "stone", 80)))                    # sword of extermination
+            bone.cubes.append(Cube((-13.5, 13.6, -5.2), (3, 3.8, 1.2), plain(P.det(), "stone", 81)))                      # guard
 
 
 BEAST_BUILDERS = [
     ("wolf", beast_wolf), ("owl", beast_owl), ("serpent", beast_serpent), ("toad", beast_toad),
     ("elephant", beast_elephant), ("rabbit", beast_rabbit), ("deer", beast_deer), ("bull", beast_bull),
     ("tiger", beast_tiger), ("lion", beast_lion), ("dragon", beast_dragon), ("colossus", beast_colossus),
+    ("dog_white", beast_dog_white), ("totality", beast_totality),
 ]
 
 
@@ -2024,17 +2070,24 @@ def build_beast(sp: str, builder) -> tuple:
 # Small 2D assets
 # --------------------------------------------------------------------------------------
 def item_icon(path: str) -> None:
-    """Shadow Summoner: a dark grimoire with a glowing crescent and star."""
+    """Selo das Dez Sombras: a dark seal with the shadow of a Divine Dog (hand-sign silhouette) and a violet ring."""
     s = 32
     img = Image.new("RGBA", (s, s), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    d.rounded_rectangle([5, 4, 26, 28], radius=3, fill=hexc("#2a1f3d"), outline=hexc("#120c1c"))
-    d.rectangle([7, 5, 9, 27], fill=hexc("#8e5cff"))           # spine
-    d.rectangle([24, 6, 26, 26], fill=hexc("#f4efff"))         # pages
-    moon(d, 17, 14, 5, hexc("#ffd36b"), hexc("#2a1f3d"))
-    star(d, 20, 22, 3, hexc("#d7a8ff"))
-    for (x, y) in ((12, 8), (23, 10), (13, 24)):
-        d.point([x, y], fill=hexc("#ffffff"))
+    d.ellipse([2, 2, 29, 29], fill=hexc("#120c1c"))
+    d.ellipse([3, 3, 28, 28], outline=hexc("#8e5cff"), width=2)
+    for k in range(10):                                   # ten marks for the ten shadows
+        ang = k / 10 * math.tau - math.pi / 2
+        x, y = 15.5 + math.cos(ang) * 11.5, 15.5 + math.sin(ang) * 11.5
+        d.point([round(x), round(y)], fill=hexc("#d7a8ff"))
+    white = hexc("#f2f0ff")
+    d.polygon([(10, 9), (12, 15), (14, 11)], fill=white)     # left ear
+    d.polygon([(21, 9), (19, 15), (17, 11)], fill=white)     # right ear
+    d.ellipse([10, 11, 21, 21], fill=white)                  # head
+    d.polygon([(13, 18), (18, 18), (15.5, 24)], fill=white)  # snout
+    d.point([13, 15], fill=hexc("#120c1c"))
+    d.point([18, 15], fill=hexc("#120c1c"))
+    d.point([15, 22], fill=hexc("#120c1c"))
     img.save(path)
 
 

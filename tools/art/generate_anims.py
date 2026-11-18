@@ -327,7 +327,7 @@ print("animations generated:", len(A))
 # attack, ability, guard, summon) and an always-on "secondary" layer (breathing,
 # blinking, tail/ear/wing motion). One controller routes to the species' own states.
 # =====================================================================================
-BEASTS = ["wolf", "owl", "serpent", "toad", "elephant", "rabbit", "deer", "bull", "tiger", "lion", "dragon", "colossus"]
+BEASTS = ["wolf", "owl", "serpent", "toad", "elephant", "rabbit", "deer", "bull", "tiger", "lion", "dragon", "colossus", "dog_white", "totality"]
 SPECIES = "query.property('shadowbound:species')"
 T = "query.life_time"
 AT = "query.anim_time"
@@ -662,6 +662,16 @@ S["colossus"] = dict(
     pose={"arm_l": [0, 0, -75], "arm_r": [0, 0, 75], "head": [-25, 0, 0]},
     guard={"arm_l": R(-40, 0, -10), "arm_r": R(-40, 0, 10), "root": Pz(0, -1, 0), "head": R(8)},
 )
+
+
+# Divine Dogs: the white one shares the black one's moves; Totality is heavier and fiercer
+S["dog_white"] = dict(S["wolf"])
+S["totality"] = dict(S["wolf"], stride=28, walk=(trot, dict(amp=30, bob=0.3, head=2, tail=8)), walk_f=1.5,
+                     run=(bound, dict(amp=48, bob=1.5, pitch=8)), run_f=2.4,
+                     pose={"head": [-50, 0, 0], "jaw": [34, 0, 0], "body": [-16, 0, 0]},
+                     guard={"root": Pz(0, -0.9, 0), "head": R(14), "tail": R(-30), "jaw": R(14), "leg_fl": R(-10), "leg_fr": R(-10)})
+# Mahoraga: the wheel turns 45° per adaptation step (property synced from the server)
+S["colossus"]["secondary"] = dict(S["colossus"]["secondary"], wheel=R(0, "query.property('shadowbound:adapt') * 45", 0))
 
 
 def cast_from_pose(sp, length=1.4):

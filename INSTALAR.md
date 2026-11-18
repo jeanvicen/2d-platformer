@@ -16,7 +16,7 @@ O arquivo que você vai usar é o **`dist/Shadowbound.mcaddon`**. Ele já tem os
 5. Crie um mundo novo (ou edite um que já existe):
    - **Configurações do mundo → Pacotes de comportamento → Disponível → Shadowbound (Comportamento) → Ativar.**
    - O jogo pergunta se quer ativar o pacote de recursos junto: **sim**.
-6. Entre no mundo. Em 2 segundos você recebe o **Invocador das Sombras** 📖. Ao usar, escolha **Luna, Raven, Sora, Yuki, Hana ou Aiko**, ou uma criatura das sombras.
+6. Entre no mundo. Em 2 segundos você recebe o **Selo das Dez Sombras** 🌑. Ao usar, abre o Selo: comece pelos **Cães Divinos** (Selo → Shikigamis) e chame companheiras em **Esquadrão**.
 
 ### Se o celular não oferecer "Abrir com Minecraft"
 - Use o app **Files by Google**: ele costuma oferecer o Minecraft.
@@ -33,14 +33,14 @@ Baixe o `Shadowbound.mcaddon` e dê **dois cliques**. O Minecraft importa tudo. 
 
 | O que fazer | Como |
 |---|---|
-| Invocar | Segure o **Invocador das Sombras** e **use** (toque e segure no celular). Escolha uma companheira ou uma criatura. Pode invocar várias. |
-| Abrir o menu | Use o Invocador de novo (menu do esquadrão), **ou toque numa sombra** (menu dela). |
+| Invocar | Segure o **Selo das Dez Sombras** e **use** (toque e segure no celular). Escolha uma companheira ou uma criatura. Pode invocar várias. |
+| Abrir o menu | Use o Selo de novo (menu do esquadrão), **ou toque numa sombra** (menu dela). |
 | Dar ordem escrita | Menu → **"Dar uma ordem (texto)"**, ou digite no chat: `/sombra pegue 32 troncos e volte` |
 | Dar um item pra ela | **Agache** e toque nela segurando o item. |
 | Pedir itens de volta | `/sombra me dá tudo`, ou pelo menu **Inventário**. |
 
 > Se `/sombra` não aparecer, use o nome completo: **`/shadowbound:sombra ...`**.
-> Perdeu o Invocador? Faça na bancada: **livro + graveto + carvão**, ou digite `/sombra invocar luna`.
+> Perdeu o Selo? Faça na bancada: **livro + graveto + carvão**, ou digite `/sombra invocar luna`.
 
 ### Esquadrão e criaturas
 - `/sombra invocar hana` · `/sombra invocar 2 lobos` · `/sombra invocar dragao`
@@ -48,7 +48,7 @@ Baixe o `Shadowbound.mcaddon` e dê **dois cliques**. O Minecraft importa tudo. 
 - Fale com uma só começando pelo nome: `aiko, construa uma mansão` · `raven, me proteja` · `lobos, ataquem`.
 - `/sombra desinvocar lobos` · `/sombra desinvocar todos`
 - Criaturas lutam, caçam e protegem; não coletam nem constroem.
-- Limite do esquadrão: 12 por padrão (menu do Invocador → Configurações do esquadrão, até 40). No celular, menos é mais leve.
+- Limite do esquadrão: 12 por padrão (menu do Selo → Configurações do esquadrão, até 40). No celular, menos é mais leve.
 
 ### Exemplos de ordens (português normal)
 - `me proteja` · `me siga` · `fique de guarda aqui` · `fica aqui` · `volte imediatamente`
