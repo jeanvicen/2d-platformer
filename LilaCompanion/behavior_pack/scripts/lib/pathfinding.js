@@ -88,11 +88,14 @@ export function makeWalker(cellFn) {
  * Retorna `{ path, complete }` — `complete=false` traz o melhor caminho parcial rumo ao alvo.
  * @param {{x:number,y:number,z:number}} start
  * @param {{x:number,y:number,z:number}} goal
- * @param {{cell:(x:number,y:number,z:number)=>number, budget?:number, maxNodes?:number, reach?:number, yTol?:number, maxDrop?:number}} opts
+ * @param {{cell:(x:number,y:number,z:number)=>number, budget?:number, maxNodes?:number, reach?:number, yTol?:number, maxDrop?:number, sliceMs?:number, now?:()=>number}} opts
  */
 export function* astar(start, goal, opts) {
   const W = makeWalker(opts.cell);
   const budget = opts.budget ?? 150;
+  const sliceMs = opts.sliceMs ?? 3;
+  const now = opts.now ?? Date.now;
+  let slice = now();
   const maxNodes = opts.maxNodes ?? 3000;
   const reach = opts.reach ?? 1.5;
   const yTol = opts.yTol ?? 2;
@@ -126,7 +129,11 @@ export function* astar(start, goal, opts) {
     const dGoal = Math.sqrt((cur.x + 0.5 - goal.x) ** 2 + (cur.z + 0.5 - goal.z) ** 2);
     if (dGoal <= reach && Math.abs(cur.y - gy) <= yTol) return { path: rebuild(came, cur.k), complete: true };
     if (++expanded > maxNodes) break;
-    if (expanded % budget === 0) yield;
+    // cede o tick por número de nós OU por tempo (celulares lentos: nunca trava o jogo)
+    if (expanded % 8 === 0 && (expanded % budget === 0 || now() - slice > sliceMs)) {
+      yield;
+      slice = now();
+    }
     const gc = g.get(cur.k) ?? 0;
     const here = W.cell(cur.x, cur.y, cur.z);
     const swimming = here === WATER || here === CLIMB;

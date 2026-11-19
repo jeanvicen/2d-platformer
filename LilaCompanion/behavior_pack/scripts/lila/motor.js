@@ -39,7 +39,7 @@ function* plan(c, goal, reach, yTol, maxNodes) {
   const dim = c.dim();
   const cell = cellFn(dim);
   c.nav = NAV.PLANNING;
-  const gen = astar(c.pos(), goal, { cell, budget: 180, maxNodes, reach, yTol });
+  const gen = astar(c.pos(), goal, { cell, budget: 120, maxNodes, reach, yTol, sliceMs: 3 });
   for (;;) {
     const r = gen.next();
     if (r.done) return r.value ?? { path: null, complete: false };
@@ -100,7 +100,7 @@ export function* goTo(c, target, o = {}) {
     }
     const far = distXZ(c.pos(), target) > 40;
     const goal = far ? waypoint(c, target) : target;
-    const res = yield* plan(c, goal, far ? 3 : reach, far ? 4 : yTol, failures ? 6000 : 3500);
+    const res = yield* plan(c, goal, far ? 3 : reach, far ? 4 : yTol, failures ? 4000 : 2500);
     const path = res.path;
     if (!path || path.length < 2) {
       failures++;
@@ -133,12 +133,20 @@ export function* goTo(c, target, o = {}) {
         if (yield* recoverTeleport(c, target)) return true;
       }
     }
+    if (failures >= 8) {
+      stop(c);
+      c.nav = NAV.FAILED;
+      return false;
+    }
+    yield 1; // toda volta do laço cede pelo menos um tick
   }
   return false;
 }
 
 /**
- * Anda pelo caminho, um passo por tick (teleportes curtos interpolados = movimento suave).
+ * Anda pelo caminho com física de verdade (impulso por tick, pulo nos degraus, nado):
+ * o cliente interpola o movimento suave e as animações de andar/correr ficam naturais.
+ * Se emperrar num trecho, dá um passo interpolado (recuperação) e segue.
  * @returns {Generator<any, "ok"|"blocked"|"stuck"|"abort">}
  */
 function* walkPath(c, path, run, replanEvery = 0) {
@@ -146,72 +154,128 @@ function* walkPath(c, path, run, replanEvery = 0) {
   const cell = cellFn(dim);
   c.nav = NAV.MOVING;
   let i = 1;
-  let yaw = c.entity?.getRotation().y ?? 0;
   const openDoors = [];
   let ticks = 0;
-  let lastCheck = c.pos();
+  let best = Infinity;
+  let noProgress = 0;
+  let rescues = 0;
+  let lastJump = -10;
   while (i < path.length) {
-    if (!c.alive()) return "abort";
-    if (c.abortMove) return "abort";
+    if (!c.alive() || c.abortMove) {
+      halt(c);
+      return "abort";
+    }
     const e = c.entity;
     if (!e) return "abort";
     const node = path[i];
     const tgt = { x: node.x + 0.5, y: node.y, z: node.z + 0.5 };
     const here = e.location;
-    // o caminho ainda vale? (bloco colocado/quebrado no caminho)
     const fc = cell(node.x, node.y, node.z), hc = cell(node.x, node.y + 1, node.z);
     if (fc === SOLID || hc === SOLID) {
-      stop(c);
+      halt(c);
       return "blocked";
     }
     if (fc === DOOR || hc === DOOR) openDoor(dim, node, openDoors);
-    const inWater = fc === WATER || cell(Math.floor(here.x), Math.floor(here.y), Math.floor(here.z)) === WATER;
-    const climbing = fc === CLIMB;
-    const speed = inWater ? SWIM : run ? RUN : WALK;
-    const dx = tgt.x - here.x, dy = tgt.y - here.y, dz = tgt.z - here.z;
+    const dx = tgt.x - here.x, dz = tgt.z - here.z, dy = tgt.y - here.y;
     const dh = Math.sqrt(dx * dx + dz * dz);
-    const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
-    let next;
-    if (d <= speed) {
-      next = tgt;
+    // chegou no nó: passa para o próximo (sem gastar tick)
+    if (dh < 0.32 && dy > -1.2 && dy < 0.6) {
       i++;
+      best = Infinity;
+      noProgress = 0;
       closeDoors(dim, openDoors, here);
-    } else {
-      const k = speed / d;
-      let ny = here.y + dy * k;
-      // degrau: um pulinho em arco em vez de deslizar
-      if (dy > 0.3 && dh > 0.15 && !inWater && !climbing) ny = Math.min(tgt.y + 0.2, here.y + Math.max(dy * k, 0.42));
-      next = { x: here.x + dx * k, y: ny, z: here.z + dz * k };
+      continue;
     }
-    if (dh > 0.05) {
-      const want = (-Math.atan2(dx, dz) * 180) / Math.PI;
-      let diff = ((want - yaw + 540) % 360) - 180;
-      diff = Math.max(-35, Math.min(35, diff));
-      yaw += diff;
-    }
-    setMove(e, inWater ? "swim" : climbing ? "climb" : run ? "run" : "walk");
+    const inWater = fc === WATER || cell(Math.floor(here.x), Math.floor(here.y), Math.floor(here.z)) === WATER;
+    const climbing = fc === CLIMB || cell(Math.floor(here.x), Math.floor(here.y), Math.floor(here.z)) === CLIMB;
+    let speed = inWater ? SWIM : run ? RUN : WALK;
+    if (dh < speed) speed = dh; // não passa do ponto
+    let v = { x: 0, y: 0, z: 0 };
     try {
-      e.teleport(next, { rotation: { x: 0, y: yaw }, keepVelocity: false, checkForBlocks: false });
+      v = e.getVelocity();
+    } catch {
+      /* ignore */
+    }
+    const imp = { x: (dx / (dh || 1)) * speed - v.x, y: 0, z: (dz / (dh || 1)) * speed - v.z };
+    let onGround = true;
+    try {
+      onGround = e.isOnGround;
+    } catch {
+      /* ignore */
+    }
+    if (dy > 0.45 && onGround && !inWater && ticks - lastJump > 6 && dh < 1.7) {
+      imp.y = 0.42 - Math.max(0, v.y); // pulo de jogador (1 bloco)
+      lastJump = ticks;
+    } else if (inWater && dy > -0.3) imp.y = Math.max(0, 0.07 - v.y); // nada para cima
+    else if (climbing && dy > 0.2) imp.y = 0.14 - v.y; // sobe a escada
+    try {
+      e.applyImpulse(imp);
+      if (dh > 0.05) e.setRotation({ x: 0, y: (-Math.atan2(dx, dz) * 180) / Math.PI });
     } catch (err) {
-      logError("motor.tp", err);
+      logError("motor.impulse", err);
       return "stuck";
     }
+    setMove(e, inWater ? "swim" : climbing ? "climb" : !onGround && v.y < -0.35 ? "fall" : run ? "run" : "walk");
     yield 1;
     ticks++;
-    // empurrada (dano, pistão): se saiu muito do trilho, replaneja
-    if (dist3(c.pos(), next) > 2.2) {
-      stop(c);
-      return "blocked";
+    // progresso: se não chega mais perto do nó por 1,5 s, dá um passo de recuperação
+    const nd = Math.hypot(tgt.x - c.pos().x, tgt.z - c.pos().z) + Math.abs(tgt.y - c.pos().y) * 0.5;
+    if (nd < best - 0.03) {
+      best = nd;
+      noProgress = 0;
+    } else if (++noProgress > 30) {
+      if (++rescues > 3) {
+        halt(c);
+        return "stuck";
+      }
+      yield* stepTo(c, tgt, 5);
+      best = Infinity;
+      noProgress = 0;
     }
-    if (ticks % 40 === 0) {
-      if (dist3(c.pos(), lastCheck) < 0.5) return "stuck";
-      lastCheck = c.pos();
+    // empurrada (dano, pistão, água corrente): se saiu muito do trilho, replaneja
+    if (nd > 6) {
+      halt(c);
+      return "blocked";
     }
     if (replanEvery && ticks >= replanEvery) break;
   }
   closeDoors(dim, openDoors, c.pos(), true);
-  stop(c);
+  halt(c);
   return "ok";
+}
+
+/** Para o corpo (zera o embalo horizontal) e volta para a pose parada. */
+function halt(c) {
+  const e = c.entity;
+  if (e?.isValid) {
+    try {
+      const v = e.getVelocity();
+      e.applyImpulse({ x: -v.x * 0.8, y: 0, z: -v.z * 0.8 });
+    } catch {
+      /* ignore */
+    }
+  }
+  stop(c);
+}
+
+/** Passo interpolado curto (recuperação, túneis, escadarias): suave e sem atravessar blocos. */
+export function* stepTo(c, to, frames = 4) {
+  const e = c.entity;
+  if (!e?.isValid) return;
+  const from = e.location;
+  const up = to.y - from.y > 0.3;
+  setMove(e, "walk");
+  face(c, { x: to.x - 0.5, y: to.y, z: to.z - 0.5 });
+  for (let k = 1; k <= frames; k++) {
+    const t = k / frames;
+    try {
+      e.teleport({ x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t + (up ? Math.sin(t * Math.PI) * 0.35 : 0), z: from.z + (to.z - from.z) * t }, { keepVelocity: false });
+    } catch {
+      break;
+    }
+    yield 1;
+  }
+  setMove(e, "none");
 }
 
 function openDoor(dim, node, opened) {
@@ -308,22 +372,8 @@ export function* digToward(c, target, steps = 10) {
       yield* placeAt(c, { x: nx, y: ny - 1, z: nz }, blk, blk);
     }
     // anda o passo
-    const e = c.entity;
-    if (!e) return moved;
-    face(c, { x: nx, y: ny, z: nz });
-    setMove(e, "walk");
-    const from = e.location;
-    const to = { x: nx + 0.5, y: ny, z: nz + 0.5 };
-    for (let k = 1; k <= 4; k++) {
-      const t = k / 4;
-      try {
-        e.teleport({ x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t + (ny > by ? Math.sin(t * Math.PI) * 0.3 : 0), z: from.z + (to.z - from.z) * t }, { keepVelocity: false });
-      } catch {
-        break;
-      }
-      yield 1;
-    }
-    setMove(e, "none");
+    if (!c.entity) return moved;
+    yield* stepTo(c, { x: nx + 0.5, y: ny, z: nz + 0.5 }, 4);
     moved = true;
   }
   return moved;

@@ -4,7 +4,7 @@ Legenda: **PASS** = verificado de verdade · **FAIL** = falhou · **NOT TESTED**
 neste ambiente (sem cliente gráfico/celular).
 
 Ambiente: Bedrock Dedicated Server **1.26.65.1** oficial (Linux, sem jogadores), autoteste dentro do
-mundo `/scriptevent lila:selftest` — log completo em `tests/last_bds_run.log` (25/25 PASS).
+mundo `/scriptevent lila:selftest` — log completo em `tests/last_bds_run.log` (29/29 PASS, versão 1.1.0).
 
 ## Carregamento e qualidade
 | Item | Resultado |
@@ -37,6 +37,10 @@ mundo `/scriptevent lila:selftest` — log completo em `tests/last_bds_run.log` 
 | Persistência do registro | PASS |
 | Construção do jogador intacta no fim de tudo | PASS |
 | Autonomia: sem ordens, escolhe e executa atividades úteis (ferramentas, comida) | PASS |
+| Regressão do crash: cercada e mandada minerar fundo termina sem travar (522 ticks) | PASS |
+| Blocos do jogador intactos nesse cenário | PASS |
+| Andar com física (sem teleporte) chega ao destino | PASS |
+| Passo de script mais lento durante a autonomia < 60 ms (medido 12 ms) | PASS |
 
 ## Não testado (precisa de cliente/celular)
 | Item | Resultado |

@@ -14,6 +14,7 @@ import * as inv from "./inventory.js";
 import { hold, setAction, sound } from "./anim.js";
 import { say } from "./talk.js";
 import { logError } from "../core/log.js";
+import { breathe } from "../core/budget.js";
 
 /** @typedef {import("./companion.js").Companion} Companion */
 
@@ -75,7 +76,9 @@ export function chooseSite(c, blocks, here) {
 function siteFree(c, blocks, site) {
   const dim = c.dim();
   let bad = 0;
+  const t0 = Date.now();
   for (const b of blocks) {
+    if (Date.now() - t0 > 12) break; // amostra grande o bastante; a obra nunca quebra o que é do jogador
     const w = toWorld(site, b);
     const blk = blockAt(dim, w.x, w.y, w.z);
     if (!blk) return false;
@@ -131,6 +134,7 @@ export function* buildBlueprint(c, key, o = {}) {
   let placed = 0;
   for (const b of order) {
     if (!c.alive()) return false;
+    yield* breathe();
     if (b.m === "door_upper") continue;
     const w = toWorld(site, b);
     const want = blueprintBlock(b.m, wood);
@@ -196,6 +200,7 @@ function* fillFoundation(c, blocks, site) {
   const dim = c.dim();
   const minY = Math.min(...blocks.map((b) => b.y));
   for (const b of blocks) {
+    yield* breathe();
     if (b.y !== minY || b.m === "water") continue;
     const w = toWorld(site, b);
     for (let d = 4; d >= 1; d--) {
@@ -218,6 +223,7 @@ function* clearInterior(c, blocks, site) {
   for (let y = top; y >= 1; y--) {
     for (let x = fp.x0; x <= fp.x1; x++) {
       for (let z = fp.z0; z <= fp.z1; z++) {
+        yield* breathe();
         if (planned.has(`${x},${y},${z}`)) continue;
         const w = toWorld(site, { x, y, z });
         const blk = blockAt(dim, w.x, w.y, w.z);

@@ -9,7 +9,8 @@ import { goTo } from "../lila/motor.js";
 import { buildBlueprint } from "../lila/build.js";
 import { BLUEPRINTS } from "../lib/blueprints.js";
 import { blueprintBlock } from "../lib/recipes.js";
-import { command, handleIntents } from "../lila/brain.js";
+import { command, handleIntents, stats } from "../lila/brain.js";
+import { mineFor } from "../lila/resource.js";
 import { defend } from "../lila/combat.js";
 import { dismiss, restoreBodyForTest, RESPAWN_TICKS } from "../lila/lifecycle.js";
 import { readJSON } from "../core/persistence.js";
@@ -256,9 +257,40 @@ export async function runSelfTest(mode = "") {
     // 12) construção do jogador intacta no fim
     check("player planks wall intact", [-5, 0, 5].every((zz) => dim.getBlock({ x: 20, y: Y + 2, z: zz })?.typeId === "minecraft:oak_planks"));
 
+    // 12b) regressão do crash: cercada por blocos do jogador, mandada minerar fundo
+    {
+      const bx = 24, bz = 20;
+      cmd(dim, `fill ${bx - 2} ${Y + 1} ${bz - 2} ${bx + 2} ${Y + 4} ${bz + 2} oak_planks`);
+      cmd(dim, `fill ${bx - 2} ${Y - 4} ${bz - 2} ${bx + 2} ${Y} ${bz + 2} oak_planks`);
+      cmd(dim, `fill ${bx} ${Y + 1} ${bz} ${bx} ${Y + 2} ${bz} air`);
+      c.entity?.teleport({ x: bx + 0.5, y: Y + 1, z: bz + 0.5 });
+      await system.waitTicks(2);
+      stats.maxStepMs = 0;
+      const t0 = system.currentTick;
+      const rr = await runGen(mineFor(c, { types: ["minecraft:diamond_ore"], item: "minecraft:diamond", want: 1, depth: -50, tier: "none", label: "diamante" }), 1200);
+      const dt = system.currentTick - t0;
+      check("trapped deep-mining never hangs (crash fix)", dt > 5 && stats.maxStepMs < 60, `ticks=${dt} maxStep=${stats.maxStepMs}ms ${rr.err ?? ""}`);
+      check("trapped: player blocks untouched", dim.getBlock({ x: bx + 1, y: Y + 1, z: bz })?.typeId === "minecraft:oak_planks");
+      cmd(dim, `fill ${bx - 2} ${Y + 1} ${bz - 2} ${bx + 2} ${Y + 4} ${bz + 2} air`);
+      cmd(dim, `fill ${bx - 2} ${Y - 4} ${bz - 2} ${bx + 2} ${Y - 1} ${bz + 2} stone`);
+      cmd(dim, `fill ${bx - 2} ${Y} ${bz - 2} ${bx + 2} ${Y} ${bz + 2} grass_block`);
+      c.entity?.teleport({ x: 0.5, y: Y + 1, z: 0.5 });
+      await system.waitTicks(2);
+    }
+
+    // 12c) andar com física (sem teleporte): chega ao destino
+    {
+      c.entity?.teleport({ x: 0.5, y: Y + 1, z: 4.5 });
+      await system.waitTicks(4);
+      const r2 = await runGen(goTo(c, { x: 12.5, y: Y + 1, z: -2.5 }, { reach: 1.5, allowTeleport: false }), 600);
+      const q = c.pos();
+      check("physics walking reaches target", r2.ok && Math.hypot(q.x - 12.5, q.z + 2.5) < 2.5, `pos=${q.x.toFixed(1)},${q.z.toFixed(1)} ${r2.err ?? ""}`);
+    }
+
     // 13) autonomia: sem ordens, ela decide sozinha e faz algo útil
     if (!quick) {
       const blocks0 = c.rec.stats.blocks, crafted0 = c.rec.stats.crafted;
+      stats.maxStepMs = 0;
       const seen = new Set();
       c.rec.mode = "auto";
       c.rec.goals = [];
@@ -270,6 +302,7 @@ export async function runSelfTest(mode = "") {
         await system.waitTicks(20);
       }
       c.rec.paused = true;
+      check("autonomy: slowest script step under 60 ms", stats.maxStepMs < 60, `maxStep=${stats.maxStepMs}ms`);
       check("autonomy chooses and works on its own", c.rec.stats.blocks + c.rec.stats.crafted > blocks0 + crafted0 && seen.size >= 1,
         `goals=[${[...seen].join(",")}] blocks+${c.rec.stats.blocks - blocks0} crafted+${c.rec.stats.crafted - crafted0}`);
     }

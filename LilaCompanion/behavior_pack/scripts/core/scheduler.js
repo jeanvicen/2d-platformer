@@ -2,6 +2,7 @@
 // com intervalos próprios, deslocamento (stagger) e isolamento de erros.
 import { system } from "@minecraft/server";
 import { measure } from "./log.js";
+import { beginTick } from "./budget.js";
 
 /** @type {{name:string, every:number, offset:number, fn:()=>void}[]} */
 const tasks = [];
@@ -17,6 +18,7 @@ export function startScheduler() {
   if (started) return;
   started = true;
   intervalId = system.runInterval(() => {
+    beginTick();
     const t = system.currentTick;
     for (const task of tasks) {
       if ((t + task.offset) % task.every === 0) measure(task.name, task.fn);

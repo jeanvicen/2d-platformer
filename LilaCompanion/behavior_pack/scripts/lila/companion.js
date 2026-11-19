@@ -28,7 +28,7 @@ export function newRecord(player) {
   return {
     v: 1, ownerId: player.id, ownerName: player.name, summoned: false, dim: "minecraft:overworld",
     pos: { x: 0, y: 64, z: 0 }, hunger: 20, mode: "auto", goals: [], paused: false, defeat: null, saved: null,
-    base: null, farm: null, mem: {}, settings: { hud: "auto", chat: "normal", hunt: false, roam: 96 },
+    base: null, farm: null, mem: {}, settings: { hud: "auto", chat: "normal", hunt: false, roam: 64 },
     stats: { blocks: 0, crafted: 0, kills: 0, defeats: 0, built: 0 }, placed: [],
   };
 }

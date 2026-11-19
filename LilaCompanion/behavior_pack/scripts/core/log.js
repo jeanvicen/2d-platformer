@@ -2,14 +2,20 @@
 const RING = [];
 const MAX = 40;
 const counters = new Map();
+const lastWarn = new Map();
 
 export function logError(scope, err) {
   const msg = err instanceof Error ? `${err.message}` : String(err);
   const stack = err instanceof Error && err.stack ? String(err.stack).split("\n").slice(0, 3).join(" | ") : "";
   RING.push({ t: Date.now(), scope, msg, stack });
   if (RING.length > MAX) RING.shift();
-  counters.set(scope, (counters.get(scope) ?? 0) + 1);
-  console.warn(`[Lila:${scope}] ${msg}${stack ? " :: " + stack : ""}`);
+  const n = (counters.get(scope) ?? 0) + 1;
+  counters.set(scope, n);
+  // no máximo 1 aviso por área a cada 30 s: o log de conteúdo aparece na tela do celular
+  const now = Date.now();
+  if (now - (lastWarn.get(scope) ?? 0) < 30000) return;
+  lastWarn.set(scope, now);
+  console.warn(`[Lila:${scope}] ${msg}${stack ? " :: " + stack : ""}${n > 1 ? ` (x${n})` : ""}`);
 }
 
 export function logInfo(scope, msg) {

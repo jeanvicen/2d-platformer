@@ -1,126 +1,162 @@
 NO LOG FILE! - Failed to up file descriptor limit Operation not permitted
 NO LOG FILE! - setting up server logging...
-[2026-11-19 17:18:01:103 INFO] Starting Server
-[2026-11-19 17:18:01:103 INFO] Version: 1.26.65.1
-[2026-11-19 17:18:01:103 INFO] Session ID: 3e10630e-64c4-46c7-bf36-74c81b1320da
-[2026-11-19 17:18:01:103 INFO] Build ID: 53624744
-[2026-11-19 17:18:01:104 INFO] Branch: r/26_u6
-[2026-11-19 17:18:01:104 INFO] Commit ID: cdafb75c90a160d7dd40adc9769f2485a4a76a05
-[2026-11-19 17:18:01:104 INFO] Configuration: Publish
-[2026-11-19 17:18:01:104 INFO] Contents of server.properties: {"allow-cheats":"true","allow-inbound-script-debugging":"false","allow-list":"false","allow-outbound-script-debugging":"false","block-network-ids-are-hashes":"true","chat-restriction":"None","client-side-chunk-generation-enabled":"true","compression-algorithm":"zlib","compression-threshold":"1","content-log-console-output-enabled":"true","content-log-file-enabled":"true","content-log-level":"info","default-player-permission-level":"member","difficulty":"easy","disable-custom-skins":"false","disable-persona":"false","disable-player-interaction":"false","enable-lan-visibility":"false","force-gamemode":"false","gamemode":"survival","level-name":"lila_test","max-players":"10","max-threads":"8","online-mode":"false","persistent-ticking-area-max-chunks":"100","persistent-ticking-area-max-count":"10","player-idle-timeout":"30","player-movement-action-direction-threshold":"0.85","player-position-acceptance-threshold":"0.5","script-debugger-auto-attach":"disabled","server-authoritative-block-breaking-pick-range-scalar":"1.5","server-authoritative-dismount-strict":"false","server-authoritative-entity-attack-range-tolerance":"0.5","server-authoritative-entity-attack-range-validation":"disabled","server-authoritative-entity-attack-request-validation":"disabled","server-authoritative-entity-interactions-strict":"false","server-authoritative-movement-strict":"false","server-build-radius-ratio":"Disabled","server-name":"Dedicated Server","server-port":"41234","server-portv6":"41235","server-udp-ports":"19132","texturepack-required":"false","tick-distance":"4","transient-ticking-area-max-chunks":"300","transport":"nethernet","view-distance":"32"}
-[2026-11-19 17:18:01:104 INFO] Level Name: lila_test
-[2026-11-19 17:18:01:104 INFO] Profiler config ('bootstrap.json') load result: success=1, errorMessage=(null)
-[2026-11-19 17:18:01:105 INFO] No CDN config file found at: cdn_config.json for dedicated server
-[2026-11-19 17:18:01:105 INFO] Game mode: 0 Survival
-[2026-11-19 17:18:01:105 INFO] Difficulty: 1 EASY
-[2026-11-19 17:18:01:108 INFO] Content logging to console is enabled.
-[2026-11-19 17:18:01:110 INFO] 
+[2026-11-19 19:30:44:549 INFO] Starting Server
+[2026-11-19 19:30:44:549 INFO] Version: 1.26.65.1
+[2026-11-19 19:30:44:549 INFO] Session ID: 242c294d-f448-43c7-a7cf-3b6ac4f578e1
+[2026-11-19 19:30:44:549 INFO] Build ID: 53624744
+[2026-11-19 19:30:44:549 INFO] Branch: r/26_u6
+[2026-11-19 19:30:44:549 INFO] Commit ID: cdafb75c90a160d7dd40adc9769f2485a4a76a05
+[2026-11-19 19:30:44:550 INFO] Configuration: Publish
+[2026-11-19 19:30:44:551 INFO] Contents of server.properties: {"allow-cheats":"true","allow-inbound-script-debugging":"false","allow-list":"false","allow-outbound-script-debugging":"false","block-network-ids-are-hashes":"true","chat-restriction":"None","client-side-chunk-generation-enabled":"true","compression-algorithm":"zlib","compression-threshold":"1","content-log-console-output-enabled":"true","content-log-file-enabled":"true","content-log-level":"info","default-player-permission-level":"member","difficulty":"easy","disable-custom-skins":"false","disable-persona":"false","disable-player-interaction":"false","enable-lan-visibility":"false","force-gamemode":"false","gamemode":"survival","level-name":"lila_test","max-players":"10","max-threads":"8","online-mode":"false","persistent-ticking-area-max-chunks":"100","persistent-ticking-area-max-count":"10","player-idle-timeout":"30","player-movement-action-direction-threshold":"0.85","player-position-acceptance-threshold":"0.5","script-debugger-auto-attach":"disabled","server-authoritative-block-breaking-pick-range-scalar":"1.5","server-authoritative-dismount-strict":"false","server-authoritative-entity-attack-range-tolerance":"0.5","server-authoritative-entity-attack-range-validation":"disabled","server-authoritative-entity-attack-request-validation":"disabled","server-authoritative-entity-interactions-strict":"false","server-authoritative-movement-strict":"false","server-build-radius-ratio":"Disabled","server-name":"Dedicated Server","server-port":"41234","server-portv6":"41235","server-udp-ports":"19132","texturepack-required":"false","tick-distance":"4","transient-ticking-area-max-chunks":"300","transport":"nethernet","view-distance":"32"}
+[2026-11-19 19:30:44:551 INFO] Level Name: lila_test
+[2026-11-19 19:30:44:687 INFO] Profiler config ('bootstrap.json') load result: success=1, errorMessage=(null)
+[2026-11-19 19:30:44:761 INFO] No CDN config file found at: cdn_config.json for dedicated server
+[2026-11-19 19:30:44:761 INFO] Game mode: 0 Survival
+[2026-11-19 19:30:44:761 INFO] Difficulty: 1 EASY
+[2026-11-19 19:30:44:770 INFO] Content logging to console is enabled.
+[2026-11-19 19:30:44:844 INFO] 
 
 #####################################################
 #                                                   #
 #              CREATING VANILLA WORLD               #
 #                                                   #
 #####################################################
-[2026-11-19 17:18:01:462 INFO] Content logging to disk is enabled. Writing log to: ./ContentLog2026-11-19_17-18-01.txt
-[2026-11-19 17:18:01:463 INFO] Opening level 'worlds/lila_test/db'
-[2026-11-19 17:18:01:463 INFO] Accepting clients on 0.0.0.0:41234
-[2026-11-19 17:18:01:499 INFO] Pack Stack - [00] Lila Companion (BP) (id: b461d112-57c7-4e8f-b4dc-395753b1764f, version: 1.0.0) @ behavior_packs/LilaCompanion_BP
-[2026-11-19 17:18:01:733 INFO] Signed in to signaling service successfully
-[2026-11-19 17:18:02:431 INFO] Server started.
-[2026-11-19 17:18:02:431 INFO] ================ TELEMETRY MESSAGE ===================
-[2026-11-19 17:18:02:431 INFO] Server Telemetry is currently not enabled. 
-[2026-11-19 17:18:02:431 INFO] Enabling this telemetry helps us improve the game.
-[2026-11-19 17:18:02:431 INFO] 
-[2026-11-19 17:18:02:431 INFO] To enable this feature, add the line 'emit-server-telemetry=true'
-[2026-11-19 17:18:02:431 INFO] to the server.properties file in the handheld/src-server directory
-[2026-11-19 17:18:02:431 INFO] ======================================================
-[2026-11-19 17:18:02:441 INFO] [Scripting] [Lila:boot] Lila Companion carregado
+[2026-11-19 19:30:46:964 INFO] Content logging to disk is enabled. Writing log to: ./ContentLog2026-11-19_19-30-46.txt
+[2026-11-19 19:30:46:967 INFO] Opening level 'worlds/lila_test/db'
+[2026-11-19 19:30:47:025 INFO] Accepting clients on 0.0.0.0:41234
+[2026-11-19 19:30:47:580 INFO] Pack Stack - [00] Lila Companion (BP) (id: b461d112-57c7-4e8f-b4dc-395753b1764f, version: 1.1.0) @ behavior_packs/LilaCompanion_BP
+[2026-11-19 19:30:48:150 INFO] Signed in to signaling service successfully
+[2026-11-19 19:30:48:995 INFO] Server started.
+[2026-11-19 19:30:48:996 INFO] ================ TELEMETRY MESSAGE ===================
+[2026-11-19 19:30:48:996 INFO] Server Telemetry is currently not enabled. 
+[2026-11-19 19:30:48:996 INFO] Enabling this telemetry helps us improve the game.
+[2026-11-19 19:30:48:996 INFO] 
+[2026-11-19 19:30:48:996 INFO] To enable this feature, add the line 'emit-server-telemetry=true'
+[2026-11-19 19:30:48:996 INFO] to the server.properties file in the handheld/src-server directory
+[2026-11-19 19:30:48:996 INFO] ======================================================
+[2026-11-19 19:30:49:010 INFO] [Scripting] [Lila:boot] Lila Companion carregado
 
-[2026-11-19 17:18:07:568 INFO] Script event lila:selftest has been sent
-[2026-11-19 17:18:07:570 INFO] [Scripting] LILA-TEST START
+[2026-11-19 19:30:54:219 INFO] Script event lila:selftest has been sent
+[2026-11-19 19:30:54:220 INFO] [Scripting] LILA-TEST START
 
-[2026-11-19 17:18:08:813 INFO] [Scripting] LILA-TEST PASS arena chunks loaded
+[2026-11-19 19:30:55:512 INFO] [Scripting] LILA-TEST PASS arena chunks loaded
 
-[2026-11-19 17:18:09:630 INFO] [Scripting] LILA-TEST PASS spawn + adopt
+[2026-11-19 19:30:56:317 INFO] [Scripting] LILA-TEST PASS spawn + adopt
 
-[2026-11-19 17:18:09:630 INFO] [Scripting] LILA-TEST PASS inventory add/count
+[2026-11-19 19:30:56:319 INFO] [Scripting] LILA-TEST PASS inventory add/count
 
-[2026-11-19 17:18:09:631 INFO] [Scripting] LILA-TEST PASS inventory take
+[2026-11-19 19:30:56:319 INFO] [Scripting] LILA-TEST PASS inventory take
 
-[2026-11-19 17:18:15:780 INFO] [Scripting] LILA-TEST PASS pathfinding around wall :: pos=-14.5,151.0,-9.5 
+[2026-11-19 19:31:05:222 INFO] [Scripting] LILA-TEST PASS pathfinding around wall :: pos=-14.5,151.0,-9.2 
 
-[2026-11-19 17:18:15:780 INFO] [Scripting] LILA-TEST PASS wall intact (player build)
+[2026-11-19 19:31:05:222 INFO] [Scripting] LILA-TEST PASS wall intact (player build)
 
-[2026-11-19 17:18:43:031 INFO] [Scripting] LILA-TEST PASS chop trees -> 8 logs :: logs=10 
+[2026-11-19 19:31:05:374 INFO] [Scripting] [Lila:say] Vou explorar ali pra frente procurando árvores.
 
-[2026-11-19 17:18:47:331 INFO] [Scripting] LILA-TEST PASS craft wooden pickaxe (planks, sticks, table)
+[2026-11-19 19:32:13:574 INFO] [Scripting] LILA-TEST PASS chop trees -> 8 logs :: logs=10 
 
-[2026-11-19 17:19:02:058 INFO] [Scripting] LILA-TEST PASS stone pickaxe (mines real stone)
+[2026-11-19 19:32:18:023 INFO] [Scripting] LILA-TEST PASS craft wooden pickaxe (planks, sticks, table)
 
-[2026-11-19 17:19:02:060 INFO] [Scripting] LILA-TEST PASS temporary crafting table picked back up :: tables=0
+[2026-11-19 19:32:29:523 INFO] [Scripting] LILA-TEST PASS stone pickaxe (mines real stone)
 
-[2026-11-19 17:19:08:845 INFO] [Scripting] [Lila:say] Vou atrás de ferro bruto.
+[2026-11-19 19:32:29:524 INFO] [Scripting] LILA-TEST PASS temporary crafting table picked back up :: tables=0
 
-[2026-11-19 17:19:16:547 INFO] [Scripting] [Lila:say] Fundindo 2 barras de ferro na fornalha...
+[2026-11-19 19:32:36:623 INFO] [Scripting] [Lila:say] Vou atrás de ferro bruto.
 
-[2026-11-19 17:19:37:746 INFO] [Scripting] LILA-TEST PASS iron ingots via mining + furnace smelting :: iron=2 raw=0 
+[2026-11-19 19:32:49:973 INFO] [Scripting] [Lila:say] Fundindo 2 barras de ferro na fornalha...
 
-[2026-11-19 17:19:37:752 INFO] [Scripting] [Lila:say] Deixa comigo! (coletar 3 areia)
+[2026-11-19 19:33:11:173 INFO] [Scripting] LILA-TEST PASS iron ingots via mining + furnace smelting :: iron=2 raw=0 
 
-[2026-11-19 17:19:41:395 INFO] [Scripting] [Lila:say] Pronto! Juntei 3 areia.
+[2026-11-19 19:33:11:181 INFO] [Scripting] [Lila:say] Pode deixar! (coletar 3 areia)
 
-[2026-11-19 17:19:41:495 INFO] [Scripting] LILA-TEST PASS text command 'pega 3 areia' :: sand=3
+[2026-11-19 19:33:22:373 INFO] [Scripting] [Lila:say] Pronto! Juntei 3 areia.
 
-[2026-11-19 17:19:41:647 INFO] [Scripting] [Lila:say] Materiais prontos! Começando abrigo.
+[2026-11-19 19:33:22:422 INFO] [Scripting] LILA-TEST PASS text command 'pega 3 areia' :: sand=3
 
-[2026-11-19 17:20:19:944 INFO] [Scripting] [Lila:say] Obra em andamento: 39%
+[2026-11-19 19:33:22:575 INFO] [Scripting] [Lila:say] Materiais prontos! Começando abrigo.
 
-[2026-11-19 17:20:30:645 INFO] [Scripting] [Lila:say] Obra em andamento: 80%
+[2026-11-19 19:34:00:872 INFO] [Scripting] [Lila:say] Obra em andamento: 39%
 
-[2026-11-19 17:20:38:046 INFO] [Scripting] LILA-TEST PASS build 'abrigo' from blueprint :: 97/98 
+[2026-11-19 19:34:11:572 INFO] [Scripting] [Lila:say] Obra em andamento: 80%
 
-[2026-11-19 17:20:41:796 INFO] [Scripting] LILA-TEST PASS defend: kills zombie
+[2026-11-19 19:34:18:974 INFO] [Scripting] LILA-TEST PASS build 'abrigo' from blueprint :: 97/98 
 
-[2026-11-19 17:20:41:796 INFO] [Scripting] [Lila:say] Tá bom, vou descansar. É só me chamar no controle!
+[2026-11-19 19:34:22:022 INFO] [Scripting] LILA-TEST PASS defend: kills zombie
 
-[2026-11-19 17:20:41:994 INFO] [Scripting] LILA-TEST PASS dismiss stores body
+[2026-11-19 19:34:22:023 INFO] [Scripting] [Lila:say] Tá bom, vou descansar. É só me chamar no controle!
 
-[2026-11-19 17:20:42:195 INFO] [Scripting] LILA-TEST PASS resummon restores full inventory :: before=96 after=96
+[2026-11-19 19:34:22:222 INFO] [Scripting] LILA-TEST PASS dismiss stores body
 
-[2026-11-19 17:20:42:244 INFO] [Scripting] [Lila:say] Fui derrotada... volto em 20 segundos!
+[2026-11-19 19:34:22:423 INFO] [Scripting] LILA-TEST PASS resummon restores full inventory :: before=83 after=83
 
-[2026-11-19 17:20:42:295 INFO] [Scripting] LILA-TEST PASS lethal hit -> defeat (no death)
+[2026-11-19 19:34:22:472 INFO] [Scripting] [Lila:say] Fui derrotada... volto em 20 segundos!
 
-[2026-11-19 17:20:44:295 INFO] [Scripting] LILA-TEST PASS body stored during defeat
+[2026-11-19 19:34:22:517 INFO] [Scripting] LILA-TEST PASS lethal hit -> defeat (no death)
 
-[2026-11-19 17:21:02:246 INFO] [Scripting] [Lila:say] Voltei! Continuando de onde parei.
+[2026-11-19 19:34:24:522 INFO] [Scripting] LILA-TEST PASS body stored during defeat
 
-[2026-11-19 17:21:02:295 INFO] [Scripting] LILA-TEST PASS respawn after exactly 400 ticks (20 s) :: ticks=402
+[2026-11-19 19:34:42:473 INFO] [Scripting] [Lila:say] Voltei! Continuando de onde parei.
 
-[2026-11-19 17:21:02:295 INFO] [Scripting] LILA-TEST PASS inventory kept after defeat :: before=96 after=96
+[2026-11-19 19:34:42:522 INFO] [Scripting] LILA-TEST PASS respawn after exactly 400 ticks (20 s) :: ticks=402
 
-[2026-11-19 17:21:02:295 INFO] [Scripting] LILA-TEST PASS plan resumed after defeat
+[2026-11-19 19:34:42:523 INFO] [Scripting] LILA-TEST PASS inventory kept after defeat :: before=83 after=83
 
-[2026-11-19 17:21:02:296 INFO] [Scripting] LILA-TEST PASS record persisted :: blocks=79
+[2026-11-19 19:34:42:523 INFO] [Scripting] LILA-TEST PASS plan resumed after defeat
 
-[2026-11-19 17:21:02:296 INFO] [Scripting] LILA-TEST PASS player planks wall intact
+[2026-11-19 19:34:42:523 INFO] [Scripting] LILA-TEST PASS record persisted :: blocks=85
 
-[2026-11-19 17:21:05:395 INFO] [Scripting] [Lila:say] Fiz ferramentas novas de pedra!
+[2026-11-19 19:34:42:523 INFO] [Scripting] LILA-TEST PASS player planks wall intact
 
-[2026-11-19 17:22:03:896 INFO] [Scripting] [Lila:say] Vou explorar ali pra frente procurando grama para sementes.
+[2026-11-19 19:34:42:723 INFO] [Scripting] [Lila:say] Vou descer cavando uma escadaria.
 
-[2026-11-19 17:22:20:701 INFO] [Scripting] [Lila:say] Vou explorar ali pra frente procurando grama para sementes.
+[2026-11-19 19:34:42:923 INFO] [Scripting] [Lila:say] Vou descer cavando uma escadaria.
 
-[2026-11-19 17:22:28:250 INFO] [Scripting] [Lila:say] Vou explorar ali pra frente procurando grama para sementes.
+[2026-11-19 19:34:43:073 INFO] [Scripting] [Lila:say] Vou explorar ali pra frente procurando diamante.
 
-[2026-11-19 17:22:32:295 INFO] [Scripting] LILA-TEST PASS autonomy chooses and works on its own :: goals=[tools,food] blocks+56 crafted+3
+[2026-11-19 19:34:45:923 INFO] [Scripting] [Lila:say] Vou explorar ali pra frente procurando diamante.
 
-[2026-11-19 17:22:32:295 INFO] [Scripting] [Lila:say] Fico aqui esperando.
+[2026-11-19 19:34:48:773 INFO] [Scripting] [Lila:say] Vou explorar ali pra frente procurando diamante.
 
-[2026-11-19 17:22:32:295 INFO] [Scripting] LILA-TEST PASS mode stay
+[2026-11-19 19:34:51:622 INFO] [Scripting] [Lila:say] Vou explorar ali pra frente procurando diamante.
 
-[2026-11-19 17:22:32:295 INFO] [Scripting] LILA-TEST DONE pass=25 fail=0
+[2026-11-19 19:34:54:472 INFO] [Scripting] [Lila:say] Vou explorar ali pra frente procurando diamante.
 
-[2026-11-19 17:22:34:307 INFO] Server stop requested.
-[2026-11-19 17:22:34:355 INFO] Stopping server...
+[2026-11-19 19:34:57:323 INFO] [Scripting] [Lila:say] Vou explorar ali pra frente procurando diamante.
+
+[2026-11-19 19:35:00:173 INFO] [Scripting] [Lila:say] Vou explorar ali pra frente procurando diamante.
+
+[2026-11-19 19:35:03:018 INFO] [Scripting] [Lila:say] Vou explorar ali pra frente procurando diamante.
+
+[2026-11-19 19:35:05:873 INFO] [Scripting] [Lila:say] Vou explorar ali pra frente procurando diamante.
+
+[2026-11-19 19:35:08:722 INFO] [Scripting] LILA-TEST PASS trapped deep-mining never hangs (crash fix) :: ticks=522 maxStep=0ms não encontrei diamante depois de procurar muito
+
+[2026-11-19 19:35:08:722 INFO] [Scripting] LILA-TEST PASS trapped: player blocks untouched
+
+[2026-11-19 19:35:14:972 INFO] [Scripting] LILA-TEST PASS physics walking reaches target :: pos=12.5,-1.5 
+
+[2026-11-19 19:35:15:023 INFO] [Scripting] [Lila:say] Vou fazer umas ferramentas de pedra.
+
+[2026-11-19 19:35:18:223 INFO] [Scripting] [Lila:say] Fiz ferramentas novas de pedra!
+
+[2026-11-19 19:35:18:273 INFO] [Scripting] [Lila:say] Vou procurar comida pra gente.
+
+[2026-11-19 19:35:47:419 INFO] [Scripting] [Lila:say] Comida garantida!
+
+[2026-11-19 19:36:06:773 INFO] [Scripting] [Lila:say] Comida garantida!
+
+[2026-11-19 19:36:19:873 INFO] [Scripting] [Lila:say] Comida garantida!
+
+[2026-11-19 19:36:44:976 INFO] [Scripting] LILA-TEST PASS autonomy: slowest script step under 60 ms :: maxStep=12ms
+
+[2026-11-19 19:36:44:976 INFO] [Scripting] LILA-TEST PASS autonomy chooses and works on its own :: goals=[tools,food] blocks+110 crafted+3
+
+[2026-11-19 19:36:44:976 INFO] [Scripting] [Lila:say] Fico aqui esperando.
+
+[2026-11-19 19:36:44:976 INFO] [Scripting] LILA-TEST PASS mode stay
+
+[2026-11-19 19:36:44:976 INFO] [Scripting] LILA-TEST DONE pass=29 fail=0
+
+[2026-11-19 19:36:47:022 INFO] Server stop requested.
+[2026-11-19 19:36:47:067 INFO] Stopping server...
 Quit correctly

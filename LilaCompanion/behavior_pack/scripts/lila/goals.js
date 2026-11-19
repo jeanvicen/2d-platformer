@@ -183,8 +183,8 @@ export function* sleep(c, untilDay = true) {
 }
 
 /** Ilumina a área do dono com tochas (fabrica as tochas se precisar). */
-function* torches(c, count) {
-  if (inv.count(c, "minecraft:torch") < count) yield* obtain(c, "minecraft:torch", count, { cmd: true });
+function* torches(c, count, quiet = false) {
+  if (inv.count(c, "minecraft:torch") < count && !quiet) yield* obtain(c, "minecraft:torch", count, { cmd: true });
   const o = c.owner();
   const center = o?.location ?? c.pos();
   const dim = c.dim();
@@ -205,7 +205,8 @@ function* torches(c, count) {
       if (yield* placeAt(c, spot, "minecraft:torch", "minecraft:torch", { torch_facing_direction: "top" })) placed++;
     }
   }
-  say(c, placed ? `Coloquei ${placed} tochas por aqui.` : "Já está bem iluminado por aqui!", { force: true });
+  if (!quiet) say(c, placed ? `Coloquei ${placed} tochas por aqui.` : "Já está bem iluminado por aqui!", { force: true });
+  else if (placed) say(c, "Tava escuro aí, coloquei umas tochas.", { chatter: true });
 }
 
 /** Guarda tudo (menos ferramentas, comida e blocos de apoio) no baú da base. */
@@ -292,6 +293,7 @@ export function runGoal(c, g) {
   const cmd = g.origin === "cmd";
   switch (g.type) {
     case "follow": return followOwner(c);
+    case "tagalong": return followOwner(c, a.ticks ?? 240);
     case "stay": return stayHere(c);
     case "come": return (function* () {
       const o = c.owner();
@@ -359,7 +361,10 @@ export function runGoal(c, g) {
       yield* goTo(c, c.rec.base, { reach: 2, yTol: 3, run: true });
       say(c, "Cheguei em casa!", { force: cmd });
     })();
-    case "torches": return torches(c, a.count ?? 16);
+    case "torches": return (function* () {
+      c.flags.lastTorch = system.currentTick;
+      yield* torches(c, a.count ?? 16, !!a.quiet);
+    })();
     case "deposit": return deposit(c);
     case "eat": return eat(c);
     case "defend": return defend(c);
@@ -421,6 +426,7 @@ function* hangout(c, ticks) {
       yield 20;
     }
     yield* sweepItems(c, c.pos(), 3);
+    yield 1;
   }
 }
 

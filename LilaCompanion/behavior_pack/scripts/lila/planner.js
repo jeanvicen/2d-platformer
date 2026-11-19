@@ -68,6 +68,7 @@ export function* obtain(c, target, count, o = {}) {
   if (inv.count(c, t.id ?? t) >= count) return true;
   let toolRetries = 0;
   for (;;) {
+    yield 1;
     try {
       yield* strategy(c, t, count, { ...o, depth: depth + 1 });
       if (inv.count(c, t.id ?? t) >= count) return true;
@@ -125,7 +126,7 @@ function* strategy(c, t, count, o) {
   const ore = ORE_BY_ITEM[id];
   if (ore) return yield* tryMine(c, ore, count, o, false);
   if (id === "minecraft:cobblestone") {
-    return yield* mineFor(c, { types: ["minecraft:stone", "minecraft:cobblestone"], item: id, want: count, depth: Math.floor(c.pos().y) - 6, tier: "wooden", label: "pedra" });
+    return yield* mineFor(c, { types: ["minecraft:stone"], item: id, want: count, depth: Math.floor(c.pos().y) - 6, tier: "wooden", label: "pedra" });
   }
   if (id === "minecraft:cobbled_deepslate") {
     return yield* mineFor(c, { types: ["minecraft:deepslate", "minecraft:cobbled_deepslate"], item: id, want: count, depth: -4, tier: "wooden", label: "ardósia" });

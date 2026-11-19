@@ -116,6 +116,7 @@ export function summon(c, player) {
   }
   c.rec.summoned = true;
   c.rec.paused = false;
+  c.flags.tagUntil = system.currentTick + 600;
   arrive(c, player.dimension, loc, true);
   say(c, pick(LINES.summon), { force: true });
   c.save();

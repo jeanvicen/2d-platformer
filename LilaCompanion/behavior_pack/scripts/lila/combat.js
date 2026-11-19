@@ -172,6 +172,7 @@ export function* huntFor(c, item, mobs, count, allowed) {
   if (!mobs.length) throw new GoalError(`não sei como conseguir ${ptName(item)}`);
   let explorations = 0;
   while (inv.count(c, item) < count && c.alive()) {
+    yield 1;
     let list = [];
     try {
       list = c.dim().getEntities({ location: c.pos(), maxDistance: 40 }).filter((e) => mobs.includes(e.typeId) && canAttack(c, e, true));
@@ -198,6 +199,7 @@ export function* shearSheep(c, count, allowKill) {
   if (inv.count(c, "minecraft:shears") < 1) yield* obtain(c, "minecraft:shears", 1, {});
   let explorations = 0;
   while (inv.count(c, { group: "wool" }) < count && c.alive()) {
+    yield 1;
     let sheep = [];
     try {
       sheep = c.dim().getEntities({ type: "minecraft:sheep", location: c.pos(), maxDistance: 40 }).filter((e) => !e.getComponent("minecraft:is_sheared"));

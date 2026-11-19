@@ -188,6 +188,7 @@ def move_controller():
         states["default"]["transitions"].append({mv: f"{m} == '{mv}'"})
         states[mv] = {"animations": [mv], "blend_transition": 0.2,
                       "transitions": [{"default": f"{m} != '{mv}'"}]}
+    # corpo andando de verdade (física) mesmo se a propriedade ainda não sincronizou
     states["default"]["transitions"].append({"native": f"{m} == 'none' && {native}"})
     states["native"] = {"animations": ["walk"], "blend_transition": 0.25,
                         "transitions": [{"default": f"{m} != 'none' || q.ground_speed < 0.25"}]}

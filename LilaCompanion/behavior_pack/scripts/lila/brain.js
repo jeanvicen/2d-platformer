@@ -14,6 +14,7 @@ import * as inv from "./inventory.js";
 import { setAction, getAction } from "./anim.js";
 import { LINES, pick, say } from "./talk.js";
 import { logError } from "../core/log.js";
+import { overBudget } from "../core/budget.js";
 
 /** @typedef {import("./companion.js").Companion} Companion */
 /** @typedef {import("./companion.js").GoalDesc} GoalDesc */
@@ -39,20 +40,29 @@ function step(c, job) {
     return "run";
   }
   let r;
+  const t0 = Date.now();
   try {
     r = job.gen.next();
   } catch (e) {
     job.error = e;
     return "fail";
+  } finally {
+    const dt = Date.now() - t0;
+    if (dt > (stats.maxStepMs ?? 0)) stats.maxStepMs = dt;
+    if (dt > 50) logError("brain.slow", `${job.desc.type}: passo de ${dt} ms`);
   }
   if (r.done) return "done";
   job.wait = typeof r.value === "number" ? Math.max(0, r.value - 1) : 0;
   return "run";
 }
 
+/** Estatísticas de desempenho (o autoteste confere o passo mais lento). */
+export const stats = { maxStepMs: 0 };
+
 /** Chamado todo tick para cada Lila ativa. */
 export function tick(c) {
   if (!c.alive() || c.rec.defeat || c.rec.paused) return;
+  if (overBudget(14)) return; // o tick já está pesado: ela espera o próximo
   const job = c.urgent ?? c.job;
   if (!job) {
     pickNext(c);
@@ -110,7 +120,29 @@ function pickNext(c) {
   if (c.flags.autoCooldown && system.currentTick < c.flags.autoCooldown) {
     return start(c, { type: "hangout", origin: "auto", args: { ticks: 200 } });
   }
-  start(c, chooseAuto(c));
+  const pickG = chooseAuto(c);
+  announce(c, pickG);
+  start(c, pickG);
+}
+
+const PLANS = {
+  stock: (a) => `Vou juntar ${a.count ?? ""} ${a.item?.group === "log" ? "madeira" : String(a.item?.id ?? a.item ?? "").replace("minecraft:", "").replace(/_/g, " ")} aqui perto.`,
+  tools: (a) => `Vou fazer umas ferramentas ${a.tier === "iron" ? "de ferro" : a.tier === "stone" ? "de pedra" : "de madeira"}.`,
+  food: () => "Vou procurar comida pra gente.",
+  build: () => "Vou construir uma casinha pra gente aqui perto!",
+  farm: () => "Vou fazer uma plantação do lado da casa.",
+  tend: () => "Vou dar uma olhada na plantação.",
+  deposit: () => "Mochila cheia, vou guardar as coisas no baú.",
+  armor: () => "Vou fazer uma armadura pra mim.",
+  explore: () => "Vou dar uma explorada por aqui, já volto!",
+  sleep: () => "Tá tarde... vou descansar perto de você.",
+};
+
+function announce(c, g) {
+  const f = PLANS[g.type];
+  if (!f || c.flags.lastAnnounced === g.type) return;
+  c.flags.lastAnnounced = g.type;
+  say(c, f(g.args ?? {}), { chatter: true });
 }
 
 const nightTime = () => {
@@ -151,6 +183,10 @@ export function chooseAuto(c) {
   const failed = c.flags.lastFail && system.currentTick - c.flags.lastFail.t < 2400 ? c.flags.lastFail.type : null;
 
   if (o && d > roam) add(95, { type: "regroup" });
+  // acabou de chegar ou você está viajando: vai junto (como uma amiga de verdade)
+  if (o && (system.currentTick < (c.flags.tagUntil ?? 0) || c.flags.ownerMoving)) add(90, { type: "tagalong", args: { ticks: 240 } });
+  // escuro perto de você e ela tem tochas: ilumina
+  if (o && c.flags.ownerDark && cnt("minecraft:torch") > 0 && system.currentTick - (c.flags.lastTorch ?? -9999) > 1200) add(70, { type: "torches", args: { count: 4, quiet: true } });
   if (c.rec.hunger < 8 && food === 0) add(88, { type: "food", args: { count: 6 } });
   else if (food < 4) add(42, { type: "food", args: { count: 8 } });
   if (nightTime() && !findThreat(c) && (ownerResting(c) || d < 16)) add(72, { type: "sleep" });
@@ -168,7 +204,7 @@ export function chooseAuto(c) {
   if (c.rec.base && !c.rec.farm && !nightTime()) add(28, { type: "farm", args: { crop: "minecraft:wheat_seeds" } });
   if (c.rec.farm) add(18 + (system.currentTick % 6000 < 200 ? 20 : 0), { type: "tend" });
   add(18, { type: "hangout", args: { ticks: 400 } });
-  if (d < roam / 2) add(12, { type: "explore", args: { legs: 2 } });
+  if (d < roam / 2 && !c.flags.ownerMoving) add(12, { type: "explore", args: { legs: 2 } });
   opts.sort((a, b) => b.score - a.score);
   const best = opts.find((x) => x.desc.type !== failed) ?? opts[0];
   return best.desc;
@@ -194,6 +230,7 @@ export function sense(c) {
   }
   // no modo autônomo, se o dono foi longe demais, larga a tarefa e volta
   const o = c.owner();
+  if (o && now % 20 === 0) watchOwner(c, o);
   if (o) {
     if (o.dimension.id !== c.dim().id) {
       c.flags.otherDim = (c.flags.otherDim ?? 0) + 10;
@@ -205,15 +242,43 @@ export function sense(c) {
       c.flags.otherDim = 0;
       const d = Math.hypot(o.location.x - c.pos().x, o.location.z - c.pos().z);
       const roam = c.rec.settings.roam ?? 96;
-      if (c.job && c.job.desc.origin === "auto" && c.job.desc.type !== "regroup" && c.job.desc.type !== "explore" && d > roam * 1.6) {
+      const jt = c.job?.desc.type;
+      const casual = jt && c.job?.desc.origin === "auto" && !["regroup", "tagalong", "follow", "sleep"].includes(jt);
+      if (casual && (d > roam * 1.6 || (c.flags.ownerMoving && d > 24))) {
         abortAll(c, true);
-        start(c, { type: "regroup", origin: "auto" });
+        start(c, { type: "tagalong", origin: "auto", args: { ticks: 240 } });
       }
     }
   }
   keepLoaded(c);
   // pega itens do chão quando passa por cima (como jogadora)
   if (now % 20 === 0) collectDrops(c, c.pos(), 1.6);
+}
+
+/** Observa o dono: está viajando? está no escuro? está machucado? */
+function watchOwner(c, o) {
+  const trail = (c.flags.trail ??= []);
+  trail.push({ x: o.location.x, z: o.location.z });
+  if (trail.length > 6) trail.shift(); // ~6 s
+  const a = trail[0], b = trail[trail.length - 1];
+  c.flags.ownerMoving = trail.length >= 3 && Math.hypot(a.x - b.x, a.z - b.z) > 9;
+  try {
+    const blk = o.dimension.getBlock({ x: Math.floor(o.location.x), y: Math.floor(o.location.y), z: Math.floor(o.location.z) });
+    c.flags.ownerDark = !!blk && blk.getLightLevel() < 7 && !c.flags.ownerMoving;
+  } catch {
+    c.flags.ownerDark = false;
+  }
+  // vida baixa: leva comida até ele (no máximo 1× por minuto)
+  try {
+    const hp = o.getComponent("minecraft:health");
+    if (hp && hp.currentValue <= 8 && !c.urgent && system.currentTick - (c.flags.lastHeal ?? -99999) > 1200 && inv.bestFood(c)) {
+      c.flags.lastHeal = system.currentTick;
+      say(c, "Você tá machucado! Toma, come alguma coisa.", { force: true });
+      start(c, { type: "give", origin: "auto", args: { item: { group: "food" }, count: 3 } }, true);
+    }
+  } catch {
+    /* ignore */
+  }
 }
 
 function followAcrossDimension(c, o) {

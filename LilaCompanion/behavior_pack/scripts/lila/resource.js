@@ -5,7 +5,7 @@ import { ORES, ORE_DEPTH, ORE_TIER, TIER_RANK, CROPS, isLog, isLeaves, oreOf } f
 import { GoalError, NeedTool } from "./companion.js";
 import { blockAt, cellFn, exposed, findBlocks, groundY, isLoaded, isTreeLog, safeState, treeLogs } from "./world.js";
 import { canBreak, collectDrops, face, harvestCrop, lavaNear, pickBerries, placeAt, quickBreak } from "./blocks.js";
-import { goTo, stop } from "./motor.js";
+import { goTo, stepTo, stop } from "./motor.js";
 import * as inv from "./inventory.js";
 import { hold, setAction } from "./anim.js";
 import { say } from "./talk.js";
@@ -41,6 +41,7 @@ export function* chopTrees(c, want) {
   const dim = c.dim();
   let explorations = 0;
   while (inv.count(c, { group: "log" }) < want && c.alive()) {
+    yield 1;
     const here = c.pos();
     const remembered = c.mem.nearest("tree", here, dim.id, 64);
     let base;
@@ -50,7 +51,7 @@ export function* chopTrees(c, want) {
       else c.mem.forget("tree", remembered);
     }
     if (!base) {
-      const logs = findBlocks(dim, here, LOG_TYPES, { r: 28, dy: 12, max: 40, filter: (p) => isTreeLog(dim, p) && canBreak(c, dim, p, blockAt(dim, p.x, p.y, p.z)?.typeId) });
+      const logs = findBlocks(dim, here, LOG_TYPES, { r: 20, dy: 10, max: 6, filter: (p) => isTreeLog(dim, p) && canBreak(c, dim, p, blockAt(dim, p.x, p.y, p.z)?.typeId) });
       // prefere o tronco mais baixo de cada árvore
       base = logs.sort((a, b) => a.y - b.y || 0)[0];
       for (const l of logs.slice(0, 6)) c.mem.remember("tree", l, dim.id);
@@ -122,7 +123,10 @@ export function* mineFor(c, o) {
     const have = inv.toolTier(c, "pickaxe");
     if (TIER_RANK[have] < TIER_RANK[o.tier]) throw new NeedTool("pickaxe", o.tier);
   }
+  let stairFails = 0;
+  let depth = o.depth;
   while (inv.count(c, o.item) < o.want && c.alive()) {
+    yield 1; // toda volta cede um tick (nunca prende o jogo)
     const here = c.pos();
     // 1) visíveis num raio grande (cavernas, encostas) ou qualquer um bem pertinho
     let list = findBlocks(dim, here, o.types, { r: 20, dy: 14, max: 30, filter: (p) => exposed(dim, p) && !lavaNear(dim, p) });
@@ -145,8 +149,11 @@ export function* mineFor(c, o) {
       continue;
     }
     // 2) sem nada à vista: escadaria até a camada do recurso e túnel
-    if (o.depth !== undefined && Math.abs(c.pos().y - o.depth) > 6) {
-      yield* staircase(c, o.depth);
+    if (depth !== undefined && Math.abs(c.pos().y - depth) > 6) {
+      if (!(yield* staircase(c, depth)) && ++stairFails >= 2) {
+        depth = undefined; // não dá pra descer daqui: túnel no nível atual e exploração
+        yield* exploreStep(c, o.label);
+      }
       continue;
     }
     if (tunnels < 6) {
@@ -189,6 +196,7 @@ export function* staircase(c, targetY, maxSteps = 40) {
   const cell = cellFn(dim);
   let dir = pickDir(c);
   say(c, targetY < c.pos().y ? "Vou descer cavando uma escadaria." : "Subindo de volta pra superfície.", { chatter: true });
+  let blockedRun = 0;
   for (let s = 0; s < maxSteps && c.alive(); s++) {
     const p = c.pos();
     const by = Math.floor(p.y);
@@ -228,6 +236,8 @@ export function* staircase(c, targetY, maxSteps = 40) {
     }
     if (blocked) {
       dir = turn(dir);
+      if (++blockedRun >= 4) return false; // cercada: desiste daqui (quem chamou escolhe outro plano)
+      yield 1;
       continue;
     }
     // chão do próximo degrau
@@ -236,11 +246,13 @@ export function* staircase(c, targetY, maxSteps = 40) {
       if (blk) yield* placeAt(c, { x: nx, y: ny - 1, z: nz }, blk, blk);
       else {
         dir = turn(dir);
+        if (++blockedRun >= 4) return false;
+        yield 1;
         continue;
       }
     }
-    stepTo(c, { x: nx + 0.5, y: ny, z: nz + 0.5 });
-    yield 3;
+    blockedRun = 0;
+    yield* stepTo(c, { x: nx + 0.5, y: ny, z: nz + 0.5 }, 3);
     if (s % 8 === 7) yield* placeTorchHere(c);
   }
   return Math.abs(Math.floor(c.pos().y) - targetY) <= 3;
@@ -251,6 +263,7 @@ export function* tunnel(c, len, oreTypes) {
   const dim = c.dim();
   const cell = cellFn(dim);
   let dir = pickDir(c);
+  let blockedRun = 0;
   for (let s = 0; s < len && c.alive(); s++) {
     const p = c.pos();
     const bx = Math.floor(p.x), by = Math.floor(p.y), bz = Math.floor(p.z);
@@ -275,6 +288,8 @@ export function* tunnel(c, len, oreTypes) {
     }
     if (blocked) {
       dir = turn(dir);
+      if (++blockedRun >= 4) return false;
+      yield 1;
       continue;
     }
     if (cell(nx, by - 1, nz) !== 1) {
@@ -282,27 +297,18 @@ export function* tunnel(c, len, oreTypes) {
       if (blk) yield* placeAt(c, { x: nx, y: by - 1, z: nz }, blk, blk);
       else {
         dir = turn(dir);
+        if (++blockedRun >= 4) return false;
+        yield 1;
         continue;
       }
     }
-    stepTo(c, { x: nx + 0.5, y: by, z: nz + 0.5 });
-    yield 3;
+    blockedRun = 0;
+    yield* stepTo(c, { x: nx + 0.5, y: by, z: nz + 0.5 }, 3);
     if (s % 10 === 9) yield* placeTorchHere(c);
     // olha as paredes: achou minério? para o túnel e deixa o mineFor pegar
     if (oreTypes && findBlocks(dim, c.pos(), oreTypes, { r: 3, dy: 2, max: 1 }).length) return true;
   }
   return false;
-}
-
-function stepTo(c, p) {
-  const e = c.entity;
-  if (!e) return;
-  face(c, { x: p.x - 0.5, y: p.y, z: p.z - 0.5 });
-  try {
-    e.teleport(p, { keepVelocity: false });
-  } catch {
-    /* ignore */
-  }
 }
 
 function pickDir(c) {
@@ -369,15 +375,26 @@ export function* exploreStep(c, what) {
   return ok;
 }
 
-/** Anota recursos visíveis por perto na memória espacial. */
+const SCAN_TYPES = [...LOG_TYPES, "minecraft:water", "minecraft:sand", ...Object.values(ORES).flat()];
+const ORE_OF = Object.fromEntries(Object.entries(ORES).flatMap(([k, list]) => list.map((id) => [id, k])));
+
+/** Anota recursos visíveis por perto na memória espacial (uma varredura só, com limite de tempo). */
 export function scanSurroundings(c) {
   const dim = c.dim();
   const p = c.pos();
-  for (const t of findBlocks(dim, p, LOG_TYPES, { r: 20, dy: 10, max: 4, filter: (q) => isTreeLog(dim, q) })) c.mem.remember("tree", t, dim.id);
-  for (const w of findBlocks(dim, p, ["minecraft:water"], { r: 20, dy: 8, max: 2 })) c.mem.remember("water", w, dim.id);
-  for (const s of findBlocks(dim, p, ["minecraft:sand"], { r: 20, dy: 8, max: 2 })) c.mem.remember("sand", s, dim.id);
-  for (const [ore, types] of Object.entries(ORES)) {
-    for (const o of findBlocks(dim, p, types, { r: 16, dy: 10, max: 2, filter: (q) => exposed(dim, q) })) c.mem.remember(`ore_${ore}`, o, dim.id);
+  const found = findBlocks(dim, p, SCAN_TYPES, { r: 16, dy: 8, max: 60, ms: 4 });
+  const seen = {};
+  for (const q of found) {
+    const id = blockAt(dim, q.x, q.y, q.z)?.typeId;
+    if (!id) continue;
+    let kind;
+    if (LOG_TYPES.includes(id)) kind = "tree";
+    else if (id === "minecraft:water") kind = "water";
+    else if (id === "minecraft:sand") kind = "sand";
+    else if (ORE_OF[id] && exposed(dim, q)) kind = `ore_${ORE_OF[id]}`;
+    if (!kind || (seen[kind] = (seen[kind] ?? 0) + 1) > 3) continue;
+    if (kind === "tree" && !isTreeLog(dim, q)) continue;
+    c.mem.remember(kind, q, dim.id);
   }
 }
 
@@ -386,6 +403,7 @@ export function* digFor(c, types, item, want, label) {
   const dim = c.dim();
   let explorations = 0;
   while (inv.count(c, item) < want && c.alive()) {
+    yield 1;
     const here = c.pos();
     const list = findBlocks(dim, here, types, { r: 24, dy: 10, max: 20, filter: (p) => exposed(dim, p) && canBreak(c, dim, p, blockAt(dim, p.x, p.y, p.z)?.typeId) && !lavaNear(dim, p) });
     if (!list.length) {
@@ -464,6 +482,7 @@ export function* fillBucket(c) {
   if (inv.count(c, "minecraft:bucket") < 1) return false;
   let explorations = 0;
   for (;;) {
+    yield 1;
     const mem = c.mem.nearest("water", c.pos(), dim.id, 80);
     let list = findBlocks(dim, c.pos(), ["minecraft:water"], { r: 28, dy: 10, max: 10, filter: (p) => safeState(blockAt(dim, p.x, p.y, p.z), "liquid_depth") === 0 });
     if (!list.length && mem) list = [mem];

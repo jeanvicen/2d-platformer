@@ -1,7 +1,6 @@
 // WorldScanner: lê o mundo para o pathfinding, procura recursos e mantém uma memória espacial.
 import { BlockVolume, system } from "@minecraft/server";
 import { classifyId, isLeaves, isLog } from "../lib/items.js";
-import { logError } from "../core/log.js";
 
 /** @typedef {import("@minecraft/server").Dimension} Dimension */
 /** @typedef {{x:number,y:number,z:number}} Vec */
@@ -38,36 +37,53 @@ export function isLoaded(dim, p) {
 
 /**
  * Procura blocos de certos tipos perto de um ponto (mais próximos primeiro).
+ * Varre do centro para fora em fatias de 16×16, com limite de tempo (resultado parcial é ok:
+ * quem chama tenta de novo depois). O filtro é aplicado só nos mais próximos, sob demanda.
  * @param {Dimension} dim
  * @param {Vec} c
  * @param {string[]} types
- * @param {{r?:number, dy?:number, max?:number, filter?:(b:Vec)=>boolean}} o
+ * @param {{r?:number, dy?:number, max?:number, filter?:(b:Vec)=>boolean, ms?:number}} o
  * @returns {Vec[]}
  */
 export function findBlocks(dim, c, types, o = {}) {
   const r = o.r ?? 16, dy = o.dy ?? 8, max = o.max ?? 24;
+  const limit = o.ms ?? 5;
+  const t0 = Date.now();
   const cx = Math.floor(c.x), cy = Math.floor(c.y), cz = Math.floor(c.z);
   const range = dim.heightRange;
   const y0 = Math.max(range.min, cy - dy), y1 = Math.min(range.max - 1, cy + dy);
-  const found = [];
-  // varre em fatias de 16×16 para não estourar o orçamento e pular chunks descarregados
+  const slices = [];
   for (let x0 = cx - r; x0 <= cx + r; x0 += 16) {
     for (let z0 = cz - r; z0 <= cz + r; z0 += 16) {
       const x1 = Math.min(cx + r, x0 + 15), z1 = Math.min(cz + r, z0 + 15);
-      if (!isLoaded(dim, { x: x0, y: cy, z: z0 }) || !isLoaded(dim, { x: x1, y: cy, z: z1 })) continue;
-      try {
-        const list = dim.getBlocks(new BlockVolume({ x: x0, y: y0, z: z0 }, { x: x1, y: y1, z: z1 }), { includeTypes: types }, false);
-        for (const p of list.getBlockLocationIterator()) {
-          if (o.filter && !o.filter(p)) continue;
-          found.push({ x: p.x, y: p.y, z: p.z });
-        }
-      } catch (e) {
-        logError("world.find", e);
-      }
+      slices.push({ x0, z0, x1, z1, d: ((x0 + x1) / 2 - cx) ** 2 + ((z0 + z1) / 2 - cz) ** 2 });
     }
   }
-  found.sort((a, b) => d2(a, c) - d2(b, c));
-  return found.slice(0, max);
+  slices.sort((a, b) => a.d - b.d);
+  const raw = [];
+  for (const sl of slices) {
+    if (Date.now() - t0 > limit && raw.length) break;
+    if (!isLoaded(dim, { x: sl.x0, y: cy, z: sl.z0 }) || !isLoaded(dim, { x: sl.x1, y: cy, z: sl.z1 })) continue;
+    try {
+      const list = dim.getBlocks(new BlockVolume({ x: sl.x0, y: y0, z: sl.z0 }, { x: sl.x1, y: y1, z: sl.z1 }), { includeTypes: types }, false);
+      for (const p of list.getBlockLocationIterator()) {
+        raw.push({ x: p.x, y: p.y, z: p.z });
+        if (raw.length > 400) break;
+      }
+    } catch {
+      /* fatia com chunk descarregado: ignora */
+    }
+  }
+  raw.sort((a, b) => d2(a, c) - d2(b, c));
+  if (!o.filter) return raw.slice(0, max);
+  const out = [];
+  for (const p of raw) {
+    if (Date.now() - t0 > limit * 2) break;
+    if (!o.filter(p)) continue;
+    out.push(p);
+    if (out.length >= max) break;
+  }
+  return out;
 }
 
 const d2 = (a, b) => (a.x - b.x) ** 2 + (a.y - b.y) ** 2 * 1.5 + (a.z - b.z) ** 2;
