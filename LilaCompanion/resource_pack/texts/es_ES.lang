@@ -1,0 +1,3 @@
+entity.lila:lila.name=Lila
+item.lila.controller.name=Mando de Lila
+action.interact.lila.talk=Hablar

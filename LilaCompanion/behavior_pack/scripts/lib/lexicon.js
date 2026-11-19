@@ -1,0 +1,98 @@
+// Vocabulário pt-BR -> itens do Minecraft (puro). Usado pelo reconhecedor de intenções.
+// Cada entrada: palavras (já normalizadas, sem acento) e o alvo: item exato ou grupo.
+
+/** @typedef {{words:string[], id?:string, group?:string, ore?:string, def?:number}} LexEntry */
+
+/** @type {LexEntry[]} */
+export const ITEMS = [
+  { words: ["madeira", "madeiras", "tronco", "troncos", "lenha", "tora", "toras", "arvore", "arvores", "wood", "log", "logs"], group: "log", def: 16 },
+  { words: ["tabua", "tabuas", "plank", "planks"], group: "planks", def: 32 },
+  { words: ["graveto", "gravetos", "vareta", "varetas", "stick", "sticks"], id: "minecraft:stick", def: 16 },
+  { words: ["pedra", "pedras", "pedregulho", "pedregulhos", "cobble", "cobblestone", "rocha"], id: "minecraft:cobblestone", def: 32 },
+  { words: ["pedra lisa", "stone"], id: "minecraft:stone", def: 16 },
+  { words: ["tijolo de pedra", "tijolos de pedra", "stone bricks"], id: "minecraft:stone_bricks", def: 32 },
+  { words: ["carvao", "carvoes", "coal"], group: "coal", ore: "coal", def: 16 },
+  { words: ["ferro", "barra de ferro", "barras de ferro", "lingote de ferro", "iron"], id: "minecraft:iron_ingot", ore: "iron", def: 8 },
+  { words: ["ferro bruto", "minerio de ferro"], id: "minecraft:raw_iron", ore: "iron", def: 8 },
+  { words: ["ouro", "barra de ouro", "gold"], id: "minecraft:gold_ingot", ore: "gold", def: 8 },
+  { words: ["cobre", "copper"], id: "minecraft:copper_ingot", ore: "copper", def: 8 },
+  { words: ["diamante", "diamantes", "diamond", "diamonds"], id: "minecraft:diamond", ore: "diamond", def: 3 },
+  { words: ["esmeralda", "esmeraldas", "emerald"], id: "minecraft:emerald", ore: "emerald", def: 2 },
+  { words: ["redstone", "pedra vermelha"], id: "minecraft:redstone", ore: "redstone", def: 16 },
+  { words: ["lapis", "lapis lazuli"], id: "minecraft:lapis_lazuli", ore: "lapis", def: 8 },
+  { words: ["areia", "sand"], id: "minecraft:sand", def: 16 },
+  { words: ["vidro", "vidros", "glass"], id: "minecraft:glass", def: 16 },
+  { words: ["terra", "dirt"], id: "minecraft:dirt", def: 16 },
+  { words: ["cascalho", "gravel"], id: "minecraft:gravel", def: 8 },
+  { words: ["silex", "pederneira", "flint"], id: "minecraft:flint", def: 4 },
+  { words: ["argila", "barro", "clay"], id: "minecraft:clay_ball", def: 8 },
+  { words: ["trigo", "wheat"], id: "minecraft:wheat", def: 12 },
+  { words: ["semente", "sementes", "seeds"], id: "minecraft:wheat_seeds", def: 8 },
+  { words: ["cenoura", "cenouras", "carrot"], id: "minecraft:carrot", def: 8 },
+  { words: ["batata", "batatas", "potato"], id: "minecraft:potato", def: 8 },
+  { words: ["batata assada", "batatas assadas"], id: "minecraft:baked_potato", def: 8 },
+  { words: ["pao", "paes", "bread"], id: "minecraft:bread", def: 8 },
+  { words: ["maca", "macas", "apple"], id: "minecraft:apple", def: 4 },
+  { words: ["frutinha", "frutinhas", "frutas vermelhas", "baga", "bagas", "berries"], id: "minecraft:sweet_berries", def: 8 },
+  { words: ["carne", "carnes", "bife", "bifes", "meat"], id: "minecraft:cooked_beef", def: 8 },
+  { words: ["comida", "comidas", "comer", "alimento", "alimentos", "food", "lanche", "rango"], group: "food", def: 8 },
+  { words: ["tocha", "tochas", "torch", "torches"], id: "minecraft:torch", def: 16 },
+  { words: ["bau", "baus", "chest"], id: "minecraft:chest", def: 1 },
+  { words: ["bancada", "mesa de trabalho", "crafting table", "mesa de craft"], id: "minecraft:crafting_table", def: 1 },
+  { words: ["fornalha", "forno", "furnace"], id: "minecraft:furnace", def: 1 },
+  { words: ["balde", "bucket"], id: "minecraft:bucket", def: 1 },
+  { words: ["balde de agua", "agua"], id: "minecraft:water_bucket", def: 1 },
+  { words: ["escada de mao", "escadinha", "ladder"], id: "minecraft:ladder", def: 8 },
+  { words: ["porta", "portas", "door"], id: "minecraft:wooden_door", def: 1 },
+  { words: ["cerca", "cercas", "fence"], id: "minecraft:oak_fence", def: 8 },
+  { words: ["cama", "camas", "bed"], id: "minecraft:bed", def: 1 },
+  { words: ["la", "las", "wool"], group: "wool", def: 3 },
+  { words: ["linha", "barbante", "string"], id: "minecraft:string", def: 4 },
+  { words: ["couro", "leather"], id: "minecraft:leather", def: 4 },
+  { words: ["osso", "ossos", "bone"], id: "minecraft:bone", def: 4 },
+  { words: ["pena", "penas", "feather"], id: "minecraft:feather", def: 4 },
+  { words: ["flecha", "flechas", "arrow", "arrows"], id: "minecraft:arrow", def: 16 },
+  { words: ["arco", "bow"], id: "minecraft:bow", def: 1 },
+  { words: ["escudo", "shield"], id: "minecraft:shield", def: 1 },
+  { words: ["tesoura", "shears"], id: "minecraft:shears", def: 1 },
+  { words: ["cana", "cana de acucar", "sugar cane"], id: "minecraft:sugar_cane", def: 8 },
+  { words: ["abobora", "pumpkin"], id: "minecraft:pumpkin", def: 2 },
+  { words: ["melancia", "melon"], id: "minecraft:melon_slice", def: 8 },
+  { words: ["muda", "mudas", "sapling"], group: "sapling", def: 4 },
+  { words: ["lanterna", "lanternas", "lantern"], id: "minecraft:lantern", def: 4 },
+  { words: ["obsidiana", "obsidian"], id: "minecraft:obsidian", def: 4 },
+  { words: ["pepita de ferro", "nugget"], id: "minecraft:iron_nugget", def: 9 },
+];
+
+export const TOOL_WORDS = {
+  pickaxe: ["picareta", "picaretas", "pickaxe"],
+  axe: ["machado", "machados", "axe"],
+  shovel: ["pa", "pas", "shovel"],
+  hoe: ["enxada", "enxadas", "hoe"],
+  sword: ["espada", "espadas", "sword"],
+};
+export const ARMOR_WORDS = {
+  helmet: ["capacete", "helmet"],
+  chestplate: ["peitoral", "armadura", "chestplate"],
+  leggings: ["calca", "calcas", "perneira", "leggings"],
+  boots: ["bota", "botas", "boots"],
+};
+export const TIER_WORDS = {
+  wooden: ["madeira", "pau"],
+  stone: ["pedra"],
+  iron: ["ferro"],
+  golden: ["ouro"],
+  diamond: ["diamante"],
+  netherite: ["netherita", "netherite"],
+};
+
+export const BLUEPRINT_WORDS = {
+  mansao: ["mansao", "mansoes", "castelo", "palacio", "mansion"],
+  casa: ["casa", "casas", "casinha", "lar", "house"],
+  cabana: ["cabana", "cabaninha", "barraco", "choupana", "cabin"],
+  torre: ["torre", "torres", "vigia", "tower"],
+  muralha: ["muralha", "muro", "parede", "wall"],
+  ponte: ["ponte", "bridge"],
+  fazenda: ["fazenda", "plantacao", "horta", "lavoura", "roca", "farm"],
+  abrigo: ["abrigo", "refugio", "bunker", "shelter"],
+};

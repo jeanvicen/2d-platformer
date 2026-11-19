@@ -1,0 +1,206 @@
+<title>Lila Companion</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Figtree:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: obsidiana com acentos esmeralda e ouro (as cores da roupa e da presilha da Lila); coluna única de leitura, herói em duas colunas que empilham no celular. */
+:root {
+  --bg: #0d1013; --panel: #151a1e; --line: #24302c; --fg: #e9f1ec; --muted: #9db0a7;
+  --emerald: #3fd08e; --emerald-deep: #1b7a52; --gold: #e9c46a; --ink: #06110c;
+  --display: "Pixelify Sans", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 16px/1.6 var(--body); }
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 28px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 56px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 700; letter-spacing: .5px; text-wrap: balance; margin: 0; }
+h2 { font-size: clamp(24px, 4vw, 32px); color: var(--emerald); }
+h3 { font-size: 19px; }
+p { margin: 0; max-width: 65ch; }
+.eyebrow { font: 600 12px/1 var(--body); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+.hero { display: grid; grid-template-columns: 1fr 1.1fr; gap: 32px; align-items: center; }
+.hero > * { min-width: 0; }
+.portrait { width: 100%; max-width: 440px; aspect-ratio: 1; border-radius: 6px; image-rendering: pixelated; box-shadow: 0 0 0 1px var(--line), 0 24px 60px -24px #3fd08e55; justify-self: center; }
+.hero h1 { font-size: clamp(56px, 11vw, 96px); line-height: .9; color: var(--fg); }
+.hero h1 span { color: var(--emerald); }
+.lede { font-size: 18px; color: var(--muted); margin-top: 14px; }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+.btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 20px; border-radius: 6px; font: 800 16px var(--body); text-decoration: none; border: 1px solid var(--line); color: var(--fg); background: var(--panel); cursor: pointer; }
+.btn.primary { background: var(--emerald); color: var(--ink); border-color: var(--emerald); }
+.btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.btn[disabled] { opacity: .5; cursor: default; }
+.meta { margin-top: 14px; font: 500 12px var(--mono); color: var(--muted); overflow-wrap: anywhere; }
+.status { margin-top: 8px; font-size: 14px; color: var(--gold); min-height: 1.4em; }
+.steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 40px 1fr; gap: 14px; align-items: start; }
+.steps li::before { content: counter(s); font: 700 20px/40px var(--display); text-align: center; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; color: var(--emerald); }
+.steps li > div { min-width: 0; }
+.recipe { display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: center; }
+.recipe > * { min-width: 0; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 56px); gap: 4px; padding: 8px; background: #8b8b8b; border: 3px solid #3a3a3a; }
+.slot { width: 56px; height: 56px; background: #6f6f6f; box-shadow: inset 2px 2px #4a4a4a, inset -2px -2px #a5a5a5; display: grid; place-items: center; font: 700 22px var(--display); }
+.slot.r { color: #ff5a4f; } .slot.f { color: #f1f1f1; } .slot.b { color: #c9c9c9; }
+.legend { display: grid; gap: 8px; }
+.legend b { font-family: var(--display); }
+.ctl { display: grid; grid-template-columns: 160px 1fr; gap: 20px; align-items: center; margin-top: 18px; }
+.ctl img { width: 160px; image-rendering: pixelated; }
+.ctl > div { min-width: 0; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 28px; }
+.cols > section { display: grid; gap: 8px; align-content: start; }
+.turn { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.turn figure { margin: 0; display: grid; gap: 6px; text-align: center; color: var(--muted); font-size: 13px; }
+.turn img { width: 100%; background: radial-gradient(circle at 50% 60%, #1c2a24, var(--bg) 70%); border-radius: 6px; }
+.cmds { display: flex; flex-wrap: wrap; gap: 8px; }
+.cmd { font: 500 14px var(--mono); padding: 8px 12px; border-radius: 6px; background: var(--panel); border: 1px solid var(--line); color: var(--fg); cursor: pointer; }
+.cmd:hover { border-color: var(--emerald); }
+.tests { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tests td { padding: 7px 8px; border-top: 1px solid var(--line); vertical-align: top; }
+.tests td:first-child { width: 86px; }
+.pill { font: 700 11px var(--mono); padding: 3px 7px; border-radius: 4px; }
+.pass { background: #1b7a5233; color: var(--emerald); }
+.todo { background: #e9c46a22; color: var(--gold); }
+.tablebox { overflow-x: auto; }
+.note { font-size: 14px; color: var(--muted); }
+footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 18px; }
+@media (max-width: 760px) {
+  .hero { grid-template-columns: 1fr; }
+  .recipe { grid-template-columns: 1fr; }
+  .turn { grid-template-columns: repeat(2, 1fr); }
+  .ctl { grid-template-columns: 110px 1fr; }
+  .ctl img { width: 110px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .portrait { animation: float 6s ease-in-out infinite; }
+  @keyframes float { 50% { transform: translateY(-6px); } }
+}
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <img class="portrait" src="%%PORTRAIT%%" alt="Retrato da Lila: cabelo verde-esmeralda, presilha de folha dourada, vestido preto">
+    <div>
+      <div class="eyebrow">Add-on para Minecraft Bedrock · v%%VERSION%%</div>
+      <h1>Li<span>la</span></h1>
+      <p class="lede">Uma companheira que joga de verdade: corta árvores, minera, funde na fornalha, constrói casas, planta, cozinha, explora longe e te protege. Você manda pelo controle, em texto livre ou com um toque.</p>
+      <div class="cta">
+        <a class="btn primary" href="%%RAW%%" target="_blank" rel="noopener">Baixar Lila_Companion.mcaddon</a>
+        <button class="btn" id="zip" type="button" hidden>Salvar cópia (.zip)</button>
+      </div>
+      <div class="status" id="st" role="status"></div>
+      <div class="meta">%%SIZE%% KB · sha256 %%SHA%% · Minecraft 1.26.30+ · sem experimentos</div>
+    </div>
+  </header>
+
+  <section style="display:grid;gap:18px">
+    <h2>Instalar no Android</h2>
+    <ol class="steps">
+      <li><div><b>Baixe o arquivo</b> pelo botão verde. Ele abre no GitHub e baixa o <code>.mcaddon</code>.</div></li>
+      <li><div><b>Toque no arquivo baixado</b> e escolha abrir com o Minecraft. O jogo importa os dois pacotes sozinho.</div></li>
+      <li><div><b>Ative no mundo:</b> Editar mundo → Pacotes de comportamento → <b>Lila Companion (BP)</b>. O pacote de recursos vem junto.</div></li>
+      <li><div><b>Fabrique o controle</b> numa bancada e toque com ele na mão. Ao entrar no mundo nada aparece: a Lila só existe depois do controle.</div></li>
+    </ol>
+    <p class="note">Usou o botão “Salvar cópia (.zip)”? Renomeie o arquivo de <code>.zip</code> para <code>.mcaddon</code> no app de Arquivos antes de abrir.</p>
+  </section>
+
+  <section style="display:grid;gap:18px">
+    <h2>Controle da Lila</h2>
+    <div class="recipe">
+      <div class="grid3" aria-label="Receita do controle na bancada">
+        <div class="slot"></div><div class="slot r">R</div><div class="slot"></div>
+        <div class="slot f">F</div><div class="slot b">B</div><div class="slot f">F</div>
+        <div class="slot f">F</div><div class="slot"></div><div class="slot f">F</div>
+      </div>
+      <div class="legend">
+        <div><b>R</b> pó de redstone</div>
+        <div><b>F</b> barra de ferro <span class="note">(ou barra de cobre, receita alternativa)</span></div>
+        <div><b>B</b> botão de pedra</div>
+        <p class="note">Infinito: nunca gasta e nunca quebra.</p>
+      </div>
+    </div>
+    <div class="ctl">
+      <img src="%%CONTROLLER%%" alt="Controle da Lila em 3D: preto com botões esmeralda e emblema de folha dourada">
+      <div>
+        <h3>Menu com texto livre e botões rápidos</h3>
+        <p class="note">Escrever ordem · Me seguir · Ficar aqui · Vem aqui · Modo livre · Pegar madeira · Minerar · Achar comida · Construir · Plantação · Fabricar · Me proteger · Explorar · Tochas · Me dá tudo · Base · Status · Pausar · Configurações. Pelo chat: <code>/lila pega 32 madeira</code>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:grid;gap:18px">
+    <h2>Fale do seu jeito</h2>
+    <p class="note">Toque para copiar e cole no campo de texto do controle.</p>
+    <div class="cmds" id="cmds">
+      <button class="cmd" type="button">pega 20 madeira e depois faz uma casa aqui</button>
+      <button class="cmd" type="button">faz uma picareta de diamante</button>
+      <button class="cmd" type="button">minera 10 ferro</button>
+      <button class="cmd" type="button">constrói uma mansão aqui</button>
+      <button class="cmd" type="button">faz uma plantação de cenoura aqui</button>
+      <button class="cmd" type="button">arranja comida pra mim</button>
+      <button class="cmd" type="button">procura diamante</button>
+      <button class="cmd" type="button">me dá tudo</button>
+      <button class="cmd" type="button">aqui é a base</button>
+      <button class="cmd" type="button">me protege</button>
+    </div>
+  </section>
+
+  <section style="display:grid;gap:18px">
+    <h2>Ela por inteiro</h2>
+    <div class="turn">
+      <figure><img src="%%V0%%" alt="Lila de frente, três quartos"><figcaption>Frente</figcaption></figure>
+      <figure><img src="%%V2%%" alt="Lila de costas, cabelo longo"><figcaption>Costas</figcaption></figure>
+      <figure><img src="%%PMINE%%" alt="Lila minerando"><figcaption>Minerando</figcaption></figure>
+      <figure><img src="%%PSIT%%" alt="Lila sentada"><figcaption>Sentada</figcaption></figure>
+    </div>
+  </section>
+
+  <div class="cols">
+    <section><h3>Planeja sozinha</h3><p class="note">Pediu picareta de ferro? Ela descobre a cadeia: madeira, tábuas, gravetos, bancada, pedra, fornalha, minerar ferro, combustível, fundir (10 s por barra) e só então a picareta.</p></section>
+    <section><h3>Joga quando você não manda</h3><p class="note">No modo livre ela melhora as ferramentas, junta recursos, constrói a casinha dela, monta e cuida da plantação, dorme à noite, explora e volta se você se afastar.</p></section>
+    <section><h3>5× mais forte</h3><p class="note">100 de vida e golpes 5× mais fortes que os seus com a mesma arma. Se cair, não morre: volta em 20 segundos com o inventário inteiro e continua o plano.</p></section>
+    <section><h3>Nunca trava</h3><p class="note">Caminhos A* com portas, água, escadas e degraus; desvia de lava. Se travar, replaneja, cava ou faz ponte com blocos naturais e só em último caso reaparece perto do alvo.</p></section>
+    <section><h3>Respeita suas obras</h3><p class="note">Só quebra blocos naturais ou o que ela mesma colocou. Nunca mexe nos seus baús nem ataca jogadores, aldeões, golens ou pets.</p></section>
+    <section><h3>Sabe onde ela está</h3><p class="note">“Lila ↗ 38m · minerando ferro” na barra de ação e um ponto verde na barra de localização do jogo.</p></section>
+  </div>
+
+  <section style="display:grid;gap:14px">
+    <h2>Testado no servidor oficial</h2>
+    <p class="note">Autoteste dentro do mundo no Bedrock Dedicated Server 1.26.65.1: a Lila de verdade, numa arena com árvores, rocha com minérios, água, areia e uma construção “do jogador” que ela não pode tocar.</p>
+    <div class="tablebox"><table class="tests">%%TESTS%%</table></div>
+    <p class="note">Não testado ainda: a aparência no celular (o servidor não tem tela). O modelo e as animações foram conferidos com renderizações do próprio modelo.</p>
+  </section>
+
+  <footer>Lila Companion · criado por <b>0neajx</b> · personagem e arte originais · add-on de fã, não oficial. Código e documentação no repositório, pasta <code>LilaCompanion/</code>.</footer>
+</div>
+
+<script>
+(function () {
+  var st = document.getElementById("st");
+  document.getElementById("cmds").addEventListener("click", function (e) {
+    var b = e.target.closest(".cmd");
+    if (!b) return;
+    var t = b.textContent;
+    function sel() { var r = document.createRange(); r.selectNodeContents(b); var s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+    try {
+      navigator.clipboard.writeText(t).then(function () { st.textContent = "Copiado: " + t; }, function () { sel(); st.textContent = "Texto selecionado: copie com o menu do celular."; });
+    } catch (err) { sel(); st.textContent = "Texto selecionado: copie com o menu do celular."; }
+  });
+  var B64 = "%%B64%%";
+  var zip = document.getElementById("zip");
+  Promise.resolve(window.claude && window.claude.use ? window.claude.use("downloads") : null).then(function (d) {
+    if (!d) return;
+    zip.hidden = false;
+    zip.addEventListener("click", function () {
+      var bin = atob(B64), bytes = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      zip.disabled = true;
+      st.textContent = "Confirme o download…";
+      d.save({ filename: "Lila_Companion.zip", data: new Blob([bytes]) }).then(function () {
+        st.textContent = "Salvo. Renomeie para .mcaddon e abra com o Minecraft.";
+      }, function (e) {
+        st.textContent = e && e.code === "declined" ? "Download cancelado." : "Não deu para salvar aqui. Use o botão verde.";
+      }).then(function () { zip.disabled = false; });
+    });
+  }, function () {});
+})();
+</script>

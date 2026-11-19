@@ -1,0 +1,289 @@
+// Autoteste dentro do jogo (servidor dedicado sem jogadores): /scriptevent lila:selftest [quick]
+// Monta uma arena no céu com árvores, rocha com minérios, areia, água, grama e uma "construção
+// do jogador", invoca uma Lila de teste e verifica comportamento real (nada simulado).
+import { system, world, ItemStack } from "@minecraft/server";
+import { COMPANIONS, Companion, ENTITY_ID, OWNER_PROP, adopt, newRecord } from "../lila/companion.js";
+import * as inv from "../lila/inventory.js";
+import { obtain } from "../lila/planner.js";
+import { goTo } from "../lila/motor.js";
+import { buildBlueprint } from "../lila/build.js";
+import { BLUEPRINTS } from "../lib/blueprints.js";
+import { blueprintBlock } from "../lib/recipes.js";
+import { command, handleIntents } from "../lila/brain.js";
+import { defend } from "../lila/combat.js";
+import { dismiss, restoreBodyForTest, RESPAWN_TICKS } from "../lila/lifecycle.js";
+import { readJSON } from "../core/persistence.js";
+import { recKey } from "../lila/companion.js";
+import { toWorld } from "../lila/build.js";
+import { findBlocks } from "../lila/world.js";
+import { logError } from "../core/log.js";
+
+const Y = 150; // topo da arena (grama); a Lila anda em Y+1
+const OWNER = "selftest-owner";
+let running = false;
+
+function log(s) {
+  console.info(`LILA-TEST ${s}`);
+}
+
+function runGen(gen, timeout) {
+  return new Promise((resolve) => {
+    let wait = 0;
+    const t0 = system.currentTick;
+    const id = system.runInterval(() => {
+      if (system.currentTick - t0 > timeout) {
+        system.clearRun(id);
+        try {
+          gen.return(undefined);
+        } catch {
+          /* ignore */
+        }
+        resolve({ ok: false, err: "timeout" });
+        return;
+      }
+      if (wait > 0) {
+        wait--;
+        return;
+      }
+      try {
+        const r = gen.next();
+        if (r.done) {
+          system.clearRun(id);
+          resolve({ ok: true, value: r.value });
+          return;
+        }
+        wait = typeof r.value === "number" ? Math.max(0, r.value - 1) : 0;
+      } catch (e) {
+        system.clearRun(id);
+        resolve({ ok: false, err: String(e?.message ?? e) });
+      }
+    }, 1);
+  });
+}
+
+async function waitUntil(pred, timeout) {
+  const t0 = system.currentTick;
+  while (system.currentTick - t0 < timeout) {
+    try {
+      if (pred()) return true;
+    } catch {
+      /* ignore */
+    }
+    await system.waitTicks(5);
+  }
+  return false;
+}
+
+function cmd(dim, s) {
+  try {
+    dim.runCommand(s);
+  } catch (e) {
+    logError("test.cmd", `${s}: ${e}`);
+  }
+}
+
+async function buildArena(dim) {
+  // chão: pedra com grama em cima, 64×64
+  cmd(dim, `fill -32 ${Y - 4} -32 31 ${Y - 1} 31 stone`);
+  cmd(dim, `fill -32 ${Y} -32 31 ${Y} 31 grass_block`);
+  for (let y = Y + 1; y < Y + 24; y += 7) cmd(dim, `fill -32 ${y} -32 31 ${Math.min(Y + 23, y + 6)} 31 air`);
+  // árvores
+  for (const [x, z] of [[10, 10], [14, 4], [-12, 12], [6, 20]]) {
+    cmd(dim, `fill ${x - 2} ${Y + 4} ${z - 2} ${x + 2} ${Y + 5} ${z + 2} oak_leaves`);
+    cmd(dim, `fill ${x - 1} ${Y + 6} ${z - 1} ${x + 1} ${Y + 6} ${z + 1} oak_leaves`);
+    cmd(dim, `fill ${x} ${Y + 1} ${z} ${x} ${Y + 5} ${z} oak_log`);
+  }
+  // rocha com minérios expostos
+  cmd(dim, `fill -14 ${Y + 1} -14 -4 ${Y + 3} -4 stone`);
+  for (const [x, y, z, b] of [[-4, Y + 1, -6, "iron_ore"], [-4, Y + 2, -8, "iron_ore"], [-6, Y + 3, -4, "iron_ore"], [-8, Y + 3, -6, "iron_ore"],
+    [-4, Y + 3, -12, "coal_ore"], [-10, Y + 3, -4, "coal_ore"], [-12, Y + 3, -10, "coal_ore"]]) cmd(dim, `setblock ${x} ${y} ${z} ${b}`);
+  // areia, água e grama alta
+  cmd(dim, `fill 4 ${Y} -12 7 ${Y} -9 sand`);
+  cmd(dim, `fill -4 ${Y} 6 -2 ${Y} 8 water`);
+  for (let x = 0; x <= 8; x += 2) for (let z = 13; z <= 17; z += 2) cmd(dim, `setblock ${x} ${Y + 1} ${z} short_grass`);
+  // "construção do jogador" (nunca pode ser quebrada) e um muro para contornar
+  cmd(dim, `fill 20 ${Y + 1} -5 20 ${Y + 3} 5 oak_planks`);
+  cmd(dim, `fill -20 ${Y + 1} -24 -20 ${Y + 3} -2 cobblestone`);
+}
+
+function spawnTestLila(dim) {
+  for (const e of dim.getEntities({ type: ENTITY_ID })) {
+    if (e.getDynamicProperty(OWNER_PROP) === OWNER) e.remove();
+  }
+  const rec = newRecord({ id: OWNER, name: "Teste" });
+  rec.summoned = true;
+  rec.mode = "stay";
+  rec.anchor = { x: 0.5, y: Y + 1, z: 0.5 };
+  rec.pos = { ...rec.anchor };
+  const c = new Companion(rec);
+  c.flags.test = true;
+  COMPANIONS.set(OWNER, c);
+  const e = dim.spawnEntity(ENTITY_ID, { x: 0.5, y: Y + 1, z: 0.5 });
+  e.setDynamicProperty(OWNER_PROP, OWNER);
+  adopt(e);
+  c.rec.paused = true; // os testes dirigem os objetivos diretamente
+  return c;
+}
+
+/** @param {string} mode */
+export async function runSelfTest(mode = "") {
+  if (running) return;
+  running = true;
+  const quick = mode.includes("quick");
+  const dim = world.getDimension("overworld");
+  const results = [];
+  const check = (name, ok, info = "") => {
+    results.push({ name, ok });
+    log(`${ok ? "PASS" : "FAIL"} ${name}${info ? " :: " + info : ""}`);
+  };
+  try {
+    log("START");
+    try {
+      const mgr = world.tickingAreaManager;
+      if (mgr.hasTickingArea("lila_selftest")) mgr.removeTickingArea("lila_selftest");
+      await mgr.createTickingArea("lila_selftest", { dimension: dim, from: { x: -40, y: Y - 8, z: -40 }, to: { x: 40, y: Y + 30, z: 40 } });
+    } catch (e) {
+      log(`WARN tickingarea ${e}`);
+      cmd(dim, `tickingarea add -40 ${Y - 8} -40 40 ${Y + 30} 40 lila_selftest true`);
+    }
+    const loaded = await waitUntil(() => [[-32, -32], [31, 31], [-32, 31], [31, -32], [0, 0]].every(([x, z]) => dim.isChunkLoaded({ x, y: Y, z })), 600);
+    check("arena chunks loaded", loaded);
+    await buildArena(dim);
+    await system.waitTicks(10);
+    const c = spawnTestLila(dim);
+    await system.waitTicks(5);
+    check("spawn + adopt", c.alive() && c.entity?.getDynamicProperty(OWNER_PROP) === OWNER);
+
+    // 1) inventário real
+    inv.addId(c, "minecraft:dirt", 20);
+    check("inventory add/count", inv.count(c, "minecraft:dirt") === 20);
+    check("inventory take", inv.take(c, "minecraft:dirt", 5) === 5 && inv.count(c, "minecraft:dirt") === 15);
+
+    // 2) caminho contornando um muro que ela não pode quebrar
+    c.entity?.teleport({ x: -25.5, y: Y + 1, z: -10.5 });
+    await system.waitTicks(2);
+    let r = await runGen(goTo(c, { x: -14.5, y: Y + 1, z: -10.5 }, { reach: 1.6, allowTeleport: false }), 900);
+    const p = c.pos();
+    check("pathfinding around wall", r.ok && Math.hypot(p.x + 14.5, p.z + 10.5) < 2.5, `pos=${p.x.toFixed(1)},${p.y.toFixed(1)},${p.z.toFixed(1)} ${r.err ?? ""}`);
+    check("wall intact (player build)", dim.getBlock({ x: -20, y: Y + 2, z: -10 })?.typeId === "minecraft:cobblestone");
+
+    // 3) cortar árvores de verdade
+    r = await runGen(obtain(c, { group: "log" }, 8), 2400);
+    check("chop trees -> 8 logs", r.ok && inv.count(c, { group: "log" }) >= 8, `logs=${inv.count(c, { group: "log" })} ${r.err ?? ""}`);
+
+    // 4) cadeia de ferramentas: madeira -> pedra
+    r = await runGen(obtain(c, "minecraft:wooden_pickaxe", 1), 1200);
+    check("craft wooden pickaxe (planks, sticks, table)", r.ok && inv.count(c, "minecraft:wooden_pickaxe") >= 1, r.err ?? "");
+    r = await runGen(obtain(c, "minecraft:stone_pickaxe", 1), 2400);
+    check("stone pickaxe (mines real stone)", r.ok && inv.count(c, "minecraft:stone_pickaxe") >= 1, r.err ?? "");
+    const tables = findBlocks(dim, { x: 0, y: Y + 1, z: 0 }, ["minecraft:crafting_table"], { r: 32, dy: 8, max: 5 });
+    check("temporary crafting table picked back up", tables.length === 0, `tables=${tables.length}`);
+
+    // 5) ferro: minerar + fornalha + combustível + fundição real
+    if (!quick) {
+      r = await runGen(obtain(c, "minecraft:iron_ingot", 2), 4800);
+      check("iron ingots via mining + furnace smelting", r.ok && inv.count(c, "minecraft:iron_ingot") >= 2, `iron=${inv.count(c, "minecraft:iron_ingot")} raw=${inv.count(c, "minecraft:raw_iron")} ${r.err ?? ""}`);
+    }
+
+    // 6) ordem em texto pela fila do cérebro
+    c.rec.paused = false;
+    const sandBefore = inv.count(c, "minecraft:sand");
+    command(c, "pega 3 areia");
+    const done = await waitUntil(() => c.rec.goals.length === 0 && !c.job?.desc || (c.job?.desc?.type === "stay"), 2400);
+    check("text command 'pega 3 areia'", done && inv.count(c, "minecraft:sand") >= sandBefore + 3, `sand=${inv.count(c, "minecraft:sand")}`);
+    c.rec.paused = true;
+    await system.waitTicks(2);
+
+    // 7) construção por planta com materiais na mão
+    inv.addId(c, "minecraft:cobblestone", 90);
+    inv.addId(c, "minecraft:oak_planks", 40);
+    inv.addId(c, "minecraft:glass", 2);
+    inv.addId(c, "minecraft:wooden_door", 1);
+    inv.addId(c, "minecraft:torch", 4);
+    const site = { origin: { x: -2, y: Y, z: -26 }, card: 0 };
+    c.entity?.teleport({ x: 0.5, y: Y + 1, z: -22.5 });
+    r = await runGen(buildBlueprint(c, "abrigo", { site }), 3600);
+    const plan = BLUEPRINTS.abrigo.build();
+    let okBlocks = 0;
+    for (const b of plan) {
+      if (b.m === "door_upper" || b.m === "air") continue;
+      const w = toWorld(site, b);
+      const id = dim.getBlock(w)?.typeId;
+      const want = blueprintBlock(b.m, "oak");
+      if (id === want || (b.m.startsWith("lantern") && id && id !== "minecraft:air")) okBlocks++;
+    }
+    const total = plan.filter((b) => b.m !== "door_upper" && b.m !== "air").length;
+    check("build 'abrigo' from blueprint", r.ok && okBlocks / total >= 0.9, `${okBlocks}/${total} ${r.err ?? ""}`);
+
+    // 8) combate: zumbi perto
+    const z = dim.spawnEntity("minecraft:zombie", { x: c.pos().x + 4, y: Y + 1, z: c.pos().z });
+    r = await runGen(defend(c), 600);
+    check("defend: kills zombie", !z.isValid || (z.getComponent("minecraft:health")?.currentValue ?? 0) <= 0, r.err ?? "");
+
+    // 9) dispensar e invocar de novo sem perder nada
+    const countBefore = inv.totalItems(c);
+    c.rec.paused = false;
+    dismiss(c);
+    await system.waitTicks(4);
+    check("dismiss stores body", !c.alive() && !!c.rec.saved?.sid);
+    const back = restoreBodyForTest(c, dim, { x: 0.5, y: Y + 1, z: 0.5 });
+    await system.waitTicks(4);
+    check("resummon restores full inventory", !!back && c.alive() && inv.totalItems(c) === countBefore, `before=${countBefore} after=${inv.totalItems(c)}`);
+    c.rec.summoned = true;
+    c.rec.paused = true;
+
+    // 10) derrota -> volta em 20 s exatos e retoma o plano
+    c.rec.goals = [{ type: "gather", args: { item: { group: "log" }, count: 1 }, origin: "cmd" }];
+    const itemsBefore = inv.totalItems(c);
+    const t0 = system.currentTick;
+    c.entity?.applyDamage(5000);
+    await system.waitTicks(2);
+    check("lethal hit -> defeat (no death)", !!c.rec.defeat);
+    await waitUntil(() => !c.alive(), 80);
+    check("body stored during defeat", !c.alive());
+    const back2 = await waitUntil(() => !c.rec.defeat && c.alive(), RESPAWN_TICKS + 80);
+    const dt = system.currentTick - t0;
+    check("respawn after exactly 400 ticks (20 s)", back2 && dt >= RESPAWN_TICKS - 2 && dt <= RESPAWN_TICKS + 10, `ticks=${dt}`);
+    check("inventory kept after defeat", inv.totalItems(c) === itemsBefore, `before=${itemsBefore} after=${inv.totalItems(c)}`);
+    check("plan resumed after defeat", c.rec.goals.length === 1 && c.rec.goals[0].type === "gather");
+    c.rec.goals = [];
+
+    // 11) persistência
+    c.flush();
+    const saved = readJSON(world, recKey(OWNER), null);
+    check("record persisted", saved?.ownerId === OWNER && saved.stats.blocks > 0, `blocks=${saved?.stats?.blocks}`);
+
+    // 12) construção do jogador intacta no fim
+    check("player planks wall intact", [-5, 0, 5].every((zz) => dim.getBlock({ x: 20, y: Y + 2, z: zz })?.typeId === "minecraft:oak_planks"));
+
+    // 13) autonomia: sem ordens, ela decide sozinha e faz algo útil
+    if (!quick) {
+      const blocks0 = c.rec.stats.blocks, crafted0 = c.rec.stats.crafted;
+      const seen = new Set();
+      c.rec.mode = "auto";
+      c.rec.goals = [];
+      c.rec.paused = false;
+      const t1 = system.currentTick;
+      while (system.currentTick - t1 < 1800) {
+        const g = c.job?.desc?.type;
+        if (g) seen.add(g);
+        await system.waitTicks(20);
+      }
+      c.rec.paused = true;
+      check("autonomy chooses and works on its own", c.rec.stats.blocks + c.rec.stats.crafted > blocks0 + crafted0 && seen.size >= 1,
+        `goals=[${[...seen].join(",")}] blocks+${c.rec.stats.blocks - blocks0} crafted+${c.rec.stats.crafted - crafted0}`);
+    }
+
+    // 14) intents prontos (sem rodar)
+    handleIntents(c, [{ type: "stay" }]);
+    check("mode stay", c.rec.mode === "stay");
+    void ItemStack;
+  } catch (e) {
+    log(`FAIL exception :: ${e}${e?.stack ? " " + String(e.stack).split("\n").slice(0, 3).join(" | ") : ""}`);
+    results.push({ name: "exception", ok: false });
+  } finally {
+    const pass = results.filter((r) => r.ok).length;
+    log(`DONE pass=${pass} fail=${results.length - pass}`);
+    running = false;
+  }
+}

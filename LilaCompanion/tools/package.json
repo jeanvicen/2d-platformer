@@ -1,0 +1,17 @@
+{
+  "name": "lila-companion-tools",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Validation tooling for the Lila add-on (type definitions of the exact Script API versions the pack depends on).",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node --test ../tests/unit.test.mjs && node ../tests/validate_ids.mjs && python3 validate_packs.py"
+  },
+  "devDependencies": {
+    "@minecraft/server": "2.8.0",
+    "@minecraft/server-ui": "2.1.0",
+    "@minecraft/vanilla-data": "1.26.60",
+    "typescript": "5.9.3"
+  }
+}

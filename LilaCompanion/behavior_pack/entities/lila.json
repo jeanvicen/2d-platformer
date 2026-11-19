@@ -1,0 +1,201 @@
+{
+  "format_version": "1.21.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "lila:lila",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "properties": {
+        "lila:action": {
+          "type": "enum",
+          "values": [
+            "idle",
+            "mine",
+            "chop",
+            "dig",
+            "place",
+            "attack",
+            "eat",
+            "sleep",
+            "craft",
+            "farm",
+            "wave",
+            "sit",
+            "defeat",
+            "summon",
+            "celebrate",
+            "think"
+          ],
+          "default": "idle",
+          "client_sync": true
+        },
+        "lila:move": {
+          "type": "enum",
+          "values": [
+            "none",
+            "walk",
+            "run",
+            "swim",
+            "climb",
+            "fall",
+            "sneak"
+          ],
+          "default": "none",
+          "client_sync": true
+        }
+      }
+    },
+    "component_groups": {
+      "lila:despawn": {
+        "minecraft:instant_despawn": {
+          "remove_child_entities": false
+        }
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "lila",
+          "lila_companion",
+          "npc",
+          "mob"
+        ]
+      },
+      "minecraft:health": {
+        "value": 100,
+        "max": 100
+      },
+      "minecraft:attack": {
+        "damage": 4
+      },
+      "minecraft:movement": {
+        "value": 0.3
+      },
+      "minecraft:collision_box": {
+        "width": 0.6,
+        "height": 1.8
+      },
+      "minecraft:physics": {
+        "has_gravity": true,
+        "has_collision": true
+      },
+      "minecraft:pushable": {
+        "is_pushable": false,
+        "is_pushable_by_piston": true
+      },
+      "minecraft:knockback_resistance": {
+        "value": 0.6
+      },
+      "minecraft:jump.static": {},
+      "minecraft:can_climb": {},
+      "minecraft:movement.basic": {},
+      "minecraft:navigation.walk": {
+        "can_path_over_water": true,
+        "avoid_damage_blocks": true,
+        "can_pass_doors": true,
+        "can_open_doors": true
+      },
+      "minecraft:nameable": {
+        "always_show": false,
+        "allow_name_tag_renaming": false
+      },
+      "minecraft:persistent": {},
+      "minecraft:breathable": {
+        "total_supply": 60,
+        "suffocate_time": 0,
+        "breathes_water": true
+      },
+      "minecraft:damage_sensor": {
+        "triggers": [
+          {
+            "on_damage": {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "player"
+              }
+            },
+            "deals_damage": "no"
+          },
+          {
+            "on_damage": {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "lila"
+              }
+            },
+            "deals_damage": "no"
+          },
+          {
+            "cause": "fall",
+            "deals_damage": "no"
+          },
+          {
+            "cause": "suffocation",
+            "deals_damage": "no"
+          },
+          {
+            "cause": "drowning",
+            "deals_damage": "no"
+          },
+          {
+            "cause": "fly_into_wall",
+            "deals_damage": "no"
+          }
+        ]
+      },
+      "minecraft:inventory": {
+        "inventory_size": 36,
+        "container_type": "inventory",
+        "private": true
+      },
+      "minecraft:interact": {
+        "interactions": [
+          {
+            "on_interact": {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "player"
+              },
+              "event": "lila:interacted",
+              "target": "self"
+            },
+            "interact_text": "action.interact.lila.talk",
+            "swing": true
+          }
+        ]
+      },
+      "minecraft:behavior.float": {
+        "priority": 0
+      },
+      "minecraft:behavior.look_at_player": {
+        "priority": 8,
+        "look_distance": 10,
+        "probability": 0.03
+      },
+      "minecraft:behavior.random_look_around": {
+        "priority": 9
+      },
+      "minecraft:conditional_bandwidth_optimization": {},
+      "minecraft:experience_reward": {
+        "on_death": "0"
+      }
+    },
+    "events": {
+      "lila:despawn": {
+        "add": {
+          "component_groups": [
+            "lila:despawn"
+          ]
+        }
+      },
+      "lila:interacted": {
+        "remove": {
+          "component_groups": []
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "lila:lila",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/lila/lila"
+      },
+      "geometry": {
+        "default": "geometry.lila.lila"
+      },
+      "animations": {
+        "look": "animation.lila.look",
+        "life": "animation.lila.life",
+        "idle": "animation.lila.idle",
+        "walk": "animation.lila.walk",
+        "run": "animation.lila.run",
+        "sneak": "animation.lila.sneak",
+        "swim": "animation.lila.swim",
+        "climb": "animation.lila.climb",
+        "fall": "animation.lila.fall",
+        "mine": "animation.lila.mine",
+        "chop": "animation.lila.chop",
+        "dig": "animation.lila.dig",
+        "attack": "animation.lila.attack",
+        "place": "animation.lila.place",
+        "eat": "animation.lila.eat",
+        "craft": "animation.lila.craft",
+        "farm": "animation.lila.farm",
+        "wave": "animation.lila.wave",
+        "think": "animation.lila.think",
+        "celebrate": "animation.lila.celebrate",
+        "sit": "animation.lila.sit",
+        "sleep": "animation.lila.sleep",
+        "defeat": "animation.lila.defeat",
+        "summon": "animation.lila.summon",
+        "ctrl_move": "controller.animation.lila.move",
+        "ctrl_act": "controller.animation.lila.action"
+      },
+      "particle_effects": {
+        "sparkle": "lila:sparkle"
+      },
+      "scripts": {
+        "scale": "0.9375",
+        "animate": [
+          "look",
+          "ctrl_move",
+          "ctrl_act",
+          "life"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.lila.lila"
+      ],
+      "enable_attachables": true
+    }
+  }
+}

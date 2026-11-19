@@ -1,0 +1,46 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Lila Companion (RP)",
+    "description": "§aLila§r — modelo, animações e controle\n§7Criado por 0neajx",
+    "uuid": "d7bcc89a-2727-4727-aa37-344181885cac",
+    "version": [
+      1,
+      0,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      26,
+      30
+    ]
+  },
+  "modules": [
+    {
+      "type": "resources",
+      "uuid": "65cf8480-3b98-4618-baea-f184211cc525",
+      "version": [
+        1,
+        0,
+        0
+      ],
+      "description": "Lila resources"
+    }
+  ],
+  "dependencies": [
+    {
+      "uuid": "b461d112-57c7-4e8f-b4dc-395753b1764f",
+      "version": [
+        1,
+        0,
+        0
+      ]
+    }
+  ],
+  "metadata": {
+    "authors": [
+      "0neajx"
+    ],
+    "url": "https://github.com/jeanvicen/2d-platformer"
+  }
+}
