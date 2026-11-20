@@ -3,6 +3,7 @@
 //   "pega 20 madeira e depois faz uma casa aqui" -> [gather log x20, build casa (aqui)]
 import { normalize, parseAmount, similar, tokens } from "./text.js";
 import { ARMOR_WORDS, BLUEPRINT_WORDS, ITEMS, TIER_WORDS, TOOL_WORDS } from "./lexicon.js";
+import { ARMY_WORDS, BIOMES, CREATIVE_ITEMS, FORM_WORDS, KIT_WORDS, MEGA, NORMAL_WORDS } from "./catalog.js";
 
 /**
  * @typedef {{type:string, [k:string]:any}} Intent
@@ -60,6 +61,39 @@ export function findTool(tok) {
   }
   return null;
 }
+
+/** Item do catálogo criativo (maior nome primeiro). */
+export function findCreative(tok) {
+  const joined = ` ${tok.join(" ")} `;
+  let best = null, bl = 0;
+  for (const e of CREATIVE_ITEMS) {
+    for (const w of e.w) {
+      const hit = w.includes(" ") ? joined.includes(` ${w} `) : tok.includes(w);
+      if (hit && w.length > bl) {
+        best = e;
+        bl = w.length;
+      }
+    }
+  }
+  return best;
+}
+
+function findKey(tok, table) {
+  const joined = ` ${tok.join(" ")} `;
+  let best = null, bl = 0;
+  for (const [k, v] of Object.entries(table)) {
+    for (const w of v.w ?? v) {
+      const hit = w.includes(" ") ? joined.includes(` ${w} `) : tok.includes(w);
+      if (hit && w.length > bl) {
+        best = k;
+        bl = w.length;
+      }
+    }
+  }
+  return best;
+}
+
+const TRANSFORM = ["vira", "virar", "vire", "transforma", "transformar", "transforme", "modo", "quero", "vai de", "bora de", "muda pra", "muda para", "forma de"];
 
 function findBlueprint(tok) {
   for (const [k, ws] of Object.entries(BLUEPRINT_WORDS)) if (has(tok, ws)) return k;
@@ -153,6 +187,20 @@ export function parseOne(s) {
   const amount = parseAmount(s, null);
 
   if (has(tok, V.dismiss) && !has(tok, V.give)) return { type: "dismiss" };
+  // ---- 2.0: voltar ao normal, formas, exército, kit, megaconstruções e biomas
+  if (has(tok, NORMAL_WORDS)) return { type: "normal" };
+  if (has(tok, KIT_WORDS)) return { type: "kit" };
+  if (has(tok, ARMY_WORDS)) return { type: "army", count: amount ?? undefined };
+  const biome = findKey(tok, BIOMES);
+  if (biome && has(tok, ["bioma", "transforma", "transformar", "transforme", "muda", "mudar", "mude", "vira", "virar", "deixa", "faz"])) {
+    return { type: "biome", biome };
+  }
+  const mega = findKey(tok, MEGA);
+  if (mega && (has(tok, V.build) || has(tok, V.craft) || has(tok, ["quero", "queria", "bora", "vamos", "cria", "gera"]) || tok.length <= 3)) {
+    return { type: "mega", key: mega, here };
+  }
+  const form = findKey(tok, FORM_WORDS);
+  if (form && (has(tok, TRANSFORM) || tok.length <= 2 || form === "colossus")) return { type: "form", form };
   if (has(tok, V.turret)) return { type: "turret" };
   if (has(tok, V.scan)) return { type: "scan" };
   if (has(tok, V.ride)) return { type: "ride" };
@@ -170,9 +218,14 @@ export function parseOne(s) {
   }
   if (has(tok, V.farmv) || (bp === "fazenda")) return { type: "farm", here, crop: cropOf(tok) };
 
-  if (has(tok, V.give)) {
+  if (has(tok, V.give) || has(tok, ["quero", "preciso", "manda"]) && (findCreative(tok) || findTool(tok))) {
     if (has(tok, ["tudo", "todas", "todos", "everything", "all"])) return { type: "give", all: true };
     const tool = findTool(tok);
+    if (tool?.armor && has(tok, ["armadura", "armaduras"]) && !has(tok, ["capacete", "peitoral", "calca", "bota", "botas"])) {
+      return { type: "kit", armorOnly: true, tier: tool.tier };
+    }
+    const cre = !tool && findCreative(tok);
+    if (cre && !findItem(tok)?.group) return { type: "give", item: { id: cre.id }, count: amount ?? cre.n ?? 1, creative: true };
     if (tool) return { type: "give", item: tool.id ? { id: tool.id } : { toolKind: tool.kind }, count: amount ?? 1 };
     const it = findItem(tok);
     if (it) {
@@ -249,6 +302,11 @@ export function describe(it) {
     case "farm": return "fazer uma plantação";
     case "food": return it.forOwner ? "arranjar comida pra você" : "arranjar comida";
     case "give": return it.all ? "te entregar tudo" : `te entregar ${targetName(it.item)}`;
+    case "mega": return `construir: ${MEGA[it.key]?.name ?? it.key}`;
+    case "biome": return `transformar o lugar em ${BIOMES[it.biome]?.name ?? it.biome}`;
+    case "form": return `virar ${it.form}`;
+    case "army": return "modo exército";
+    case "kit": return "te deixar mais forte";
     case "explore": return "explorar";
     case "hunt": return "caçar";
     case "torches": return "iluminar a área";

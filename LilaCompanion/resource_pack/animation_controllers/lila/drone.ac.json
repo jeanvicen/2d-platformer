@@ -222,6 +222,143 @@
           ]
         }
       }
+    },
+    "controller.animation.lila.form.action": {
+      "initial_state": "default",
+      "states": {
+        "default": {
+          "blend_transition": 0.15,
+          "transitions": [
+            {
+              "work": "q.property('lila:action') == 'work' && v.form != 0"
+            },
+            {
+              "place": "q.property('lila:action') == 'place' && v.form != 0"
+            },
+            {
+              "shoot": "q.property('lila:action') == 'shoot' && v.form != 0"
+            },
+            {
+              "charge": "q.property('lila:action') == 'charge' && v.form != 0"
+            },
+            {
+              "celebrate": "q.property('lila:action') == 'celebrate' && v.form != 0"
+            },
+            {
+              "wave": "q.property('lila:action') == 'wave' && v.form != 0"
+            },
+            {
+              "defeat": "q.property('lila:action') == 'defeat' && v.form != 0"
+            }
+          ]
+        },
+        "work": {
+          "animations": [
+            {
+              "col_punch": "v.form == 7"
+            },
+            {
+              "exc_dig": "v.form == 3"
+            }
+          ],
+          "blend_transition": 0.2,
+          "transitions": [
+            {
+              "default": "q.property('lila:action') != 'work' || v.form == 0"
+            }
+          ]
+        },
+        "place": {
+          "animations": [
+            {
+              "col_stomp": "v.form == 7"
+            }
+          ],
+          "blend_transition": 0.2,
+          "transitions": [
+            {
+              "default": "q.property('lila:action') != 'place' || v.form == 0"
+            }
+          ]
+        },
+        "shoot": {
+          "animations": [
+            {
+              "tank_fire": "v.form == 4"
+            },
+            {
+              "turret_fire": "v.form == 8"
+            },
+            {
+              "heli_fire": "v.form == 1"
+            }
+          ],
+          "blend_transition": 0.2,
+          "transitions": [
+            {
+              "default": "q.property('lila:action') != 'shoot' || v.form == 0"
+            }
+          ]
+        },
+        "charge": {
+          "animations": [
+            {
+              "col_beam": "v.form == 7"
+            },
+            {
+              "turret_missile": "v.form == 8"
+            },
+            {
+              "jet_missile": "v.form == 5"
+            }
+          ],
+          "blend_transition": 0.2,
+          "transitions": [
+            {
+              "default": "q.property('lila:action') != 'charge' || v.form == 0"
+            }
+          ]
+        },
+        "celebrate": {
+          "animations": [
+            {
+              "col_roar": "v.form == 7"
+            }
+          ],
+          "blend_transition": 0.2,
+          "transitions": [
+            {
+              "default": "q.property('lila:action') != 'celebrate' || v.form == 0"
+            }
+          ]
+        },
+        "wave": {
+          "animations": [
+            {
+              "col_wave": "v.form == 7"
+            }
+          ],
+          "blend_transition": 0.2,
+          "transitions": [
+            {
+              "default": "q.property('lila:action') != 'wave' || v.form == 0"
+            }
+          ]
+        },
+        "defeat": {
+          "animations": [
+            {
+              "col_defeat": "v.form == 7"
+            }
+          ],
+          "blend_transition": 0.2,
+          "transitions": [
+            {
+              "default": "q.property('lila:action') != 'defeat' || v.form == 0"
+            }
+          ]
+        }
+      }
     }
   }
 }

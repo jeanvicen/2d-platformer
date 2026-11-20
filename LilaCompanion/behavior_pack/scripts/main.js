@@ -1,6 +1,6 @@
-// Lila Companion — ponto de entrada (APIs estáveis: @minecraft/server 2.x + server-ui 2.x).
-// Nada aparece quando o jogador entra no mundo: tudo começa quando ele fabrica o Controle da Lila.
-import { CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus, Player, system, world } from "@minecraft/server";
+// DR-0N Mega Drone — ponto de entrada (APIs estáveis: @minecraft/server 2.x + server-ui 2.x).
+// Nada aparece quando o jogador entra no mundo: tudo começa quando ele fabrica o Controle do DR-0N.
+import { ButtonState, CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus, EntityDamageCause, InputButton, Player, system, world } from "@minecraft/server";
 import { every, startScheduler } from "./core/scheduler.js";
 import { logError, logInfo } from "./core/log.js";
 import { COMPANIONS, OWNER_PROP, adopt, companionForEntity, companionsOf, findEntityFor, isCompanionType, loadAllRecords, loadCompanion } from "./lila/companion.js";
@@ -8,13 +8,16 @@ import { command, metabolism, sense, tick } from "./lila/brain.js";
 import { backupInventory, defeat, tickDefeat } from "./lila/lifecycle.js";
 import { flushHud, resetWaypoint, updateHud } from "./lila/hud.js";
 import { riddenBy, rideTick } from "./lila/drone.js";
-import { fight } from "./lila/combat.js";
+import { fight, markAggro } from "./lila/combat.js";
+import { beam, formOf, formTick, isRideForm, jumpAction, primaryAttack, releaseRiders, riders } from "./lila/forms.js";
+import { armyActive, armyTick, ROBOT } from "./lila/army.js";
+import { particle, sound } from "./lila/anim.js";
+import { say } from "./lila/talk.js";
 import { openController } from "./ui/controller.js";
 import { runSelfTest } from "./test/selftest.js";
-import { SUMMONS } from "./lila/registry.js";
+import { DRONE, SUMMONS } from "./lila/registry.js";
 
-/** Item de controle -> tipo de companheira. */
-const CONTROLLERS = Object.fromEntries([...SUMMONS.values()].map((d) => [d.controller, d.key]));
+const CONTROLLER = DRONE.controller;
 
 // ------------------------------------------------------------------ registro antecipado
 system.beforeEvents.startup.subscribe((ev) => {
@@ -24,7 +27,7 @@ system.beforeEvents.startup.subscribe((ev) => {
     for (const def of SUMMONS.values()) {
       ev.customCommandRegistry.registerCommand({
         name: def.command ?? `lila:${def.key}`,
-        description: `Dá uma ordem para ${def.name}. Ex.: /${(def.command ?? def.key).split(":")[1]} pega 20 madeira (sem texto: abre o menu)`,
+        description: "Dá uma ordem para o DR-0N. Ex.: /drone vira helicóptero (sem texto: abre o menu)",
         permissionLevel: CommandPermissionLevel.Any,
         cheatsRequired: false,
         optionalParameters: optional,
@@ -35,11 +38,11 @@ system.beforeEvents.startup.subscribe((ev) => {
         system.run(() => {
           const c = loadCompanion(src, def.key);
           if (!text) {
-            openController(src, def.key);
+            openController(src);
             return;
           }
-          if (!c.rec.summoned || !c.alive()) {
-            src.sendMessage(`${def.chatTag}Me invoque primeiro com o §l${def.key === "drone" ? "Controle do DR-0N" : "Controle da Lila"}§r.`);
+          if (!c.rec.summoned || (!c.alive() && !armyActive(c))) {
+            src.sendMessage(`${def.chatTag}Me invoque primeiro com o §lControle do DR-0N§r.`);
             return;
           }
           src.sendMessage(`§7Você » ${def.name}: §f${text}`);
@@ -53,9 +56,18 @@ system.beforeEvents.startup.subscribe((ev) => {
   }
 });
 
+const setDismount = (p, on) => {
+  try {
+    p.inputPermissions.setPermissionCategory(8, on);
+  } catch {
+    /* ignore */
+  }
+};
+
 // ------------------------------------------------------------------ mundo carregado
 world.afterEvents.worldLoad.subscribe(() => {
   loadAllRecords();
+  for (const p of world.getAllPlayers()) setDismount(p, true); // segurança: nunca deixa ninguém preso
   for (const c of COMPANIONS.values()) {
     const e = findEntityFor(c);
     if (e) adopt(e);
@@ -70,9 +82,17 @@ world.afterEvents.worldLoad.subscribe(() => {
       } catch (e) {
         logError("lila.defeat", e);
       }
-      if (!c.owner() && !c.flags.test) continue; // dono offline: ela espera
+      if (!c.owner() && !c.flags.test) continue; // dono offline: ele espera
       try {
-        // carona: o dono pilota; o cérebro espera e retoma quando ele descer
+        if (armyActive(c)) {
+          armyTick(c);
+          continue;
+        }
+        if (c.alive() && isRideForm(formOf(c))) {
+          formTick(c); // veículos e colosso: você pilota, o cérebro descansa
+          continue;
+        }
+        // carona no drone: o dono pilota; o cérebro espera e retoma quando ele descer
         if (c.def?.flying && c.alive()) {
           const rider = riddenBy(c);
           if (rider) {
@@ -82,7 +102,7 @@ world.afterEvents.worldLoad.subscribe(() => {
           }
           if (c.flags.ridden) {
             c.flags.ridden = false;
-            c.abortMove = true; // replaneja o caminho a partir de onde ele foi deixado
+            c.abortMove = true;
           }
         }
         tick(c);
@@ -96,14 +116,14 @@ world.afterEvents.worldLoad.subscribe(() => {
     for (const c of COMPANIONS.values()) {
       if (!c.owner() && !c.flags.test) continue;
       try {
-        if (!c.alive() && c.rec.summoned && !c.rec.defeat) {
+        if (!armyActive(c) && !c.alive() && c.rec.summoned && !c.rec.defeat) {
           const e = findEntityFor(c);
           if (e) {
             adopt(e);
             resetWaypoint(c);
           }
         }
-        if (!c.flags.ridden) sense(c);
+        if (!c.flags.ridden && !armyActive(c) && !isRideForm(formOf(c))) sense(c);
         updateHud(c);
         const o = c.owner();
         if (o) owners.set(o.id, o);
@@ -133,18 +153,16 @@ world.afterEvents.worldLoad.subscribe(() => {
     }
   }, 11);
   startScheduler();
-  logInfo("boot", "Lila Companion carregado");
+  logInfo("boot", "DR-0N Mega Drone carregado");
 });
 
 // ------------------------------------------------------------------ controle
 world.afterEvents.itemUse.subscribe((ev) => {
-  const kind = CONTROLLERS[ev.itemStack?.typeId ?? ""];
-  if (kind) openController(ev.source, kind);
+  if (ev.itemStack?.typeId === CONTROLLER) openController(ev.source);
 });
 
 world.afterEvents.playerInteractWithBlock.subscribe((ev) => {
-  const kind = CONTROLLERS[ev.itemStack?.typeId ?? ""];
-  if (kind) openController(ev.player, kind);
+  if (ev.itemStack?.typeId === CONTROLLER) openController(ev.player);
 });
 
 world.afterEvents.playerInteractWithEntity.subscribe((ev) => {
@@ -152,14 +170,59 @@ world.afterEvents.playerInteractWithEntity.subscribe((ev) => {
   if (!t || !isCompanionType(t.typeId)) return;
   const owner = t.getDynamicProperty(OWNER_PROP);
   const c = companionForEntity(t);
+  const held = ev.player.getComponent("minecraft:inventory")?.container?.getItem(ev.player.selectedSlotIndex)?.typeId;
   if (owner !== ev.player.id) {
-    ev.player.sendMessage(`${c?.def.chatTag ?? "§a[Lila]§r "}Oi! Eu sou ${c?.def.name ?? "a Lila"} de ${c?.rec.ownerName ?? "outra pessoa"}. Fabrique o seu controle para ter o seu!`);
+    // outros jogadores podem pegar carona nos veículos/colosso (o assento é nativo)
+    if (c && isRideForm(formOf(c))) ev.player.sendMessage(`${c.def.chatTag}Bem-vindo a bordo! Só o dono pilota. Agache para descer.`);
+    else ev.player.sendMessage(`${c?.def.chatTag ?? "§b[DR-0N]§r "}Oi! Eu sou o DR-0N de ${c?.rec.ownerName ?? "outra pessoa"}. Fabrique o seu controle para ter o seu!`);
     return;
   }
-  // tocar no drone de mão vazia = subir nele (carona); com o controle = menu
-  const held = ev.player.getComponent("minecraft:inventory")?.container?.getItem(ev.player.selectedSlotIndex)?.typeId;
-  if (c?.def.flying && held !== c.def.controller) return;
-  openController(ev.player, c?.kind ?? "lila");
+  if (held !== CONTROLLER) return; // mão vazia = subir (assento nativo)
+  openController(ev.player);
+});
+
+// ------------------------------------------------------------------ pilotagem: botões do jogo
+function pilotOf(player) {
+  for (const c of companionsOf(player.id)) {
+    if (c.alive() && isRideForm(formOf(c)) && riders(c).some((r) => r.id === player.id)) return c;
+  }
+  return undefined;
+}
+
+world.afterEvents.playerSwingStart.subscribe((ev) => {
+  const c = pilotOf(ev.player);
+  if (c) primaryAttack(c, ev.player);
+});
+
+world.afterEvents.playerButtonInput.subscribe((ev) => {
+  const p = ev.player;
+  const c = pilotOf(p);
+  if (!c || ev.newButtonState !== ButtonState.Pressed) return;
+  if (ev.button === InputButton.Jump) {
+    jumpAction(c);
+    return;
+  }
+  if (ev.button !== InputButton.Sneak) return;
+  const now = system.currentTick;
+  const last = c.flags.lastSneak ?? -99;
+  c.flags.lastSneak = now;
+  if (now - last <= 10) {
+    // agachar 2× = sair
+    c.flags.lastSneak = -99;
+    setDismount(p, true);
+    try {
+      c.entity?.getComponent("minecraft:rideable")?.ejectRider(p);
+    } catch {
+      /* ignore */
+    }
+    return;
+  }
+  // colosso: um toque = raio de plasma (espera um instante para ver se é o toque duplo)
+  if (formOf(c) === "colossus") {
+    system.runTimeout(() => {
+      if (c.flags.lastSneak === now && c.alive() && riders(c)[0]?.id === p.id) beam(c, p);
+    }, 11);
+  }
 });
 
 // ------------------------------------------------------------------ entidades
@@ -171,10 +234,10 @@ world.afterEvents.entityLoad.subscribe((ev) => {
 });
 
 world.afterEvents.playerSpawn.subscribe((ev) => {
-  // nada é mostrado ao entrar: só reconecta as companheiras de quem já tem
+  setDismount(ev.player, true);
   for (const kind of SUMMONS.keys()) {
     const c = loadCompanion(ev.player, kind);
-    if (c.rec.summoned && !c.alive()) {
+    if (c.rec.summoned && !c.alive() && !armyActive(c)) {
       const e = findEntityFor(c);
       if (e) adopt(e);
     }
@@ -183,23 +246,45 @@ world.afterEvents.playerSpawn.subscribe((ev) => {
 
 world.afterEvents.playerLeave.subscribe((ev) => {
   try {
-    for (const c of companionsOf(ev.playerId)) c.flush();
+    for (const c of companionsOf(ev.playerId)) {
+      if (c.alive() && isRideForm(formOf(c))) releaseRiders(c);
+      c.flush();
+    }
   } catch (e) {
     logError("leave", e);
   }
 });
 
-// ------------------------------------------------------------------ dano: resistência e derrota
+// ------------------------------------------------------------------ dano
+/** Dono pilotando o colosso: quase imortal. Dono batendo no próprio drone/robôs: sem dano. */
 world.beforeEvents.entityHurt.subscribe((ev) => {
   const e = ev.hurtEntity;
+  const src = ev.damageSource?.damagingEntity;
+  if (e.typeId === "minecraft:player") {
+    for (const c of companionsOf(e.id)) {
+      if (c.alive() && formOf(c) === "colossus" && riders(c).some((r) => r.id === e.id)) {
+        ev.cancel = true;
+        return;
+      }
+    }
+    // passageiros do colosso também ficam protegidos
+    const v = e.getComponent?.("minecraft:riding")?.entityRidingOn;
+    if (v?.typeId === DRONE.entity && Number(v.getProperty("lila:form")) === 7) ev.cancel = true;
+    return;
+  }
+  if (e.typeId === ROBOT) {
+    if (src && src.id === e.getDynamicProperty(OWNER_PROP)) ev.cancel = true;
+    return;
+  }
   if (!isCompanionType(e.typeId)) return;
   const c = companionForEntity(e);
   if (!c) return;
-  if (c.rec.defeat) {
+  if (c.rec.defeat || (src && src.id === c.rec.ownerId)) {
     ev.cancel = true;
     return;
   }
-  ev.damage = ev.damage * armorFactor(c);
+  const f = formOf(c);
+  ev.damage = ev.damage * (f === "colossus" ? 0.08 : f === "turret" ? 0.3 : f === "tank" ? 0.25 : 0.45);
   let hp = 100;
   try {
     hp = e.getComponent("minecraft:health")?.currentValue ?? 100;
@@ -210,52 +295,58 @@ world.beforeEvents.entityHurt.subscribe((ev) => {
     ev.cancel = true;
     system.run(() => defeat(c));
   }
-}, { entityFilter: { families: ["lila_companion"] } });
+});
 
-/** Resistência: metade do dano normal, menos ainda com armadura no inventário. */
-function armorFactor(c) {
-  let pts = 0;
-  try {
-    const inv = c.entity?.getComponent("minecraft:inventory")?.container;
-    const seen = new Set();
-    for (let i = 0; inv && i < inv.size; i++) {
-      const id = inv.getItem(i)?.typeId;
-      if (!id || seen.has(id)) continue;
-      const m = /^minecraft:(iron|diamond|netherite|golden)_(helmet|chestplate|leggings|boots)$/.exec(id);
-      if (!m) continue;
-      seen.add(m[2]);
-      const table = { iron: { helmet: 2, chestplate: 6, leggings: 5, boots: 2 }, diamond: { helmet: 3, chestplate: 8, leggings: 6, boots: 3 },
-        netherite: { helmet: 3, chestplate: 8, leggings: 6, boots: 3 }, golden: { helmet: 2, chestplate: 5, leggings: 3, boots: 1 } };
-      pts += table[m[1]][m[2]];
-    }
-  } catch {
-    /* ignore */
-  }
-  return 0.5 * (1 - Math.min(20, pts) * 0.035);
-}
-
-// Quem machucar o dono (ou ela) vira alvo imediato.
+/** Quem machucar o dono (ou o drone/robôs) vira alvo imediato — jogadores também. */
 world.afterEvents.entityHurt.subscribe((ev) => {
   const attacker = ev.damageSource.damagingEntity;
-  if (!attacker || attacker.typeId === "minecraft:player" || isCompanionType(attacker.typeId)) return;
   const hurt = ev.hurtEntity;
-  /** @type {any[]} */
+  if (!attacker || attacker.typeId === ROBOT || isCompanionType(attacker.typeId)) return;
   let list = [];
-  if (hurt.typeId === "minecraft:player") list = companionsOf(hurt.id);
+  if (hurt.typeId === "minecraft:player") list = companionsOf(hurt.id).filter((c) => c.rec.ownerId !== attacker.id);
   else if (isCompanionType(hurt.typeId)) list = [companionForEntity(hurt)];
-  try {
-    if (attacker.getComponent("minecraft:tameable")?.isTamed) return;
-  } catch {
-    /* ignore */
+  else if (hurt.typeId === ROBOT) {
+    const owner = hurt.getDynamicProperty(OWNER_PROP);
+    if (typeof owner === "string") list = companionsOf(owner);
   }
   for (const c of list) {
-    if (!c || !c.alive() || c.rec.defeat || c.urgent || c.flags.ridden) continue;
-    const gen = fight(c, attacker, 400);
+    if (!c || c.rec.defeat || attacker.id === c.rec.ownerId) continue;
+    markAggro(c, attacker, 800);
+    if (!c.alive() || c.urgent || c.flags.ridden || isRideForm(formOf(c)) || armyActive(c) || formOf(c) === "turret") continue;
+    if (attacker.typeId === "minecraft:player") say(c, `${/** @type {any} */ (attacker).name ?? "Jogador"} te atacou. Revidando!`, { force: true });
+    const gen = fight(c, attacker, 600);
     c.urgent = { desc: { type: "defend", origin: "auto" }, gen, wait: 0, t0: system.currentTick };
   }
 });
 
-// Morte de verdade (ex.: /kill): mesmo assim ela volta em 20 s.
+/** Você bateu no DR-0N: ele te dá uma "lição" de leve (3 tirinhos fracos). */
+world.afterEvents.entityHitEntity.subscribe((ev) => {
+  const p = ev.damagingEntity;
+  const t = ev.hitEntity;
+  if (p?.typeId !== "minecraft:player" || !t || !isCompanionType(t.typeId)) return;
+  const c = companionForEntity(t);
+  if (!c || c.rec.ownerId !== p.id || c.rec.settings.lesson === false || isRideForm(formOf(c))) return;
+  const now = system.currentTick;
+  if (now < (c.flags.lessonUntil ?? 0)) return;
+  c.flags.lessonUntil = now + 80;
+  say(c, "Ei! Bateu, levou! Toma uma liçãozinha...", { force: true });
+  for (let k = 0; k < 3; k++) {
+    system.runTimeout(() => {
+      if (!c.alive() || !p.isValid) return;
+      const a = c.pos(), b = p.location;
+      for (let i = 1; i <= 6; i++) particle(c.dim(), "lila:tracer", { x: a.x + (b.x - a.x) * (i / 7), y: a.y + 0.3 + (b.y + 1 - a.y) * (i / 7), z: a.z + (b.z - a.z) * (i / 7) });
+      sound(c.entity, "random.click", 0.7, 1.9);
+      try {
+        p.applyDamage(2, { cause: EntityDamageCause.entityAttack, damagingEntity: c.entity });
+        p.applyKnockback({ x: (b.x - a.x) * 0.15, z: (b.z - a.z) * 0.15 }, 0.25);
+      } catch {
+        /* ignore */
+      }
+    }, 6 + k * 5);
+  }
+});
+
+// Morte de verdade (ex.: /kill): mesmo assim ele volta em 20 s.
 world.afterEvents.entityDie.subscribe((ev) => {
   const e = ev.deadEntity;
   if (!e || !isCompanionType(e.typeId)) return;
@@ -265,6 +356,7 @@ world.afterEvents.entityDie.subscribe((ev) => {
         c.rec.defeat = { left: 400, sid: "", goals: c.rec.goals.slice() };
         c.rec.stats.defeats++;
       }
+      c.rec.form = "drone";
       c.entity = undefined;
       c.save();
     }

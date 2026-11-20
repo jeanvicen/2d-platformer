@@ -10,10 +10,6 @@ MOVE = "q.property('lila:move')"
 DRONE_ACTIONS = ["idle", "work", "place", "shoot", "charge", "turret", "craft", "wave", "sleep", "defeat",
                  "summon", "celebrate", "scan"]
 LANDED = f"({ACT} == 'sleep' || {ACT} == 'defeat' || {ACT} == 'turret')"
-T = "v.turret_t"  # 0 = voando, 1 = torreta montada (rampa suave calculada em pre_animation)
-PRE_ANIMATION = [
-    f"v.turret_t = math.clamp(v.turret_t + (({ACT} == 'turret') ? 1 : -1) * math.min(q.delta_time, 0.1) * 2.2, 0, 1);",
-]
 
 
 def drone_anims():
@@ -29,17 +25,6 @@ def drone_anims():
         "root": bone(pos=[0, f"{LANDED} ? 0 : 5 + math.sin(q.anim_time * 120) * 0.7", 0]),
         "eye": bone(scale=f"1 + math.sin(q.anim_time * 200) * 0.03"),
         "antenna": bone(rot=[osc(3, 160), 0, osc(2, 110)]),
-    })
-    # transformação: tripé desce do corpo e crava no chão, braços/hélices dobram, escudo e canhão abrem
-    add("parts", {
-        "tripod": bone(scale=f"{T}", pos=[0, f"(1 - {T}) * 7", 0]),
-        "shield": bone(scale=f"{T}", rot=[f"(1 - {T}) * 80", 0, 0]),
-        "cannon": bone(scale=f"{T}", rot=[f"(1 - {T}) * -90", f"{T} * math.sin(q.anim_time * 40) * 25", 0]),
-        "red_eye": bone(scale=f"{T}"),
-        "legs": bone(scale=f"1 - {T} * 0.999"),
-        **{f"arm{i}": bone(scale=f"1 - {T} * 0.62") for i in range(4)},
-        **{f"rotor{i}": bone(scale=f"1 - {T} * 0.7") for i in range(4)},
-        "gun_r": bone(pos=[f"{T} * 1.5", 0, f"{T} * -2"]), "gun_l": bone(pos=[f"{T} * -1.5", 0, f"{T} * -2"]),
     })
     add("look", {"eye": bone(rot=["math.clamp(q.target_x_rotation, -30, 30)", "math.clamp(q.target_y_rotation, -25, 25)", 0])})
     # voo: inclina para frente conforme a velocidade

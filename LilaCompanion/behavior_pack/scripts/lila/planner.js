@@ -11,6 +11,7 @@ import { applesFromLeaves, chopTrees, digFor, exploreStep, fillBucket, harvestNe
 import { canAttack, fight, huntFor, shearSheep } from "./combat.js";
 import { findBlocks } from "./world.js";
 import { say } from "./talk.js";
+import { isCreative, materialize } from "./creative.js";
 
 /** @typedef {import("./companion.js").Companion} Companion */
 /** @typedef {string | {id?:string, group?:string, toolKind?:string, tier?:string, ore?:string}} Target */
@@ -64,6 +65,11 @@ export function* obtain(c, target, count, o = {}) {
   const t = normTarget(target);
   const depth = o.depth ?? 0;
   if (depth > MAX_DEPTH) throw new GoalError("essa cadeia de fabricação ficou longa demais");
+  // DR-0N tem itens infinitos: o que faltar ele materializa na hora
+  if (isCreative(c) && materialize(c, t.toolKind ? { toolKind: t.toolKind, tier: t.tier } : t, count)) {
+    yield 4;
+    return true;
+  }
   if (t.toolKind) return yield* ensureTool(c, t.toolKind, t.tier ?? "wooden", o);
   if (inv.count(c, t.id ?? t) >= count) return true;
   let toolRetries = 0;
@@ -87,6 +93,7 @@ export function* obtain(c, target, count, o = {}) {
 
 /** Garante uma ferramenta de pelo menos esse nível. */
 export function* ensureTool(c, kind, minTier, o = {}) {
+  if (isCreative(c) && TIER_RANK[inv.toolTier(c, kind)] < TIER_RANK.netherite) materialize(c, { toolKind: kind, tier: "netherite" }, 1);
   const cur = inv.toolTier(c, kind);
   if (TIER_RANK[cur] >= TIER_RANK[minTier]) return true;
   return yield* obtain(c, toolId(kind, minTier), 1, o);
@@ -262,6 +269,11 @@ export function* obtainFood(c, count, o = {}) {
   const have = () => inv.count(c, food);
   const enough = () => have() >= count;
   if (enough()) return;
+  if (isCreative(c)) {
+    inv.addId(c, "minecraft:cooked_beef", count - have());
+    yield 4;
+    return;
+  }
   const allowHunt = !!o.cmd || c.rec.settings.hunt;
   const talk = (m) => say(c, m, { force: !!o.cmd });
   for (let round = 0; round < 4 && !enough(); round++) {

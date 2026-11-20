@@ -24,6 +24,51 @@
         "a": "0.4"
       }
     },
+    "controller.render.lila.forms": {
+      "arrays": {
+        "geometries": {
+          "Array.geo": [
+            "Geometry.default",
+            "Geometry.heli",
+            "Geometry.car",
+            "Geometry.excavator",
+            "Geometry.tank",
+            "Geometry.jet",
+            "Geometry.moto",
+            "Geometry.colossus",
+            "Geometry.turret_g"
+          ]
+        },
+        "textures": {
+          "Array.tex": [
+            "Texture.default",
+            "Texture.heli",
+            "Texture.car",
+            "Texture.excavator",
+            "Texture.tank",
+            "Texture.jet",
+            "Texture.moto",
+            "Texture.colossus",
+            "Texture.turret_g"
+          ]
+        }
+      },
+      "geometry": "Array.geo[q.property('lila:form')]",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "Array.tex[q.property('lila:form')]"
+      ],
+      "is_hurt_color": {
+        "r": "0.85",
+        "g": "0.25",
+        "b": "0.25",
+        "a": "0.25"
+      }
+    },
     "controller.render.lila.item": {
       "geometry": "Geometry.default",
       "materials": [

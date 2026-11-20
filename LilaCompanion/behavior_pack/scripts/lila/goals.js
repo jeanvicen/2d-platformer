@@ -18,7 +18,11 @@ import * as inv from "./inventory.js";
 import { hold, setAction, setMove, sound } from "./anim.js";
 import { LINES, pick, say } from "./talk.js";
 import { keepLoaded } from "./areas.js";
-import { missions, orbitOwner, remember, scanOwner, turret } from "./drone.js";
+import { missions, orbitOwner, remember, scanOwner } from "./drone.js";
+import { turretGoal } from "./forms.js";
+import { megaBuild, biomeTransform } from "./mega.js";
+import { deploy, empower, armyActive } from "./army.js";
+import { isCreative, materialize, strengthKit, equipArmor, giveStacks, buff } from "./creative.js";
 
 /** @typedef {import("./companion.js").Companion} Companion */
 /** @typedef {import("./companion.js").GoalDesc} GoalDesc */
@@ -356,7 +360,29 @@ export function runGoal(c, g) {
   switch (g.type) {
     case "follow": return followOwner(c);
     case "tagalong": return followOwner(c, a.ticks ?? 240);
-    case "turret": return turret(c);
+    case "turret": return turretGoal(c);
+    case "mega": return megaBuild(c, a.key, { here: a.here });
+    case "biome": return biomeTransform(c, a.biome);
+    case "army": return (function* () {
+      yield* deploy(c, a.count ?? c.rec.settings.army ?? 10);
+    })();
+    case "kit": return (function* () {
+      const o = c.owner();
+      if (!o) return;
+      if (armyActive(c)) {
+        empower(c, o);
+        return;
+      }
+      yield* goTo(c, o.location, { reach: 2.5, yTol: 3, run: true, follow: () => c.owner()?.location });
+      setAction(c.entity, "wave");
+      sound(c.entity, "lila.transform", 0.6, 1.6);
+      const rest = equipArmor(o, strengthKit({ armorOnly: !!a.armorOnly, tier: a.tier }));
+      giveStacks(o, rest);
+      if (!a.armorOnly) buff(o, "battle");
+      say(c, a.armorOnly ? "Armadura encantada vestida em você!" : "Kit de força: netherita encantada, armas, totem, maçãs, élitro e efeitos. Agora você tá forte!", { force: true });
+      yield 20;
+      setAction(c.entity, "idle");
+    })();
     case "scan": return (function* () {
       scanOwner(c);
       yield 30;
@@ -420,7 +446,9 @@ export function runGoal(c, g) {
       yield* obtainFood(c, want, { cmd });
       say(c, "Comida garantida!", { force: cmd });
     })();
-    case "give": return a.all ? giveAll(c) : giveTarget(c, a.item, a.count);
+    case "give":
+      if (!a.all && isCreative(c)) materialize(c, a.item, a.count ?? 1);
+      return a.all ? giveAll(c) : giveTarget(c, a.item, a.count);
     case "explore": return explore(c, a.legs ?? 5);
     case "hunt": return (function* () {
       yield* huntFor(c, "minecraft:beef", ["minecraft:cow", "minecraft:pig", "minecraft:sheep", "minecraft:chicken"], inv.count(c, { group: "food" }) + (a.count ?? 4), true);
@@ -529,6 +557,10 @@ export function goalLabel(g) {
   const a = g.args ?? {};
   switch (g.type) {
     case "follow": return "te seguindo";
+    case "mega": return `construindo ${a.key ?? ""}`.trim();
+    case "biome": return `transformando o bioma (${a.biome ?? ""})`;
+    case "army": return "virando exército";
+    case "kit": return "te deixando mais forte";
     case "stay": return "esperando aqui";
     case "hangout": return "de boa por perto";
     case "regroup": return "voltando pra perto de você";

@@ -1,0 +1,38 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "lila:robot",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/lila/robot"
+      },
+      "geometry": {
+        "default": "geometry.lila.robot"
+      },
+      "animations": {
+        "look": "animation.lila.robot.look",
+        "idle": "animation.lila.robot.idle",
+        "walk": "animation.lila.robot.walk",
+        "fly": "animation.lila.robot.fly",
+        "shoot": "animation.lila.robot.shoot",
+        "punch": "animation.lila.robot.punch",
+        "give": "animation.lila.robot.give",
+        "spawn": "animation.lila.robot.spawn",
+        "ctrl": "controller.animation.lila.robot.action"
+      },
+      "scripts": {
+        "animate": [
+          "look",
+          "idle",
+          "ctrl"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.lila.lila"
+      ]
+    }
+  }
+}

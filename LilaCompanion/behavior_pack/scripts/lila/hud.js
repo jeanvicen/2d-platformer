@@ -1,9 +1,10 @@
-// HUDLocator: "Lila ↗ 38m" na barra de ação + ponto verde na barra de localização nativa.
-// Mostra onde ela está mesmo longe, avisa se está em outra dimensão ou voltando da derrota.
+// HUDLocator: "DR-0N ↗ 38m" na barra de ação + ponto na barra de localização nativa.
+// Mostra onde ele está mesmo longe, a forma atual, outra dimensão ou volta da derrota.
 import { EntityWaypoint, WaypointTexture } from "@minecraft/server";
 import { goalLabel } from "./goals.js";
 import { logError } from "../core/log.js";
-import { LILA } from "./registry.js";
+import { DRONE } from "./registry.js";
+import { FORM_NAMES } from "../lib/catalog.js";
 
 /** @typedef {import("./companion.js").Companion} Companion */
 
@@ -36,12 +37,14 @@ export function updateHud(c) {
   let holding = false;
   try {
     const it = o.getComponent("minecraft:inventory")?.container?.getItem(o.selectedSlotIndex);
-    holding = it?.typeId === "lila:controller";
+    holding = it?.typeId === DRONE.controller;
   } catch {
     /* ignore */
   }
   let text;
-  if (c.rec.defeat) {
+  if (c.rec.form === "army") {
+    text = `§b${c.def?.name ?? "DR-0N"}§r §7· §aexército em ação§7 (use o controle para comandar)`;
+  } else if (c.rec.defeat) {
     text = `${c.kind === "drone" ? "§b" : "§a"}${c.def?.name ?? "Lila"}§r §7volta em §e${Math.max(1, Math.ceil(c.rec.defeat.left / 20))}s`;
   } else if (!c.rec.summoned) {
     if (!holding) return;
@@ -59,7 +62,8 @@ export function updateHud(c) {
     const dy = p.y - o.location.y;
     const vert = dy > 4 ? " §b▲" : dy < -4 ? " §b▼" : "";
     const cur = c.urgent?.desc ?? c.job?.desc;
-    text = `${c.kind === "drone" ? "§b" : "§a"}${c.def?.name ?? "Lila"} §f${arrow} §e${Math.round(d)}m${vert}§r §7· ${goalLabel(cur)}`;
+    const form = c.rec.form && c.rec.form !== "drone" ? ` §6[${FORM_NAMES[c.rec.form] ?? c.rec.form}]` : "";
+    text = `§b${c.def?.name ?? "DR-0N"}${form} §f${arrow} §e${Math.round(d)}m${vert}§r §7· ${goalLabel(cur)}`;
   }
   c.flags.hudText = text;
 }
@@ -68,7 +72,7 @@ function ensureNative(c, o) {
   if (!c.alive() || c.waypoint) return;
   try {
     const wp = new EntityWaypoint(c.entity, { textureBoundsList: [{ lowerBound: 0, texture: WaypointTexture.Circle }] },
-      { showInvisible: true, showSneaking: true, showDead: false }, c.def?.color ?? LILA.color);
+      { showInvisible: true, showSneaking: true, showDead: false }, c.def?.color ?? DRONE.color);
     o.locatorBar.addWaypoint(wp);
     c.waypoint = wp;
   } catch {

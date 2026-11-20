@@ -1,6 +1,5 @@
-entity.lila:lila.name=Lila
-item.lila.controller.name=Lila's Controller
-action.interact.lila.talk=Talk
 entity.lila:drone.name=DR-0N
+entity.lila:robot.name=DR-0N Soldier
 item.lila.drone_controller.name=DR-0N Remote
-action.interact.lila.ride=Ride
+action.interact.lila.ride=Get in
+action.interact.lila.talk=Talk

@@ -1,0 +1,281 @@
+{
+  "format_version": "1.21.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "lila:robot",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "properties": {
+        "lila:action": {
+          "type": "enum",
+          "values": [
+            "idle",
+            "shoot",
+            "punch",
+            "give",
+            "fly",
+            "spawn"
+          ],
+          "default": "idle",
+          "client_sync": true
+        }
+      }
+    },
+    "component_groups": {
+      "lila:despawn": {
+        "minecraft:instant_despawn": {
+          "remove_child_entities": false
+        }
+      },
+      "lila:follow": {
+        "minecraft:behavior.follow_owner": {
+          "priority": 4,
+          "speed_multiplier": 1.4,
+          "start_distance": 7,
+          "stop_distance": 3,
+          "can_teleport": true,
+          "ignore_vibration": true
+        }
+      },
+      "lila:guard": {
+        "minecraft:behavior.follow_owner": {
+          "priority": 4,
+          "speed_multiplier": 1.4,
+          "start_distance": 7,
+          "stop_distance": 3,
+          "can_teleport": true,
+          "ignore_vibration": true
+        },
+        "minecraft:behavior.nearest_attackable_target": {
+          "priority": 2,
+          "must_see": false,
+          "reselect_targets": true,
+          "within_radius": 28,
+          "scan_interval": 5,
+          "entity_types": [
+            {
+              "filters": {
+                "all_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "monster"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "operator": "!=",
+                    "value": "lila_robot"
+                  }
+                ]
+              },
+              "max_dist": 28
+            }
+          ]
+        }
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "lila_robot",
+          "lila_companion_army",
+          "mob"
+        ]
+      },
+      "minecraft:health": {
+        "value": 80,
+        "max": 80
+      },
+      "minecraft:attack": {
+        "damage": 9
+      },
+      "minecraft:movement": {
+        "value": 0.34
+      },
+      "minecraft:collision_box": {
+        "width": 0.7,
+        "height": 2.0
+      },
+      "minecraft:physics": {
+        "has_gravity": true,
+        "has_collision": true
+      },
+      "minecraft:jump.static": {},
+      "minecraft:movement.basic": {},
+      "minecraft:can_climb": {},
+      "minecraft:navigation.walk": {
+        "can_path_over_water": true,
+        "avoid_damage_blocks": true,
+        "can_jump": true,
+        "can_swim": true,
+        "can_pass_doors": true,
+        "can_open_doors": true
+      },
+      "minecraft:tameable": {
+        "probability": 0.0
+      },
+      "minecraft:pushable": {
+        "is_pushable": false,
+        "is_pushable_by_piston": true
+      },
+      "minecraft:knockback_resistance": {
+        "value": 0.8
+      },
+      "minecraft:fire_immune": {},
+      "minecraft:persistent": {},
+      "minecraft:breathable": {
+        "total_supply": 60,
+        "suffocate_time": 0,
+        "breathes_water": true
+      },
+      "minecraft:damage_sensor": {
+        "triggers": [
+          {
+            "on_damage": {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "lila_companion"
+              }
+            },
+            "deals_damage": "no"
+          },
+          {
+            "on_damage": {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "lila_robot"
+              }
+            },
+            "deals_damage": "no"
+          },
+          {
+            "cause": "fall",
+            "deals_damage": "no"
+          },
+          {
+            "cause": "suffocation",
+            "deals_damage": "no"
+          },
+          {
+            "cause": "drowning",
+            "deals_damage": "no"
+          },
+          {
+            "cause": "fly_into_wall",
+            "deals_damage": "no"
+          },
+          {
+            "cause": "lava",
+            "deals_damage": "no"
+          },
+          {
+            "cause": "fire",
+            "deals_damage": "no"
+          },
+          {
+            "cause": "fire_tick",
+            "deals_damage": "no"
+          },
+          {
+            "cause": "block_explosion",
+            "deals_damage": "no"
+          }
+        ]
+      },
+      "minecraft:nameable": {
+        "always_show": false,
+        "allow_name_tag_renaming": false
+      },
+      "minecraft:behavior.float": {
+        "priority": 0
+      },
+      "minecraft:behavior.owner_hurt_by_target": {
+        "priority": 1
+      },
+      "minecraft:behavior.owner_hurt_target": {
+        "priority": 1
+      },
+      "minecraft:behavior.hurt_by_target": {
+        "priority": 1,
+        "entity_types": [
+          {
+            "filters": {
+              "test": "is_family",
+              "subject": "other",
+              "operator": "!=",
+              "value": "lila_robot"
+            }
+          }
+        ]
+      },
+      "minecraft:behavior.melee_attack": {
+        "priority": 3,
+        "speed_multiplier": 1.5,
+        "track_target": true
+      },
+      "minecraft:behavior.look_at_player": {
+        "priority": 8,
+        "look_distance": 10,
+        "probability": 0.2
+      },
+      "minecraft:behavior.random_look_around": {
+        "priority": 9
+      },
+      "minecraft:conditional_bandwidth_optimization": {},
+      "minecraft:experience_reward": {
+        "on_death": "0"
+      }
+    },
+    "events": {
+      "lila:despawn": {
+        "add": {
+          "component_groups": [
+            "lila:despawn"
+          ]
+        }
+      },
+      "lila:mode_follow": {
+        "add": {
+          "component_groups": [
+            "lila:follow"
+          ]
+        },
+        "remove": {
+          "component_groups": [
+            "lila:guard"
+          ]
+        }
+      },
+      "lila:mode_guard": {
+        "add": {
+          "component_groups": [
+            "lila:guard"
+          ]
+        },
+        "remove": {
+          "component_groups": [
+            "lila:follow"
+          ]
+        }
+      },
+      "lila:mode_stay": {
+        "remove": {
+          "component_groups": [
+            "lila:guard",
+            "lila:follow"
+          ]
+        }
+      },
+      "minecraft:entity_spawned": {
+        "add": {
+          "component_groups": [
+            "lila:guard"
+          ]
+        }
+      }
+    }
+  }
+}

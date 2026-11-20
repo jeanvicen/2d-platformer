@@ -1,12 +1,12 @@
 {
   "format_version": 2,
   "header": {
-    "name": "Lila Companion (RP)",
-    "description": "§aLila§r — modelo, animações e controle\n§7Criado por 0neajx",
+    "name": "DR-0N Mega Drone (RP)",
+    "description": "§bDR-0N§r — modelos, animações e sons\n§7Criado por 0neajx",
     "uuid": "d7bcc89a-2727-4727-aa37-344181885cac",
     "version": [
-      1,
-      5,
+      2,
+      0,
       0
     ],
     "min_engine_version": [
@@ -20,19 +20,19 @@
       "type": "resources",
       "uuid": "65cf8480-3b98-4618-baea-f184211cc525",
       "version": [
-        1,
-        5,
+        2,
+        0,
         0
       ],
-      "description": "Lila resources"
+      "description": "DR-0N resources"
     }
   ],
   "dependencies": [
     {
       "uuid": "b461d112-57c7-4e8f-b4dc-395753b1764f",
       "version": [
-        1,
-        5,
+        2,
+        0,
         0
       ]
     }

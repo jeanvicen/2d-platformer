@@ -1,6 +1,7 @@
-// Combate e proteção: a Lila defende o dono, luta com a melhor arma que tiver e bate 5× mais
-// forte que um jogador com a mesma arma. Nunca ataca jogadores, aldeões, golens nem animais
-// domesticados/nomeados. Caçar animais passivos só com permissão (pedido direto ou configuração).
+// Combate e proteção do DR-0N. No modo proteger ele ATACA PRIMEIRO os monstros perto de você.
+// Quem bater em você ou nele vira inimigo marcado ("aggro") — inclusive outros jogadores — e
+// ele revida até o inimigo cair ou fugir. Aldeões, golens e bichos com nome nunca são alvo
+// (a não ser que ataquem). Se VOCÊ bater nele, ele te dá uma "lição" (tiros fracos).
 import { EntityDamageCause, ItemStack, system } from "@minecraft/server";
 import { HOSTILE_SKIP, TOOL_DAMAGE, ptName } from "../lib/items.js";
 import { GoalError } from "./companion.js";
@@ -12,15 +13,15 @@ import { hold, setAction, sound } from "./anim.js";
 import { say, pick, LINES } from "./talk.js";
 import { obtain } from "./planner.js";
 import { logError } from "../core/log.js";
-import { LILA } from "./registry.js";
+import { DRONE } from "./registry.js";
 import { gunFight } from "./drone.js";
 
 /** @typedef {import("./companion.js").Companion} Companion */
 /** @typedef {import("@minecraft/server").Entity} Entity */
 
-export const STRENGTH = LILA.strength; // multiplicador sobre o dano de um jogador com a mesma arma
+export const STRENGTH = DRONE.strength; // multiplicador sobre o dano de um jogador com a mesma arma
 const NEVER = new Set(["minecraft:player", "minecraft:villager", "minecraft:villager_v2", "minecraft:wandering_trader", "minecraft:iron_golem",
-  "minecraft:snow_golem", "minecraft:allay", "minecraft:copper_golem", "lila:lila", "lila:drone", "minecraft:armor_stand", "minecraft:item", "minecraft:xp_orb"]);
+  "minecraft:snow_golem", "minecraft:allay", "minecraft:copper_golem", "lila:drone", "lila:robot", "minecraft:armor_stand", "minecraft:item", "minecraft:xp_orb"]);
 
 /** Melhor arma: espada > machado > qualquer ferramenta > mão. */
 export function bestWeapon(c) {
@@ -37,9 +38,34 @@ export function bestWeapon(c) {
   return { tool: best, damage: bd };
 }
 
+/**
+ * Marca um inimigo (qualquer entidade, jogadores inclusive) por um tempo.
+ * @param {Companion} c
+ */
+export function markAggro(c, e, ticks = 600) {
+  if (!e?.isValid || e.id === c.rec.ownerId || e.id === c.entity?.id || e.typeId === "lila:robot" || e.typeId === "lila:drone") return;
+  (c.flags.aggro ??= new Map()).set(e.id, system.currentTick + ticks);
+}
+
+/** Inimigos marcados ainda válidos (limpa os vencidos). */
+export function aggroTargets(c, center, r = 48) {
+  const m = c.flags.aggro;
+  if (!m?.size) return [];
+  const now = system.currentTick;
+  for (const [id, until] of m) if (until < now) m.delete(id);
+  if (!m.size) return [];
+  try {
+    return c.dim().getEntities({ location: center, maxDistance: r }).filter((x) => m.has(x.id) && x.isValid);
+  } catch {
+    return [];
+  }
+}
+
 /** Pode atacar essa entidade? */
 export function canAttack(c, e, allowPassive = false) {
-  if (!e?.isValid || NEVER.has(e.typeId)) return false;
+  if (!e?.isValid) return false;
+  if (c.flags.aggro?.has(e.id) && e.id !== c.rec.ownerId) return true; // inimigo marcado: vale tudo
+  if (NEVER.has(e.typeId)) return false;
   try {
     if (e.nameTag) return false; // nomeado pelo jogador
     const tame = e.getComponent("minecraft:tameable");
@@ -68,18 +94,27 @@ export function findThreat(c) {
   const owner = c.owner();
   const centers = [c.pos()];
   if (owner && owner.dimension.id === dim.id) centers.push(owner.location);
+  // 1) quem atacou você ou ele (jogadores inclusive)
+  const marked = aggroTargets(c, owner && owner.dimension.id === dim.id ? owner.location : c.pos(), 48);
+  if (marked.length) {
+    const ref = owner?.location ?? c.pos();
+    marked.sort((a, b) => Math.hypot(a.location.x - ref.x, a.location.z - ref.z) - Math.hypot(b.location.x - ref.x, b.location.z - ref.z));
+    return marked[0];
+  }
+  // 2) monstros: no modo proteger ele caça longe (ataca primeiro); senão só os que chegam perto
+  const reach = c.rec.mode === "guard" ? 32 : 16;
   let best, bs = -Infinity;
   for (const center of centers) {
     let list = [];
     try {
-      list = dim.getEntities({ location: center, maxDistance: 14, families: ["monster"] });
+      list = dim.getEntities({ location: center, maxDistance: reach, families: ["monster"] });
     } catch {
       continue;
     }
     for (const e of list) {
       if (!canAttack(c, e)) continue;
       const d = Math.hypot(e.location.x - center.x, e.location.z - center.z);
-      let s = 20 - d;
+      let s = reach + 6 - d;
       if (e.typeId === "minecraft:creeper") s += 8;
       if (owner && center === owner.location) s += 4;
       if (Math.abs(e.location.y - center.y) > 6) s -= 10;

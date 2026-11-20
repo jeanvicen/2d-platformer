@@ -87,10 +87,10 @@ export const TIER_WORDS = {
 };
 
 export const BLUEPRINT_WORDS = {
-  mansao: ["mansao", "mansoes", "castelo", "palacio", "mansion"],
+  mansao: ["mansao", "mansoes", "palacio", "mansion"],
   casa: ["casa", "casas", "casinha", "lar", "house"],
   cabana: ["base", "cabana", "cabaninha", "barraco", "choupana", "cabin"],
-  torre: ["torre", "torres", "vigia", "tower"],
+  torre: ["torre", "torres", "tower"],
   muralha: ["muralha", "muro", "parede", "wall"],
   ponte: ["ponte", "bridge"],
   fazenda: ["fazenda", "plantacao", "horta", "lavoura", "roca", "farm"],

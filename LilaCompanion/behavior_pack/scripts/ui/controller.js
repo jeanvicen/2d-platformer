@@ -1,12 +1,16 @@
-// Menu do Controle da Lila: campo de texto para ordens livres + botões rápidos e submenus.
-// Só controla a Lila do próprio dono. O controle nunca é gasto.
+// Menu do Controle do DR-0N: ordem por texto + botões (formas, colosso, torreta, exército,
+// megaconstruções, biomas, itens infinitos, kit de força...). "Cancelar" sempre volta ao normal.
 import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
 import { BLUEPRINTS } from "../lib/blueprints.js";
+import { BIOMES, CREATIVE_ITEMS, FORM_NAMES, MEGA } from "../lib/catalog.js";
 import { loadCompanion } from "../lila/companion.js";
 import { summon, dismiss } from "../lila/lifecycle.js";
 import { command, handleIntents, inventoryText, statusText } from "../lila/brain.js";
 import { goalLabel } from "../lila/goals.js";
 import { missions } from "../lila/drone.js";
+import { formOf, isRideForm, isVehicle, beam, roar, stomp, switchSeat, mountOwner, riders } from "../lila/forms.js";
+import { armyActive, command as armyCommand, empower, robotsOf } from "../lila/army.js";
+import { findItemType } from "../lila/creative.js";
 import { say } from "../lila/talk.js";
 import { show } from "./forms.js";
 import { logError } from "../core/log.js";
@@ -17,17 +21,8 @@ const I = {
   stay: "textures/items/bed_red",
   come: "textures/items/ender_pearl",
   auto: "textures/items/map_filled",
-  wood: "textures/items/wood_axe",
-  mine: "textures/items/iron_pickaxe",
-  food: "textures/items/bread",
-  build: "textures/items/door_wood",
-  farm: "textures/items/wheat",
-  craft: "textures/blocks/crafting_table_front",
-  protect: "textures/items/iron_sword",
-  explore: "textures/items/map_empty",
-  give: "textures/blocks/chest_front",
+  protect: "textures/items/netherite_sword",
   info: "textures/items/name_tag",
-  pause: "textures/items/redstone_dust",
   settings: "textures/items/comparator",
   dismiss: "textures/items/ender_eye",
   cancel: "textures/blocks/barrier",
@@ -37,50 +32,49 @@ const I = {
   missions: "textures/items/book_enchanted",
   memory: "textures/items/map_filled",
   drone: "textures/items/lila/drone_controller",
-  summon: "textures/items/lila/controller",
-  torch: "textures/blocks/torch_on",
-  home: "textures/items/emerald",
   back: "textures/items/arrow",
+  vehicle: "textures/items/minecart_normal",
+  colossus: "textures/items/nether_star",
+  army: "textures/items/iron_horse_armor",
+  build: "textures/blocks/stonebrick",
+  biome: "textures/blocks/sapling_oak",
+  creative: "textures/blocks/chest_front",
+  kit: "textures/items/totem",
 };
-
-/** Qual companheira o jogador está controlando agora (Lila ou DR-0N). */
-const KIND = new Map();
-const comp = (player) => loadCompanion(player, KIND.get(player.id) ?? "lila");
-const isDrone = (player) => KIND.get(player.id) === "drone";
 
 const EXAMPLES = [
   "— escolha um exemplo —",
-  "pega 32 madeira",
-  "faz uma picareta de ferro",
-  "minera 10 ferro e depois faz uma armadura de ferro",
-  "constrói uma casa aqui",
-  "faz uma plantação de trigo aqui",
-  "arranja comida pra mim",
-  "procura diamante",
-  "coloca tochas por aqui",
-  "me dá tudo",
-  "aqui é a base",
-  "vai pra casa",
-  "constrói uma mansão aqui",
+  "vira helicóptero",
+  "modo colosso",
+  "modo exército com 10 robôs",
+  "constrói um castelo aqui",
+  "faz uma cidade inteira",
+  "faz uma montanha russa",
+  "transforma aqui em neve",
+  "me dá 64 diamantes",
+  "me fortalece",
+  "me protege",
+  "volta ao normal",
 ];
+
+const comp = (player) => loadCompanion(player, "drone");
 
 /**
  * Abre o menu principal do controle.
  * @param {import("@minecraft/server").Player} player
  */
-export async function openController(player, kind = "lila") {
-  KIND.set(player.id, kind);
+export async function openController(player) {
   try {
     const c = comp(player);
-    if (!c.rec.summoned || (!c.alive() && !c.rec.defeat)) {
+    // pilotando: painel do piloto
+    if (c.alive() && isRideForm(formOf(c)) && riders(c).some((r) => r.id === player.id)) return pilotPanel(player);
+    if (!c.rec.summoned || (!c.alive() && !c.rec.defeat && !armyActive(c))) {
       const f = new ActionFormData()
-        .title(isDrone(player) ? "§l§bControle do DR-0N" : "§l§2Controle da Lila")
+        .title("§l§bControle do DR-0N")
         .body(c.rec.defeat
-          ? `§7${c.def.name} está se recuperando. Volta em §e${Math.ceil(c.rec.defeat.left / 20)}s§7.`
-          : isDrone(player)
-            ? "§fO §bDR-0N§f é um drone-robô: voa, coleta, minera, fabrica, constrói, explora longe, escaneia, tem metralhadora, vira torreta e te dá carona.\n\n§7Sem ordens, ele joga sozinho e te protege."
-            : "§fA §aLila§f é sua companheira: coleta, minera, fabrica, constrói, planta, cozinha, explora e te protege.\n\n§7Quando você não pede nada, ela joga sozinha como uma jogadora de verdade.")
-        .button(isDrone(player) ? "§l§bInvocar DR-0N" : "§l§2Invocar Lila", isDrone(player) ? I.drone : I.summon)
+          ? `§7O DR-0N está se recuperando. Volta em §e${Math.ceil(c.rec.defeat.left / 20)}s§7.`
+          : "§fO §bDR-0N§f é um drone com §eitens infinitos§f: vira §bhelicóptero, carro, escavadeira, tanque, jato e moto§f, vira §ctorreta gigante§f, vira o §6colosso TITÃ§f, se divide num §aexército de robôs§f, constrói §ecidades, castelos, montanhas-russas§f e transforma biomas.")
+        .button("§l§bInvocar DR-0N", I.drone)
         .button("Como funciona", I.info);
       const r = await show(player, f);
       if (!r || r.canceled) return;
@@ -89,39 +83,34 @@ export async function openController(player, kind = "lila") {
       return;
     }
     const cur = c.urgent?.desc ?? c.job?.desc ?? c.rec.goals[0];
+    const army = armyActive(c);
     const f = new ActionFormData()
-      .title(isDrone(player) ? "§l§bControle do DR-0N" : "§l§2Controle da Lila")
-      .body(`§7${statusText(c)}\n§fAgora: §a${goalLabel(cur)}${c.rec.paused ? " §c(pausada)" : ""}`);
+      .title("§l§bControle do DR-0N")
+      .body(`§7${statusText(c)}\n§fAgora: §a${army ? `exército (${robotsOf(c).length} robôs)` : goalLabel(cur)}${c.rec.paused ? " §c(pausado)" : ""}`);
     /** @type {[string, string, () => any][]} */
     const buttons = [
       ["§l✎ Escrever ordem", I.write, () => writeOrder(player)],
-      ["§c✖ Cancelar tarefas", I.cancel, () => handleIntents(c, [{ type: "stop" }])],
-      ...(isDrone(player) ? /** @type {[string, string, () => any][]} */ ([
-        ["§bCarona (subir no drone)", I.ride, () => handleIntents(c, [{ type: "ride" }])],
-        [c.rec.mode === "turret" ? "§bSair do modo torreta" : "§bModo torreta", I.turret, () => handleIntents(c, [{ type: c.rec.mode === "turret" ? "follow" : "turret" }])],
-        ["§bEscanear você", I.scan, () => handleIntents(c, [{ type: "scan" }])],
-        ["§bMissões", I.missions, () => missionsMenu(player)],
-        ["§bMemórias", I.memory, () => memoriesMenu(player)],
-      ]) : []),
+      ["§c§l✖ Cancelar tudo §r§c(volta ao normal)", I.cancel, () => handleIntents(c, [{ type: "stop" }])],
+      ["§bVeículos…", I.vehicle, () => vehicleMenu(player)],
+      [formOf(c) === "colossus" ? "§6Entrar no colosso (cabeça)" : "§6§lModo COLOSSO", I.colossus, () => (formOf(c) === "colossus" ? mountOwner(c, player) : handleIntents(c, [{ type: "form", form: "colossus" }]))],
+      [c.rec.mode === "turret" ? "§cDesmontar a torreta" : "§cTorreta gigante", I.turret, () => handleIntents(c, [{ type: c.rec.mode === "turret" ? "stop" : "turret" }])],
+      [army ? "§aComandar o exército…" : "§aModo EXÉRCITO", I.army, () => (army ? armyMenu(player) : handleIntents(c, [{ type: "army", count: c.rec.settings.army ?? 10 }]))],
+      ["§eConstruções gigantes…", I.build, () => buildMenu(player)],
+      ["§2Transformar bioma…", I.biome, () => biomeMenu(player)],
+      ["§dItens infinitos…", I.creative, () => creativeMenu(player)],
+      ["§dMe fortalecer (kit encantado)", I.kit, () => handleIntents(c, [{ type: "kit" }])],
+      ["§4Me proteger (ataca primeiro)", I.protect, () => handleIntents(c, [{ type: "protect" }])],
       ["Me seguir", I.follow, () => handleIntents(c, [{ type: "follow" }])],
       ["Ficar aqui", I.stay, () => handleIntents(c, [{ type: "stay" }])],
       ["Vem aqui", I.come, () => handleIntents(c, [{ type: "come" }])],
-      ["Modo livre (autônoma)", I.auto, () => handleIntents(c, [{ type: "auto" }])],
-      ["Pegar madeira", I.wood, () => handleIntents(c, [{ type: "gather", item: { group: "log" }, count: 32 }])],
-      ["Minerar…", I.mine, () => mineMenu(player)],
-      ["Achar comida", I.food, () => handleIntents(c, [{ type: "food", count: 8, forOwner: true }])],
-      ["Construir…", I.build, () => buildMenu(player)],
-      ["Fazer plantação", I.farm, () => farmMenu(player)],
-      ["Fabricar…", I.craft, () => craftMenu(player)],
-      ["Me proteger", I.protect, () => handleIntents(c, [{ type: "protect" }])],
-      ["Explorar", I.explore, () => handleIntents(c, [{ type: "explore", here: false }])],
-      ["Colocar tochas", I.torch, () => handleIntents(c, [{ type: "torches", count: 16 }])],
-      ["Me dá tudo", I.give, () => handleIntents(c, [{ type: "give", all: true }])],
-      ["Ir para a base", I.home, () => handleIntents(c, [{ type: "home" }])],
+      ["Carona (subir no drone)", I.ride, () => handleIntents(c, [{ type: "ride" }])],
+      ["Modo livre", I.auto, () => handleIntents(c, [{ type: "auto" }])],
+      ["Escanear você", I.scan, () => handleIntents(c, [{ type: "scan" }])],
+      ["Missões", I.missions, () => missionsMenu(player)],
+      ["Memórias", I.memory, () => memoriesMenu(player)],
       ["Inventário e status", I.info, () => infoMenu(player)],
-      [c.rec.paused ? "Continuar" : "Pausar", I.pause, () => handleIntents(c, [{ type: c.rec.paused ? "resume" : "pause" }])],
       ["Configurações", I.settings, () => settingsMenu(player)],
-      ["§cDispensar Lila", I.dismiss, () => dismiss(c)],
+      ["§cDispensar DR-0N", I.dismiss, () => dismiss(c)],
     ];
     for (const [t, icon] of buttons) f.button(t, icon);
     const r = await show(player, f);
@@ -135,8 +124,8 @@ export async function openController(player, kind = "lila") {
 async function writeOrder(player) {
   const c = comp(player);
   const f = new ModalFormData()
-    .title(`§l§2Ordem para ${c.def.name}`)
-    .textField(`§fO que ${c.def.name} deve fazer?\n§7Pode encadear: \"pega madeira e depois faz uma casa aqui\"`, "ex.: minera ferro e faz uma picareta", { defaultValue: "" })
+    .title("§l§bOrdem para o DR-0N")
+    .textField("§fO que o DR-0N deve fazer?\n§7Ex.: \"vira tanque\", \"constrói uma vila\", \"me dá um élitro\"", "ex.: modo colosso", { defaultValue: "" })
     .dropdown("§7ou toque num exemplo:", EXAMPLES, { defaultValueIndex: 0 })
     .submitButton("§lEnviar");
   const r = await show(player, f);
@@ -145,109 +134,156 @@ async function writeOrder(player) {
   const ex = Number(r.formValues[1] ?? 0);
   const order = text || (ex > 0 ? EXAMPLES[ex] : "");
   if (!order) return;
-  player.sendMessage(`§7Você » ${c.def.name}: §f${order}`);
+  player.sendMessage(`§7Você » DR-0N: §f${order}`);
   command(c, order);
 }
 
-async function mineMenu(player) {
+async function vehicleMenu(player) {
   const c = comp(player);
-  /** @type {any[]} */
-  const opts = [
-    ["Pedra (pedregulho)", "textures/blocks/cobblestone", { id: "minecraft:cobblestone" }, 64],
-    ["Carvão", "textures/items/coal", { group: "coal" }, 32],
-    ["Ferro", "textures/items/iron_ingot", { id: "minecraft:iron_ingot", ore: "iron" }, 16],
-    ["Cobre", "textures/items/copper_ingot", { id: "minecraft:copper_ingot", ore: "copper" }, 16],
-    ["Ouro", "textures/items/gold_ingot", { id: "minecraft:gold_ingot", ore: "gold" }, 8],
-    ["Redstone", "textures/items/redstone_dust", { id: "minecraft:redstone", ore: "redstone" }, 16],
-    ["Lápis-lazúli", "textures/items/dye_powder_blue", { id: "minecraft:lapis_lazuli", ore: "lapis" }, 16],
-    ["Diamante", "textures/items/diamond", { id: "minecraft:diamond", ore: "diamond" }, 5],
-    ["Areia", "textures/blocks/sand", { id: "minecraft:sand" }, 32],
-  ];
-  const f = new ActionFormData().title("§lMinerar").body("§7Ela faz a picareta certa, desce até a camada do minério e volta com tudo.");
-  for (const [t, icon] of opts) f.button(t, icon);
+  const list = [["heli", "textures/items/elytra"], ["car", "textures/items/minecart_normal"], ["excavator", "textures/items/iron_shovel"],
+    ["tank", "textures/items/fireworks"], ["jet", "textures/items/elytra"], ["moto", "textures/items/saddle"]];
+  const f = new ActionFormData().title("§l§bVeículos")
+    .body("§fEle vira o veículo e você já entra no volante.\n§7Andar = acelerar · olhar = direção · pular = subir/pular · bater = arma · agachar 2× = sair (ele volta a ser drone). Outros jogadores podem entrar de carona tocando no veículo.");
+  for (const [k, icon] of list) f.button(`§l${FORM_NAMES[k][0].toUpperCase()}${FORM_NAMES[k].slice(1)}`, icon);
   f.button("Voltar", I.back);
   const r = await show(player, f);
   if (!r || r.canceled || r.selection === undefined) return;
-  if (r.selection >= opts.length) return openController(player, KIND.get(player.id) ?? "lila");
-  const [, , item, n] = opts[r.selection];
-  handleIntents(c, [{ type: "gather", item, count: n }]);
+  if (r.selection >= list.length) return openController(player);
+  handleIntents(c, [{ type: "form", form: list[r.selection][0] }]);
+}
+
+/** Painel de quem está pilotando (usar o controle dentro do veículo/colosso). */
+async function pilotPanel(player) {
+  const c = comp(player);
+  const f = formOf(c);
+  const col = f === "colossus";
+  /** @type {[string, string, () => any][]} */
+  const b = col ? [
+    ["§l§cRaio de plasma", I.colossus, () => beam(c, player)],
+    ["§6Rugido", "textures/items/goat_horn", () => roar(c)],
+    ["§ePisão (onda de choque)", "textures/items/iron_boots", () => stomp(c)],
+    ["Ir para a cabeça (pilotar)", I.ride, () => switchSeat(c, player, true)],
+    ["Ir para uma cabine", I.ride, () => switchSeat(c, player, false) || say(c, "Precisa de alguém na cabeça pra você ir pra uma cabine.", { force: true })],
+    ["Sair (ele fica colosso)", I.back, () => exit(c, player)],
+    ["§c✖ Voltar a ser drone", I.cancel, () => handleIntents(c, [{ type: "stop" }])],
+  ] : [
+    ["Sair (vira drone de novo)", I.back, () => exit(c, player)],
+    ["§c✖ Cancelar tudo", I.cancel, () => handleIntents(c, [{ type: "stop" }])],
+  ];
+  const form = new ActionFormData().title(`§l§bPainel — ${FORM_NAMES[f]}`)
+    .body(col
+      ? "§fVocê está na cabeça do TITÃ: quase imortal aqui dentro.\n§7andar = mover · bater = soco · pular = pisão · agachar = raio · agachar 2× = sair"
+      : `§fPilotando: ${FORM_NAMES[f]}.\n§7bater = ${({ heli: "metralhadora", tank: "canhão", jet: "mísseis", excavator: "cavar", car: "buzina", moto: "buzina" })[f] ?? "arma"} · agachar 2× = sair`);
+  for (const [t, icon] of b) form.button(t, icon);
+  const r = await show(player, form);
+  if (!r || r.canceled || r.selection === undefined) return;
+  await b[r.selection][2]();
+}
+
+function exit(c, player) {
+  try {
+    player.inputPermissions.setPermissionCategory(8, true);
+    c.entity?.getComponent("minecraft:rideable")?.ejectRider(player);
+  } catch {
+    /* ignore */
+  }
+}
+
+async function armyMenu(player) {
+  const c = comp(player);
+  const n = robotsOf(c).length;
+  /** @type {[string, string, () => any][]} */
+  const b = [
+    ["§aProteger (atacam primeiro)", I.protect, () => armyCommand(c, "guard", player)],
+    ["Me seguir", I.follow, () => armyCommand(c, "follow", player)],
+    ["Ficar aqui", I.stay, () => armyCommand(c, "stay", player)],
+    ["§cAtacar o que estou olhando", I.turret, () => armyCommand(c, "attack", player)],
+    ["Ir até onde estou olhando", I.come, () => armyCommand(c, "goto", player)],
+    ["Formação em círculo", I.army, () => armyCommand(c, "circle", player)],
+    ["§dMe fortalecer (kit + efeitos)", I.kit, () => empower(c, player)],
+    ["§c✖ Juntar e voltar ao drone", I.cancel, () => handleIntents(c, [{ type: "stop" }])],
+  ];
+  const f = new ActionFormData().title("§l§aExército DR-0N").body(`§f${n} robôs ativos.\n§7Eles caçam monstros, revidam em quem te atacar (jogador também), atiram laser e trazem o que você precisar: cura, comida, armadura, visão noturna, respiração na água, resistência a fogo e queda lenta.`);
+  for (const [t, icon] of b) f.button(t, icon);
+  f.button("Voltar", I.back);
+  const r = await show(player, f);
+  if (!r || r.canceled || r.selection === undefined) return;
+  if (r.selection >= b.length) return openController(player);
+  await b[r.selection][2]();
 }
 
 async function buildMenu(player) {
   const c = comp(player);
-  const keys = Object.keys(BLUEPRINTS);
+  const mega = Object.keys(MEGA);
+  const small = Object.keys(BLUEPRINTS);
+  const names = [...mega.map((k) => `§e${MEGA[k].name}§r — ${MEGA[k].desc}`), ...small.map((k) => `${BLUEPRINTS[k].name} — ${BLUEPRINTS[k].desc}`)];
   const f = new ModalFormData()
-    .title("§lConstruir")
-    .dropdown("§fO que construir?", keys.map((k) => `${BLUEPRINTS[k].name} — ${BLUEPRINTS[k].desc}`), { defaultValueIndex: 0 })
+    .title("§l§eConstruções gigantes")
+    .dropdown("§fO que construir? §7(material infinito)", names, { defaultValueIndex: 0 })
     .toggle("§fBem aqui na minha frente", { defaultValue: true })
     .submitButton("§lConstruir");
   const r = await show(player, f);
   if (!r || r.canceled || !r.formValues) return;
-  const key = keys[Number(r.formValues[0] ?? 0)];
+  const i = Number(r.formValues[0] ?? 0);
   const here = !!r.formValues[1];
-  handleIntents(c, [key === "fazenda" ? { type: "farm", here, crop: "minecraft:wheat_seeds" } : { type: "build", blueprint: key, here }]);
+  if (i < mega.length) handleIntents(c, [{ type: "mega", key: mega[i], here }]);
+  else {
+    const key = small[i - mega.length];
+    handleIntents(c, [key === "fazenda" ? { type: "farm", here, crop: "minecraft:wheat_seeds" } : { type: "build", blueprint: key, here }]);
+  }
 }
 
-async function farmMenu(player) {
+async function biomeMenu(player) {
   const c = comp(player);
-  const crops = [["Trigo", "minecraft:wheat_seeds"], ["Cenoura", "minecraft:carrot"], ["Batata", "minecraft:potato"], ["Beterraba", "minecraft:beetroot_seeds"]];
-  const f = new ModalFormData()
-    .title("§lPlantação")
-    .dropdown("§fO que plantar?", crops.map((x) => x[0]), { defaultValueIndex: 0 })
-    .toggle("§fBem aqui na minha frente", { defaultValue: true })
-    .submitButton("§lPlantar");
-  const r = await show(player, f);
-  if (!r || r.canceled || !r.formValues) return;
-  handleIntents(c, [{ type: "farm", here: !!r.formValues[1], crop: crops[Number(r.formValues[0] ?? 0)][1] }]);
-}
-
-async function craftMenu(player) {
-  const c = comp(player);
-  /** @type {any[]} */
-  const opts = [
-    ["Picareta (melhor possível)", "textures/items/iron_pickaxe", { toolKind: "pickaxe" }, 1],
-    ["Machado", "textures/items/iron_axe", { toolKind: "axe" }, 1],
-    ["Espada", "textures/items/iron_sword", { toolKind: "sword" }, 1],
-    ["Pá", "textures/items/iron_shovel", { toolKind: "shovel" }, 1],
-    ["Enxada", "textures/items/iron_hoe", { toolKind: "hoe" }, 1],
-    ["16 tochas", "textures/blocks/torch_on", { id: "minecraft:torch" }, 16],
-    ["Baú", "textures/blocks/chest_front", { id: "minecraft:chest" }, 1],
-    ["Fornalha", "textures/blocks/furnace_front_off", { id: "minecraft:furnace" }, 1],
-    ["Bancada", "textures/blocks/crafting_table_front", { id: "minecraft:crafting_table" }, 1],
-    ["8 pães", "textures/items/bread", { id: "minecraft:bread" }, 8],
-    ["Armadura de ferro (peitoral)", "textures/items/iron_chestplate", { id: "minecraft:iron_chestplate" }, 1],
-    ["Escudo", "textures/items/shield", { id: "minecraft:shield" }, 1],
-    ["Balde", "textures/items/bucket_empty", { id: "minecraft:bucket" }, 1],
-    ["Cama", "textures/items/bed_red", { id: "minecraft:bed" }, 1],
-  ];
-  const f = new ActionFormData().title("§lFabricar").body("§7Ela junta os materiais que faltarem, fabrica e te entrega.");
-  for (const [t, icon] of opts) f.button(t, icon);
+  const keys = Object.keys(BIOMES);
+  const f = new ActionFormData().title("§l§2Transformar bioma")
+    .body("§fTransforma tudo num raio de 36 blocos em volta de você: chão, árvores, plantas, água.\n§7(O jogo não deixa trocar o ID do bioma por script: a cor da grama e o clima continuam os de antes.)");
+  for (const k of keys) f.button(`§l${BIOMES[k].name}`, I.biome);
   f.button("Voltar", I.back);
   const r = await show(player, f);
   if (!r || r.canceled || r.selection === undefined) return;
-  if (r.selection >= opts.length) return openController(player, KIND.get(player.id) ?? "lila");
-  const [, , item, n] = opts[r.selection];
-  handleIntents(c, [{ type: "craft", item, count: n }]);
+  if (r.selection >= keys.length) return openController(player);
+  handleIntents(c, [{ type: "biome", biome: keys[r.selection] }]);
+}
+
+async function creativeMenu(player) {
+  const c = comp(player);
+  const quick = CREATIVE_ITEMS.slice(0, 40);
+  const f = new ModalFormData()
+    .title("§l§dItens infinitos")
+    .dropdown("§fEscolha um item", ["— digitar abaixo —", ...quick.map((x) => `${x.w[0]} (${x.id.replace("minecraft:", "")})`)], { defaultValueIndex: 0 })
+    .textField("§fou digite o nome (pt ou id do jogo, ex.: beacon, netherite_sword)", "ex.: tridente", { defaultValue: "" })
+    .slider("§fQuantidade", 1, 64, { valueStep: 1, defaultValue: 64 })
+    .submitButton("§lPegar");
+  const r = await show(player, f);
+  if (!r || r.canceled || !r.formValues) return;
+  const pick = Number(r.formValues[0] ?? 0);
+  const text = String(r.formValues[1] ?? "").trim();
+  const n = Number(r.formValues[2] ?? 1);
+  let id = pick > 0 ? quick[pick - 1].id : undefined;
+  if (!id && text) {
+    const hit = CREATIVE_ITEMS.find((x) => x.w.includes(text.toLowerCase()));
+    id = hit?.id ?? findItemType(text);
+  }
+  if (!id) {
+    say(c, "Não achei esse item. Tenta o nome do jogo em inglês (ex.: golden_apple).", { force: true });
+    return;
+  }
+  handleIntents(c, [{ type: "give", item: { id }, count: n, creative: true }]);
 }
 
 async function infoMenu(player) {
   const c = comp(player);
   const s = c.rec.stats;
-  const base = c.rec.base ? `${c.rec.base.x}, ${c.rec.base.y}, ${c.rec.base.z}` : "não definida";
-  const queue = c.rec.goals.map((g, i) => `${i + 1}. ${goalLabel(g)}`).join("\n") || "§7(vazia)";
   const f = new ActionFormData()
-    .title("§lLila — status")
-    .body(`§f${statusText(c)}\n\n§2Fila de ordens:§f\n${queue}\n\n§2Inventário:§f\n${inventoryText(c)}\n\n§2Base:§f ${base}\n§2Recordes:§f ${s.blocks} blocos quebrados · ${s.crafted} itens fabricados · ${s.kills} monstros derrotados · ${s.built} construções`)
-    .button("Me dá tudo", I.give)
-    .button("Guardar no baú da base", "textures/blocks/chest_front")
-    .button("Cancelar a fila", "textures/blocks/barrier")
+    .title("§lDR-0N — status")
+    .body(`§f${statusText(c)}\n\n§bInventário:§f\n${inventoryText(c)}\n\n§bRecordes:§f ${s.kills} inimigos derrotados · ${s.built} construções · ${s.crafted} itens fabricados`)
+    .button("Me dá tudo", I.creative)
     .button("Voltar", I.back);
   const r = await show(player, f);
   if (!r || r.canceled) return;
   if (r.selection === 0) handleIntents(c, [{ type: "give", all: true }]);
-  else if (r.selection === 1) handleIntents(c, [{ type: "deposit" }]);
-  else if (r.selection === 2) handleIntents(c, [{ type: "stop" }]);
-  else if (r.selection === 3) return openController(player, KIND.get(player.id) ?? "lila");
+  else return openController(player);
 }
 
 async function settingsMenu(player) {
@@ -256,32 +292,34 @@ async function settingsMenu(player) {
   const hud = ["auto", "always", "off"];
   const chat = ["normal", "pouco", "silencio"];
   const f = new ModalFormData()
-    .title("§lConfigurações da Lila")
-    .dropdown("§fIndicador de posição (HUD)", ["Automático (quando longe ou com o controle)", "Sempre visível", "Desligado"], { defaultValueIndex: Math.max(0, hud.indexOf(st.hud)) })
+    .title("§lConfigurações do DR-0N")
+    .dropdown("§fIndicador de posição (HUD)", ["Automático", "Sempre visível", "Desligado"], { defaultValueIndex: Math.max(0, hud.indexOf(st.hud)) })
     .dropdown("§fConversa no chat", ["Normal", "Pouca", "Só respostas"], { defaultValueIndex: Math.max(0, chat.indexOf(st.chat)) })
-    .toggle("§fPode caçar animais (comida, couro, lã)", { defaultValue: !!st.hunt })
-    .slider("§fDistância máxima para explorar sozinha (blocos)", 32, 256, { valueStep: 16, defaultValue: st.roam ?? 96 })
+    .slider("§fRobôs no modo exército", 1, 24, { valueStep: 1, defaultValue: st.army ?? 10 })
+    .toggle("§fArmas quebram blocos (colosso, canhão, mísseis)", { defaultValue: st.destroy !== false })
+    .toggle("§fRevidar quando EU bater nele (lição de leve)", { defaultValue: st.lesson !== false })
     .submitButton("§lSalvar");
   const r = await show(player, f);
   if (!r || r.canceled || !r.formValues) return;
   st.hud = hud[Number(r.formValues[0] ?? 0)];
   st.chat = chat[Number(r.formValues[1] ?? 0)];
-  st.hunt = !!r.formValues[2];
-  st.roam = Number(r.formValues[3] ?? 96);
+  st.army = Number(r.formValues[2] ?? 10);
+  st.destroy = !!r.formValues[3];
+  st.lesson = !!r.formValues[4];
   c.save();
-  player.sendMessage("§a[Lila]§r Configurações salvas.");
+  player.sendMessage("§b[DR-0N]§r Configurações salvas.");
 }
 
 async function help(player) {
   const f = new ActionFormData()
     .title("§lComo funciona")
     .body([
-      "§2Controle:§f use (toque/clique direito) para abrir o menu. Toque na Lila segurando o controle para falar com ela.",
-      "§2Ordens em texto:§f escreva do seu jeito: \"pega 20 madeira\", \"minera ferro\", \"faz uma picareta de diamante\", \"constrói uma casa aqui\", \"planta cenoura\", \"me dá tudo\", \"me segue\", \"fica aqui\".",
-      "§2Pelo chat:§f /lila pega 32 madeira",
-      "§2Sozinha:§f no modo livre ela faz ferramentas, junta recursos, constrói a casinha dela, planta, cozinha, dorme à noite, explora e te protege.",
-      "§2Derrota:§f se cair em batalha, volta em 20 segundos e continua o que estava fazendo.",
-      "§2Força:§f 100 de vida, bate 5× mais forte que você com a mesma arma.",
+      "§bControle:§f use para abrir o menu. Toque no drone segurando o controle para falar com ele; de mão vazia você sobe nele.",
+      "§bOrdens em texto:§f \"vira helicóptero\", \"modo colosso\", \"modo exército\", \"constrói um castelo\", \"faz uma cidade\", \"transforma aqui em neve\", \"me dá um élitro\", \"me fortalece\", \"me protege\", \"volta ao normal\".",
+      "§bPelo chat:§f /drone vira tanque",
+      "§bCancelar tudo:§f larga o que estiver fazendo e volta a ser o drone normal (junta o exército, desfaz veículo/colosso/torreta).",
+      "§bProteção:§f no modo proteger ele ataca primeiro. Quem bater em você ou nele vira alvo, até outro jogador.",
+      "§bDerrota:§f se cair, volta em 20 segundos.",
     ].join("\n\n"))
     .button("Entendi!");
   await show(player, f);
@@ -290,34 +328,30 @@ async function help(player) {
 async function missionsMenu(player) {
   const c = comp(player);
   const ms = missions(c);
-  const f = new ActionFormData().title("§l§bMissões do DR-0N").body(`§7Missões concluídas: §e${c.rec.stats.missions ?? 0}§7. Toque numa missão para o DR-0N cumprir.`);
+  const f = new ActionFormData().title("§l§bMissões do DR-0N").body(`§7Missões concluídas: §e${c.rec.stats.missions ?? 0}§7.`);
   for (const m of ms) f.button(`${m.done ? "§a✔ " : ""}${m.title}\n§8${m.desc} (${Math.min(m.have, m.need)}/${m.need})`, I.missions);
   f.button("Voltar", I.back);
   const r = await show(player, f);
   if (!r || r.canceled || r.selection === undefined) return;
-  if (r.selection >= ms.length) return openController(player, "drone");
+  if (r.selection >= ms.length) return openController(player);
   const m = ms[r.selection];
   if (m.done) {
     say(c, `Essa missão já está cumprida: ${m.title}.`, { force: true });
     return;
   }
-  abortAndQueue(c, { type: "mission", args: { key: m.key }, origin: "cmd", label: m.title });
-}
-
-function abortAndQueue(c, g) {
   handleIntents(c, [{ type: "stop" }]);
-  c.rec.goals.push(g);
-  c.rec.mode = c.rec.mode === "turret" ? "follow" : c.rec.mode;
+  c.rec.goals.push({ type: "mission", args: { key: m.key }, origin: "cmd", label: m.title });
   c.save();
 }
 
 async function memoriesMenu(player) {
   const c = comp(player);
   const diary = (c.rec.diary ?? []).slice(-12).reverse().map((d) => `§7•§f ${d.msg}`).join("\n") || "§7(ainda sem memórias)";
-  const spots = Object.entries(c.mem.spots).filter(([, v]) => v.length).map(([k, v]) => `${k.replace("ore_", "minério de ").replace("tree", "árvores").replace("water", "água").replace("sand", "areia").replace("table", "bancada").replace("furnace", "fornalha").replace("chest", "baú")}: ${v.length}`).join(" · ") || "nada ainda";
   const f = new ActionFormData().title("§l§bMemórias do DR-0N")
-    .body(`§bDiário:§f\n${diary}\n\n§bLugares que ele lembra:§f ${spots}\n§bÁreas mapeadas:§f ${c.mem.explored.length}\n§bMissões concluídas:§f ${c.rec.stats.missions ?? 0}`)
+    .body(`§bDiário:§f\n${diary}\n\n§bÁreas mapeadas:§f ${c.mem.explored.length}\n§bMissões concluídas:§f ${c.rec.stats.missions ?? 0}`)
     .button("Voltar", I.back);
   const r = await show(player, f);
-  if (r && !r.canceled) return openController(player, "drone");
+  if (r && !r.canceled) return openController(player);
 }
+
+export { isVehicle };

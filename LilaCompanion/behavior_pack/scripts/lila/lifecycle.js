@@ -8,12 +8,13 @@ import { setAction, setMove, hold, sound, particle } from "./anim.js";
 import { standSpot } from "./world.js";
 import { LINES, pick, say } from "./talk.js";
 import { release } from "./areas.js";
-import { LILA } from "./registry.js";
+import { DRONE } from "./registry.js";
 import { logError } from "../core/log.js";
+import { merge } from "./army.js";
 
 /** @typedef {import("./companion.js").Companion} Companion */
 
-export const RESPAWN_TICKS = LILA.respawnTicks;
+export const RESPAWN_TICKS = DRONE.respawnTicks;
 
 const sid = (c, kind) => `lila:${kind}_${c.kind}_${c.rec.ownerId.replace(/[^a-zA-Z0-9]/g, "").slice(-12)}`;
 
@@ -28,7 +29,7 @@ function spotNear(player) {
 }
 
 /** Restaura o corpo salvo (estrutura) num ponto. Retorna a entidade. */
-function restoreBody(c, structureId, dim, loc) {
+export function restoreBody(c, structureId, dim, loc) {
   const sm = world.structureManager;
   try {
     if (!sm.get(structureId)) return undefined;
@@ -47,7 +48,7 @@ function restoreBody(c, structureId, dim, loc) {
 }
 
 /** Guarda o corpo (com inventário) como estrutura e remove a entidade do mundo. */
-function storeBody(c, structureId) {
+export function storeBody(c, structureId) {
   const e = c.entity;
   if (!e?.isValid) return false;
   const sm = world.structureManager;
@@ -148,6 +149,17 @@ export function restoreBodyForTest(c, dim, loc) {
 
 /** Dispensa: guarda o corpo com tudo e some (pode ser invocada de novo depois). */
 export function dismiss(c) {
+  if (c.rec.form === "army") {
+    merge(c);
+  } else if (c.alive() && c.rec.form && c.rec.form !== "drone") {
+    try {
+      c.entity?.getComponent("minecraft:rideable")?.ejectRiders();
+      c.entity?.triggerEvent("lila:form_drone");
+    } catch {
+      /* ignore */
+    }
+    c.rec.form = "drone";
+  }
   if (!c.alive()) {
     c.rec.summoned = false;
     c.save();
@@ -155,7 +167,7 @@ export function dismiss(c) {
   }
   const dim = c.dim();
   const loc = c.pos();
-  say(c, "Tá bom, vou descansar. É só me chamar no controle!", { force: true });
+  say(c, "Beleza, vou recarregar. É só me chamar no controle!", { force: true });
   particle(dim, "lila:leaves", { x: loc.x, y: loc.y + 1, z: loc.z });
   sound(c.entity, "beacon.deactivate", 0.6, 1.6);
   abortAll(c);
@@ -174,6 +186,24 @@ export function defeat(c) {
   const e = c.entity;
   if (!e) return;
   c.rec.stats.defeats++;
+  // caiu numa forma (veículo/colosso/torreta): desmonta tudo e volta a ser drone
+  if (c.rec.form && c.rec.form !== "drone") {
+    try {
+      for (const r of e.getComponent("minecraft:rideable")?.getRiders() ?? []) {
+        try {
+          r.inputPermissions?.setPermissionCategory(8, true);
+        } catch {
+          /* ignore */
+        }
+      }
+      e.getComponent("minecraft:rideable")?.ejectRiders();
+      e.triggerEvent("lila:form_drone");
+    } catch {
+      /* ignore */
+    }
+    c.rec.form = "drone";
+    if (c.rec.mode === "turret") c.rec.mode = "follow";
+  }
   say(c, pick(LINES.defeat), { force: true });
   abortAll(c, true);
   setMove(e, "none");

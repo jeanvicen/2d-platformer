@@ -1,12 +1,12 @@
 {
   "format_version": 2,
   "header": {
-    "name": "Lila Companion (BP)",
-    "description": "§aLila§r — companheira autônoma\n§7Criado por 0neajx",
+    "name": "DR-0N Mega Drone (BP)",
+    "description": "§bDR-0N§r — drone que vira veículos, torreta, colosso e exército\n§7Criado por 0neajx",
     "uuid": "b461d112-57c7-4e8f-b4dc-395753b1764f",
     "version": [
-      1,
-      5,
+      2,
+      0,
       0
     ],
     "min_engine_version": [
@@ -20,31 +20,31 @@
       "type": "data",
       "uuid": "0eb44987-9e9c-463b-910a-8fa1028bf56b",
       "version": [
-        1,
-        5,
+        2,
+        0,
         0
       ],
-      "description": "Lila behaviors"
+      "description": "DR-0N behaviors"
     },
     {
       "type": "script",
       "language": "javascript",
       "uuid": "9cfa397e-a894-4a0e-90bb-14e27ca0c535",
       "version": [
-        1,
-        5,
+        2,
+        0,
         0
       ],
       "entry": "scripts/main.js",
-      "description": "Lila brain"
+      "description": "DR-0N brain"
     }
   ],
   "dependencies": [
     {
       "uuid": "d7bcc89a-2727-4727-aa37-344181885cac",
       "version": [
-        1,
-        5,
+        2,
+        0,
         0
       ]
     },

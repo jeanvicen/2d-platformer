@@ -1,9 +1,9 @@
 // ConversationService: a voz da Lila no chat (pt-BR), com limite de frequência e níveis de conversa.
 import { system } from "@minecraft/server";
 
-import { LILA } from "./registry.js";
+import { DRONE } from "./registry.js";
 
-const TAG = LILA.chatTag;
+const TAG = DRONE.chatTag;
 
 /**
  * @param {import("./companion.js").Companion} c

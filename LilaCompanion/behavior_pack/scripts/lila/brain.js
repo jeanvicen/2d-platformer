@@ -15,6 +15,9 @@ import { setAction, getAction } from "./anim.js";
 import { LINES, pick, say } from "./talk.js";
 import { logError } from "../core/log.js";
 import { missions, mount } from "./drone.js";
+import { formOf, setForm, releaseRiders } from "./forms.js";
+import { armyActive, merge, command as armyCommand } from "./army.js";
+import { FORM_NAMES } from "../lib/catalog.js";
 import { overBudget } from "../core/budget.js";
 
 /** @typedef {import("./companion.js").Companion} Companion */
@@ -192,6 +195,17 @@ export function chooseAuto(c) {
   const opts = [];
   const add = (score, desc) => opts.push({ score: score + Math.random() * 6, desc: { origin: "auto", ...desc } });
   const failed = c.flags.lastFail && system.currentTick - c.flags.lastFail.t < 2400 ? c.flags.lastFail.type : null;
+  if (c.def?.creative) {
+    // itens infinitos: nada de juntar recurso — ele fica com você, ilumina, patrulha e explora perto
+    if (o && d > roam) add(95, { type: "regroup" });
+    if (o && (system.currentTick < (c.flags.tagUntil ?? 0) || c.flags.ownerMoving)) add(90, { type: "tagalong", args: { ticks: 240 } });
+    if (o && c.flags.ownerDark && system.currentTick - (c.flags.lastTorch ?? -9999) > 1200) add(70, { type: "torches", args: { count: 4, quiet: true } });
+    add(40, { type: "tagalong", args: { ticks: 400 } });
+    add(18, { type: "hangout", args: { ticks: 300 } });
+    if (d < roam / 2 && !c.flags.ownerMoving) add(12, { type: "explore", args: { legs: 1 } });
+    opts.sort((a, b) => b.score - a.score);
+    return (opts.find((x) => x.desc.type !== failed) ?? opts[0]).desc;
+  }
 
   if (o && d > roam) add(95, { type: "regroup" });
   // acabou de chegar ou você está viajando: vai junto (como uma amiga de verdade)
@@ -323,6 +337,7 @@ function followAcrossDimension(c, o) {
 /** A cada 20 ticks: fome cai, vida regenera com a barriga cheia. */
 export function metabolism(c) {
   if (!c.alive() || c.rec.defeat) return;
+  if (c.def?.creative) c.rec.hunger = 20; // energia infinita
   const working = !!c.job && !["hangout", "stay", "follow", "sleep"].includes(c.job.desc.type);
   c.rec.hunger = Math.max(0, c.rec.hunger - (working ? 0.025 : 0.01));
   if (c.rec.hunger >= 12 && system.currentTick % 40 === 0) {
@@ -347,17 +362,54 @@ export function command(c, text) {
   handleIntents(c, intents, text);
 }
 
-const GOAL_TYPES = new Set(["gather", "craft", "build", "farm", "food", "give", "explore", "hunt", "attack", "sleep", "home", "torches", "deposit", "come"]);
+const GOAL_TYPES = new Set(["gather", "craft", "build", "farm", "food", "give", "explore", "hunt", "attack", "sleep", "home", "torches", "deposit", "come",
+  "mega", "biome", "kit"]);
+
+/** "Cancelar": larga tudo e volta a ser o drone normal (junta o exército, desfaz veículo/colosso/torreta). */
+export function backToNormal(c, quiet = false) {
+  abortAll(c);
+  if (armyActive(c)) merge(c);
+  else if (c.alive() && formOf(c) !== "drone") {
+    releaseRiders(c);
+    setForm(c, "drone", { mount: false, quiet });
+  }
+  if (c.rec.mode === "turret" || c.rec.mode === "stay") c.rec.mode = "follow";
+  c.save();
+}
 
 export function handleIntents(c, intents, raw = "") {
   const newGoals = [];
   for (const it of intents) {
     switch (it.type) {
       case "stop":
-        abortAll(c);
-        c.rec.mode = c.rec.mode === "stay" ? "follow" : c.rec.mode;
-        say(c, "Parei! O que você quer agora?", { force: true });
+      case "normal":
+        backToNormal(c);
+        say(c, it.type === "normal" ? "Voltei ao normal! Drone de novo." : "Cancelei tudo e voltei ao normal. O que você quer agora?", { force: true });
         break;
+      case "form": {
+        if (armyActive(c)) merge(c);
+        abortAll(c);
+        const o = c.owner();
+        if (!c.alive() || !o) {
+          say(c, "Me invoque primeiro!", { force: true });
+          break;
+        }
+        if (it.form === formOf(c)) {
+          say(c, `Já estou de ${FORM_NAMES[it.form]}!`, { force: true });
+          break;
+        }
+        // vem pra perto e se transforma do seu lado
+        try {
+          const l = o.location, r = (o.getRotation().y * Math.PI) / 180;
+          const d = it.form === "colossus" ? 9 : 2.5;
+          c.entity?.teleport({ x: l.x - Math.sin(r) * d, y: l.y + (it.form === "heli" || it.form === "jet" ? 0.5 : 0), z: l.z + Math.cos(r) * d }, { keepVelocity: false });
+        } catch {
+          /* ignore */
+        }
+        if (c.rec.mode === "turret") c.rec.mode = "follow";
+        setForm(c, it.form);
+        break;
+      }
       case "pause":
         abortAll(c, true);
         c.rec.paused = true;
@@ -388,14 +440,26 @@ export function handleIntents(c, intents, raw = "") {
       case "protect":
         abortAll(c);
         c.rec.mode = "guard";
-        say(c, "Guarda-costas ativada!", { force: true });
+        if (armyActive(c)) armyCommand(c, "guard");
+        say(c, "Modo proteger: eu ataco primeiro qualquer monstro perto de você, e quem te bater (até jogador) vira alvo!", { force: true });
+        break;
+      case "army":
+        if (armyActive(c)) {
+          say(c, "Já estou em modo exército! Use o controle para mandar neles.", { force: true });
+          break;
+        }
+        if (formOf(c) !== "drone") setForm(c, "drone", { mount: false, quiet: true });
+        abortAll(c);
+        newGoals.push({ type: "army", args: { count: it.count ?? c.rec.settings.army ?? 10 }, origin: "cmd", label: "modo exército" });
         break;
       case "wake":
         c.flags.wake = true;
         say(c, "Tô acordada!", { force: true });
         break;
       case "turret":
+        if (armyActive(c)) merge(c);
         abortAll(c);
+        if (formOf(c) !== "drone" && formOf(c) !== "turret") setForm(c, "drone", { mount: false, quiet: true });
         c.rec.mode = c.def?.gun ? "turret" : "guard";
         if (!c.def?.gun) say(c, "Não tenho arma de torreta, mas fico de guarda-costas!", { force: true });
         break;
@@ -467,10 +531,11 @@ export function statusText(c) {
     /* ignore */
   }
   const cur = c.urgent?.desc ?? c.job?.desc ?? c.rec.goals[0];
-  const mode = { auto: "livre", follow: "seguindo", stay: "parada", guard: "guarda-costas" }[c.rec.mode] ?? c.rec.mode;
+  const mode = { auto: "livre", follow: "seguindo", stay: "parado", guard: "proteger (ataca primeiro)", turret: "torreta" }[c.rec.mode] ?? c.rec.mode;
   const pickT = inv.toolTier(c, "pickaxe");
   return `Vida ${hp}/${max} · Fome ${Math.round(c.rec.hunger)}/20 · Modo ${mode} · Agora: ${goalLabel(cur)}` +
-    (c.rec.goals.length > 1 ? ` (+${c.rec.goals.length - 1} na fila)` : "") + ` · Picareta: ${pickT === "none" ? "nenhuma" : pickT}`;
+    (c.rec.goals.length > 1 ? ` (+${c.rec.goals.length - 1} na fila)` : "") + ` · Forma: ${c.rec.form === "army" ? "exército" : FORM_NAMES[c.rec.form ?? "drone"] ?? "drone"}` +
+    (c.def?.creative ? " · Itens: infinitos" : ` · Picareta: ${pickT === "none" ? "nenhuma" : pickT}`);
 }
 
 export function inventoryText(c) {

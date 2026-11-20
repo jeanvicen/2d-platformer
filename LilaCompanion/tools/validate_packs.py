@@ -209,14 +209,49 @@ for e, j in bp_ents.items():
     for p, jj in jsons.items():
         if not jj or "/resource_pack/" not in p:
             continue
-        if ("drone" in os.path.basename(p)) != (e == "lila:drone"):
+        base = os.path.basename(p)
+        owner = "lila:robot" if "robot" in base else "lila:drone" if ("drone" in base or "forms" in base) else None
+        if owner != e:
             continue
-        for m in re.finditer(r"q\.property\('([^']+)'\) [=!]= '([^']+)'", json.dumps(jj)):
+        txt = json.dumps(jj)
+        for m in re.finditer(r"q\.property\('([^']+)'\) [=!]= '([^']+)'", txt):
             name, val = m.group(1), m.group(2)
             if name not in props:
-                errors.append(f"{os.path.basename(p)}: propriedade {name} não existe em {e}")
-            elif val not in props[name]["values"]:
-                errors.append(f"{os.path.basename(p)}: valor '{val}' não existe em {name}")
+                errors.append(f"{base}: propriedade {name} não existe em {e}")
+            elif val not in props[name].get("values", []):
+                errors.append(f"{base}: valor '{val}' não existe em {name}")
+        for m in re.finditer(r"q\.property\('([^']+)'\)", txt):
+            if m.group(1) not in props:
+                errors.append(f"{base}: propriedade {m.group(1)} não existe em {e}")
+
+# controlador de formas: cada geometria/textura da lista existe na entidade do cliente
+for j in jsons.values():
+    if not j or "minecraft:client_entity" not in j:
+        continue
+    d = j["minecraft:client_entity"]["description"]
+    for rcname in d.get("render_controllers", []):
+        rc = next((jj["render_controllers"][rcname] for jj in jsons.values() if jj and rcname in jj.get("render_controllers", {})), None)
+        if rc is None:
+            errors.append(f"{d['identifier']}: render controller {rcname} inexistente")
+            continue
+        for arr in rc.get("arrays", {}).get("geometries", {}).values():
+            for g in arr:
+                if g.split(".", 1)[1] not in d.get("geometry", {}):
+                    errors.append(f"{d['identifier']}: {g} não declarado")
+        for arr in rc.get("arrays", {}).get("textures", {}).values():
+            for t in arr:
+                if t.split(".", 1)[1] not in d.get("textures", {}):
+                    errors.append(f"{d['identifier']}: {t} não declarado")
+    for k, g in d.get("geometry", {}).items():
+        if g not in geos:
+            errors.append(f"{d['identifier']}: geometria {g} inexistente")
+
+# sons
+sd = jsons.get(os.path.join(RP, "sounds", "sound_definitions.json")) or {}
+for k, v in sd.get("sound_definitions", {}).items():
+    for snd in v.get("sounds", []):
+        if not os.path.exists(os.path.join(RP, snd["name"] + ".ogg")):
+            errors.append(f"som {k}: arquivo {snd['name']}.ogg ausente")
 
 # itens e ícones
 itex = jsons.get(os.path.join(RP, "textures", "item_texture.json")) or {}
@@ -231,11 +266,18 @@ for k, v in itex.get("texture_data", {}).items():
 
 # ações do script == enum da entidade
 anim_js = open(os.path.join(BP, "scripts", "lila", "anim.js"), encoding="utf-8").read()
-for name, pat in (("lila:action", r"export const ACTIONS = \[([^\]]+)\]"), ("lila:move", r"export const MOVES = \[([^\]]+)\]")):
+for name, pat in (("lila:move", r"export const MOVES = \[([^\]]+)\]"),):
     vals = re.findall(r'"([a-z_]+)"', re.search(pat, anim_js).group(1))
-    ent = bp_ents["lila:lila"]["minecraft:entity"]["description"]["properties"][name]["values"]
+    ent = bp_ents["lila:drone"]["minecraft:entity"]["description"]["properties"][name]["values"]
     if vals != ent:
         errors.append(f"{name}: valores do script {vals} != entidade {ent}")
+# ações do drone (actionMap do registro) existem no enum da entidade
+reg_js = open(os.path.join(BP, "scripts", "lila", "registry.js"), encoding="utf-8").read()
+amap = re.search(r"actionMap: \{([^}]+)\}", reg_js)
+dvals = bp_ents["lila:drone"]["minecraft:entity"]["description"]["properties"]["lila:action"]["values"]
+for v in re.findall(r': "([a-z_]+)"', amap.group(1) if amap else ""):
+    if v not in dvals:
+        errors.append(f"actionMap usa '{v}' que não existe no enum do drone")
 
 print(f"arquivos JSON: {len(jsons)} · geometrias: {len(geos)} · animações: {len(anims)} · controladores: {len(ctrls)}")
 for e in errors:

@@ -4,9 +4,9 @@ import { readJSON, writeJSON } from "../core/persistence.js";
 import { logError } from "../core/log.js";
 import { SpatialMemory } from "./world.js";
 
-import { LILA, SUMMONS, summonByEntity } from "./registry.js";
+import { DRONE, SUMMONS, summonByEntity } from "./registry.js";
 
-export const ENTITY_ID = LILA.entity;
+export const ENTITY_ID = DRONE.entity;
 /** Entidade é uma das companheiras (Lila, DR-0N...)? */
 export const isCompanionType = (typeId) => !!summonByEntity(typeId);
 export const OWNER_PROP = "lila:owner";
@@ -19,9 +19,9 @@ export const OWNER_PROP = "lila:owner";
  *   stayPos?:{x:number,y:number,z:number}, goals:GoalDesc[], paused:boolean,
  *   defeat?:{left:number, sid:string, goals:GoalDesc[]}|null, saved?:{sid:string}|null,
  *   base?:{x:number,y:number,z:number,d:string}|null, farm?:any, mem:any,
- *   settings:{hud:string, chat:string, hunt:boolean, roam:number},
+ *   settings:{hud:string, chat:string, hunt:boolean, roam:number, army?:number, destroy?:boolean, lesson?:boolean},
  *   stats:{blocks:number, crafted:number, kills:number, defeats:number, built:number, missions?:number},
- *   placed:string[], kind?:string, diary?:{t:number,msg:string}[], anchor?:{x:number,y:number,z:number}, backup?:{id:string,n:number,d:number}[]
+ *   placed:string[], kind?:string, form?:string, army?:any, diary?:{t:number,msg:string}[], anchor?:{x:number,y:number,z:number}, backup?:{id:string,n:number,d:number}[]
  * }} Rec
  */
 
@@ -39,10 +39,10 @@ export class Companion {
   /** @param {Rec} rec */
   constructor(rec) {
     this.rec = rec;
-    this.kind = rec.kind ?? "lila";
+    this.kind = rec.kind ?? "drone";
     rec.kind = this.kind;
     /** definição do registro (velocidade, voo, armas, nomes) */
-    this.def = SUMMONS.get(this.kind) ?? LILA;
+    this.def = SUMMONS.get(this.kind) ?? DRONE;
     /** @type {import("@minecraft/server").Entity|undefined} */
     this.entity = undefined;
     this.mem = new SpatialMemory(rec.mem);
@@ -120,13 +120,13 @@ export class Companion {
   }
 }
 
-export const recKey = (ownerId, kind = "lila") => `lila:rec:${ownerId}${SUMMONS.get(kind)?.recSuffix ?? ""}`;
-export const compKey = (ownerId, kind = "lila") => `${ownerId}|${kind}`;
+export const recKey = (ownerId, kind = "drone") => `lila:rec:${ownerId}${SUMMONS.get(kind)?.recSuffix ?? ""}`;
+export const compKey = (ownerId, kind = "drone") => `${ownerId}|${kind}`;
 
 /** @type {Map<string, Companion>} */
 export const COMPANIONS = new Map();
 
-export function companionOf(player, kind = "lila") {
+export function companionOf(player, kind = "drone") {
   return COMPANIONS.get(compKey(player.id, kind));
 }
 
@@ -136,7 +136,7 @@ export function companionsOf(ownerId) {
 }
 
 function normalize(rec, kind) {
-  const def = SUMMONS.get(kind) ?? LILA;
+  const def = SUMMONS.get(kind) ?? DRONE;
   rec.kind = kind;
   rec.settings = { hud: "auto", chat: "normal", hunt: false, roam: def.defaults.roam, ...(rec.settings ?? {}) };
   rec.stats = { blocks: 0, crafted: 0, kills: 0, defeats: 0, built: 0, missions: 0, ...(rec.stats ?? {}) };
@@ -146,7 +146,7 @@ function normalize(rec, kind) {
   return rec;
 }
 
-export function loadCompanion(player, kind = "lila") {
+export function loadCompanion(player, kind = "drone") {
   const key = compKey(player.id, kind);
   let c = COMPANIONS.get(key);
   if (c) {
@@ -155,7 +155,7 @@ export function loadCompanion(player, kind = "lila") {
   }
   const rec = normalize(readJSON(world, recKey(player.id, kind), null) ?? newRecord(player), kind);
   rec.ownerName = player.name;
-  if (!rec.mode) rec.mode = (SUMMONS.get(kind) ?? LILA).defaults.mode;
+  if (!rec.mode) rec.mode = (SUMMONS.get(kind) ?? DRONE).defaults.mode;
   c = new Companion(rec);
   COMPANIONS.set(key, c);
   return c;
@@ -167,7 +167,8 @@ export function loadAllRecords() {
     for (const id of world.getDynamicPropertyIds()) {
       const m = /^lila:rec:([^:#]+)(?::([a-z_]+))?$/.exec(id);
       if (!m) continue;
-      const kind = m[2] ?? "lila";
+      const kind = m[2];
+      if (!kind || !SUMMONS.has(kind)) continue; // registros antigos da Lila (removida na 2.0)
       if (COMPANIONS.has(compKey(m[1], kind))) continue;
       const rec = readJSON(world, id, null);
       if (rec?.ownerId) COMPANIONS.set(compKey(rec.ownerId, kind), new Companion(normalize(rec, kind)));
