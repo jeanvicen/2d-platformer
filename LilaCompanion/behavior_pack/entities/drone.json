@@ -1,0 +1,847 @@
+{
+  "format_version": "1.21.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "lila:drone",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "properties": {
+        "lila:action": {
+          "type": "enum",
+          "values": [
+            "idle",
+            "work",
+            "place",
+            "shoot",
+            "charge",
+            "turret",
+            "craft",
+            "wave",
+            "sleep",
+            "defeat",
+            "summon",
+            "celebrate",
+            "scan"
+          ],
+          "default": "idle",
+          "client_sync": true
+        },
+        "lila:move": {
+          "type": "enum",
+          "values": [
+            "none",
+            "walk",
+            "run",
+            "swim",
+            "climb",
+            "fall",
+            "sneak"
+          ],
+          "default": "none",
+          "client_sync": true
+        },
+        "lila:form": {
+          "type": "int",
+          "range": [
+            0,
+            8
+          ],
+          "default": 0,
+          "client_sync": true
+        },
+        "lila:aim": {
+          "type": "int",
+          "range": [
+            -180,
+            180
+          ],
+          "default": 0,
+          "client_sync": true
+        },
+        "lila:pitch": {
+          "type": "int",
+          "range": [
+            -60,
+            60
+          ],
+          "default": 0,
+          "client_sync": true
+        }
+      }
+    },
+    "component_groups": {
+      "lila:despawn": {
+        "minecraft:instant_despawn": {
+          "remove_child_entities": false
+        }
+      },
+      "lila:f_drone": {
+        "minecraft:collision_box": {
+          "width": 1.4,
+          "height": 1.2
+        },
+        "minecraft:physics": {
+          "has_gravity": false,
+          "has_collision": true
+        },
+        "minecraft:scale": {
+          "value": 1.0
+        },
+        "minecraft:health": {
+          "value": 300,
+          "max": 300
+        },
+        "minecraft:rideable": {
+          "seat_count": 1,
+          "family_types": [
+            "player"
+          ],
+          "interact_text": "action.interact.lila.ride",
+          "crouching_skip_interact": true,
+          "pull_in_entities": false,
+          "rider_can_interact": false,
+          "seats": [
+            {
+              "position": [
+                0,
+                1.55,
+                0
+              ]
+            }
+          ]
+        }
+      },
+      "lila:f_heli": {
+        "minecraft:collision_box": {
+          "width": 2.6,
+          "height": 2.4
+        },
+        "minecraft:physics": {
+          "has_gravity": false,
+          "has_collision": true
+        },
+        "minecraft:scale": {
+          "value": 1.0
+        },
+        "minecraft:health": {
+          "value": 400,
+          "max": 400
+        },
+        "minecraft:rideable": {
+          "seat_count": 4,
+          "family_types": [
+            "player"
+          ],
+          "interact_text": "action.interact.lila.ride",
+          "crouching_skip_interact": true,
+          "pull_in_entities": false,
+          "rider_can_interact": false,
+          "seats": [
+            {
+              "position": [
+                -0.4,
+                0.75,
+                -1.05
+              ]
+            },
+            {
+              "position": [
+                0.4,
+                0.75,
+                -1.05
+              ]
+            },
+            {
+              "position": [
+                -0.4,
+                0.75,
+                0.25
+              ]
+            },
+            {
+              "position": [
+                0.4,
+                0.75,
+                0.25
+              ]
+            }
+          ]
+        }
+      },
+      "lila:f_car": {
+        "minecraft:collision_box": {
+          "width": 2.2,
+          "height": 1.4
+        },
+        "minecraft:physics": {
+          "has_gravity": true,
+          "has_collision": true
+        },
+        "minecraft:scale": {
+          "value": 1.0
+        },
+        "minecraft:health": {
+          "value": 400,
+          "max": 400
+        },
+        "minecraft:rideable": {
+          "seat_count": 4,
+          "family_types": [
+            "player"
+          ],
+          "interact_text": "action.interact.lila.ride",
+          "crouching_skip_interact": true,
+          "pull_in_entities": false,
+          "rider_can_interact": false,
+          "seats": [
+            {
+              "position": [
+                -0.45,
+                0.42,
+                -0.05
+              ]
+            },
+            {
+              "position": [
+                0.45,
+                0.42,
+                -0.05
+              ]
+            },
+            {
+              "position": [
+                -0.45,
+                0.48,
+                0.95
+              ]
+            },
+            {
+              "position": [
+                0.45,
+                0.48,
+                0.95
+              ]
+            }
+          ]
+        }
+      },
+      "lila:f_excavator": {
+        "minecraft:collision_box": {
+          "width": 2.6,
+          "height": 3.0
+        },
+        "minecraft:physics": {
+          "has_gravity": true,
+          "has_collision": true
+        },
+        "minecraft:scale": {
+          "value": 1.0
+        },
+        "minecraft:health": {
+          "value": 500,
+          "max": 500
+        },
+        "minecraft:rideable": {
+          "seat_count": 2,
+          "family_types": [
+            "player"
+          ],
+          "interact_text": "action.interact.lila.ride",
+          "crouching_skip_interact": true,
+          "pull_in_entities": false,
+          "rider_can_interact": false,
+          "seats": [
+            {
+              "position": [
+                -0.5,
+                1.15,
+                -0.4
+              ]
+            },
+            {
+              "position": [
+                0.75,
+                1.35,
+                0.9
+              ]
+            }
+          ]
+        }
+      },
+      "lila:f_tank": {
+        "minecraft:collision_box": {
+          "width": 3.2,
+          "height": 2.2
+        },
+        "minecraft:physics": {
+          "has_gravity": true,
+          "has_collision": true
+        },
+        "minecraft:scale": {
+          "value": 1.0
+        },
+        "minecraft:health": {
+          "value": 900,
+          "max": 900
+        },
+        "minecraft:rideable": {
+          "seat_count": 3,
+          "family_types": [
+            "player"
+          ],
+          "interact_text": "action.interact.lila.ride",
+          "crouching_skip_interact": true,
+          "pull_in_entities": false,
+          "rider_can_interact": false,
+          "seats": [
+            {
+              "position": [
+                0.5,
+                1.55,
+                0.6
+              ]
+            },
+            {
+              "position": [
+                -0.5,
+                1.55,
+                0.6
+              ]
+            },
+            {
+              "position": [
+                0,
+                1.05,
+                1.9
+              ]
+            }
+          ]
+        }
+      },
+      "lila:f_jet": {
+        "minecraft:collision_box": {
+          "width": 3.0,
+          "height": 1.6
+        },
+        "minecraft:physics": {
+          "has_gravity": false,
+          "has_collision": true
+        },
+        "minecraft:scale": {
+          "value": 1.0
+        },
+        "minecraft:health": {
+          "value": 400,
+          "max": 400
+        },
+        "minecraft:rideable": {
+          "seat_count": 2,
+          "family_types": [
+            "player"
+          ],
+          "interact_text": "action.interact.lila.ride",
+          "crouching_skip_interact": true,
+          "pull_in_entities": false,
+          "rider_can_interact": false,
+          "seats": [
+            {
+              "position": [
+                0,
+                1.0,
+                -1.9
+              ]
+            },
+            {
+              "position": [
+                0,
+                1.05,
+                -1.2
+              ]
+            }
+          ]
+        }
+      },
+      "lila:f_moto": {
+        "minecraft:collision_box": {
+          "width": 0.9,
+          "height": 1.3
+        },
+        "minecraft:physics": {
+          "has_gravity": true,
+          "has_collision": true
+        },
+        "minecraft:scale": {
+          "value": 1.0
+        },
+        "minecraft:health": {
+          "value": 300,
+          "max": 300
+        },
+        "minecraft:rideable": {
+          "seat_count": 2,
+          "family_types": [
+            "player"
+          ],
+          "interact_text": "action.interact.lila.ride",
+          "crouching_skip_interact": true,
+          "pull_in_entities": false,
+          "rider_can_interact": false,
+          "seats": [
+            {
+              "position": [
+                0,
+                0.82,
+                0.35
+              ]
+            },
+            {
+              "position": [
+                0,
+                0.88,
+                0.95
+              ]
+            }
+          ]
+        }
+      },
+      "lila:f_colossus": {
+        "minecraft:collision_box": {
+          "width": 2.4,
+          "height": 7.6
+        },
+        "minecraft:physics": {
+          "has_gravity": true,
+          "has_collision": true
+        },
+        "minecraft:scale": {
+          "value": 3.4
+        },
+        "minecraft:health": {
+          "value": 4000,
+          "max": 4000
+        },
+        "minecraft:rideable": {
+          "seat_count": 6,
+          "family_types": [
+            "player"
+          ],
+          "interact_text": "action.interact.lila.ride",
+          "crouching_skip_interact": true,
+          "pull_in_entities": false,
+          "rider_can_interact": false,
+          "seats": [
+            {
+              "position": [
+                0,
+                5.9,
+                -2.5
+              ]
+            },
+            {
+              "position": [
+                -0.55,
+                4.2,
+                -0.4
+              ]
+            },
+            {
+              "position": [
+                0.55,
+                4.2,
+                -0.4
+              ]
+            },
+            {
+              "position": [
+                -1.4,
+                5.0,
+                -0.2
+              ]
+            },
+            {
+              "position": [
+                1.4,
+                5.0,
+                -0.2
+              ]
+            },
+            {
+              "position": [
+                0,
+                3.2,
+                1.4
+              ]
+            }
+          ]
+        }
+      },
+      "lila:f_turret": {
+        "minecraft:collision_box": {
+          "width": 2.2,
+          "height": 3.4
+        },
+        "minecraft:physics": {
+          "has_gravity": true,
+          "has_collision": true
+        },
+        "minecraft:scale": {
+          "value": 1.7
+        },
+        "minecraft:health": {
+          "value": 1500,
+          "max": 1500
+        }
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "lila_drone",
+          "lila_companion",
+          "npc",
+          "mob"
+        ]
+      },
+      "minecraft:attack": {
+        "damage": 8
+      },
+      "minecraft:movement": {
+        "value": 0.3
+      },
+      "minecraft:pushable": {
+        "is_pushable": false,
+        "is_pushable_by_piston": true
+      },
+      "minecraft:knockback_resistance": {
+        "value": 1.0
+      },
+      "minecraft:nameable": {
+        "always_show": false,
+        "allow_name_tag_renaming": false
+      },
+      "minecraft:persistent": {},
+      "minecraft:fire_immune": {},
+      "minecraft:breathable": {
+        "total_supply": 60,
+        "suffocate_time": 0,
+        "breathes_water": true
+      },
+      "minecraft:damage_sensor": {
+        "triggers": [
+          {
+            "on_damage": {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "lila_companion"
+              }
+            },
+            "deals_damage": "no"
+          },
+          {
+            "on_damage": {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "lila_robot"
+              }
+            },
+            "deals_damage": "no"
+          },
+          {
+            "cause": "fall",
+            "deals_damage": "no"
+          },
+          {
+            "cause": "suffocation",
+            "deals_damage": "no"
+          },
+          {
+            "cause": "drowning",
+            "deals_damage": "no"
+          },
+          {
+            "cause": "fly_into_wall",
+            "deals_damage": "no"
+          },
+          {
+            "cause": "lava",
+            "deals_damage": "no"
+          },
+          {
+            "cause": "fire",
+            "deals_damage": "no"
+          },
+          {
+            "cause": "fire_tick",
+            "deals_damage": "no"
+          },
+          {
+            "cause": "block_explosion",
+            "deals_damage": "no"
+          }
+        ]
+      },
+      "minecraft:inventory": {
+        "inventory_size": 54,
+        "container_type": "inventory",
+        "private": true
+      },
+      "minecraft:interact": {
+        "interactions": [
+          {
+            "on_interact": {
+              "filters": {
+                "all_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "player"
+                  },
+                  {
+                    "test": "has_equipment",
+                    "subject": "other",
+                    "domain": "hand",
+                    "value": "lila:drone_controller"
+                  }
+                ]
+              },
+              "event": "lila:interacted",
+              "target": "self"
+            },
+            "interact_text": "action.interact.lila.talk",
+            "swing": true
+          }
+        ]
+      },
+      "minecraft:behavior.look_at_player": {
+        "priority": 8,
+        "look_distance": 10,
+        "probability": 0.2
+      },
+      "minecraft:conditional_bandwidth_optimization": {},
+      "minecraft:experience_reward": {
+        "on_death": "0"
+      }
+    },
+    "events": {
+      "lila:despawn": {
+        "add": {
+          "component_groups": [
+            "lila:despawn"
+          ]
+        }
+      },
+      "lila:interacted": {
+        "remove": {
+          "component_groups": []
+        }
+      },
+      "minecraft:entity_spawned": {
+        "add": {
+          "component_groups": [
+            "lila:f_drone"
+          ]
+        }
+      },
+      "lila:form_drone": {
+        "add": {
+          "component_groups": [
+            "lila:f_drone"
+          ]
+        },
+        "remove": {
+          "component_groups": [
+            "lila:f_heli",
+            "lila:f_car",
+            "lila:f_excavator",
+            "lila:f_tank",
+            "lila:f_jet",
+            "lila:f_moto",
+            "lila:f_colossus",
+            "lila:f_turret"
+          ]
+        },
+        "set_property": {
+          "lila:form": 0
+        }
+      },
+      "lila:form_heli": {
+        "add": {
+          "component_groups": [
+            "lila:f_heli"
+          ]
+        },
+        "remove": {
+          "component_groups": [
+            "lila:f_drone",
+            "lila:f_car",
+            "lila:f_excavator",
+            "lila:f_tank",
+            "lila:f_jet",
+            "lila:f_moto",
+            "lila:f_colossus",
+            "lila:f_turret"
+          ]
+        },
+        "set_property": {
+          "lila:form": 1
+        }
+      },
+      "lila:form_car": {
+        "add": {
+          "component_groups": [
+            "lila:f_car"
+          ]
+        },
+        "remove": {
+          "component_groups": [
+            "lila:f_drone",
+            "lila:f_heli",
+            "lila:f_excavator",
+            "lila:f_tank",
+            "lila:f_jet",
+            "lila:f_moto",
+            "lila:f_colossus",
+            "lila:f_turret"
+          ]
+        },
+        "set_property": {
+          "lila:form": 2
+        }
+      },
+      "lila:form_excavator": {
+        "add": {
+          "component_groups": [
+            "lila:f_excavator"
+          ]
+        },
+        "remove": {
+          "component_groups": [
+            "lila:f_drone",
+            "lila:f_heli",
+            "lila:f_car",
+            "lila:f_tank",
+            "lila:f_jet",
+            "lila:f_moto",
+            "lila:f_colossus",
+            "lila:f_turret"
+          ]
+        },
+        "set_property": {
+          "lila:form": 3
+        }
+      },
+      "lila:form_tank": {
+        "add": {
+          "component_groups": [
+            "lila:f_tank"
+          ]
+        },
+        "remove": {
+          "component_groups": [
+            "lila:f_drone",
+            "lila:f_heli",
+            "lila:f_car",
+            "lila:f_excavator",
+            "lila:f_jet",
+            "lila:f_moto",
+            "lila:f_colossus",
+            "lila:f_turret"
+          ]
+        },
+        "set_property": {
+          "lila:form": 4
+        }
+      },
+      "lila:form_jet": {
+        "add": {
+          "component_groups": [
+            "lila:f_jet"
+          ]
+        },
+        "remove": {
+          "component_groups": [
+            "lila:f_drone",
+            "lila:f_heli",
+            "lila:f_car",
+            "lila:f_excavator",
+            "lila:f_tank",
+            "lila:f_moto",
+            "lila:f_colossus",
+            "lila:f_turret"
+          ]
+        },
+        "set_property": {
+          "lila:form": 5
+        }
+      },
+      "lila:form_moto": {
+        "add": {
+          "component_groups": [
+            "lila:f_moto"
+          ]
+        },
+        "remove": {
+          "component_groups": [
+            "lila:f_drone",
+            "lila:f_heli",
+            "lila:f_car",
+            "lila:f_excavator",
+            "lila:f_tank",
+            "lila:f_jet",
+            "lila:f_colossus",
+            "lila:f_turret"
+          ]
+        },
+        "set_property": {
+          "lila:form": 6
+        }
+      },
+      "lila:form_colossus": {
+        "add": {
+          "component_groups": [
+            "lila:f_colossus"
+          ]
+        },
+        "remove": {
+          "component_groups": [
+            "lila:f_drone",
+            "lila:f_heli",
+            "lila:f_car",
+            "lila:f_excavator",
+            "lila:f_tank",
+            "lila:f_jet",
+            "lila:f_moto",
+            "lila:f_turret"
+          ]
+        },
+        "set_property": {
+          "lila:form": 7
+        }
+      },
+      "lila:form_turret": {
+        "add": {
+          "component_groups": [
+            "lila:f_turret"
+          ]
+        },
+        "remove": {
+          "component_groups": [
+            "lila:f_drone",
+            "lila:f_heli",
+            "lila:f_car",
+            "lila:f_excavator",
+            "lila:f_tank",
+            "lila:f_jet",
+            "lila:f_moto",
+            "lila:f_colossus"
+          ]
+        },
+        "set_property": {
+          "lila:form": 8
+        }
+      }
+    }
+  }
+}

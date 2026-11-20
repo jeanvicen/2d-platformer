@@ -1,0 +1,5 @@
+entity.lila:drone.name=DR-0N
+entity.lila:robot.name=Soldado DR-0N
+item.lila.drone_controller.name=Controle do DR-0N
+action.interact.lila.ride=Entrar
+action.interact.lila.talk=Conversar

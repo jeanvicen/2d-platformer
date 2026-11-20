@@ -1,0 +1,154 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "lila:drone",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/lila/drone",
+        "heli": "textures/entity/lila/heli",
+        "car": "textures/entity/lila/car",
+        "excavator": "textures/entity/lila/excavator",
+        "tank": "textures/entity/lila/tank",
+        "jet": "textures/entity/lila/jet",
+        "moto": "textures/entity/lila/moto",
+        "turret_g": "textures/entity/lila/turret_g",
+        "colossus": "textures/entity/lila/colossus"
+      },
+      "geometry": {
+        "default": "geometry.lila.drone",
+        "heli": "geometry.lila.heli",
+        "car": "geometry.lila.car",
+        "excavator": "geometry.lila.excavator",
+        "tank": "geometry.lila.tank",
+        "jet": "geometry.lila.jet",
+        "moto": "geometry.lila.moto",
+        "turret_g": "geometry.lila.turret_g",
+        "colossus": "geometry.lila.colossus"
+      },
+      "animations": {
+        "base": "animation.lila.drone.base",
+        "look": "animation.lila.drone.look",
+        "fly": "animation.lila.drone.fly",
+        "dash": "animation.lila.drone.dash",
+        "still": "animation.lila.drone.still",
+        "work": "animation.lila.drone.work",
+        "place": "animation.lila.drone.place",
+        "shoot": "animation.lila.drone.shoot",
+        "charge": "animation.lila.drone.charge",
+        "turret": "animation.lila.drone.turret",
+        "craft": "animation.lila.drone.craft",
+        "wave": "animation.lila.drone.wave",
+        "scan": "animation.lila.drone.scan",
+        "celebrate": "animation.lila.drone.celebrate",
+        "sleep": "animation.lila.drone.sleep",
+        "defeat": "animation.lila.drone.defeat",
+        "summon": "animation.lila.drone.summon",
+        "intro": "animation.lila.form.intro",
+        "intro_colossus": "animation.lila.form.intro_colossus",
+        "heli": "animation.lila.form.heli",
+        "heli_fire": "animation.lila.form.heli_fire",
+        "car": "animation.lila.form.car",
+        "excavator": "animation.lila.form.excavator",
+        "exc_dig": "animation.lila.form.exc_dig",
+        "tank": "animation.lila.form.tank",
+        "tank_fire": "animation.lila.form.tank_fire",
+        "jet": "animation.lila.form.jet",
+        "jet_missile": "animation.lila.form.jet_missile",
+        "moto": "animation.lila.form.moto",
+        "turret_g": "animation.lila.form.turret_g",
+        "turret_fire": "animation.lila.form.turret_fire",
+        "turret_missile": "animation.lila.form.turret_missile",
+        "col_idle": "animation.lila.form.col_idle",
+        "col_walk": "animation.lila.form.col_walk",
+        "col_punch": "animation.lila.form.col_punch",
+        "col_stomp": "animation.lila.form.col_stomp",
+        "col_beam": "animation.lila.form.col_beam",
+        "col_roar": "animation.lila.form.col_roar",
+        "col_wave": "animation.lila.form.col_wave",
+        "col_defeat": "animation.lila.form.col_defeat",
+        "ctrl_move": "controller.animation.lila.drone.move",
+        "ctrl_act": "controller.animation.lila.drone.action",
+        "ctrl_form": "controller.animation.lila.form.action"
+      },
+      "particle_effects": {
+        "sparkle": "lila:sparkle"
+      },
+      "scripts": {
+        "initialize": [
+          "v.dtilt = 0; v.htilt = 0; v.jpitch = 0; v.aims = 0; v.pits = 0; v.cwd = 0; v.cws = 0; v.wheel = 0; v.pby = q.body_y_rotation; v.lean = 0; v.tf = 9; v.pf = q.property('lila:form'); v.gspin = 0; v.gear = 1;"
+        ],
+        "pre_animation": [
+          "v.form = q.property('lila:form');",
+          "v.tf = (v.form != v.pf) ? 0 : v.tf + q.delta_time; v.pf = v.form;",
+          "v.dir = (q.property('lila:move') == 'sneak') ? -1 : 1;",
+          "v.wheel = v.wheel + q.ground_speed * math.min(q.delta_time, 0.1) * 160 * v.dir;",
+          "v.dy = math.mod(q.body_y_rotation - v.pby + 540, 360) - 180; v.pby = q.body_y_rotation;",
+          "v.lean = math.lerp(v.lean, math.clamp(v.dy / math.max(q.delta_time, 0.016) * 0.12, -30, 30), 0.08);",
+          "v.aim = q.property('lila:aim');",
+          "v.gspin = v.gspin + math.min(q.delta_time, 0.1) * ((q.property('lila:action') == 'shoot') ? 2400 : 90);",
+          "v.gear = math.lerp(v.gear, q.is_on_ground ? 1 : 0, 0.06);",
+          "v.cwd = v.cwd + q.ground_speed * math.min(q.delta_time, 0.1) / 3.4; v.cws = math.lerp(v.cws, math.min(1, q.ground_speed / 2.5), 0.12);",
+          "v.dtilt = math.lerp(v.dtilt, math.clamp(q.ground_speed * 2.4, 0, 24), 0.08);",
+          "v.htilt = math.lerp(v.htilt, math.clamp(q.ground_speed * 1.6, 0, 18), 0.08);",
+          "v.jpitch = math.lerp(v.jpitch, math.clamp(-q.vertical_speed * 2.2, -28, 28), 0.1);",
+          "v.aims = v.aims + (math.mod(v.aim - v.aims + 540, 360) - 180) * 0.2;",
+          "v.pits = math.lerp(v.pits, q.property('lila:pitch'), 0.2);"
+        ],
+        "animate": [
+          {
+            "base": "v.form == 0"
+          },
+          {
+            "look": "v.form == 0"
+          },
+          {
+            "ctrl_move": "v.form == 0"
+          },
+          {
+            "ctrl_act": "v.form == 0"
+          },
+          {
+            "intro": "v.form != 7"
+          },
+          {
+            "intro_colossus": "v.form == 7"
+          },
+          {
+            "heli": "v.form == 1"
+          },
+          {
+            "car": "v.form == 2"
+          },
+          {
+            "excavator": "v.form == 3"
+          },
+          {
+            "tank": "v.form == 4"
+          },
+          {
+            "jet": "v.form == 5"
+          },
+          {
+            "moto": "v.form == 6"
+          },
+          {
+            "col_idle": "v.form == 7"
+          },
+          {
+            "col_walk": "v.form == 7"
+          },
+          {
+            "turret_g": "v.form == 8"
+          },
+          "ctrl_form"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.lila.forms"
+      ]
+    }
+  }
+}
