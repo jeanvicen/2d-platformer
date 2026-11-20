@@ -273,6 +273,8 @@ async function soloTests(dim, check) {
     check("flatten picks up the items on the ground", inv.count(c, "minecraft:diamond") >= d0 + 12, `diamonds ${d0}->${inv.count(c, "minecraft:diamond")}`);
     // destruir TUDO: a parede vai embora, o baú fica
     cmd(dim, `setblock ${fx} ${Y + 1} 10 chest`);
+    c.entity?.teleport({ x: fx + 0.5, y: Y + 1, z: 0.5 }); // referência = centro (no jogo é você)
+    await system.waitTicks(2);
     const ra = await runGen(flatten(c, 12, true), 3000);
     const wall2 = countBlocks(dim, "minecraft:oak_planks", fx - 3, Y + 1, 8, fx + 3, Y + 3, 8);
     check("destroy everything: builds gone, chest kept", ra.ok && wall2 === 0 && dim.getBlock({ x: fx, y: Y + 1, z: 10 })?.typeId === "minecraft:chest", `planks=${wall2}`);
