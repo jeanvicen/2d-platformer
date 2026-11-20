@@ -623,7 +623,10 @@ function punch(c, owner) {
     if (look) at.y = Math.max(c.pos().y + 1, at.y + look.y * 8);
     const dim = c.dim();
     if (c.rec.settings.destroy !== false) smash(dim, at, 3.6);
+    // o golpe pega do punho até o chão (monstros pequenos não escapam por baixo)
     areaDamage(c, at, 6, 70, 2.6, 0.7);
+    areaDamage(c, { x: at.x, y: c.pos().y + 1, z: at.z }, 6, 70, 2.6, 0.7);
+    particle(dim, "lila:dust", { x: at.x, y: c.pos().y + 0.5, z: at.z });
     particle(dim, "lila:shock", at);
     particle(dim, "lila:dust", at);
     particle(dim, "lila:smoke", at);

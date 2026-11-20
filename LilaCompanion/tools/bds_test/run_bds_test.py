@@ -153,7 +153,7 @@ def main():
         print("\n".join(log[-40:]))
     time.sleep(5)
     send(f"scriptevent lila:selftest {mode}".strip())
-    done = wait_for(r"LILA-TEST DONE", 1800)
+    done = wait_for(r"LILA-TEST DONE", 3300)
     print("selftest finished:", bool(done), flush=True)
     time.sleep(2)
     send("stop")

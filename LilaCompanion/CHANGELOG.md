@@ -1,5 +1,34 @@
 # Changelog
 
+## 2.0.0 — DR-0N Mega Drone
+- **A Lila saiu.** O add-on agora é só o DR-0N (pacotes renomeados para "DR-0N Mega Drone";
+  arquivo `DR-0N_Mega_Drone.mcaddon`). Registros antigos da Lila são ignorados.
+- **Itens infinitos (criativo):** qualquer item do jogo por nome ("me dá um élitro") ou pelo menu;
+  o planejador materializa o que faltar na hora; "me fortalece" veste netherita encantada e entrega
+  armas, élitro, totem, maçãs e efeitos. Mais vida (300).
+- **Formas** (mesma entidade, troca hitbox, gravidade, assentos, escala e modelo): helicóptero
+  (metralhadora), carro esportivo, escavadeira (cava), tanque (torre gira com seu olhar, canhão),
+  caça a jato (mísseis), moto. Você entra no volante sozinho; agachar 2× sai e ele volta a ser drone.
+  Outros jogadores pegam carona; só o dono pilota (o "agachar = descer" fica desligado enquanto você
+  pilota, e volta sempre ao sair).
+- **Colosso TITÃ** (mecha-kaiju original, escala 3,4 ≈ 25 blocos): cabine na cabeça (piloto quase
+  imortal), cabines para passageiros, soco que destrói, pisão com onda de choque, raio de plasma,
+  rugido, passos que tremem a tela e derrubam o que estiver na frente. Fica colosso até "Cancelar".
+- **Torreta gigante:** pousa e vira uma arma fincada (metralhadora rotativa de 6 canos, lança-mísseis,
+  radar), mira em monstros e em quem te atacar.
+- **Proteção de verdade:** no modo proteger ataca primeiro (até 32 blocos); quem bater em você ou
+  nele vira alvo — jogadores também; bater nele você mesmo = lição de leve (configurável).
+- **Modo exército:** sobe, explode num clarão e vira 10 robôs-soldado (até 24) que seguem, protegem,
+  atiram laser, obedecem (atacar o que você olha, ir até lá, círculo, ficar) e trazem o que você
+  precisa (cura, comida, armadura, visão noturna, respiração, fogo, queda). "Cancelar" junta tudo.
+- **Construções gigantes:** castelo, cidade, vila, montanha-russa (trilhos funcionando + carrinho),
+  poço, labirinto, casa inteligente, montanha, pirâmide, farol, arranha-céu e estádio, com material
+  infinito, por partes (sem travar) e sem derrubar construção de jogador.
+- **Biomas:** neve, deserto, selva, cerejeiras, cogumelos, flores, floresta e pântano (raio 36).
+- **"Cancelar tudo" volta ao normal** de qualquer forma/modo.
+- **13 sons originais** sintetizados + novas partículas (clarão, fumaça, onda de choque, plasma,
+  poeira, fogo, faíscas de construção).
+
 ## 1.5.0
 - **Entende muito mais**: 102 jeitos comuns de falar viraram teste fixo ("bora", "cola em mim",
   "corre aqui", "fica de guarda", "faz o que quiser", "o que vc tem", "quero comida"...).

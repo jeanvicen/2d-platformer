@@ -12,7 +12,7 @@ from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IMG = os.path.join(ROOT, "docs", "img")
-RAW = "https://github.com/jeanvicen/2d-platformer/raw/ccr-4f2624e6-c75bcj/LilaCompanion/dist/Lila_Companion.mcaddon"
+RAW = "https://github.com/jeanvicen/2d-platformer/raw/ccr-4f2624e6-c75bcj/LilaCompanion/dist/DR-0N_Mega_Drone.mcaddon"
 
 
 def img(name, size, pixel=False):
@@ -24,10 +24,13 @@ def img(name, size, pixel=False):
 
 
 def tests_rows():
-    log = os.path.join(ROOT, "tests", "last_bds_run.log")
     rows = []
-    if os.path.exists(log):
+    for log in (os.path.join(ROOT, "tests", "last_bds_run.log"), os.path.join(ROOT, "tests", "last_bds_owner_run.log")):
+        if not os.path.exists(log):
+            continue
         for line in open(log, encoding="utf-8"):
+            if "arena chunks" in line:
+                continue
             m = re.search(r"LILA-TEST (PASS|FAIL) (.+?)( :: (.*))?$", line.strip())
             if m:
                 cls = "pass" if m.group(1) == "PASS" else "todo"
@@ -37,14 +40,13 @@ def tests_rows():
 
 
 def main():
-    addon = open(os.path.join(ROOT, "dist", "Lila_Companion.mcaddon"), "rb").read()
+    addon = open(os.path.join(ROOT, "dist", "DR-0N_Mega_Drone.mcaddon"), "rb").read()
     ver = ".".join(map(str, json.load(open(os.path.join(ROOT, "behavior_pack", "manifest.json")))["header"]["version"]))
     rep = {
         "%%PORTRAIT%%": img("portrait", 440),
-        "%%CONTROLLER%%": img("controller", 220),
-        "%%V0%%": img("lila_view_0", 300), "%%V2%%": img("lila_view_2", 300),
-        "%%PMINE%%": img("lila_pose_mine", 300), "%%PSIT%%": img("lila_pose_sit", 300),
-        "%%DRONE0%%": img("drone_view_0", 300), "%%DRONE1%%": img("drone_view_1", 300), "%%DRONETUR%%": img("drone_turret", 300), "%%DRONECTL%%": img("drone_controller", 220),
+        "%%DRONE0%%": img("drone_view_0", 300), "%%DRONECTL%%": img("drone_controller", 220),
+        **{f"%%F_{k.upper()}%%": img(f"form_{k}", 420 if k == "colossus" else 300) for k in ("heli", "car", "excavator", "tank", "jet", "moto", "colossus")},
+        "%%F_TURRET%%": img("form_turret_g", 300), "%%ROBOT%%": img("robot", 260),
         "%%TESTS%%": tests_rows(), "%%B64%%": base64.b64encode(addon).decode(),
         "%%SIZE%%": f"{len(addon) / 1024:.0f}", "%%SHA%%": hashlib.sha256(addon).hexdigest()[:16],
         "%%RAW%%": RAW, "%%VERSION%%": ver,

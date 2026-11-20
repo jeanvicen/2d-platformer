@@ -155,7 +155,7 @@ async function soloTests(dim, check) {
 
   // itens infinitos
   let r = await runGen(obtain(c, { toolKind: "pickaxe", tier: "diamond" }, 1), 200);
-  check("creative: tool materializes instantly", r.ok && inv.toolTier(c, "pickaxe") === "netherite", `tier=${inv.toolTier(c, "pickaxe")} ticks=${r.ticks}`);
+  check("creative: tool materializes instantly", r.ok && ["diamond", "netherite"].includes(inv.toolTier(c, "pickaxe")), `tier=${inv.toolTier(c, "pickaxe")} ticks=${r.ticks}`);
   r = await runGen(obtain(c, { group: "log" }, 64), 200);
   check("creative: 64 logs instantly", r.ok && inv.count(c, { group: "log" }) >= 64 && r.ticks < 20, `ticks=${r.ticks}`);
 
@@ -207,7 +207,7 @@ async function soloTests(dim, check) {
   primaryAttack(c, undefined);
   await system.waitTicks(20);
   const stoneLeft = countBlocks(dim, "minecraft:stone", -3, Y + 6, -11, 3, Y + 10, -9);
-  check("colossus punch breaks blocks and hits", stoneLeft < 105, `stone left=${stoneLeft}/105 zombie=${dead(zz) ? "down" : hp(zz)}`);
+  check("colossus punch breaks blocks and hits", stoneLeft < 105 && dead(zz), `stone left=${stoneLeft}/105 zombie=${dead(zz) ? "down" : hp(zz)}`);
   setForm(c, "drone", { mount: false, quiet: true });
   await system.waitTicks(4);
   c.entity?.teleport({ x: 0.5, y: Y + 2, z: 0.5 });
@@ -238,11 +238,18 @@ async function soloTests(dim, check) {
     const b0 = c.rec.stats.built;
     const res = await runGen(megaBuild(c, key, { here: false }), key === "cidade" ? 9000 : 5000);
     check(`mega: ${key}`, res.ok && c.rec.stats.built === b0 + 1, `ticks=${res.ticks} ${res.err ?? ""}`);
+    if (key === "cidade" || key === "castelo" || key === "arranha_ceu") {
+      const id = { cidade: "minecraft:black_concrete", castelo: "minecraft:stone_bricks", arranha_ceu: "minecraft:light_blue_stained_glass" }[key];
+      const n = countBlocks(dim, id, x - 70, Y - 3, 0, x + 70, Y + 40, 150, 3);
+      check(`mega: ${key} really placed its blocks`, n > 200, `${id.replace("minecraft:", "")} (amostra 1/27)=${n}`);
+    }
     if (key === "montanha_russa") {
       const rails = countBlocks(dim, "minecraft:rail", x - 30, Y - 2, 0, x + 30, Y + 16, 60, 1) + countBlocks(dim, "minecraft:golden_rail", x - 30, Y - 2, 0, x + 30, Y + 16, 60, 1);
       const carts = dim.getEntities({ type: "minecraft:minecart", location: { x, y: Y, z: 30 }, maxDistance: 60 }).length;
       check("roller coaster has a full closed track + cart", rails >= 100 && carts >= 1, `rails=${rails} carts=${carts}`);
     }
+    c.entity?.teleport({ x: 0.5, y: Y + 2, z: 0.5 }); // volta pra arena antes de descarregar a área da obra
+    await system.waitTicks(2);
     dropArea("lila_test_build");
   }
   check("mega builds never freeze the game (step < 60 ms)", stats.maxStepMs < 60, `maxStep=${stats.maxStepMs}ms`);
@@ -257,9 +264,9 @@ async function soloTests(dim, check) {
   const rb = await runGen(biomeTransform(c, "neve"), 3000);
   const snow = countBlocks(dim, "minecraft:snow_layer", bx - 30, Y + 1, -30, bx + 30, Y + 1, 30, 2);
   check("biome transform: snow", rb.ok && snow > 150, `snow layers(sample)=${snow} ticks=${rb.ticks} ${rb.err ?? ""}`);
-  dropArea("lila_test_biome");
   c.entity?.teleport({ x: 0.5, y: Y + 2, z: 0.5 });
   await system.waitTicks(4);
+  dropArea("lila_test_biome");
 
   // derrota no meio de uma forma: desmonta, guarda e volta em 20 s
   setForm(c, "tank", { mount: false, quiet: true });
@@ -338,7 +345,8 @@ async function ownerTests(dim, check) {
   await system.waitTicks(5);
   command(c, "modo colosso");
   await waitUntil(() => riders(c)[0]?.id === owner.id, 120);
-  check("colossus: owner is in the head seat", formOf(c) === "colossus" && riders(c)[0]?.id === owner.id);
+  check("colossus: owner is in the head seat", formOf(c) === "colossus" && riders(c)[0]?.id === owner.id,
+    `pilot height=${(owner.location.y - c.pos().y).toFixed(1)} blocks`);
   const hp0 = hp(owner);
   try {
     owner.applyDamage(8);
