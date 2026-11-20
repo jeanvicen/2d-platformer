@@ -36,7 +36,7 @@ export const LILA = registerSummon({
   color: { red: 0.25, green: 0.9, blue: 0.55 },
   chatTag: "§a§lLila§r§7 »§r ",
   defaults: { mode: "auto", roam: 64, hunt: false },
-  speed: 1, mineSpeed: 1.6, vision: 40, command: "lila:lila", recSuffix: "",
+  speed: 1, mineSpeed: 2.6, vision: 40, command: "lila:lila", recSuffix: "",
 });
 
 /**
@@ -55,7 +55,7 @@ export const DRONE = registerSummon({
   color: { red: 0.3, green: 0.75, blue: 1.0 },
   chatTag: "§b§lDR-0N§r§7 »§r ",
   defaults: { mode: "auto", roam: 160, hunt: false },
-  flying: true, speed: 2.2, mineSpeed: 3.2, vision: 64,
+  flying: true, speed: 2.2, mineSpeed: 5, vision: 64,
   gun: { damage: 5, every: 3, range: 28 },
   command: "lila:drone", recSuffix: ":drone",
   actionMap: { mine: "work", chop: "work", dig: "work", attack: "shoot", eat: "charge", sit: "turret", farm: "work",

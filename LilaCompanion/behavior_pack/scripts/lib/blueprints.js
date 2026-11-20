@@ -272,7 +272,8 @@ export const BLUEPRINTS = {
 /** Ordem de construção: fundação → piso → paredes de baixo para cima → telhado → detalhes. */
 export function buildOrder(blocks) {
   const prio = (m) => (m === "air" ? 0 : ["door_lower", "door_upper", "lantern", "lantern_post", "table", "chest", "crop", "fence"].includes(m) ? 2 : 1);
-  return [...blocks].sort((a, b) => prio(a.m) - prio(b.m) || a.y - b.y || a.z - b.z || a.x - b.x);
+  // camada por camada em zigue-zague (anda menos entre um bloco e outro)
+  return [...blocks].sort((a, b) => prio(a.m) - prio(b.m) || a.y - b.y || a.z - b.z || ((a.z & 1) ? b.x - a.x : a.x - b.x));
 }
 
 export function footprint(blocks) {

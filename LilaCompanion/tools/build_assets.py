@@ -29,10 +29,10 @@ from forge.lila_anims import ACTIONS, MOVES, action_controller, lila_anims, move
 from forge.lila_art import bake_lila, lila_model  # noqa: E402
 from forge.paint import bake  # noqa: E402
 from forge import drone_art  # noqa: E402
-from forge.drone_anims import DRONE_ACTIONS, drone_anims, drone_controllers  # noqa: E402
+from forge.drone_anims import DRONE_ACTIONS, PRE_ANIMATION, drone_anims, drone_controllers  # noqa: E402
 from forge.render import render  # noqa: E402
 
-VERSION = [1, 4, 0]
+VERSION = [1, 5, 0]
 MIN_ENGINE = [1, 26, 30]
 SERVER_VERSION = "2.8.0"
 SERVER_UI_VERSION = "2.1.0"
@@ -367,7 +367,7 @@ def build_drone(previews):
             "geometry": {"default": "geometry.lila.drone"},
             "animations": amap,
             "particle_effects": {"sparkle": "lila:sparkle"},
-            "scripts": {"animate": ["base", "look", "ctrl_move", "ctrl_act"]},
+            "scripts": {"initialize": ["v.turret_t = 0;"], "pre_animation": PRE_ANIMATION, "animate": ["base", "parts", "look", "ctrl_move", "ctrl_act"]},
             "render_controllers": ["controller.render.lila.lila"],
         }}})
     wjson(os.path.join(BP, "entities", "drone.json"), {
@@ -445,8 +445,11 @@ def build_drone(previews):
             "result": {"item": "lila:drone_controller"}}})
     if previews:
         os.makedirs(PREVIEW_DIR, exist_ok=True)
+        fly = {k: {"hide": True} for k in ("tripod", "shield", "cannon", "red_eye")}
+        tur = {"legs": {"hide": True}, **{f"arm{i}": {"scale": 0.38} for i in range(4)}, **{f"rotor{i}": {"scale": 0.3 / 0.38} for i in range(4)}}
         for i, (y, p) in enumerate(((-30, 18), (150, 22))):
-            wpng(os.path.join(PREVIEW_DIR, f"drone_view_{i}.png"), render(m, tex, size=520, yaw=y, pitch=p, outline=True))
+            wpng(os.path.join(PREVIEW_DIR, f"drone_view_{i}.png"), render(m, tex, size=520, yaw=y, pitch=p, pose=fly, outline=True))
+        wpng(os.path.join(PREVIEW_DIR, "drone_turret.png"), render(m, tex, size=520, yaw=-150, pitch=16, pose=tur, outline=True))
         wpng(os.path.join(PREVIEW_DIR, "drone_controller.png"), render(im, itex, size=360, yaw=-20, pitch=20, ssaa=3))
     return m
 

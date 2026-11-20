@@ -9,6 +9,7 @@ import { GoalError } from "./companion.js";
 import { blockAt, groundY } from "./world.js";
 import { canBreak, face, markPlaced, placeAt, quickBreak } from "./blocks.js";
 import { obtain, obtainAll } from "./planner.js";
+import { craft, planksFor } from "./crafting.js";
 import { fillBucket, reach } from "./resource.js";
 import * as inv from "./inventory.js";
 import { hold, setAction, sound } from "./anim.js";
@@ -89,6 +90,162 @@ function siteFree(c, blocks, site) {
   return true;
 }
 
+// ---------- materiais flexíveis (como jogador: usa o que tem, não trava por enfeite) ----------
+const SOLID_M = new Set(["planks", "cobble", "stone_bricks", "log", "slab"]);
+const FLOOR_M = new Set(["planks", "cobble", "stone_bricks"]);
+const SOLID_GROUND = /^minecraft:(dirt|grass_block|coarse_dirt|podzol|rooted_dirt|mycelium|stone|deepslate|andesite|diorite|granite|tuff|sandstone|red_sandstone|cobblestone|mud|packed_mud|clay|terracotta|.*_terracotta|calcite|dirt_with_roots)$/;
+const STONEISH = ["minecraft:cobblestone", "minecraft:stone_bricks", "minecraft:stone", "minecraft:cobbled_deepslate",
+  "minecraft:mossy_cobblestone", "minecraft:andesite", "minecraft:diorite", "minecraft:granite", "minecraft:tuff",
+  "minecraft:polished_andesite", "minecraft:polished_diorite", "minecraft:polished_granite", "minecraft:deepslate_bricks",
+  "minecraft:sandstone", "minecraft:blackstone"];
+const LOG_RE = /^minecraft:(?!stripped_)[a-z_]+_(log|stem)$/;
+const SEEDS = ["minecraft:wheat_seeds", "minecraft:carrot", "minecraft:potato", "minecraft:beetroot_seeds"];
+
+/** Unidades de bloco sólido que ela consegue pôr (tronco vale 4: vira 4 tábuas). */
+export function solidUnits(c) {
+  let n = 0;
+  for (const [id, k] of Object.entries(inv.summary(c))) {
+    if (id.endsWith("_planks")) n += k;
+    else if (LOG_RE.test(id)) n += 4 * k;
+    else if (STONEISH.includes(id)) n += k;
+  }
+  return n;
+}
+
+function scaffoldUnits(c) {
+  let n = 0;
+  for (const id of ["minecraft:dirt", "minecraft:cobbled_deepslate", "minecraft:netherrack", "minecraft:sand"]) n += inv.count(c, id);
+  return n;
+}
+
+/**
+ * Lista de compras inteligente: paredes/chão viram "blocos sólidos" (qualquer tábua/pedra serve),
+ * vidro/tochas são opcionais (janela fica aberta), sementes começam com até 8 e água só se já
+ * tiver balde (sem balde, a plantação usa terra arada molhada no lugar da água).
+ */
+export function planMaterials(c, blocks, wood, wantCrop) {
+  const raw = shoppingList(blocks, wood);
+  const list = {};
+  let solidNeed = 0;
+  const skipped = [];
+  for (const b of blocks) if (SOLID_M.has(b.m)) solidNeed++;
+  for (const [id, n] of Object.entries(raw)) {
+    if (/_planks$|_log$|^minecraft:cobblestone$|^minecraft:stone_bricks$|_slab$/.test(id)) continue; // já no solidNeed
+    if (id === "minecraft:glass") {
+      if (inv.count(c, id) < n) skipped.push("vidro (janela aberta)");
+      continue;
+    }
+    if (id === "minecraft:torch") {
+      // tocha só se der pra fazer na hora (carvão no bolso); senão fica pra depois
+      if (inv.count(c, id) < n && inv.count(c, { group: "coal" }) > 0) list[id] = Math.min(n, inv.count(c, id) + inv.count(c, { group: "coal" }) * 4);
+      else if (inv.count(c, id) < n) skipped.push("tochas");
+      continue;
+    }
+    if (id === "minecraft:water_bucket") {
+      if (inv.count(c, id) > 0 || inv.count(c, "minecraft:bucket") > 0) list[id] = 1;
+      continue;
+    }
+    if (id === "minecraft:wheat_seeds") continue; // tratado abaixo
+    list[id] = n;
+  }
+  const noWater = !!raw["minecraft:water_bucket"] && !list["minecraft:water_bucket"];
+  let crop = wantCrop;
+  if (raw["minecraft:wheat_seeds"]) {
+    if (inv.count(c, crop) < 1 && crop !== "minecraft:wheat_seeds") crop = SEEDS.find((sd) => inv.count(c, sd) > 0) ?? "minecraft:wheat_seeds";
+    const have = SEEDS.reduce((a, sd) => a + inv.count(c, sd), 0);
+    const target = Math.min(raw["minecraft:wheat_seeds"], 8);
+    if (have < target) list[crop] = inv.count(c, crop) + (target - have);
+  }
+  if (blocks.some((b) => b.m === "farmland")) list["minecraft:wooden_hoe"] = 1;
+  return { list, solidNeed, crop, noWater, skipped };
+}
+
+/** Garante mais `n` blocos sólidos (troncos: 1 árvore ≈ 20 tábuas). */
+function* obtainSolid(c, n, o) {
+  const logs = inv.count(c, { group: "log" }) + Math.ceil(n / 4);
+  yield* obtain(c, { group: "log" }, logs, o);
+}
+
+/** Escolhe o que pôr num espaço de parede/chão: o preferido, senão qualquer tábua/pedra/tronco. */
+function* pickSolid(c, m, wood) {
+  const pref = blueprintItem(m, wood);
+  const s = inv.summary(c);
+  const has = (id) => (s[id] ?? 0) > 0;
+  if (pref && has(pref)) {
+    const states = m === "log" ? { pillar_axis: "y" } : m === "slab" ? { "minecraft:vertical_half": "bottom" } : undefined;
+    return { id: blueprintBlock(m, wood), item: pref, states };
+  }
+  const planks = Object.keys(s).find((id) => id.endsWith("_planks") && s[id] > 0);
+  const stone = STONEISH.find(has);
+  const log = Object.keys(s).find((id) => LOG_RE.test(id) && s[id] > 0);
+  const order = m === "cobble" || m === "stone_bricks" ? ["stone", "planks", "convert", "log"] : m === "log" ? ["log", "planks", "stone"] : ["planks", "convert", "stone", "log"];
+  for (const k of order) {
+    if (k === "planks" && planks) return { id: planks, item: planks };
+    if (k === "stone" && stone) return { id: stone, item: stone };
+    if (k === "log" && log) return { id: log, item: log, states: { pillar_axis: "y" } };
+    if (k === "convert" && log) {
+      try {
+        yield* craft(c, planksFor(c), inv.count(c, planksFor(c)) + 4);
+      } catch (e) {
+        logError("build.planks", e);
+        continue;
+      }
+      const p = planksFor(c);
+      if (inv.count(c, p) > 0) return { id: p, item: p };
+    }
+  }
+  return null;
+}
+
+const ACCEPT_SOLID = (id) => id.endsWith("_planks") || LOG_RE.test(id) || STONEISH.includes(id) || id.endsWith("_slab");
+
+/** Uma passada pela obra. Devolve quantos blocos sólidos faltaram. */
+function* placePass(c, order, site, wood, st) {
+  const dim = c.dim();
+  const r = c.def?.flying ? 6 : 4.8;
+  let short = 0;
+  for (const b of order) {
+    if (!c.alive()) return 0;
+    yield* breathe();
+    if (b.m === "door_upper") continue;
+    const w = toWorld(site, b);
+    const cur = blockAt(dim, w.x, w.y, w.z);
+    if (!cur) continue;
+    let m = b.m;
+    if (m === "glass" && inv.count(c, "minecraft:glass") < 1) m = "air"; // janela aberta
+    if (m === "water" && (c.flags.noWater || (inv.count(c, "minecraft:water_bucket") < 1 && inv.count(c, "minecraft:bucket") < 1))) m = "farmland";
+    if (m === "air") {
+      if (!cur.isAir && !cur.isLiquid && canBreak(c, dim, w, cur.typeId) && !REPLACEABLE.test(cur.typeId)) {
+        if (yield* reach(c, w, r)) yield* quickBreak(c, w, { strict: false });
+      }
+      continue;
+    }
+    const want = blueprintBlock(m, wood);
+    if (cur.typeId === want) continue;
+    if (SOLID_M.has(m) && ACCEPT_SOLID(cur.typeId)) continue; // já tem bloco bom ali (de outra madeira/pedra)
+    if (m === "farmland" && cur.typeId === "minecraft:farmland") continue;
+    // sem o item: nem anda até lá
+    if ((m === "lantern" || m === "lantern_post") && inv.count(c, "minecraft:torch") < 1 && inv.count(c, "minecraft:lantern") < 1) continue;
+    if (m === "crop" && !SEEDS.some((sd) => inv.count(c, sd) > 0)) continue;
+    if (m === "fence" && inv.count(c, blueprintItem("fence", wood)) < 1 && !Object.keys(inv.summary(c)).some((id) => id.endsWith("_fence"))) continue;
+    if (SOLID_M.has(m) && solidUnits(c) < 1) {
+      short++;
+      continue;
+    }
+    if (!cur.isAir && !REPLACEABLE.test(cur.typeId)) {
+      if (!canBreak(c, dim, w, cur.typeId)) continue; // nunca mexe no que é do jogador
+      if (!(yield* reach(c, w, r))) continue;
+      yield* quickBreak(c, w, { strict: false });
+    }
+    if (!(yield* reach(c, w, r))) continue;
+    const ok = yield* placeOne(c, { ...b, m }, w, wood, site);
+    if (ok) st.placed++;
+    else if (SOLID_M.has(m)) short++;
+    if (st.placed % 40 === 39) say(c, `Obra em andamento: ${Math.min(99, Math.round((st.placed / st.total) * 100))}%`, { chatter: true });
+  }
+  return short;
+}
+
 /**
  * Constrói uma planta inteira.
  * @param {Companion} c
@@ -103,60 +260,58 @@ export function* buildBlueprint(c, key, o = {}) {
   const site = o.site ?? chooseSite(c, blocks, !!o.here);
   if (!site) throw new GoalError("não achei um terreno livre aqui perto (não vou derrubar suas construções). Tenta outro lugar?");
   c.flags.buildSite = site;
-  // lista de compras (já descontando o que ela tem)
-  const list = shoppingList(blocks, wood);
-  const crop = o.crop ?? "minecraft:wheat_seeds";
+  const dim = c.dim();
+  // chão: onde o terreno já é sólido e natural, ela aproveita (economiza material e tempo)
+  const minY = Math.min(...blocks.map((b) => b.y));
+  const skip = new Set();
+  for (const b of blocks) {
+    if (b.y !== minY || !FLOOR_M.has(b.m)) continue;
+    const w = toWorld(site, b);
+    const blk = blockAt(dim, w.x, w.y, w.z);
+    if (blk && !blk.isAir && !blk.isLiquid && !REPLACEABLE.test(blk.typeId) && SOLID_GROUND.test(blk.typeId)) skip.add(`${b.x},${b.y},${b.z}`);
+  }
+  const effective = blocks.filter((b) => !skip.has(`${b.x},${b.y},${b.z}`));
+  const plan = planMaterials(c, effective, wood, o.crop ?? "minecraft:wheat_seeds");
+  const { list, solidNeed, crop } = plan;
   c.flags.crop = crop;
-  if (list["minecraft:wheat_seeds"]) {
-    list[crop] = list["minecraft:wheat_seeds"];
-    if (crop !== "minecraft:wheat_seeds") delete list["minecraft:wheat_seeds"];
-  }
-  // fundação: estima buracos a preencher
+  c.flags.noWater = plan.noWater;
+  // fundação: estima buracos a preencher (terra serve; nada de minerar pedra só pra isso)
   const fill = estimateFill(c, blocks, site);
-  if (fill > 0) list["minecraft:cobblestone"] = (list["minecraft:cobblestone"] ?? 0) + fill;
-  if (blocks.some((b) => b.m === "farmland")) list["minecraft:wooden_hoe"] = 1;
-  const missing = Object.entries(list).filter(([id, n]) => inv.count(c, id) < n);
+  const scaffold = scaffoldUnits(c);
+  if (fill > scaffold) list["minecraft:dirt"] = inv.count(c, "minecraft:dirt") + (fill - scaffold);
+  const solidShort = Math.max(0, solidNeed - solidUnits(c));
+  const missing = Object.entries(list).filter(([id, n]) => inv.count(c, id) < n).map(([id, n]) => `${n - inv.count(c, id)} ${ptName(id)}`);
+  if (solidShort > 0) missing.unshift(`${solidShort} blocos (tábuas ou pedra)`);
   if (missing.length) {
-    const txt = missing.slice(0, 6).map(([id, n]) => `${n - inv.count(c, id)} ${ptName(id)}`).join(", ");
-    say(c, `Pra ${bp.name.toLowerCase()} eu preciso de: ${txt}${missing.length > 6 ? "..." : ""}. Vou juntar tudo!`, { force: !!o.cmd });
+    say(c, `Pra ${bp.name.toLowerCase()} falta: ${missing.slice(0, 5).join(", ")}${missing.length > 5 ? "..." : ""}. Já vou buscar!`, { force: !!o.cmd });
   }
+  if (plan.skipped.length) say(c, `Sem ${plan.skipped.join(", ")} por enquanto: vou fazer sem e coloco depois.`, { chatter: true });
   if (list["minecraft:wooden_hoe"]) {
     delete list["minecraft:wooden_hoe"];
     if (inv.toolTier(c, "hoe") === "none") yield* obtain(c, { toolKind: "hoe", tier: "wooden" }, 1, o);
   }
   yield* obtainAll(c, list, o);
+  // material de parede/chão: madeira rende 4 tábuas por tronco, então é o jeito mais rápido
+  if (solidShort > 0) yield* obtainSolid(c, solidShort, o);
   say(c, `Materiais prontos! Começando ${bp.name.toLowerCase()}.`, { force: !!o.cmd });
-  const dim = c.dim();
   // limpeza do interior (só natural) e fundação
   yield* clearInterior(c, blocks, site);
   yield* fillFoundation(c, blocks, site);
-  const order = buildOrder(blocks);
-  let placed = 0;
-  for (const b of order) {
-    if (!c.alive()) return false;
-    yield* breathe();
-    if (b.m === "door_upper") continue;
-    const w = toWorld(site, b);
-    const want = blueprintBlock(b.m, wood);
-    const cur = blockAt(dim, w.x, w.y, w.z);
-    if (!cur) continue;
-    if (b.m === "air") {
-      if (!cur.isAir && canBreak(c, dim, w, cur.typeId)) {
-        if (yield* reach(c, w, 4)) yield* quickBreak(c, w, { strict: false });
-      }
-      continue;
+  const order = buildOrder(effective);
+  const st = { placed: 0, total: order.length };
+  for (let pass = 0; pass < 3 && c.alive(); pass++) {
+    const short = yield* placePass(c, order, site, wood, st);
+    if (!short || !c.alive()) break;
+    // faltou bloco (drops/gastos no caminho): busca mais e completa os buracos
+    say(c, `Faltaram ${short} blocos, vou buscar mais e terminar.`, { chatter: true });
+    try {
+      yield* obtainSolid(c, short, o);
+    } catch (e) {
+      if (!(e instanceof GoalError)) throw e;
+      break;
     }
-    if (cur.typeId === want) continue;
-    if (!cur.isAir && !REPLACEABLE.test(cur.typeId)) {
-      if (!canBreak(c, dim, w, cur.typeId)) continue; // nunca mexe no que é do jogador
-      if (!(yield* reach(c, w, 4))) continue;
-      yield* quickBreak(c, w, { strict: false });
-    }
-    if (!(yield* reach(c, w, 4.2))) continue;
-    const ok = yield* placeOne(c, b, w, wood, site);
-    if (ok) placed++;
-    if (placed % 40 === 39) say(c, `Obra em andamento: ${Math.round((placed / order.length) * 100)}%`, { chatter: true });
   }
+  if (!c.alive()) return false;
   setAction(c.entity, "celebrate");
   sound(c.entity, "random.levelup", 0.6, 1.2);
   yield 40;
@@ -285,7 +440,7 @@ function* placeOne(c, b, w, wood, site) {
       face(c, w);
       hold(c.entity, hoe?.id);
       setAction(c.entity, "farm");
-      yield 5;
+      yield 3;
       try {
         blockAt(dim, w.x, w.y, w.z)?.setPermutation(BlockPermutation.resolve("minecraft:farmland", { moisturized_amount: 7 }));
         sound(c.entity, "use.gravel", 0.8, 1);
@@ -323,11 +478,21 @@ function* placeOne(c, b, w, wood, site) {
       if (below?.typeId !== "minecraft:farmland") return false;
       return yield* placeAt(c, w, cropBlock, seed, { growth: 0 });
     }
+    case "fence": {
+      const pref = blueprintItem("fence", wood);
+      const item = inv.count(c, pref) > 0 ? pref : Object.keys(inv.summary(c)).find((id) => id.endsWith("_fence"));
+      if (!item) return false;
+      return yield* placeAt(c, w, item, item);
+    }
     default: {
+      if (SOLID_M.has(b.m)) {
+        const pick = yield* pickSolid(c, b.m, wood);
+        if (!pick) return false;
+        return yield* placeAt(c, w, pick.id, pick.item, pick.states);
+      }
       const id = blueprintBlock(b.m, wood);
       const item = blueprintItem(b.m, wood);
-      const states = b.m === "log" ? { pillar_axis: "y" } : b.m === "slab" ? { "minecraft:vertical_half": "bottom" } : undefined;
-      return yield* placeAt(c, w, id, item ?? null, states);
+      return yield* placeAt(c, w, id, item ?? null);
     }
   }
 }

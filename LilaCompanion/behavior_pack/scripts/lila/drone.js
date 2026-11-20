@@ -225,7 +225,8 @@ export function shoot(c, target) {
 }
 
 /** Combate à distância: flutua numa boa posição e metralha. */
-export function* gunFight(c, target, maxTicks = 500) {
+/** @param {{loc?:any}} [box] recebe a última posição do alvo (para recolher os drops) */
+export function* gunFight(c, target, maxTicks = 500, box) {
   const t0 = system.currentTick;
   const every = c.def?.gun?.every ?? 3;
   let last = 0;
@@ -239,6 +240,7 @@ export function* gunFight(c, target, maxTicks = 500) {
       }
       if (hp <= 0) break;
       const tl = target.location;
+      if (box) box.loc = tl;
       const p = c.pos();
       const d = d3(p, tl);
       if (d > 48) break;
@@ -263,24 +265,94 @@ export function* gunFight(c, target, maxTicks = 500) {
   return dead;
 }
 
-/** Modo torreta: pousa, trava as pernas e metralha tudo que for hostil num raio grande. */
+/** Primeiro chão firme logo abaixo (não o topo da árvore acima dele). */
+function groundBelow(dim, x, z, fromY) {
+  for (let y = Math.floor(fromY); y > fromY - 48; y--) {
+    const b = blockAt(dim, Math.floor(x), y, Math.floor(z));
+    if (!b) return undefined;
+    if (b.isLiquid) return y + 1;
+    if (!b.isAir && !/grass$|fern|flower|torch|snow_layer|leaf_litter|bush|petals|vine/.test(b.typeId)) return y + 1;
+  }
+  return undefined;
+}
+
+/**
+ * Pouso de verdade: desce suave até encostar no chão e encaixa no centro do bloco.
+ * @returns {Generator<any, Vec|undefined>}
+ */
+export function* land(c) {
+  const dim = c.dim();
+  const e = c.entity;
+  if (!e?.isValid) return undefined;
+  let p = c.pos();
+  let gy = groundBelow(dim, p.x, p.z, p.y + 0.5);
+  if (gy === undefined || p.y - gy > 30) {
+    // sem chão por perto (vazio/muito alto): pousa do lado do dono
+    const o = c.owner();
+    if (o && o.dimension.id === dim.id) {
+      yield* flyTo(c, { x: o.location.x + 2, y: o.location.y + 2, z: o.location.z + 2 }, { reach: 1.4, yTol: 2, timeout: 200 });
+      p = c.pos();
+      gy = groundBelow(dim, p.x, p.z, p.y + 0.5);
+    }
+    if (gy === undefined) return undefined;
+  }
+  for (let t = 0; t < 120 && c.alive(); t++) {
+    p = c.pos();
+    const dy = p.y - gy;
+    if (dy <= 0.2) break;
+    try {
+      const v = e.getVelocity();
+      const want = -Math.min(0.55, 0.1 + dy * 0.22);
+      e.applyImpulse({ x: -v.x * 0.8, y: want - v.y, z: -v.z * 0.8 });
+    } catch {
+      break;
+    }
+    setMove(e, "walk");
+    yield 1;
+  }
+  const spot = { x: Math.floor(p.x) + 0.5, y: gy, z: Math.floor(p.z) + 0.5 };
+  try {
+    e.teleport(spot, { keepVelocity: false });
+  } catch (err) {
+    logError("drone.land", err);
+  }
+  hover(c);
+  return spot;
+}
+
+/** Modo torreta: pousa, se transforma (tripé, escudo, canhão) e metralha tudo que for hostil. */
 export function* turret(c) {
   const dim = c.dim();
-  const p = c.pos();
-  const ground = surfaceY(dim, p.x, p.z, p.y);
-  yield* flyTo(c, { x: p.x, y: ground, z: p.z }, { reach: 0.8, yTol: 0.6, timeout: 120 });
-  hover(c);
-  setAction(c.entity, "sit"); // → "turret" no drone
-  say(c, "Modo torreta ativado. Ninguém passa!", { force: true });
+  const anchor = yield* land(c);
+  if (!anchor) {
+    say(c, "Não achei chão firme pra virar torreta aqui. Me leva pra perto do chão!", { force: true });
+    c.rec.mode = "follow";
+    return;
+  }
+  setAction(c.entity, "sit"); // → "turret" no drone: o modelo desdobra tripé, escudo e canhão
+  sound(c.entity, "random.anvil_land", 0.35, 1.6);
+  particle(dim, "lila:sparkle", { x: anchor.x, y: anchor.y + 0.3, z: anchor.z });
+  yield 12;
+  sound(c.entity, "random.door_close", 0.6, 0.6);
+  say(c, "Modo torreta ativado: tripé travado, canhão armado. Ninguém passa!", { force: true });
   let last = 0;
   try {
     while (c.alive() && c.rec.mode === "turret") {
+      // pernas travadas: se algo empurrar, volta pro lugar
+      const p = c.pos();
+      if (Math.abs(p.x - anchor.x) > 0.3 || Math.abs(p.z - anchor.z) > 0.3 || Math.abs(p.y - anchor.y) > 0.3) {
+        try {
+          c.entity?.teleport(anchor, { keepVelocity: false });
+        } catch {
+          /* ignore */
+        }
+      }
       let target;
       try {
         const o = c.owner();
         const centers = [c.pos(), ...(o ? [o.location] : [])];
         for (const ce of centers) {
-          for (const e of dim.getEntities({ location: ce, maxDistance: (c.def?.gun?.range ?? 24) + 6, families: ["monster"] })) {
+          for (const e of dim.getEntities({ location: ce, maxDistance: (c.def?.gun?.range ?? 24) + 8, families: ["monster"] })) {
             if (!canAttack(c, e) || !isHostile(e)) continue;
             if (!target || d3(e.location, c.pos()) < d3(target.location, c.pos())) target = e;
           }
@@ -292,7 +364,7 @@ export function* turret(c) {
         last = system.currentTick;
         setAction(c.entity, "sit");
       } else if (!target && system.currentTick % 40 === 0) {
-        // vigia: gira devagar
+        // vigia: o canhão gira devagar procurando alvo
         try {
           const r = c.entity?.getRotation();
           if (r) c.entity?.setRotation({ x: 0, y: r.y + 25 });
@@ -305,6 +377,15 @@ export function* turret(c) {
     }
   } finally {
     setAction(c.entity, "idle");
+    if (c.alive()) {
+      sound(c.entity, "random.door_open", 0.6, 0.7);
+      // decola de volta
+      try {
+        c.entity?.applyImpulse({ x: 0, y: 0.5, z: 0 });
+      } catch {
+        /* ignore */
+      }
+    }
   }
 }
 

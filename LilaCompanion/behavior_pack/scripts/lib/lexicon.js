@@ -34,7 +34,7 @@ export const ITEMS = [
   { words: ["pao", "paes", "bread"], id: "minecraft:bread", def: 8 },
   { words: ["maca", "macas", "apple"], id: "minecraft:apple", def: 4 },
   { words: ["frutinha", "frutinhas", "frutas vermelhas", "baga", "bagas", "berries"], id: "minecraft:sweet_berries", def: 8 },
-  { words: ["carne", "carnes", "bife", "bifes", "meat"], id: "minecraft:cooked_beef", def: 8 },
+  { words: ["carne", "carnes", "bife", "bifes", "meat"], group: "food", def: 8 },
   { words: ["comida", "comidas", "comer", "alimento", "alimentos", "food", "lanche", "rango"], group: "food", def: 8 },
   { words: ["tocha", "tochas", "torch", "torches"], id: "minecraft:torch", def: 16 },
   { words: ["bau", "baus", "chest"], id: "minecraft:chest", def: 1 },
@@ -89,7 +89,7 @@ export const TIER_WORDS = {
 export const BLUEPRINT_WORDS = {
   mansao: ["mansao", "mansoes", "castelo", "palacio", "mansion"],
   casa: ["casa", "casas", "casinha", "lar", "house"],
-  cabana: ["cabana", "cabaninha", "barraco", "choupana", "cabin"],
+  cabana: ["base", "cabana", "cabaninha", "barraco", "choupana", "cabin"],
   torre: ["torre", "torres", "vigia", "tower"],
   muralha: ["muralha", "muro", "parede", "wall"],
   ponte: ["ponte", "bridge"],

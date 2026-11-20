@@ -13,6 +13,7 @@ ORANGE = Paint(mat="glow", color=(255, 150, 40), color2=(255, 230, 170), seed=29
 STRIPE = Paint(mat="metal", color=(210, 214, 222), color2=(255, 255, 255), seed=31,
                decals=[("sides", "stripe_band", {"from": 0.2, "to": 0.7, "color": (250, 170, 40)})])
 GLASS = Paint(mat="crystal", color=(20, 120, 170), color2=(190, 240, 255), seed=33)
+RED = Paint(mat="glow", color=(255, 40, 40), color2=(255, 190, 170), seed=35)
 
 
 def drone_model():
@@ -67,6 +68,38 @@ def drone_model():
         legs.cube((sx * 5 - 0.75, 3, -4), (1.5, 6, 1.5), GRAPH)
         legs.cube((sx * 5 - 0.75, 3, 2.5), (1.5, 6, 1.5), GRAPH)
         legs.cube((sx * 5 - 1.25, 2, -6), (2.5, 1, 11), WHITE)
+    # ---- peças do modo torreta (escondidas em voo; aparecem desdobrando quando ele pousa) ----
+    # tripé: fica preso ao chão (filho da raiz, não do corpo)
+    tri = m.bone("tripod", "root", pivot=(0, 9, 0))
+    tri.cube((-2.5, 0, -2.5), (5, 9, 5), GRAPH)                  # coluna central
+    tri.cube((-3.5, 7, -3.5), (7, 2, 7), DARK)                    # anel do giro
+    for fx, fz in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
+        for k in range(3):                                         # perna em degraus abrindo pra fora
+            t = (k + 1) / 3
+            tri.cube((fx * (2 + 5 * t) - 1, 4 - k * 1.5, fz * (2 + 5 * t) - 1), (2, 2, 2), GRAPH)
+        tri.cube((fx * 8 - 1.5, 0, fz * 8 - 1.5), (3, 1, 3), WHITE)   # sapata
+        tri.cube((fx * 8 - 0.5, 1, fz * 8 - 0.5), (1, 0.5, 1), ORANGE)
+    # escudo frontal com visor
+    sh = m.bone("shield", "body", pivot=(0, 12, -9))
+    sh.cube((-10, 8, -12), (20, 3, 1.5), GRAPH)
+    sh.cube((-10, 14, -12), (20, 4, 1.5), GRAPH)
+    sh.cube((-10, 11, -12), (6, 3, 1.5), GRAPH)
+    sh.cube((4, 11, -12), (6, 3, 1.5), GRAPH)
+    sh.cube((-10, 17.5, -12.2), (20, 0.5, 1), ORANGE)
+    for sx in (-1, 1):
+        sh.cube((sx * 10 - (1.5 if sx > 0 else 0), 8, -11), (1.5, 9, 6), WHITE)   # abas laterais
+    # canhão duplo pesado em cima do corpo
+    cg = m.bone("cannon", "body", pivot=(0, 20, 0))
+    cg.cube((-4.5, 19, -4.5), (9, 3, 9), DARK)
+    cg.cube((-3.5, 22, -3), (7, 3, 6), GRAPH)
+    for bx in (-2.5, 1):
+        cg.cube((bx, 22.75, -19), (1.5, 1.5, 16), GRAPH)
+        cg.cube((bx - 0.25, 22.5, -20), (2, 2, 1.5), ORANGE)
+    cg.cube((-4.6, 22.5, -1), (0.6, 1, 3), CYAN)
+    cg.cube((4, 22.5, -1), (0.6, 1, 3), CYAN)
+    # olho vermelho de alvo
+    red = m.bone("red_eye", "eye", pivot=(0, 13.5, -10))
+    red.cube((-2.5, 12, -10.3), (5, 3, 0.6), RED)
     return m
 
 

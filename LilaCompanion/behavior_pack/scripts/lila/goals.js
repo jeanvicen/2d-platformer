@@ -401,6 +401,7 @@ export function runGoal(c, g) {
           yield* obtainFood(c, Math.min(a.count ?? 8, 6), { cmd, quick: true });
         }
         const stacks = inv.takeStacks(c, { group: "food" }, a.count ?? 8);
+        if (!stacks.length) throw new GoalError("não consegui comida agora. Tenta \"faz uma plantação\" ou me deixa caçar", "food");
         yield* deliver(c, stacks, "de comida");
         return;
       }

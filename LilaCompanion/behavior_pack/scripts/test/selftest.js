@@ -201,11 +201,30 @@ async function ownerTests(dim, check) {
   command(c, "arranja comida pra mim");
   await waitUntil(() => pcount(isFood) > food0, 1800);
   check("'arranja comida pra mim' brings food within 90 s", pcount(isFood) > food0, `food=${pcount(isFood)} ticks=${system.currentTick - tf} job=${c.job?.desc?.type ?? "-"}`);
+  const built0 = c.rec.stats.built;
   // ferramenta pedida é fabricada e entregue
   const tp = system.currentTick;
   command(c, "faz uma picareta de pedra");
   await waitUntil(() => pcount((id) => id === "minecraft:stone_pickaxe") > 0, 3600);
   check("'faz uma picareta de pedra' crafts and delivers", pcount((id) => id === "minecraft:stone_pickaxe") > 0, `ticks=${system.currentTick - tp} job=${c.job?.desc?.type ?? "-"}`);
+  // construção rápida: cabana só com troncos (sem vidro/tocha/pedra: ela adapta e não trava)
+  owner.teleport({ x: 0.5, y: Y + 1, z: 30.5 }, { rotation: { x: 0, y: 0 } });
+  await system.waitTicks(10);
+  inv.addId(c, "minecraft:oak_log", 48);
+  const tb = system.currentTick;
+  command(c, "constroi uma cabana aqui");
+  await waitUntil(() => c.rec.stats.built > built0 || (c.rec.goals.length === 0 && system.currentTick - tb > 60), 4800);
+  check("'constrói uma cabana' (só troncos) termina em até 4 min", c.rec.stats.built > built0, `ticks=${system.currentTick - tb} job=${c.job?.desc?.type ?? "-"} err=${c.lastError ?? "-"}`);
+  // plantação rápida: poucas sementes e sem balde → planta o que tem e usa terra molhada
+  owner.teleport({ x: -20.5, y: Y + 1, z: 30.5 }, { rotation: { x: 0, y: 0 } });
+  await system.waitTicks(10);
+  inv.addId(c, "minecraft:wheat_seeds", 6);
+  inv.addId(c, "minecraft:oak_log", 16);
+  const tz = system.currentTick;
+  const built1 = c.rec.stats.built;
+  command(c, "faz uma plantação aqui");
+  await waitUntil(() => c.rec.stats.built > built1 || (c.rec.goals.length === 0 && system.currentTick - tz > 60), 3600);
+  check("'faz uma plantação' (6 sementes, sem balde) termina em até 3 min", c.rec.stats.built > built1 && !!c.rec.farm, `ticks=${system.currentTick - tz} job=${c.job?.desc?.type ?? "-"} err=${c.lastError ?? "-"}`);
   // me dá tudo: fica só com as ferramentas
   command(c, "me dá tudo");
   await waitUntil(() => c.rec.goals.length === 0, 600);
@@ -250,6 +269,18 @@ async function droneTests(dim, check, owner, pcount) {
   command(d, "modo torreta");
   const tt = system.currentTick;
   await waitUntil(() => zs.every((z) => !z.isValid || (z.getComponent("minecraft:health")?.currentValue ?? 0) <= 0), 500);
+  {
+    const gp = d.pos();
+    let gy = gp.y;
+    for (let y = Math.floor(gp.y); y > gp.y - 20; y--) {
+      const b = dim.getBlock({ x: Math.floor(gp.x), y, z: Math.floor(gp.z) });
+      if (b && !b.isAir) {
+        gy = y + 1;
+        break;
+      }
+    }
+    check("drone: turret lands on the ground and transforms", Math.abs(gp.y - gy) < 0.4 && d.entity?.getProperty("lila:action") === "turret", `h=${(gp.y - gy).toFixed(2)} act=${d.entity?.getProperty("lila:action")}`);
+  }
   check("drone: turret mode kills 3 zombies", zs.every((z) => !z.isValid || (z.getComponent("minecraft:health")?.currentValue ?? 0) <= 0) && d.rec.mode === "turret", `ticks=${system.currentTick - tt}`);
   // carona
   handleIntents(d, [{ type: "follow" }]);
@@ -270,6 +301,13 @@ async function droneTests(dim, check, owner, pcount) {
   const tg = system.currentTick;
   await waitUntil(() => pcount((id) => /_log$/.test(id)) >= logs0 + 4, 2400);
   check("drone: 'pega 4 madeira' (flying) delivers", pcount((id) => /_log$/.test(id)) >= logs0 + 4, `ticks=${system.currentTick - tg}`);
+  // comida: abate a vaca de longe e desce pra recolher a carne e entregar
+  for (let k = 0; k < 3; k++) dim.spawnEntity("minecraft:cow", { x: 6 + k, y: Y + 1, z: 16 });
+  const dfood0 = pcount(isFood);
+  const tdf = system.currentTick;
+  command(d, "quero comida");
+  await waitUntil(() => pcount(isFood) > dfood0, 1600);
+  check("drone: 'quero comida' hunts, picks up and delivers food", pcount(isFood) > dfood0, `food=${pcount(isFood)} ticks=${system.currentTick - tdf} job=${d.job?.desc?.type ?? "-"}`);
   check("drone: scan reports owner", scanOwner(d, true).includes("vida"));
   check("drone: missions list", missions(d).length >= 8);
   check("drone: lila still alive alongside", !!loadCompanion(owner, "lila").alive());
@@ -364,7 +402,8 @@ export async function runSelfTest(mode = "") {
       const w = toWorld(site, b);
       const id = dim.getBlock(w)?.typeId;
       const want = blueprintBlock(b.m, "oak");
-      if (id === want || (b.m.startsWith("lantern") && id && id !== "minecraft:air")) okBlocks++;
+      const solid = ["planks", "cobble", "stone_bricks", "log", "slab"].includes(b.m) && id && id !== "minecraft:air" && !/water|grass$|flower/.test(id);
+      if (id === want || solid || (b.m === "glass" && id === "minecraft:air") || (b.m.startsWith("lantern") && id && id !== "minecraft:air")) okBlocks++;
     }
     const total = plan.filter((b) => b.m !== "door_upper" && b.m !== "air").length;
     check("build 'abrigo' from blueprint", r.ok && okBlocks / total >= 0.9, `${okBlocks}/${total} ${r.err ?? ""}`);

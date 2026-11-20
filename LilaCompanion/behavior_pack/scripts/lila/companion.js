@@ -59,6 +59,8 @@ export class Companion {
     this.waypoint = null;
     this.target = undefined; // inimigo atual
     this.lastHit = 0;
+    /** @type {string|undefined} última falha de objetivo (diagnóstico/autoteste) */
+    this.lastError = undefined;
     this.sleeping = false;
     this.flags = {};
     this.nav = "idle";

@@ -162,3 +162,28 @@ test("plantas: todas geram blocos e lista de compras", () => {
   const list = shoppingList(BLUEPRINTS.cabana.build(), "spruce");
   assert.ok(list["minecraft:spruce_planks"] > 100);
 });
+
+test("frases do jeito que o jogador escreve (gíria, sem acento, erros)", () => {
+  const T = {
+   "quero comida":"food","me da comida":"food","to com fome":"food","tô morrendo de fome":"food","traz comida pra mim":"food","pega comida":"food","arruma comida":"food","consegue comida ai":"food","me alimenta":"food","comida":"food","vai caçar comida":"food","traz carne":"food","me da pao":"give","faz comida":"food",
+   "pega madera":"gather","pega madeira pra mim":"gather","corta umas arvore":"gather","vai pegar madeira":"gather","junta pedra":"gather","pega 10 ferro":"gather","vai minera":"gather","minera diamante":"gather","acha diamante pra mim":"gather","pega carvao":"gather","pega areia":"gather",
+   "faz uma casa":"build","faz uma casa pra nois":"build","constroi uma casa":"build","construir casa":"build","faz uma casinha aqui":"build","faz uma mansao":"build","monta uma casa":"build","bora fazer uma casa":"build","quero uma casa":"build","faz uma base":"build","faz uma torre":"build",
+   "faz plantaçao":"farm","faz uma plantação":"farm","planta trigo":"farm","faz uma horta":"farm","planta umas coisa":"farm","faz fazenda":"farm",
+   "vem ca":"come","vem aqui":"come","corre aqui":"come","volta aqui":"come","cola aqui":"come","chega aqui":"come",
+   "segue eu":"follow","me segue":"follow","bora":"follow","vamo":"follow","anda comigo":"follow","fica comigo":"follow",
+   "fica ai":"stay","espera ai":"stay","para ai":"stop","para":"stop","cancela":"stop","esquece isso":"stop","deixa":"stop",
+   "mata os zumbi":"attack","mata eles":"attack","ataca":"attack","me protege":"protect","fica de guarda":"protect","defende eu":"protect",
+   "modo torreta":"turret","vira torreta":"turret","torreta":"turret","me da carona":"ride","me leva":"ride","quero voar":"ride","escaneia eu":"scan","missoes":"missions",
+   "faz uma picareta":"craft","faz picareta de ferro":"craft","faz uma espada":"craft","faz tocha":"craft","faz um bau":"craft","faz armadura":"craft",
+   "me da tudo":"give","me da as coisa":"give","entrega tudo":"give","me da a madeira":"give",
+   "dorme":"sleep","vai dormir":"sleep","acorda":"wake","explora":"explora","vai explorar":"explore","modo livre":"auto","faz oq quiser":"auto","se vira":"auto",
+   "coloca tocha":"torches","ilumina aqui":"torches","guarda no bau":"deposit","o que vc tem":"inventory","como vc ta":"status","oi":"hello","valeu":"thanks","vai pra casa":"home","aqui e a base":"sethome",
+  };
+  const bad = [];
+  for (const [s, t] of Object.entries(T)) {
+    const got = parseCommands(s).map((x) => x.type).join("+");
+    if (got !== (t === "explora" ? "explore" : t)) bad.push(`${s} -> ${got} (queria ${t})`);
+  }
+  assert.deepEqual(bad, []);
+  assert.equal(parseCommands("quero comida")[0].forOwner, true);
+});

@@ -168,7 +168,7 @@ export function* placeAt(c, p, blockId, itemId, states) {
   face(c, p);
   if (itemId) hold(c.entity, itemId);
   setAction(c.entity, "place");
-  yield 3;
+  yield c.def?.flying ? 1 : 2;
   try {
     const perm = BlockPermutation.resolve(blockId, states ?? {});
     const blk = blockAt(dim, p.x, p.y, p.z);
@@ -181,7 +181,7 @@ export function* placeAt(c, p, blockId, itemId, states) {
     setAction(c.entity, "idle");
     return false;
   }
-  yield 2;
+  yield 1;
   setAction(c.entity, "idle");
   return true;
 }

@@ -6,7 +6,7 @@
     "uuid": "b461d112-57c7-4e8f-b4dc-395753b1764f",
     "version": [
       1,
-      4,
+      5,
       0
     ],
     "min_engine_version": [
@@ -21,7 +21,7 @@
       "uuid": "0eb44987-9e9c-463b-910a-8fa1028bf56b",
       "version": [
         1,
-        4,
+        5,
         0
       ],
       "description": "Lila behaviors"
@@ -32,7 +32,7 @@
       "uuid": "9cfa397e-a894-4a0e-90bb-14e27ca0c535",
       "version": [
         1,
-        4,
+        5,
         0
       ],
       "entry": "scripts/main.js",
@@ -44,7 +44,7 @@
       "uuid": "d7bcc89a-2727-4727-aa37-344181885cac",
       "version": [
         1,
-        4,
+        5,
         0
       ]
     },

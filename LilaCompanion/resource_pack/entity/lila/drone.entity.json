@@ -14,6 +14,7 @@
       },
       "animations": {
         "base": "animation.lila.drone.base",
+        "parts": "animation.lila.drone.parts",
         "look": "animation.lila.drone.look",
         "fly": "animation.lila.drone.fly",
         "dash": "animation.lila.drone.dash",
@@ -37,8 +38,15 @@
         "sparkle": "lila:sparkle"
       },
       "scripts": {
+        "initialize": [
+          "v.turret_t = 0;"
+        ],
+        "pre_animation": [
+          "v.turret_t = math.clamp(v.turret_t + ((q.property('lila:action') == 'turret') ? 1 : -1) * math.min(q.delta_time, 0.1) * 2.2, 0, 1);"
+        ],
         "animate": [
           "base",
+          "parts",
           "look",
           "ctrl_move",
           "ctrl_act"

@@ -94,6 +94,7 @@ export function tick(c) {
   // falhou
   const e = job.error;
   const msg = e instanceof GoalError ? e.message : String(e?.message ?? e);
+  c.lastError = `${job.desc.type}: ${msg}`;
   if (!(e instanceof GoalError)) logError(`goal.${job.desc.type}`, e);
   if (!urgent && job.desc.origin === "cmd") {
     const g = c.rec.goals[0];
@@ -262,7 +263,7 @@ export function sense(c) {
   }
   keepLoaded(c);
   // pega itens do chão quando passa por cima (como jogadora)
-  if (now % 20 === 0) collectDrops(c, c.pos(), 1.6);
+  if (now % 20 === 0) collectDrops(c, c.pos(), c.def?.flying ? 3 : 2);
 }
 
 /** Observa o dono: está viajando? está no escuro? está machucado? */

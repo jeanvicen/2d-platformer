@@ -98,7 +98,16 @@ export function findThreat(c) {
  * @param {Entity} target
  */
 export function* fight(c, target, maxTicks = 600) {
-  if (c.def?.gun) return yield* gunFight(c, target, maxTicks);
+  if (c.def?.gun) {
+    // drone: metralha de longe e depois desce pra recolher o que caiu (carne, couro...)
+    const box = { loc: target.location };
+    const dead = yield* gunFight(c, target, maxTicks, box);
+    if (dead && c.alive()) {
+      yield 10;
+      yield* sweepItems(c, box.loc, 6);
+    }
+    return dead;
+  }
   const t0 = system.currentTick;
   const w = bestWeapon(c);
   hold(c.entity, w.tool?.id);

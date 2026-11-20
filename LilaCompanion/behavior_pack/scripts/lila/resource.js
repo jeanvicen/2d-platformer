@@ -4,7 +4,7 @@ import { system } from "@minecraft/server";
 import { ORES, ORE_DEPTH, ORE_TIER, TIER_RANK, CROPS, isLog, isLeaves, oreOf } from "../lib/items.js";
 import { GoalError, NeedTool } from "./companion.js";
 import { blockAt, cellFn, exposed, findBlocks, groundY, isLoaded, isTreeLog, safeState, treeLogs } from "./world.js";
-import { canBreak, collectDrops, face, harvestCrop, lavaNear, pickBerries, placeAt, quickBreak } from "./blocks.js";
+import { IGNORE_ITEMS, canBreak, collectDrops, face, harvestCrop, lavaNear, pickBerries, placeAt, quickBreak } from "./blocks.js";
 import { goTo, stepTo, stop } from "./motor.js";
 import * as inv from "./inventory.js";
 import { hold, setAction } from "./anim.js";
@@ -107,18 +107,30 @@ function* replant(c, base) {
 /** Recolhe itens caídos numa área (anda até eles). */
 export function* sweepItems(c, center, r = 6) {
   const dim = c.dim();
-  for (let k = 0; k < 6; k++) {
+  const grab = c.def?.flying ? 3.6 : 2.4;
+  const tried = new Set();
+  for (let k = 0; k < 10; k++) {
     let items = [];
     try {
-      items = dim.getEntities({ type: "minecraft:item", location: center, maxDistance: r });
+      items = dim.getEntities({ type: "minecraft:item", location: center, maxDistance: r }).filter((e) => e.isValid && !IGNORE_ITEMS.has(e.id) && !tried.has(e.id));
     } catch {
       return;
     }
     if (!items.length) return;
+    const p = c.pos();
+    items.sort((a, b) => (a.location.x - p.x) ** 2 + (a.location.z - p.z) ** 2 - ((b.location.x - p.x) ** 2 + (b.location.z - p.z) ** 2));
     const it = items[0];
-    if (!it.isValid) continue;
-    yield* goTo(c, it.location, { reach: 1.0, yTol: 2, timeout: 120, allowTeleport: false });
-    collectDrops(c, c.pos(), 2.2);
+    tried.add(it.id);
+    const loc = it.location;
+    if ((loc.x - p.x) ** 2 + (loc.z - p.z) ** 2 > grab * grab || Math.abs(loc.y - p.y) > 2.5) {
+      yield* goTo(c, loc, { reach: 1.0, yTol: 2, timeout: 120, allowTeleport: false, noFly: false });
+    }
+    collectDrops(c, c.pos(), grab);
+    // chegou do lado mas o item escorregou: pega pelo ponto dele
+    if (it.isValid) {
+      const q = c.pos();
+      if ((it.location.x - q.x) ** 2 + (it.location.z - q.z) ** 2 <= 16) collectDrops(c, it.location, 0.8);
+    }
   }
 }
 

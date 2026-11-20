@@ -67,15 +67,15 @@ function findBlueprint(tok) {
 }
 
 const V = {
-  follow: ["me segue", "me siga", "segue", "seguir", "siga", "vem comigo", "venha comigo", "me acompanha", "acompanha", "acompanhar", "follow"],
+  follow: ["bora", "vamo", "vamos", "anda comigo", "fica comigo", "cola em mim", "vem junto", "vem comigo", "me segue", "me siga", "segue", "seguir", "siga", "vem comigo", "venha comigo", "me acompanha", "acompanha", "acompanhar", "follow"],
   stay: ["fica aqui", "fique aqui", "fica ai", "espera", "espere", "aguarda", "aguarde", "fica parada", "parada ai", "nao se mexe", "stay", "wait"],
-  come: ["vem aqui", "venha aqui", "vem ca", "venha ca", "volta aqui", "volte aqui", "vem pra ca", "aparece", "cade voce", "come here"],
-  auto: ["modo livre", "fica livre", "livre", "autonoma", "faz o que quiser", "faca o que quiser", "se vira", "vai brincar", "vive sua vida", "joga sozinha", "explora sozinha", "free"],
+  come: ["corre aqui", "cola aqui", "chega aqui", "chega mais", "corre ca", "vem rapido", "vem aqui", "venha aqui", "vem ca", "venha ca", "volta aqui", "volte aqui", "vem pra ca", "aparece", "cade voce", "come here"],
+  auto: ["faz oq quiser", "oq quiser", "o que quiser", "modo livre", "fica livre", "livre", "autonoma", "faz o que quiser", "faca o que quiser", "se vira", "vai brincar", "vive sua vida", "joga sozinha", "explora sozinha", "free"],
   stop: ["pare", "parar", "para tudo", "para agora", "para ai", "para com isso", "para de", "cancela", "cancelar", "esquece", "chega", "deixa pra la", "stop", "cancel"],
   pause: ["pausa", "pausar", "pause", "segura ai"],
   resume: ["continua", "continuar", "continue", "volta ao trabalho", "retoma", "retomar", "resume"],
   status: ["status", "como voce esta", "como vc ta", "como esta", "tudo bem", "o que voce ta fazendo", "o que esta fazendo", "oq ta fazendo", "estado", "vida"],
-  inventory: ["inventario", "o que voce tem", "oq vc tem", "mostra suas coisas", "suas coisas", "mochila", "bolsa", "inventory"],
+  inventory: ["o que vc tem", "que vc tem", "o que voce tem", "inventario", "o que voce tem", "oq vc tem", "mostra suas coisas", "suas coisas", "mochila", "bolsa", "inventory"],
   give: ["me da", "me de", "me passa", "passa pra mim", "me entrega", "entrega", "joga pra mim", "me manda", "me envia", "da pra mim", "me devolve", "devolve", "give"],
   gather: ["pega", "pegue", "pegar", "coleta", "colete", "coletar", "junta", "junte", "juntar", "consegue", "consiga", "arranja", "arranje", "busca", "busque", "buscar", "traz", "traga", "trazer", "corta", "corte", "cortar", "minera", "minere", "minerar", "cava", "cave", "cavar", "colhe", "colha", "colher", "procura", "procure", "procurar", "acha", "ache", "achar", "encontra", "encontre", "farm", "farma", "farmar", "get", "collect", "mine"],
   craft: ["faz", "faca", "fazer", "fabrica", "fabrique", "fabricar", "cria", "crie", "criar", "crafta", "craft", "craftar", "monta", "monte", "montar", "produz", "make"],
@@ -83,7 +83,7 @@ const V = {
   farmv: ["planta", "plante", "plantar", "cultiva", "cultive", "cultivar", "semeia", "semear"],
   explore: ["explora", "explore", "explorar", "vai explorar", "aventura", "viaja", "viajar", "passeia", "passear", "explore"],
   hunt: ["caca", "caca animais", "cacar", "caçar", "hunt"],
-  protect: ["me protege", "me proteja", "protege", "proteja", "proteger", "me defende", "defende", "guarda costas", "guarda-costas", "protect", "guard"],
+  protect: ["fica de guarda", "de guarda", "vigia", "vigiar", "me protege", "me proteja", "protege", "proteja", "proteger", "me defende", "defende", "guarda costas", "guarda-costas", "protect", "guard"],
   attack: ["ataca", "ataque", "atacar", "mata", "mate", "matar", "luta", "lutar", "attack", "kill"],
   sleep: ["dorme", "durma", "dormir", "vai dormir", "descansa um pouco", "sleep"],
   wake: ["acorda", "acorde", "acordar", "wake"],
@@ -94,7 +94,7 @@ const V = {
   deposit: ["guarda no bau", "guarda as coisas", "guarda tudo", "deposita", "esvazia", "organiza", "store"],
   turret: ["modo torreta", "torreta", "turret", "vira torreta", "vira uma torreta", "defende aqui"],
   scan: ["escaneia", "escaneie", "escanear", "me escaneia", "scan", "analisa", "analisar", "escaneamento"],
-  ride: ["carona", "me leva", "me carrega", "deixa eu subir", "quero subir", "quero voar", "me da carona", "voar com voce", "montar"],
+  ride: ["carona", "me leva", "me carrega", "deixa eu subir", "quero subir", "quero voar", "me da carona", "voar com voce", "subir no drone", "sobe aqui"],
   missions: ["missoes", "missao", "quests", "quest", "objetivos"],
   thanks: ["obrigado", "obrigada", "valeu", "vlw", "brigado", "thanks", "mandou bem", "parabens", "boa garota"],
   hello: ["oi", "ola", "eae", "e ai", "salve", "bom dia", "boa tarde", "boa noite", "hello", "hi"],
@@ -182,14 +182,16 @@ export function parseOne(s) {
     return { type: "give", all: true };
   }
 
-  if (has(tok, V.stop) || (tok[0] === "para" && tok.length === 1)) return { type: "stop" };
+  if (has(tok, V.protect)) return { type: "protect" };
+  if (has(tok, V.come)) return { type: "come" };
+  if (has(tok, V.stop) || (tok.length === 1 && ["para", "deixa", "chega"].includes(tok[0]))) return { type: "stop" };
   if (has(tok, V.pause)) return { type: "pause" };
   if (has(tok, V.resume)) return { type: "resume" };
   if (has(tok, V.wake)) return { type: "wake" };
   if (has(tok, V.sleep)) return { type: "sleep" };
   if (has(tok, V.protect)) return { type: "protect" };
   if (has(tok, V.attack)) return { type: "attack" };
-  if (has(tok, V.hunt)) return { type: "hunt", count: amount ?? 4 };
+  if (has(tok, V.hunt)) return findItem(tok)?.group === "food" ? { type: "food", count: amount ?? 8, forOwner: true } : { type: "hunt", count: amount ?? 4 };
   if (has(tok, V.come)) return { type: "come" };
   if (has(tok, V.stay)) return { type: "stay" };
   if (has(tok, V.follow)) return { type: "follow" };
@@ -211,7 +213,7 @@ export function parseOne(s) {
   if (has(tok, V.gather) || item || tool) {
     if (tool) return { type: "craft", item: tool.id ? { id: tool.id } : { toolKind: tool.kind }, count: amount ?? 1 };
     if (item) {
-      if (item.group === "food") return { type: "food", count: amount ?? 8, forOwner: has(tok, ["pra mim", "para mim", "me", "fome", "estou com fome", "to com fome"]) };
+      if (item.group === "food") return { type: "food", count: amount ?? 8, forOwner: !has(tok, ["pra voce", "para voce", "pra vc", "come voce", "se alimenta"]) };
       return { type: "gather", item: lexTarget(item), count: amount ?? item.def ?? 16 };
     }
     if (has(tok, ["minerar", "minera", "minere", "mine", "cava", "cavar", "cave"])) return { type: "gather", item: { id: "minecraft:cobblestone" }, count: amount ?? 32 };

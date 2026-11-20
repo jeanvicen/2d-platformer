@@ -16,7 +16,8 @@ sozinha como uma jogadora de verdade, decidindo o que fazer.
 
 Segundo companheiro com controle próprio (**Controle do DR-0N**: ferro ×4, vidro, redstone ×2 e
 diamante na bancada: `F V F / R D R / F _ F`). Faz tudo que a Lila faz, só que **voando** e mais
-rápido; tem **metralhadora** e **modo torreta**, **escaneia** você, guarda **memórias** e propõe
+rápido; tem **metralhadora** e **modo torreta** (pousa e se transforma: tripé, escudo e canhão
+duplo), **escaneia** você, guarda **memórias** e propõe
 **missões**. **Carona**: toque nele de mão vazia (ou diga "me dá carona"), olhe para onde quer ir
 e ande para frente; pular sobe; agachar desce. Quando você desce, ele volta ao que estava fazendo.
 Comandos: `/drone <ordem>`, "modo torreta", "escaneia", "missões".
@@ -89,9 +90,11 @@ Nada é trapaça: tudo usa itens reais do inventário dela (36 espaços) e as re
   nível: ferro precisa de pedra, diamante precisa de ferro), desce em **escadaria** até a camada
   certa do minério e abre **túneis**; colhe só plantas maduras e replanta.
 - **Construção:** cabana, casa, torre, muralha, ponte, abrigo, fazenda e mansão (2.249 blocos).
-  Ela calcula a lista de materiais, junta tudo, limpa o terreno (só blocos naturais), faz a
-  fundação e ergue bloco a bloco andando pela obra.
-- **Plantação:** ara a terra com enxada, põe água com balde, planta e depois colhe e faz pão.
+  Ela calcula a lista de materiais, junta o que falta, limpa o terreno (só blocos naturais), faz a
+  fundação e ergue bloco a bloco andando pela obra. Usa o que tiver: qualquer tábua, pedra ou
+  tronco serve de parede; sem vidro a janela fica aberta; sem tocha coloca depois.
+- **Plantação:** ara a terra com enxada, põe água se tiver balde (senão usa terra molhada), planta
+  o que tiver (começa com até 8 sementes) e depois colhe, replanta e faz pão.
 - **Comida:** colhe plantas maduras/frutas, faz pão, assa carne/batata na fornalha, pega maçãs.
   Caçar animais só com permissão (pedido direto ou opção ligada nas configurações).
 - **Movimento:** caminhos A* com portas (abre e fecha), água (nada), escadas, degraus e quedas

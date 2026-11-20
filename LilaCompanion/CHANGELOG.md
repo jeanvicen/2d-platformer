@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.5.0
+- **Entende muito mais**: 102 jeitos comuns de falar viraram teste fixo ("bora", "cola em mim",
+  "corre aqui", "fica de guarda", "faz o que quiser", "o que vc tem", "quero comida"...).
+  "Para" sozinho para; "carne"/"comida" sempre é pra você (a não ser "come você").
+- **Comida chega na sua mão**: o DR-0N abate o bicho de longe e agora **desce e recolhe a carne**
+  (antes deixava no chão); a coleta de itens ignora o que ela mesma te entregou e pega pelo ponto
+  do item se ele escorregar. Se não conseguir comida, ela avisa em vez de ficar quieta.
+- **Construção muito mais rápida**:
+  - materiais flexíveis: parede/chão aceitam qualquer tábua, pedra ou tronco que ela tiver
+    (tronco = 4 tábuas); onde o chão já é firme ela aproveita o terreno;
+  - vidro e tocha não travam mais a obra (janela fica aberta; tocha só se tiver carvão);
+  - plantação começa com até 8 sementes e **não exige balde** (sem balde usa terra arada molhada);
+  - fundação com terra em vez de minerar pedra; colocar bloco 2× mais rápido; alcança mais longe;
+    obra em zigue-zague (anda menos); se faltar bloco no fim, busca e completa os buracos.
+  - quebra blocos mais rápido (Lila 2,6× · DR-0N 5× o ritmo de um jogador sem efeito).
+- **Modo torreta de verdade**: o DR-0N pousa suave até encostar no chão, encaixa no bloco e **se
+  transforma** — tripé desce e crava no chão, braços e hélices recolhem, abre escudo frontal,
+  canhão duplo sobe e o olho fica vermelho (transição animada). Pernas travadas: se empurrarem,
+  volta pro lugar. Ao sair, desmonta e decola.
+
 ## 1.4.0
 - **Novo companheiro: DR-0N**, drone-robô grande com controle próprio (ferro, vidro, redstone e
   diamante). Mesmo cérebro da Lila (planeja, coleta, minera, fabrica, constrói, planta), porém
