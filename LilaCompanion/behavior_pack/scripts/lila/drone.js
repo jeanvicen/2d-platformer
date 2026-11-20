@@ -35,7 +35,7 @@ export function clearLine(dim, a, b, slack = 1.5) {
 }
 
 /** Ajusta a velocidade do corpo (física, sem gravidade) para seguir em direção ao ponto. */
-function steer(c, to, speed) {
+export function steer(c, to, speed) {
   const e = c.entity;
   if (!e?.isValid) return 0;
   const p = e.location;

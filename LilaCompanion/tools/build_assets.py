@@ -36,7 +36,7 @@ from forge.render import render  # noqa: E402
 
 MOVES = ["none", "walk", "run", "swim", "climb", "fall", "sneak"]
 
-VERSION = [2, 0, 0]
+VERSION = [2, 1, 0]
 MIN_ENGINE = [1, 26, 30]
 SERVER_VERSION = "2.8.0"
 SERVER_UI_VERSION = "2.1.0"
@@ -381,7 +381,7 @@ def build_robot(previews):
             "textures": {"default": "textures/entity/lila/robot"},
             "geometry": {"default": "geometry.lila.robot"},
             "animations": amap,
-            "scripts": {"animate": ["look", "idle", "ctrl"]},
+            "scripts": {"animate": ["look", {"idle": "q.ground_speed < 0.6"}, "ctrl"]},
             "render_controllers": ["controller.render.lila.lila"],
         }}})
     follow = {"minecraft:behavior.follow_owner": {"priority": 4, "speed_multiplier": 1.4, "start_distance": 7, "stop_distance": 3,

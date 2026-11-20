@@ -3,7 +3,7 @@
 //   "pega 20 madeira e depois faz uma casa aqui" -> [gather log x20, build casa (aqui)]
 import { normalize, parseAmount, similar, tokens } from "./text.js";
 import { ARMOR_WORDS, BLUEPRINT_WORDS, ITEMS, TIER_WORDS, TOOL_WORDS } from "./lexicon.js";
-import { ARMY_WORDS, BIOMES, CREATIVE_ITEMS, FORM_WORDS, KIT_WORDS, MEGA, NORMAL_WORDS } from "./catalog.js";
+import { ARMY_WORDS, BIOMES, CREATIVE_ITEMS, DESTROY_WORDS, FLATTEN_WORDS, FORM_WORDS, KIT_WORDS, MEGA, NORMAL_WORDS, SPEED_WORDS, VACUUM_WORDS } from "./catalog.js";
 
 /**
  * @typedef {{type:string, [k:string]:any}} Intent
@@ -190,6 +190,16 @@ export function parseOne(s) {
   // ---- 2.0: voltar ao normal, formas, exército, kit, megaconstruções e biomas
   if (has(tok, NORMAL_WORDS)) return { type: "normal" };
   if (has(tok, KIT_WORDS)) return { type: "kit" };
+  if (has(tok, VACUUM_WORDS)) return { type: "vacuum", radius: amount ?? 32 };
+  if (has(tok, FLATTEN_WORDS) || has(tok, DESTROY_WORDS)) {
+    const all = has(tok, DESTROY_WORDS) || has(tok, ["construcoes", "construcao", "casas", "inclusive", "ate as"]);
+    return { type: "flatten", radius: amount ?? 24, all };
+  }
+  // velocidade de construção ("constrói devagar", "constrói na hora")
+  const spd = Object.entries(SPEED_WORDS).find(([, ws]) => has(tok, ws))?.[0];
+  if (spd && has(tok, ["constroi", "construir", "construcao", "constrói", "construa", "modo", "velocidade", "faz", "faca", "obra", "trabalha"]) && !findKey(tok, MEGA)) {
+    return { type: "buildspeed", speed: spd };
+  }
   if (has(tok, ARMY_WORDS)) return { type: "army", count: amount ?? undefined };
   const biome = findKey(tok, BIOMES);
   if (biome && has(tok, ["bioma", "transforma", "transformar", "transforme", "muda", "mudar", "mude", "vira", "virar", "deixa", "faz"])) {
@@ -307,6 +317,8 @@ export function describe(it) {
     case "form": return `virar ${it.form}`;
     case "army": return "modo exército";
     case "kit": return "te deixar mais forte";
+    case "flatten": return it.all ? "destruir tudo em volta e deixar plano" : "aplainar o terreno em volta";
+    case "vacuum": return "recolher os itens do chão";
     case "explore": return "explorar";
     case "hunt": return "caçar";
     case "torches": return "iluminar a área";

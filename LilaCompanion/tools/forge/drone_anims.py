@@ -27,14 +27,22 @@ def drone_anims():
         "antenna": bone(rot=[osc(3, 160), 0, osc(2, 110)]),
     })
     add("look", {"eye": bone(rot=["math.clamp(q.target_x_rotation, -30, 30)", "math.clamp(q.target_y_rotation, -25, 25)", 0])})
-    # voo: inclina para frente conforme a velocidade
-    add("fly", {"body": bone(rot=["10 + math.sin(q.anim_time * 300) * 1.5", 0, osc(2, 90)])})
-    add("dash", {"body": bone(rot=["20 + math.sin(q.anim_time * 500) * 2", 0, osc(3, 140)])})
-    add("still", {"body": bone(rot=[osc(1.5, 70), 0, osc(1.5, 50)])})
+    # voo: inclina para frente conforme a velocidade (suavizado) e "deita" na curva como um drone de verdade
+    add("fly", {"body": bone(rot=["v.dtilt + math.sin(q.anim_time * 300) * 1.2", 0, "-v.lean * 0.7 + math.sin(q.anim_time * 90) * 1.5"])})
+    add("dash", {"body": bone(rot=["v.dtilt + 6 + math.sin(q.anim_time * 500) * 1.6", 0, "-v.lean * 1.0 + math.sin(q.anim_time * 140) * 2"])})
+    add("still", {"body": bone(rot=[osc(1.5, 70), osc(2, 23), osc(1.5, 50)])})
     # ações
-    add("work", {"body": bone(rot=["22 + math.sin(q.anim_time * 1400) * 2", 0, 0]),
-                 "gun_r": bone(rot=[osc(10, 900, base=-20), 0, 0]), "gun_l": bone(rot=[osc(-10, 900, base=-20), 0, 0])}, loop=True)
-    add("place", {"body": bone(rot=keys([(0, [0, 0, 0]), (0.15, [14, 0, 0]), (0.4, [0, 0, 0])]))}, loop=True, length=0.4)
+    # quebrando/cavando: tremidinha rápida, armas martelando
+    add("work", {"body": bone(rot=["18 + math.sin(q.anim_time * 1400) * 2", 0, osc(1.5, 700)]),
+                 "gun_r": bone(rot=[osc(12, 900, base=-30), 0, 0]), "gun_l": bone(rot=[osc(-12, 900, base=-30), 0, 0]),
+                 "eye": bone(scale=f"1.05 + math.abs(math.sin(q.anim_time * 900)) * 0.12")}, loop=True)
+    # construindo: inclina para o bloco, as armas viram "bicos" de construção mirando para baixo, olho pulsa a cada bloco
+    add("place", {
+        "body": bone(rot=smooth_keys([(0, [6, 0, 0]), (0.12, [16, 0, 0]), (0.3, [8, 0, 0]), (0.5, [6, 0, 0])])),
+        "gun_r": bone(rot=smooth_keys([(0, [-35, 0, 0]), (0.12, [-48, 0, 0]), (0.5, [-35, 0, 0])])),
+        "gun_l": bone(rot=smooth_keys([(0, [-35, 0, 0]), (0.25, [-48, 0, 0]), (0.5, [-35, 0, 0])])),
+        "eye": bone(scale=smooth_keys([(0, [1, 1, 1]), (0.12, [1.22, 1.22, 1.22]), (0.5, [1, 1, 1])])),
+    }, loop=True, length=0.5)
     recoil = smooth_keys([(0, [0, 0, 0]), (0.05, [0, 0, 1.4]), (0.15, [0, 0, 0])])
     add("shoot", {"gun_r": bone(pos=recoil), "gun_l": bone(pos=smooth_keys([(0, [0, 0, 1.4]), (0.075, [0, 0, 0]), (0.15, [0, 0, 1.4])])),
                   "eye": bone(scale=1.15)}, loop=True, length=0.15)

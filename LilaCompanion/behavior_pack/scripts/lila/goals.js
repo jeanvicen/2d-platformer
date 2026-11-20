@@ -20,7 +20,7 @@ import { LINES, pick, say } from "./talk.js";
 import { keepLoaded } from "./areas.js";
 import { missions, orbitOwner, remember, scanOwner } from "./drone.js";
 import { turretGoal } from "./forms.js";
-import { megaBuild, biomeTransform } from "./mega.js";
+import { megaBuild, biomeTransform, flatten, sweepGround } from "./mega.js";
 import { deploy, empower, armyActive } from "./army.js";
 import { isCreative, materialize, strengthKit, equipArmor, giveStacks, buff } from "./creative.js";
 
@@ -363,6 +363,8 @@ export function runGoal(c, g) {
     case "turret": return turretGoal(c);
     case "mega": return megaBuild(c, a.key, { here: a.here });
     case "biome": return biomeTransform(c, a.biome);
+    case "flatten": return flatten(c, a.radius ?? 24, !!a.all);
+    case "vacuum": return sweepGround(c, a.radius ?? 32);
     case "army": return (function* () {
       yield* deploy(c, a.count ?? c.rec.settings.army ?? 10);
     })();
@@ -559,6 +561,8 @@ export function goalLabel(g) {
     case "follow": return "te seguindo";
     case "mega": return `construindo ${a.key ?? ""}`.trim();
     case "biome": return `transformando o bioma (${a.biome ?? ""})`;
+    case "flatten": return a.all ? "destruindo tudo e deixando plano" : "aplainando o terreno";
+    case "vacuum": return "recolhendo os itens do chão";
     case "army": return "virando exército";
     case "kit": return "te deixando mais forte";
     case "stay": return "esperando aqui";

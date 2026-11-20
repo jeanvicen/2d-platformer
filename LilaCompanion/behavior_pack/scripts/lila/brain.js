@@ -363,7 +363,7 @@ export function command(c, text) {
 }
 
 const GOAL_TYPES = new Set(["gather", "craft", "build", "farm", "food", "give", "explore", "hunt", "attack", "sleep", "home", "torches", "deposit", "come",
-  "mega", "biome", "kit"]);
+  "mega", "biome", "kit", "flatten", "vacuum"]);
 
 /** "Cancelar": larga tudo e volta a ser o drone normal (junta o exército, desfaz veículo/colosso/torreta). */
 export function backToNormal(c, quiet = false) {
@@ -443,6 +443,12 @@ export function handleIntents(c, intents, raw = "") {
         if (armyActive(c)) armyCommand(c, "guard");
         say(c, "Modo proteger: eu ataco primeiro qualquer monstro perto de você, e quem te bater (até jogador) vira alvo!", { force: true });
         break;
+      case "buildspeed": {
+        c.rec.settings.buildSpeed = it.speed;
+        const lbl = { humano: "à mão, bloco por bloco (devagar, como um jogador)", normal: "normal", rapido: "rápido", instantaneo: "instantâneo (tudo de uma vez)" }[it.speed];
+        say(c, `Beleza: vou construir ${lbl}.`, { force: true });
+        break;
+      }
       case "army":
         if (armyActive(c)) {
           say(c, "Já estou em modo exército! Use o controle para mandar neles.", { force: true });

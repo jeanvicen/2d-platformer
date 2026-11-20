@@ -20,6 +20,11 @@
             "math.sin(q.anim_time * 60.0) * 1.0",
             0.0,
             0.0
+          ],
+          "position": [
+            0.0,
+            "math.sin(q.anim_time * 60.0) * 0.15",
+            0.0
           ]
         },
         "rightArm": {
@@ -38,6 +43,13 @@
         },
         "jet": {
           "scale": 0.4
+        },
+        "head": {
+          "rotation": [
+            0.0,
+            "math.sin(q.anim_time * 25.0) * 8.0",
+            0.0
+          ]
         }
       },
       "loop": true

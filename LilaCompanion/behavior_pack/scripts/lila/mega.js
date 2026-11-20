@@ -1,14 +1,15 @@
-// Executor das megaconstruções e das transformações de bioma. O DR-0N tem material infinito:
-// a obra sai inteira, organizada, em pedaços pequenos por tick (sem travar o jogo), com ele
-// voando pela obra e disparando o feixe de construção. Nunca quebra construção de jogador:
-// a limpeza do terreno só remove blocos naturais, e se o lugar tem coisa de jogador ele procura
-// outro lugar ao lado.
+// Executor das megaconstruções, transformações de bioma e do "aplainar". O DR-0N tem material
+// infinito. No modo padrão ("humano") ele constrói À MÃO: voa até cada ponto e coloca bloco por
+// bloco, parte por parte, de baixo para cima, como um jogador voando (veja handwork.js). O modo
+// "instantâneo" (Configurações) ainda existe. Nunca quebra construção de jogador sem você pedir:
+// a limpeza só remove blocos naturais, e se o lugar tem coisa sua ele procura outro ao lado.
 import { BlockPermutation, BlockVolume, ItemStack, system } from "@minecraft/server";
 import { PLANS, volume } from "../lib/megaplans.js";
 import { BIOMES, MEGA } from "../lib/catalog.js";
 import { GoalError } from "./companion.js";
 import { particle, setAction, sound } from "./anim.js";
 import { hover } from "./drone.js";
+import { Placer, SPEEDS, serpentine, speedOf, vacuum } from "./handwork.js";
 import { say } from "./talk.js";
 import { breathe } from "../core/budget.js";
 import { logError } from "../core/log.js";
@@ -32,6 +33,7 @@ export const NATURAL = [...GROUND, ...LEAVES, ...LOGS, ...PLANTS, "minecraft:wat
   "minecraft:pumpkin", "minecraft:melon_block", "minecraft:brown_mushroom_block", "minecraft:red_mushroom_block", "minecraft:mushroom_stem", "minecraft:kelp",
   "minecraft:coal_ore", "minecraft:iron_ore", "minecraft:copper_ore"];
 const NATSET = new Set([...NATURAL, "minecraft:air"]);
+const NAT_BREAK = new Set(NATURAL);
 
 const PERM = new Map();
 function perm(id, st) {
@@ -162,42 +164,64 @@ export function* megaBuild(c, key, o = {}) {
       }
       if (shift === 2) throw new GoalError("tem construção sua em todo lugar aqui na frente. Vai pra um lugar mais aberto e me pede de novo");
     }
-    setAction(c.entity, "craft");
-    // terreno: limpa só natureza acima e nivela a base
-    if (plan.clear) {
-      yield* fillBox(dim, { x: cx - plan.half, y: y0 + 1, z: cz - plan.half }, { x: cx + plan.half, y: y0 + plan.height + 2, z: cz + plan.half }, perm("minecraft:air"), { includeTypes: NATURAL });
-      yield* fillBox(dim, { x: cx - plan.half, y: y0 - 4, z: cz - plan.half }, { x: cx + plan.half, y: y0 - 1, z: cz + plan.half }, perm("minecraft:dirt"), { includeTypes: ["minecraft:air", "minecraft:water", "minecraft:flowing_water"] });
-      yield* fillBox(dim, { x: cx - plan.half, y: y0, z: cz - plan.half }, { x: cx + plan.half, y: y0, z: cz + plan.half }, perm("minecraft:grass_block"), { includeTypes: ["minecraft:air", "minecraft:water", "minecraft:flowing_water", ...PLANTS] });
-    }
-    const total = plan.ops.length;
-    let done = 0, lastPct = 0;
-    for (const op of plan.ops) {
-      if (!c.alive()) return false;
-      done++;
-      try {
-        if (op[0] === "f") {
-          const p = perm(op[7], op[8]);
-          if (p) yield* fillBox(dim, { x: cx + op[1], y: y0 + op[2], z: cz + op[3] }, { x: cx + op[4], y: y0 + op[5], z: cz + op[6] }, p);
-        } else if (op[0] === "s") {
-          const p = perm(op[4], op[5]);
-          const b = p && dim.getBlock({ x: cx + op[1], y: y0 + op[2], z: cz + op[3] });
-          b?.setPermutation(p);
-        } else if (op[0] === "e") {
-          dim.spawnEntity(op[4], { x: cx + op[1], y: y0 + op[2], z: cz + op[3] });
-        } else if (op[0] === "c") {
-          const ct = dim.getBlock({ x: cx + op[1], y: y0 + op[2], z: cz + op[3] })?.getComponent("minecraft:inventory")?.container;
-          for (const [id, n] of op[4]) ct?.addItem(new ItemStack(id, n));
+    const speed = speedOf(c);
+    if (speed === "instantaneo") {
+      setAction(c.entity, "craft");
+      // terreno: limpa só natureza acima e nivela a base
+      if (plan.clear) {
+        yield* fillBox(dim, { x: cx - plan.half, y: y0 + 1, z: cz - plan.half }, { x: cx + plan.half, y: y0 + plan.height + 2, z: cz + plan.half }, perm("minecraft:air"), { includeTypes: NATURAL });
+        yield* fillBox(dim, { x: cx - plan.half, y: y0 - 4, z: cz - plan.half }, { x: cx + plan.half, y: y0 - 1, z: cz + plan.half }, perm("minecraft:dirt"), { includeTypes: ["minecraft:air", "minecraft:water", "minecraft:flowing_water"] });
+        yield* fillBox(dim, { x: cx - plan.half, y: y0, z: cz - plan.half }, { x: cx + plan.half, y: y0, z: cz + plan.half }, perm("minecraft:grass_block"), { includeTypes: ["minecraft:air", "minecraft:water", "minecraft:flowing_water", ...PLANTS] });
+      }
+      const total = plan.ops.length;
+      let done = 0, lastPct = 0;
+      for (const op of plan.ops) {
+        if (!c.alive()) return false;
+        done++;
+        try {
+          if (op[0] === "f") {
+            const p = perm(op[7], op[8]);
+            if (p) yield* fillBox(dim, { x: cx + op[1], y: y0 + op[2], z: cz + op[3] }, { x: cx + op[4], y: y0 + op[5], z: cz + op[6] }, p);
+          } else if (op[0] === "s") {
+            const p = perm(op[4], op[5]);
+            const b = p && dim.getBlock({ x: cx + op[1], y: y0 + op[2], z: cz + op[3] });
+            b?.setPermutation(p);
+          } else if (op[0] === "e") {
+            dim.spawnEntity(op[4], { x: cx + op[1], y: y0 + op[2], z: cz + op[3] });
+          } else if (op[0] === "c") {
+            const ct = dim.getBlock({ x: cx + op[1], y: y0 + op[2], z: cz + op[3] })?.getComponent("minecraft:inventory")?.container;
+            for (const [id, n] of op[4]) ct?.addItem(new ItemStack(id, n));
+          }
+        } catch (e) {
+          logError("mega.op", `${op[0]} ${op[op[0] === "f" ? 7 : 4]}: ${e}`);
         }
-      } catch (e) {
-        logError("mega.op", `${op[0]} ${op[op[0] === "f" ? 7 : 4]}: ${e}`);
+        if (done % 12 === 0) beamFx(c, { x: cx + (op[1] ?? 0), y: y0 + (op[2] ?? 0) + 1, z: cz + (op[3] ?? 0) });
+        const pct = Math.floor((done / total) * 4) * 25;
+        if (pct > lastPct && pct < 100) {
+          lastPct = pct;
+          say(c, `${label}: ${pct}%`, { force: true });
+        }
+        yield* breathe(6);
       }
-      if (done % 12 === 0) beamFx(c, { x: cx + (op[1] ?? 0), y: y0 + (op[2] ?? 0) + 1, z: cz + (op[3] ?? 0) });
-      const pct = Math.floor((done / total) * 4) * 25;
-      if (pct > lastPct && pct < 100) {
-        lastPct = pct;
-        say(c, `${label}: ${pct}%`, { force: true });
+    } else {
+      // À MÃO: parte por parte (quadrados de 24×24), de baixo para cima, bloco por bloco
+      const sp = SPEEDS[speed];
+      const est = Math.max(1, Math.round((volume(plan) * 0.3) / sp.rate / 60));
+      say(c, `Vou construir à mão, bloco por bloco (modo ${sp.label}): uns ${est} min. Dá pra acelerar em Configurações → Velocidade.`, { force: true });
+      const placer = new Placer(c, speed, { natural: NAT_BREAK });
+      yield* placer.run(manualStream(c, dim, plan, cx, cz, y0, label));
+      if (!c.alive()) return false;
+      for (const op of plan.ops) {
+        try {
+          if (op[0] === "e") dim.spawnEntity(op[4], { x: cx + op[1], y: y0 + op[2], z: cz + op[3] });
+          else if (op[0] === "c") {
+            const ct = dim.getBlock({ x: cx + op[1], y: y0 + op[2], z: cz + op[3] })?.getComponent("minecraft:inventory")?.container;
+            for (const [id, n] of op[4]) ct?.addItem(new ItemStack(id, n));
+          }
+        } catch (e) {
+          logError("mega.extra", e);
+        }
       }
-      yield* breathe(6);
     }
     setAction(c.entity, "celebrate");
     sound(c.entity, "random.levelup", 1, 1.1);
@@ -210,6 +234,88 @@ export function* megaBuild(c, key, o = {}) {
   } finally {
     unloadArea(dim, area);
     setAction(c.entity, "idle");
+  }
+}
+
+/** Gera o trabalho à mão: para cada parte (24×24) limpa o terreno natural, nivela e ergue a obra. */
+function* manualStream(c, dim, plan, cx, cz, y0, label) {
+  const T = 24, H = plan.half;
+  const tiles = [];
+  let row = 0;
+  for (let tz = -H; tz <= H; tz += T, row++) {
+    const r = [];
+    for (let tx = -H; tx <= H; tx += T) r.push([tx, tz]);
+    if (row & 1) r.reverse();
+    tiles.push(...r);
+  }
+  let done = 0, lastPct = 0;
+  for (const [tx, tz] of tiles) {
+    const rx1 = Math.min(H, tx + T - 1), rz1 = Math.min(H, tz + T - 1);
+    if (plan.clear) yield* prepTile(dim, cx, cz, y0, tx, tz, rx1, rz1, plan.height);
+    yield* planTile(plan, cx, cz, y0, tx, tz, rx1, rz1);
+    done++;
+    const pct = Math.floor((done / tiles.length) * 4) * 25;
+    if (pct > lastPct && pct < 100) {
+      lastPct = pct;
+      say(c, `${label}: ${pct}%`, { force: true });
+    }
+  }
+}
+
+/** Terreno de uma parte: quebra o natural acima do chão e nivela (terra embaixo, grama em cima). */
+function* prepTile(dim, cx, cz, y0, x0, z0, x1, z1, height) {
+  const cols = [];
+  for (let x = x0; x <= x1; x++) for (let z = z0; z <= z1; z++) cols.push({ x, z });
+  for (const { x, z } of serpentine(cols)) {
+    const wx = cx + x, wz = cz + z;
+    let top;
+    try {
+      top = dim.getTopmostBlock({ x: wx, z: wz }, y0 - 4);
+    } catch {
+      continue;
+    }
+    if (top && top.y > y0) {
+      for (let y = Math.min(top.y, y0 + height + 2); y > y0; y--) {
+        const b = dim.getBlock({ x: wx, y, z: wz });
+        if (b && !b.isAir && (NAT_BREAK.has(b.typeId) || b.isLiquid)) yield { x: wx, y, z: wz, id: "minecraft:air" };
+      }
+    }
+    const g = dim.getBlock({ x: wx, y: y0, z: wz });
+    if (g && (g.isAir || g.isLiquid || PLANTS.includes(g.typeId))) {
+      for (let y = y0 - 3; y < y0; y++) {
+        const u = dim.getBlock({ x: wx, y, z: wz });
+        if (u && (u.isAir || u.isLiquid)) yield { x: wx, y, z: wz, id: "minecraft:dirt" };
+      }
+      yield { x: wx, y: y0, z: wz, id: "minecraft:grass_block" };
+    }
+    yield 0;
+  }
+}
+
+/** A obra de uma parte, camada por camada (o resultado final de todas as operações). */
+function* planTile(plan, cx, cz, y0, x0, z0, x1, z1) {
+  const ops = plan.ops.filter((op) => (op[0] === "f" ? !(op[4] < x0 || op[1] > x1 || op[6] < z0 || op[3] > z1)
+    : op[0] === "s" ? op[1] >= x0 && op[1] <= x1 && op[3] >= z0 && op[3] <= z1 : false));
+  if (!ops.length) return;
+  let ymin = Infinity, ymax = -Infinity;
+  for (const op of ops) {
+    ymin = Math.min(ymin, op[2]);
+    ymax = Math.max(ymax, op[0] === "f" ? op[5] : op[2]);
+  }
+  for (let y = ymin; y <= ymax; y++) {
+    const layer = new Map();
+    for (const op of ops) {
+      if (op[0] === "f") {
+        if (y < op[2] || y > op[5]) continue;
+        const ax = Math.max(op[1], x0), bx = Math.min(op[4], x1), az = Math.max(op[3], z0), bz = Math.min(op[6], z1);
+        for (let x = ax; x <= bx; x++) for (let z = az; z <= bz; z++) layer.set((x + 4096) * 8192 + (z + 4096), [op[7], op[8], x, z]);
+      } else if (op[2] === y) layer.set((op[1] + 4096) * 8192 + (op[3] + 4096), [op[4], op[5], op[1], op[3]]);
+    }
+    const cells = [...layer.values()].map(([id, st, x, z]) => ({ x, z, id, st }));
+    for (const w of serpentine(cells)) {
+      yield { x: cx + w.x, y: y0 + y, z: cz + w.z, id: w.id, st: w.st };
+    }
+    yield 0;
   }
 }
 
@@ -266,19 +372,30 @@ export function* biomeTransform(c, biome) {
       if (dim.getBlock({ x: cx + R, y: cy, z: cz + R }) && dim.getBlock({ x: cx - R, y: cy, z: cz - R })) break;
       yield 5;
     }
-    // tira árvores e plantas antigas quando o bioma novo não combina com elas
-    if (["deserto", "cogumelo", "flores", "neve", "cerejeira", "selva", "pantano"].includes(biome)) {
+    const speed = speedOf(c);
+    const manual = speed !== "instantaneo";
+    const placer = manual ? new Placer(c, speed, { natural: NAT_BREAK }) : null;
+    const queue = [];
+    const clearVeg = ["deserto", "cogumelo", "flores", "neve", "cerejeira", "selva", "pantano"].includes(biome);
+    if (manual) {
+      say(c, `Vou fazer à mão, coluna por coluna (modo ${SPEEDS[speed].label}): uns ${Math.max(1, Math.round((Math.PI * R * R * 3) / SPEEDS[speed].rate / 60))} min.`, { force: true });
+    } else if (clearVeg) {
+      // tira árvores e plantas antigas quando o bioma novo não combina com elas
       yield* fillBox(dim, { x: cx - R, y: cy - 6, z: cz - R }, { x: cx + R, y: cy + 30, z: cz + R }, perm("minecraft:air"), { includeTypes: [...LEAVES, ...LOGS, ...PLANTS] });
     }
-    const put = (x, y, z, id, st) => {
-      const p = perm(id, st);
-      const b = p && dim.getBlock({ x, y, z });
-      if (b && (b.isAir || PLANTS.includes(b.typeId) || LEAVES.includes(b.typeId) || id === "minecraft:air" || GROUND.includes(b.typeId) || b.isLiquid)) b.setPermutation(p);
-    };
+    const put = manual
+      ? (x, y, z, id, st) => queue.push({ x, y, z, id, st, soft: true })
+      : (x, y, z, id, st) => {
+        const p = perm(id, st);
+        const b = p && dim.getBlock({ x, y, z });
+        if (b && (b.isAir || PLANTS.includes(b.typeId) || LEAVES.includes(b.typeId) || id === "minecraft:air" || GROUND.includes(b.typeId) || b.isLiquid)) b.setPermutation(p);
+      };
     const rnd = Math.random;
     let col = 0;
     for (let x = -R; x <= R; x++) {
-      for (let z = -R; z <= R; z++) {
+      for (let zi = -R; zi <= R; zi++) {
+        const z = (x & 1) ? -zi : zi; // zigue-zague
+        if (manual && queue.length) yield* /** @type {Placer} */ (placer).run(queue.splice(0));
         const r = Math.hypot(x, z);
         if (r > R) continue;
         const wx = cx + x, wz = cz + z;
@@ -289,6 +406,16 @@ export function* biomeTransform(c, biome) {
         const water = above?.isLiquid;
         const edge = r > R - 4 && rnd() < (r - (R - 4)) / 4; // borda irregular (mistura com o resto)
         if (!top || !GROUND.includes(top.typeId) || edge) continue;
+        if (manual && clearVeg) {
+          // à mão: derruba a vegetação antiga desta coluna, de cima para baixo
+          let tb;
+          try {
+            tb = dim.getTopmostBlock({ x: wx, z: wz }, y + 1);
+          } catch {
+            /* ignore */
+          }
+          if (tb) for (let yy = Math.min(tb.y, y + 40); yy > y; yy--) queue.push({ x: wx, y: yy, z: wz, id: "minecraft:air" });
+        }
         const ground = (id) => put(wx, y, wz, id);
         switch (biome) {
           case "neve":
@@ -368,6 +495,7 @@ export function* biomeTransform(c, biome) {
       }
       if (x % 12 === 0) say(c, `Bioma: ${Math.round(((x + R) / (2 * R)) * 100)}%`, { chatter: true });
     }
+    if (manual && queue.length) yield* /** @type {Placer} */ (placer).run(queue.splice(0));
     sound(c.entity, "random.levelup", 1, 1.2);
     say(c, `Pronto: aqui agora é ${def.name}! (O jogo não deixa mudar a cor da grama/clima por script.)`, { force: true });
     c.save();
@@ -437,4 +565,88 @@ function giantMushroom(put, x, y, z, rnd) {
     put(x + dx, y + h + 1, z + dz, cap);
     if (red && (Math.abs(dx) === r || Math.abs(dz) === r)) for (let k = 0; k < 3; k++) put(x + dx, y + h - k, z + dz, cap);
   }
+}
+
+// ------------------------------------------------------------------ aplainar / destruir tudo em volta
+const CONTAINER_IDS = ["minecraft:chest", "minecraft:trapped_chest", "minecraft:barrel", "minecraft:ender_chest", "minecraft:furnace",
+  "minecraft:lit_furnace", "minecraft:blast_furnace", "minecraft:smoker", "minecraft:hopper", "minecraft:dispenser", "minecraft:dropper",
+  "minecraft:brewing_stand", "minecraft:beacon", "minecraft:enchanting_table", "minecraft:lectern", "minecraft:jukebox", "minecraft:bed",
+  "minecraft:undyed_shulker_box", "minecraft:bedrock", "minecraft:barrier", "minecraft:command_block", "minecraft:structure_block"];
+
+/**
+ * Deixa tudo plano em volta de você: tira o que estiver acima do chão (só natureza, ou TUDO menos
+ * baús/camas/blocos que guardam itens), tapa buracos com terra/grama e recolhe os itens do chão.
+ * @param {Companion} c
+ */
+export function* flatten(c, radius = 24, all = false) {
+  const owner = c.owner();
+  const dim = c.dim();
+  const ref = owner && owner.dimension.id === dim.id ? owner.location : c.pos();
+  const R = Math.max(6, Math.min(64, Math.round(radius)));
+  const cx = Math.floor(ref.x), cz = Math.floor(ref.z), y0 = Math.floor(ref.y) - 1;
+  const speed = speedOf(c);
+  say(c, all
+    ? `Destruindo TUDO num raio de ${R} blocos e deixando plano (menos baús e camas)...`
+    : `Aplainando o terreno num raio de ${R} blocos (só natureza; suas construções ficam)...`, { force: true });
+  const area = loadArea(dim, c, { x: cx - R, z: cz - R }, { x: cx + R, z: cz + R });
+  try {
+    for (let t = 0; t < 120; t++) {
+      if (dim.getBlock({ x: cx + R, y: y0, z: cz + R }) && dim.getBlock({ x: cx - R, y: y0, z: cz - R })) break;
+      yield 5;
+    }
+    if (speed === "instantaneo") {
+      const filter = all ? { excludeTypes: CONTAINER_IDS } : { includeTypes: NATURAL };
+      for (let x = -R; x <= R; x++) {
+        const w = Math.floor(Math.sqrt(R * R - x * x));
+        yield* fillBox(dim, { x: cx + x, y: y0 + 1, z: cz - w }, { x: cx + x, y: Math.min(dim.heightRange.max - 1, y0 + 80), z: cz + w }, perm("minecraft:air"), filter);
+        yield* fillBox(dim, { x: cx + x, y: y0 - 3, z: cz - w }, { x: cx + x, y: y0 - 1, z: cz + w }, perm("minecraft:dirt"), { includeTypes: ["minecraft:air", "minecraft:water", "minecraft:flowing_water", "minecraft:lava", "minecraft:flowing_lava"] });
+        yield* fillBox(dim, { x: cx + x, y: y0, z: cz - w }, { x: cx + x, y: y0, z: cz + w }, perm("minecraft:grass_block"), { includeTypes: ["minecraft:air", "minecraft:water", "minecraft:flowing_water", "minecraft:lava", "minecraft:flowing_lava", ...PLANTS] });
+      }
+    } else {
+      const placer = new Placer(c, speed, all ? { all: true } : { natural: NAT_BREAK });
+      yield* placer.run(flattenStream(dim, cx, cz, y0, R));
+    }
+    say(c, "Agora vou recolher os itens do chão...", { chatter: true });
+    const r = yield* vacuum(c, { x: cx, y: y0 + 1, z: cz }, R + 4, speed === "instantaneo" ? "rapido" : speed);
+    sound(c.entity, "random.levelup", 1, 1.2);
+    say(c, `Pronto, tudo plano em volta de você! ${r.got ? `Recolhi ${r.got} itens do chão (estão comigo, peça "me dá tudo").` : ""}`, { force: true });
+    return true;
+  } finally {
+    unloadArea(dim, area);
+    setAction(c.entity, "idle");
+  }
+}
+
+function* flattenStream(dim, cx, cz, y0, R) {
+  const cols = [];
+  for (let x = -R; x <= R; x++) for (let z = -R; z <= R; z++) if (x * x + z * z <= R * R) cols.push({ x, z });
+  for (const { x, z } of serpentine(cols)) {
+    const wx = cx + x, wz = cz + z;
+    let top;
+    try {
+      top = dim.getTopmostBlock({ x: wx, z: wz }, y0 - 3);
+    } catch {
+      continue;
+    }
+    if (top && top.y > y0) for (let y = Math.min(top.y, y0 + 80); y > y0; y--) yield { x: wx, y, z: wz, id: "minecraft:air" };
+    const g = dim.getBlock({ x: wx, y: y0, z: wz });
+    if (g && (g.isAir || g.isLiquid || PLANTS.includes(g.typeId))) {
+      for (let y = y0 - 3; y < y0; y++) {
+        const u = dim.getBlock({ x: wx, y, z: wz });
+        if (u && (u.isAir || u.isLiquid)) yield { x: wx, y, z: wz, id: "minecraft:dirt" };
+      }
+      yield { x: wx, y: y0, z: wz, id: "minecraft:grass_block" };
+    }
+    yield 0;
+  }
+}
+
+/** Só recolher os itens do chão em volta de você. */
+export function* sweepGround(c, radius = 32) {
+  const owner = c.owner();
+  const ref = owner && owner.dimension.id === c.dim().id ? owner.location : c.pos();
+  say(c, `Recolhendo os itens do chão num raio de ${radius} blocos...`, { force: true });
+  const speed = speedOf(c);
+  const r = yield* vacuum(c, ref, radius, speed === "instantaneo" ? "rapido" : speed);
+  say(c, r.got || r.gone ? `Limpei o chão: ${r.got} itens comigo${r.gone ? `, ${r.gone} sumiram (inventário cheio)` : ""}.` : "Não tem item no chão aqui perto.", { force: true });
 }

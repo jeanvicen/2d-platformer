@@ -45,7 +45,7 @@
         },
         "body": {
           "rotation": [
-            "math.clamp(q.ground_speed * 1.6, 0, 18)",
+            "v.htilt",
             0.0,
             "-v.lean * 0.6"
           ]
@@ -122,7 +122,7 @@
         "cab": {
           "rotation": [
             0.0,
-            "v.aim",
+            "v.aims",
             0.0
           ]
         },
@@ -286,7 +286,7 @@
         "turret": {
           "rotation": [
             0.0,
-            "v.aim",
+            "v.aims",
             0.0
           ]
         },
@@ -409,7 +409,7 @@
         },
         "body": {
           "rotation": [
-            "math.clamp(-q.vertical_speed * 2.2, -28, 28)",
+            "v.jpitch",
             0.0,
             "v.lean * 1.4"
           ]
@@ -474,13 +474,13 @@
         "yaw": {
           "rotation": [
             0.0,
-            "v.aim",
+            "v.aims",
             0.0
           ]
         },
         "pitch": {
           "rotation": [
-            "-q.property('lila:pitch')",
+            "-v.pits",
             0.0,
             0.0
           ]

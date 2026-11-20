@@ -40,6 +40,8 @@ const I = {
   biome: "textures/blocks/sapling_oak",
   creative: "textures/blocks/chest_front",
   kit: "textures/items/totem",
+  flatten: "textures/items/diamond_shovel",
+  sweep: "textures/items/hopper",
 };
 
 const EXAMPLES = [
@@ -54,10 +56,14 @@ const EXAMPLES = [
   "me dá 64 diamantes",
   "me fortalece",
   "me protege",
+  "deixa tudo plano",
+  "recolhe os itens do chão",
+  "constrói devagar",
   "volta ao normal",
 ];
 
 const comp = (player) => loadCompanion(player, "drone");
+const SPEED_KEYS = ["humano", "normal", "rapido", "instantaneo"];
 
 /**
  * Abre o menu principal do controle.
@@ -97,6 +103,8 @@ export async function openController(player) {
       [army ? "§aComandar o exército…" : "§aModo EXÉRCITO", I.army, () => (army ? armyMenu(player) : handleIntents(c, [{ type: "army", count: c.rec.settings.army ?? 10 }]))],
       ["§eConstruções gigantes…", I.build, () => buildMenu(player)],
       ["§2Transformar bioma…", I.biome, () => biomeMenu(player)],
+      ["§6Aplainar / destruir em volta…", I.flatten, () => flattenMenu(player)],
+      ["§6Recolher os itens do chão", I.sweep, () => handleIntents(c, [{ type: "vacuum", radius: 32 }])],
       ["§dItens infinitos…", I.creative, () => creativeMenu(player)],
       ["§dMe fortalecer (kit encantado)", I.kit, () => handleIntents(c, [{ type: "kit" }])],
       ["§4Me proteger (ataca primeiro)", I.protect, () => handleIntents(c, [{ type: "protect" }])],
@@ -219,7 +227,7 @@ async function buildMenu(player) {
   const names = [...mega.map((k) => `§e${MEGA[k].name}§r — ${MEGA[k].desc}`), ...small.map((k) => `${BLUEPRINTS[k].name} — ${BLUEPRINTS[k].desc}`)];
   const f = new ModalFormData()
     .title("§l§eConstruções gigantes")
-    .dropdown("§fO que construir? §7(material infinito)", names, { defaultValueIndex: 0 })
+    .dropdown(`§fO que construir? §7(material infinito · construção ${({ humano: "à mão, bloco por bloco", normal: "normal", rapido: "rápida", instantaneo: "instantânea" })[c.rec.settings.buildSpeed ?? "humano"]} — muda em Configurações)`, names, { defaultValueIndex: 0 })
     .toggle("§fBem aqui na minha frente", { defaultValue: true })
     .submitButton("§lConstruir");
   const r = await show(player, f);
@@ -231,6 +239,19 @@ async function buildMenu(player) {
     const key = small[i - mega.length];
     handleIntents(c, [key === "fazenda" ? { type: "farm", here, crop: "minecraft:wheat_seeds" } : { type: "build", blueprint: key, here }]);
   }
+}
+
+async function flattenMenu(player) {
+  const c = comp(player);
+  const radii = [12, 16, 24, 32, 48, 64];
+  const f = new ModalFormData()
+    .title("§l§6Aplainar / destruir em volta")
+    .dropdown("§fRaio em volta de você (blocos)", radii.map(String), { defaultValueIndex: 2 })
+    .toggle("§cDestruir TUDO, inclusive construções §7(baús, camas e blocos com itens ficam)", { defaultValue: false })
+    .submitButton("§lDeixar plano");
+  const r = await show(player, f);
+  if (!r || r.canceled || !r.formValues) return;
+  handleIntents(c, [{ type: "flatten", radius: radii[Number(r.formValues[0] ?? 2)], all: !!r.formValues[1] }]);
 }
 
 async function biomeMenu(player) {
@@ -296,6 +317,8 @@ async function settingsMenu(player) {
     .dropdown("§fIndicador de posição (HUD)", ["Automático", "Sempre visível", "Desligado"], { defaultValueIndex: Math.max(0, hud.indexOf(st.hud)) })
     .dropdown("§fConversa no chat", ["Normal", "Pouca", "Só respostas"], { defaultValueIndex: Math.max(0, chat.indexOf(st.chat)) })
     .slider("§fRobôs no modo exército", 1, 24, { valueStep: 1, defaultValue: st.army ?? 10 })
+    .dropdown("§fVelocidade de construção", ["À mão, bloco por bloco (devagar, como jogador)", "Normal", "Rápido", "Instantâneo (tudo de uma vez)"],
+      { defaultValueIndex: Math.max(0, SPEED_KEYS.indexOf(st.buildSpeed ?? "humano")) })
     .toggle("§fArmas quebram blocos (colosso, canhão, mísseis)", { defaultValue: st.destroy !== false })
     .toggle("§fRevidar quando EU bater nele (lição de leve)", { defaultValue: st.lesson !== false })
     .submitButton("§lSalvar");
@@ -304,8 +327,9 @@ async function settingsMenu(player) {
   st.hud = hud[Number(r.formValues[0] ?? 0)];
   st.chat = chat[Number(r.formValues[1] ?? 0)];
   st.army = Number(r.formValues[2] ?? 10);
-  st.destroy = !!r.formValues[3];
-  st.lesson = !!r.formValues[4];
+  st.buildSpeed = SPEED_KEYS[Number(r.formValues[3] ?? 0)];
+  st.destroy = !!r.formValues[4];
+  st.lesson = !!r.formValues[5];
   c.save();
   player.sendMessage("§b[DR-0N]§r Configurações salvas.");
 }

@@ -2,14 +2,14 @@
 // Sem "owner": monta uma arena no céu e testa o DR-0N sozinho (criativo, todas as formas, colosso,
 // torreta, megaconstruções, bioma, derrota). Com "owner": usa jogadores simulados (Dono e Intruso)
 // para testar pilotagem, imortalidade no colosso, revide contra jogador, exército e entregas.
-import { system, world } from "@minecraft/server";
+import { ItemStack, system, world } from "@minecraft/server";
 import { COMPANIONS, Companion, ENTITY_ID, OWNER_PROP, adopt, compKey, loadCompanion, newRecord } from "../lila/companion.js";
 import * as inv from "../lila/inventory.js";
 import { obtain } from "../lila/planner.js";
 import { command, handleIntents, stats } from "../lila/brain.js";
 import { summon, dismiss, restoreBodyForTest, RESPAWN_TICKS } from "../lila/lifecycle.js";
 import { formOf, riders, setForm, turretGoal, primaryAttack } from "../lila/forms.js";
-import { megaBuild, biomeTransform } from "../lila/mega.js";
+import { megaBuild, biomeTransform, flatten, sweepGround } from "../lila/mega.js";
 import { armyActive, robotsOf } from "../lila/army.js";
 import { FORM_LIST } from "../lib/catalog.js";
 import { logError } from "../core/log.js";
@@ -225,7 +225,64 @@ async function soloTests(dim, check) {
   check("giant turret form kills 3 zombies", zs.every(dead) && wasTurret, `ticks=${system.currentTick - tt} form=${wasTurret}`);
   check("turret folds back to drone when done", formOf(c) === "drone");
 
-  // megaconstruções (cada uma longe, numa área própria carregada)
+  // construção À MÃO (modo humano): poço bloco por bloco, com o drone voando pela obra
+  {
+    c.rec.settings.buildSpeed = "humano";
+    const hx = 150;
+    await area(dim, "lila_test_build", hx - 30, -10, hx + 30, 50);
+    c.entity?.teleport({ x: hx + 0.5, y: Y + 1, z: 0.5 }, { rotation: { x: 0, y: 0 } });
+    await system.waitTicks(4);
+    const spots = new Set();
+    const watch = system.runInterval(() => {
+      const q = c.pos();
+      spots.add(`${Math.round(q.x / 2)},${Math.round(q.y / 2)},${Math.round(q.z / 2)}`);
+    }, 10);
+    stats.maxStepMs = 0;
+    const b0 = c.rec.stats.built;
+    const rh = await runGen(megaBuild(c, "poco", { here: false }), 3000);
+    system.clearRun(watch);
+    const water = countBlocks(dim, "minecraft:water", hx - 1, Y - 4, 12, hx + 1, Y, 14);
+    check("hand-built (human mode): well done block by block", rh.ok && c.rec.stats.built === b0 + 1 && rh.ticks > 150 && water >= 9,
+      `ticks=${rh.ticks} water=${water} drone positions=${spots.size} maxStep=${stats.maxStepMs}ms ${rh.err ?? ""}`);
+    check("hand-built: the drone flies around the work", spots.size >= 4, `positions=${spots.size}`);
+    c.entity?.teleport({ x: 0.5, y: Y + 2, z: 0.5 });
+    await system.waitTicks(2);
+    dropArea("lila_test_build");
+  }
+
+  // aplainar: morro + árvore somem, parede do jogador fica, itens do chão recolhidos
+  {
+    const fx = 1000;
+    await area(dim, "lila_test_flat", fx - 30, -30, fx + 30, 30);
+    cmd(dim, `fill ${fx - 20} ${Y - 2} -20 ${fx + 20} ${Y - 1} 20 dirt`);
+    cmd(dim, `fill ${fx - 20} ${Y} -20 ${fx + 20} ${Y} 20 grass_block`);
+    cmd(dim, `fill ${fx + 2} ${Y + 1} 2 ${fx + 6} ${Y + 4} 6 dirt`);            // morro
+    cmd(dim, `fill ${fx - 6} ${Y + 1} -6 ${fx - 6} ${Y + 5} -6 oak_log`);       // árvore
+    cmd(dim, `fill ${fx - 8} ${Y + 4} -8 ${fx - 4} ${Y + 6} -4 oak_leaves`);
+    cmd(dim, `fill ${fx - 3} ${Y + 1} 8 ${fx + 3} ${Y + 3} 8 oak_planks`);      // "construção do jogador"
+    for (let k = 0; k < 6; k++) dim.spawnItem(new ItemStack("minecraft:diamond", 2), { x: fx + 0.5 + k, y: Y + 1.2, z: -2.5 });
+    c.entity?.teleport({ x: fx + 0.5, y: Y + 1, z: 0.5 });
+    await system.waitTicks(4);
+    c.rec.settings.buildSpeed = "rapido";
+    const d0 = inv.count(c, "minecraft:diamond");
+    const rf = await runGen(flatten(c, 12, false), 3000);
+    const hill = countBlocks(dim, "minecraft:dirt", fx + 2, Y + 1, 2, fx + 6, Y + 4, 6) + countBlocks(dim, "minecraft:oak_log", fx - 6, Y + 1, -6, fx - 6, Y + 5, -6);
+    const wall = countBlocks(dim, "minecraft:oak_planks", fx - 3, Y + 1, 8, fx + 3, Y + 3, 8);
+    check("flatten: hill and tree gone, ground level", rf.ok && hill === 0, `left=${hill} ticks=${rf.ticks} ${rf.err ?? ""}`);
+    check("flatten (nature only) keeps the player's build", wall === 21, `planks=${wall}/21`);
+    check("flatten picks up the items on the ground", inv.count(c, "minecraft:diamond") >= d0 + 12, `diamonds ${d0}->${inv.count(c, "minecraft:diamond")}`);
+    // destruir TUDO: a parede vai embora, o baú fica
+    cmd(dim, `setblock ${fx} ${Y + 1} 10 chest`);
+    const ra = await runGen(flatten(c, 12, true), 3000);
+    const wall2 = countBlocks(dim, "minecraft:oak_planks", fx - 3, Y + 1, 8, fx + 3, Y + 3, 8);
+    check("destroy everything: builds gone, chest kept", ra.ok && wall2 === 0 && dim.getBlock({ x: fx, y: Y + 1, z: 10 })?.typeId === "minecraft:chest", `planks=${wall2}`);
+    c.entity?.teleport({ x: 0.5, y: Y + 2, z: 0.5 });
+    await system.waitTicks(2);
+    dropArea("lila_test_flat");
+  }
+
+  // megaconstruções (cada uma longe, numa área própria carregada) — modo instantâneo para o teste caber no tempo
+  c.rec.settings.buildSpeed = "instantaneo";
   /** @type {[string, number][]} */
   const builds = [["poco", 300], ["labirinto", 600], ["montanha_russa", 900], ["casa_tech", 1200], ["castelo", 1500], ["vila", 1800],
     ["piramide", 2100], ["farol", 2400], ["arranha_ceu", 2700], ["estadio", 3000], ["montanha", 3300], ["cidade", 3700]];
@@ -262,7 +319,8 @@ async function soloTests(dim, check) {
   cmd(dim, `fill ${bx - 38} ${Y} -38 ${bx + 38} ${Y} 38 grass_block`);
   c.entity?.teleport({ x: bx + 0.5, y: Y + 3, z: 0.5 });
   await system.waitTicks(4);
-  const rb = await runGen(biomeTransform(c, "neve"), 3000);
+  c.rec.settings.buildSpeed = "rapido"; // à mão (rápido), coluna por coluna
+  const rb = await runGen(biomeTransform(c, "neve"), 6000);
   const snow = countBlocks(dim, "minecraft:snow_layer", bx - 30, Y + 1, -30, bx + 30, Y + 1, 30, 2);
   check("biome transform: snow", rb.ok && snow > 150, `snow layers(sample)=${snow} ticks=${rb.ticks} ${rb.err ?? ""}`);
   c.entity?.teleport({ x: 0.5, y: Y + 2, z: 0.5 });
@@ -425,13 +483,24 @@ async function ownerTests(dim, check) {
   await waitUntil(() => c.alive() && robotsOf(c).length === 0, 100);
   check("cancel merges the army back into the drone", c.alive() && !armyActive(c) && robotsOf(c).length === 0, `robots=${robotsOf(c).length}`);
 
+  // recolher itens do chão por texto
+  for (let k = 0; k < 5; k++) dim.spawnItem(new ItemStack("minecraft:emerald", 3), { x: 3.5 + k, y: Y + 1.2, z: 9.5 });
+  c.rec.paused = false;
+  command(c, "recolhe os itens do chão");
+  await waitUntil(() => dim.getEntities({ type: "minecraft:item", location: { x: 5, y: Y + 1, z: 9 }, maxDistance: 8 }).length === 0, 600);
+  check("'recolhe os itens do chão' (drone sweeps the ground)", dim.getEntities({ type: "minecraft:item", location: { x: 5, y: Y + 1, z: 9 }, maxDistance: 8 }).length === 0,
+    `emeralds with drone=${inv.count(c, "minecraft:emerald")}`);
+  command(c, "constrói na hora");
+  check("'constrói na hora' / 'constrói devagar' change the build speed", c.rec.settings.buildSpeed === "instantaneo");
+  command(c, "constrói devagar");
+
   // construção e bioma por texto
   owner.teleport({ x: 0.5, y: Y + 1, z: -20.5 }, { rotation: { x: 0, y: 180 } });
   await system.waitTicks(10);
   const b0 = c.rec.stats.built;
   c.rec.paused = false;
   command(c, "constrói um poço aqui");
-  await waitUntil(() => c.rec.stats.built > b0, 600);
+  await waitUntil(() => c.rec.stats.built > b0, 2400);
   check("'constrói um poço aqui' (mega builder by text)", c.rec.stats.built > b0);
   check("player build untouched", dim.getBlock({ x: 20, y: Y + 2, z: 0 })?.typeId === "minecraft:oak_planks");
 }

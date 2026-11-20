@@ -150,3 +150,17 @@ export const BIOMES = {
   floresta: { name: "floresta", w: ["floresta", "bosque", "mata", "forest"] },
   pantano: { name: "pântano", w: ["pantano", "mangue", "brejo", "swamp"] },
 };
+
+/** Aplainar / destruir em volta e recolher itens. */
+export const FLATTEN_WORDS = ["aplaina", "aplainar", "aplaine", "deixa plano", "deixa tudo plano", "deixar plano", "deixa reto", "nivela", "nivelar",
+  "terraplanagem", "terraplana", "limpa o terreno", "limpa tudo em volta", "limpa a area", "limpa tudo", "limpa em volta", "planifica"];
+export const DESTROY_WORDS = ["destroi tudo", "destrua tudo", "destroi tudo em volta", "derruba tudo", "arrasa tudo", "explode tudo", "apaga tudo",
+  "destruir tudo", "destroi as coisas", "destroi tudo aqui"];
+export const VACUUM_WORDS = ["limpa os itens", "recolhe os itens", "pega os itens do chao", "tira os itens do chao", "limpa o chao", "junta os itens",
+  "aspira", "itens do chao", "recolhe tudo do chao", "pega tudo do chao", "limpa a sujeira"];
+export const SPEED_WORDS = {
+  humano: ["devagar", "manualmente", "a mao", "como humano", "modo humano", "como um jogador", "bloco por bloco", "com calma"],
+  normal: ["velocidade normal", "modo normal de construcao"],
+  rapido: ["rapido", "mais rapido", "depressa", "acelera"],
+  instantaneo: ["instantaneo", "na hora", "de uma vez", "instantaneamente"],
+};

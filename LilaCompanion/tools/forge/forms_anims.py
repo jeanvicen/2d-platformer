@@ -20,7 +20,7 @@ P = "animation.lila.form"
 ACT = "q.property('lila:action')"
 FORM_IDS = {"drone": 0, "heli": 1, "car": 2, "excavator": 3, "tank": 4, "jet": 5, "moto": 6, "colossus": 7, "turret": 8}
 
-INITIALIZE = ["v.cwd = 0; v.cws = 0; v.wheel = 0; v.pby = q.body_y_rotation; v.lean = 0; v.tf = 9; v.pf = q.property('lila:form'); v.gspin = 0; v.gear = 1;"]
+INITIALIZE = ["v.dtilt = 0; v.htilt = 0; v.jpitch = 0; v.aims = 0; v.pits = 0; v.cwd = 0; v.cws = 0; v.wheel = 0; v.pby = q.body_y_rotation; v.lean = 0; v.tf = 9; v.pf = q.property('lila:form'); v.gspin = 0; v.gear = 1;"]
 PRE_ANIMATION = [
     "v.form = q.property('lila:form');",
     "v.tf = (v.form != v.pf) ? 0 : v.tf + q.delta_time; v.pf = v.form;",
@@ -31,7 +31,13 @@ PRE_ANIMATION = [
     "v.aim = q.property('lila:aim');",
     f"v.gspin = v.gspin + math.min(q.delta_time, 0.1) * (({ACT} == 'shoot') ? 2400 : 90);",
     "v.gear = math.lerp(v.gear, q.is_on_ground ? 1 : 0, 0.06);",
-    "v.cwd = v.cwd + q.ground_speed * math.min(q.delta_time, 0.1) / 3.4; v.cws = math.min(1, q.ground_speed / 2.5);",
+    "v.cwd = v.cwd + q.ground_speed * math.min(q.delta_time, 0.1) / 3.4; v.cws = math.lerp(v.cws, math.min(1, q.ground_speed / 2.5), 0.12);",
+    # suavizações: inclinação do drone/heli/jato e mira das torres giram macio (sem estalar)
+    "v.dtilt = math.lerp(v.dtilt, math.clamp(q.ground_speed * 2.4, 0, 24), 0.08);",
+    "v.htilt = math.lerp(v.htilt, math.clamp(q.ground_speed * 1.6, 0, 18), 0.08);",
+    "v.jpitch = math.lerp(v.jpitch, math.clamp(-q.vertical_speed * 2.2, -28, 28), 0.1);",
+    "v.aims = v.aims + (math.mod(v.aim - v.aims + 540, 360) - 180) * 0.2;",
+    "v.pits = math.lerp(v.pits, q.property('lila:pitch'), 0.2);",
 ]
 
 
@@ -54,7 +60,7 @@ def form_anims():
     add("heli", {
         "rotor_main": bone(rot=[0, "q.anim_time * 1620", 0]),
         "rotor_tail": bone(rot=["q.anim_time * 2200", 0, 0]),
-        "body": bone(rot=["math.clamp(q.ground_speed * 1.6, 0, 18)", 0, "-v.lean * 0.6"]),
+        "body": bone(rot=["v.htilt", 0, "-v.lean * 0.6"]),
         "root": bone(pos=[0, "q.is_on_ground ? 0 : math.sin(q.anim_time * 100) * 0.5", 0]),
     })
     add("heli_fire", {"body": bone(pos=[0, 0, osc(0.4, 2400)])}, loop=True)
@@ -72,7 +78,7 @@ def form_anims():
 
     # ---------------- escavadeira
     add("excavator", {
-        "cab": bone(rot=[0, "v.aim", 0]),
+        "cab": bone(rot=[0, "v.aims", 0]),
         "boom": bone(rot=[osc(1.2, 60), 0, 0]),
         "tracks": bone(pos=[0, "math.sin(q.anim_time * 1400) * 0.12 * math.min(1, q.ground_speed)", 0]),
     })
@@ -84,7 +90,7 @@ def form_anims():
 
     # ---------------- tanque
     add("tank", {
-        "turret": bone(rot=[0, "v.aim", 0]),
+        "turret": bone(rot=[0, "v.aims", 0]),
         "hull": bone(rot=["math.sin(q.anim_time * 700) * 0.3 * math.min(1, q.ground_speed / 3)", 0, "v.lean * 0.08"]),
     })
     add("tank_fire", {
@@ -97,7 +103,7 @@ def form_anims():
     add("jet", {
         "flame": bone(scale=["0.5 + math.min(1, q.ground_speed / 18) * 0.9 + math.sin(q.anim_time * 2600) * 0.06"] * 3),
         "gear": bone(scale="v.gear", pos=[0, "(1 - v.gear) * 4", 0]),
-        "body": bone(rot=["math.clamp(-q.vertical_speed * 2.2, -28, 28)", 0, "v.lean * 1.4"]),
+        "body": bone(rot=["v.jpitch", 0, "v.lean * 1.4"]),
     })
     add("jet_missile", {"body": bone(pos=[0, 0, osc(0.6, 1800)])}, loop=True)
 
@@ -112,8 +118,8 @@ def form_anims():
 
     # ---------------- torreta gigante
     add("turret_g", {
-        "yaw": bone(rot=[0, "v.aim", 0]),
-        "pitch": bone(rot=["-q.property('lila:pitch')", 0, 0]),
+        "yaw": bone(rot=[0, "v.aims", 0]),
+        "pitch": bone(rot=["-v.pits", 0, 0]),
         "gatling": bone(rot=[0, 0, "v.gspin"]),
         "radar": bone(rot=[0, "q.anim_time * 140", 0]),
         "root": bone(scale="1 + (v.tf < 0.6 ? math.sin(v.tf * 300) * 0.04 : 0)"),
@@ -227,8 +233,9 @@ def robot_anims():
 
     f = 38.17
     add("look", {"head": bone(rot=["q.target_x_rotation", "q.target_y_rotation", 0])})
-    add("idle", {"body": bone(rot=[osc(1, 60), 0, 0]), "rightArm": bone(rot=[osc(2, 60, base=-4), 0, 4]),
-                 "leftArm": bone(rot=[osc(2, 60, phase=90, base=-4), 0, -4]), "jet": bone(scale=0.4)})
+    add("idle", {"body": bone(rot=[osc(1, 60), 0, 0], pos=[0, osc(0.15, 60), 0]), "rightArm": bone(rot=[osc(2, 60, base=-4), 0, 4]),
+                 "leftArm": bone(rot=[osc(2, 60, phase=90, base=-4), 0, -4]), "jet": bone(scale=0.4),
+                 "head": bone(rot=[0, osc(8, 25), 0])})
     add("walk", {
         "rightLeg": bone(rot=[walk(40, f), 0, 0]), "leftLeg": bone(rot=[walk(40, f, phase=180), 0, 0]),
         "rightArm": bone(rot=[walk(30, f, phase=180), 0, 0]), "leftArm": bone(rot=[walk(30, f), 0, 0]),
