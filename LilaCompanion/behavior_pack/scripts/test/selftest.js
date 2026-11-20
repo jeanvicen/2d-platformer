@@ -208,7 +208,7 @@ async function ownerTests(dim, check) {
   await waitUntil(() => pcount((id) => id === "minecraft:stone_pickaxe") > 0, 3600);
   check("'faz uma picareta de pedra' crafts and delivers", pcount((id) => id === "minecraft:stone_pickaxe") > 0, `ticks=${system.currentTick - tp} job=${c.job?.desc?.type ?? "-"}`);
   // construção rápida: cabana só com troncos (sem vidro/tocha/pedra: ela adapta e não trava)
-  owner.teleport({ x: 0.5, y: Y + 1, z: 30.5 }, { rotation: { x: 0, y: 0 } });
+  owner.teleport({ x: 24.5, y: Y + 1, z: 22.5 }, { rotation: { x: 0, y: 180 } });
   await system.waitTicks(10);
   inv.addId(c, "minecraft:oak_log", 48);
   const tb = system.currentTick;
@@ -216,7 +216,7 @@ async function ownerTests(dim, check) {
   await waitUntil(() => c.rec.stats.built > built0 || (c.rec.goals.length === 0 && system.currentTick - tb > 60), 4800);
   check("'constrói uma cabana' (só troncos) termina em até 4 min", c.rec.stats.built > built0, `ticks=${system.currentTick - tb} job=${c.job?.desc?.type ?? "-"} err=${c.lastError ?? "-"}`);
   // plantação rápida: poucas sementes e sem balde → planta o que tem e usa terra molhada
-  owner.teleport({ x: -20.5, y: Y + 1, z: 30.5 }, { rotation: { x: 0, y: 0 } });
+  owner.teleport({ x: -24.5, y: Y + 1, z: 24.5 }, { rotation: { x: 0, y: 180 } });
   await system.waitTicks(10);
   inv.addId(c, "minecraft:wheat_seeds", 6);
   inv.addId(c, "minecraft:oak_log", 16);

@@ -63,13 +63,30 @@ export function chooseSite(c, blocks, here) {
   }
   const fp = footprint(blocks);
   const width = fp.x1 - fp.x0 + 3;
-  const right = rotateLocal({ x: 1, y: 0, z: 0 }, card);
-  for (const shift of [0, width, -width, 2 * width, -2 * width]) {
-    const ox = base.x + right.x * shift, oz = base.z + right.z * shift;
-    const gy = groundY(dim, ox, oz, base.y);
-    if (gy === undefined) continue;
-    const site = { origin: { x: ox, y: gy - 1, z: oz }, card };
-    if (siteFree(c, blocks, site)) return site;
+  const depth = fp.z1 - fp.z0 + 3;
+  // frente primeiro; se não der, lados, mais longe e por fim atrás (como um jogador procurando lugar)
+  const tries = [];
+  for (const turn of [0, 1, 3, 2]) {
+    const cd = (card + turn) % 4;
+    for (const extra of [0, depth]) tries.push({ cd, extra, shifts: [0, width, -width, 2 * width, -2 * width] });
+  }
+  const t0 = Date.now();
+  for (const tr of tries) {
+    if (Date.now() - t0 > 40) break;
+    let b0 = base;
+    if (ref && (tr.cd !== card || tr.extra)) {
+      const f = rotateLocal({ x: 0, y: 0, z: 1 }, tr.cd);
+      const dist = (here ? 2 : 6) + tr.extra;
+      b0 = { x: Math.floor(ref.location.x) + f.x * dist, y: Math.floor(ref.location.y), z: Math.floor(ref.location.z) + f.z * dist };
+    }
+    const right = rotateLocal({ x: 1, y: 0, z: 0 }, tr.cd);
+    for (const shift of tr.shifts) {
+      const ox = b0.x + right.x * shift, oz = b0.z + right.z * shift;
+      const gy = groundY(dim, ox, oz, b0.y);
+      if (gy === undefined) continue;
+      const site = { origin: { x: ox, y: gy - 1, z: oz }, card: tr.cd };
+      if (siteFree(c, blocks, site)) return site;
+    }
   }
   return undefined;
 }
