@@ -1,35 +1,35 @@
 server started: True
-[2026-11-20 15:45:08:389 INFO] [Scripting] [Lila:boot] DR-0N Mega Drone carregado
-[2026-11-20 15:45:13:530 INFO] [Scripting] LILA-TEST START
-[2026-11-20 15:45:14:727 INFO] [Scripting] LILA-TEST PASS arena chunks loaded
-[2026-11-20 15:45:15:273 INFO] [Scripting] LILA-HARNESS owner spawned -8589934591
-[2026-11-20 15:45:15:521 INFO] [Scripting] LILA-TEST PASS simulated owner joined
-[2026-11-20 15:45:15:523 INFO] [Scripting] LILA-TEST PASS summon in front of owner
-[2026-11-20 15:45:17:271 INFO] [Scripting] LILA-TEST PASS 'me dá 64 diamantes' (infinite items)
-[2026-11-20 15:45:17:521 INFO] [Scripting] LILA-TEST PASS 'me fortalece' equips enchanted netherite :: totem=1
-[2026-11-20 15:45:18:022 INFO] [Scripting] LILA-TEST PASS 'vira helicóptero' puts the owner at the controls
-[2026-11-20 15:45:18:321 INFO] [Scripting] LILA-TEST PASS attack button fires the heli gun :: cd=200
-[2026-11-20 15:45:18:571 INFO] [Scripting] LILA-TEST PASS leaving a vehicle turns it back into the drone
-[2026-11-20 15:45:19:871 INFO] [Scripting] LILA-TEST PASS tank: owner drives, cannon fires
-[2026-11-20 15:45:20:371 INFO] [Scripting] LILA-TEST PASS 'cancelar' reverts the vehicle
-[2026-11-20 15:45:22:121 INFO] [Scripting] LILA-TEST PASS colossus: owner is in the head seat :: pilot height=19.7 blocks
-[2026-11-20 15:45:22:222 INFO] [Scripting] LILA-TEST PASS colossus: pilot is (almost) immortal :: hp 20->20
-[2026-11-20 15:45:22:421 INFO] [Scripting] LILA-TEST PASS colossus: attack button = punch
-[2026-11-20 15:45:24:422 INFO] [Scripting] LILA-TEST PASS colossus stays when you get out (until cancel)
-[2026-11-20 15:45:24:924 INFO] [Scripting] LILA-TEST PASS cancel turns the colossus back into the drone
-[2026-11-20 15:45:24:927 INFO] [Scripting] LILA-HARNESS intruder spawned -8589934582
-[2026-11-20 15:45:25:672 INFO] [Scripting] LILA-TEST PASS a player who hits you gets attacked by the drone :: intruder hp 20->15.5 aggro=true
-[2026-11-20 15:45:26:672 INFO] [Scripting] LILA-TEST PASS hitting the drone yourself = a light lesson :: hp 20->19.56800079345703
-[2026-11-20 15:45:46:671 INFO] [Scripting] LILA-TEST FAIL protect mode attacks first (zombie 20 blocks away) :: ticks=400
-[2026-11-20 15:45:47:923 INFO] [Scripting] LILA-TEST PASS army: drone bursts into 10 robots :: robots=10
-[2026-11-20 15:45:50:673 INFO] [Scripting] LILA-TEST PASS army: robots take down monsters
-[2026-11-20 15:45:52:174 INFO] [Scripting] LILA-TEST PASS army: brings what you need (low health -> golden apples)
-[2026-11-20 15:45:52:421 INFO] [Scripting] LILA-TEST PASS cancel merges the army back into the drone :: robots=0
-[2026-11-20 15:45:57:672 INFO] [Scripting] LILA-TEST PASS 'recolhe os itens do chão' (drone sweeps the ground) :: emeralds with drone=15
-[2026-11-20 15:45:57:674 INFO] [Scripting] LILA-TEST PASS 'constrói na hora' / 'constrói devagar' change the build speed
-[2026-11-20 15:46:45:671 INFO] [Scripting] LILA-TEST PASS 'constrói um poço aqui' (mega builder by text)
-[2026-11-20 15:46:45:672 INFO] [Scripting] LILA-TEST PASS player build untouched
-[2026-11-20 15:46:45:672 INFO] [Scripting] LILA-TEST DONE pass=25 fail=1
-selftest finished: True
+[2026-11-20 15:55:54:980 INFO] [Scripting] [Lila:boot] DR-0N Mega Drone carregado
+[2026-11-20 15:56:00:114 INFO] [Scripting] LILA-TEST START
+[2026-11-20 15:56:01:412 INFO] [Scripting] LILA-TEST PASS arena chunks loaded
+[2026-11-20 15:56:01:997 INFO] [Scripting] LILA-HARNESS owner spawned -8589934583
+[2026-11-20 15:56:02:244 INFO] [Scripting] LILA-TEST PASS simulated owner joined
+[2026-11-20 15:56:02:246 INFO] [Scripting] LILA-TEST PASS summon in front of owner
+[2026-11-20 15:56:03:744 INFO] [Scripting] LILA-TEST PASS 'me dá 64 diamantes' (infinite items)
+[2026-11-20 15:56:03:994 INFO] [Scripting] LILA-TEST PASS 'me fortalece' equips enchanted netherite :: totem=1
+[2026-11-20 15:56:04:494 INFO] [Scripting] LILA-TEST PASS 'vira helicóptero' puts the owner at the controls
+[2026-11-20 15:56:04:794 INFO] [Scripting] LILA-TEST PASS attack button fires the heli gun :: cd=197
+[2026-11-20 15:56:05:044 INFO] [Scripting] LILA-TEST PASS leaving a vehicle turns it back into the drone
+[2026-11-20 15:56:06:344 INFO] [Scripting] LILA-TEST PASS tank: owner drives, cannon fires
+[2026-11-20 15:56:06:845 INFO] [Scripting] LILA-TEST PASS 'cancelar' reverts the vehicle
+[2026-11-20 15:56:08:596 INFO] [Scripting] LILA-TEST PASS colossus: owner is in the head seat :: pilot height=19.7 blocks
+[2026-11-20 15:56:08:694 INFO] [Scripting] LILA-TEST PASS colossus: pilot is (almost) immortal :: hp 20->20
+[2026-11-20 15:56:08:894 INFO] [Scripting] LILA-TEST PASS colossus: attack button = punch
+[2026-11-20 15:56:10:894 INFO] [Scripting] LILA-TEST PASS colossus stays when you get out (until cancel)
+[2026-11-20 15:56:11:394 INFO] [Scripting] LILA-TEST PASS cancel turns the colossus back into the drone
+[2026-11-20 15:56:11:396 INFO] [Scripting] LILA-HARNESS intruder spawned -8589934576
+[2026-11-20 15:56:12:145 INFO] [Scripting] LILA-TEST PASS a player who hits you gets attacked by the drone :: intruder hp 20->15.5 aggro=true
+[2026-11-20 15:56:13:144 INFO] [Scripting] LILA-TEST PASS hitting the drone yourself = a light lesson :: hp 20->19.56800079345703
+[2026-11-20 15:56:15:893 INFO] [Scripting] LILA-TEST PASS protect mode attacks first (zombie 20 blocks away, before it reaches you) :: ticks=55 owner hp 20->20
+[2026-11-20 15:56:17:645 INFO] [Scripting] LILA-TEST PASS army: drone bursts into 10 robots :: robots=10
+[2026-11-20 15:56:20:644 INFO] [Scripting] LILA-TEST PASS army: robots take down monsters
+[2026-11-20 15:56:20:894 INFO] [Scripting] LILA-TEST PASS army: brings what you need (low health -> golden apples)
+[2026-11-20 15:56:21:145 INFO] [Scripting] LILA-TEST PASS cancel merges the army back into the drone :: robots=0
+[2026-11-20 15:56:22:894 INFO] [Scripting] LILA-TEST PASS 'recolhe os itens do chão' (drone sweeps the ground) :: emeralds with drone=15
+[2026-11-20 15:56:22:896 INFO] [Scripting] LILA-TEST PASS 'constrói na hora' / 'constrói devagar' change the build speed
+[2026-11-20 15:57:03:394 INFO] [Scripting] LILA-TEST PASS 'constrói um poço aqui' (mega builder by text)
+[2026-11-20 15:57:03:394 INFO] [Scripting] LILA-TEST PASS player build untouched
+[2026-11-20 15:57:03:394 INFO] [Scripting] LILA-TEST DONE pass=26 fail=0selftest finished: 
+True
 log lines: 106 · error/warn/lila lines: 1
-   [2026-11-20 15:45:08:389 INFO] [Scripting] [Lila:boot] DR-0N Mega Drone carregado
+   [2026-11-20 15:55:54:980 INFO] [Scripting] [Lila:boot] DR-0N Mega Drone carregado
