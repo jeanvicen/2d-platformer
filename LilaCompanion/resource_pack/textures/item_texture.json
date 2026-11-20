@@ -1,9 +1,0 @@
-{
-  "resource_pack_name": "lila",
-  "texture_name": "atlas.items",
-  "texture_data": {
-    "lila_drone_controller": {
-      "textures": "textures/items/lila/drone_controller"
-    }
-  }
-}
