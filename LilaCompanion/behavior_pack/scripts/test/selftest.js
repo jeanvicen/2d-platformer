@@ -26,6 +26,8 @@ const Y = 150; // topo da arena (grama); a Lila anda em Y+1
 const OWNER = "selftest-owner";
 let running = false;
 
+const fmt = (p) => `${p.x.toFixed(1)},${p.y.toFixed(1)},${p.z.toFixed(1)}`;
+
 function log(s) {
   console.info(`LILA-TEST ${s}`);
 }
@@ -159,6 +161,22 @@ async function ownerTests(dim, check) {
   await system.waitTicks(120);
   const d = Math.hypot(c.pos().x - owner.location.x, c.pos().z - owner.location.z);
   check("follows the owner while walking", d < 6, `dist=${d.toFixed(1)}`);
+  // ladeira de degraus de 1 bloco: ela tem que subir atrás de você sem empacar
+  for (let k = 0; k < 8; k++) cmd(dim, `fill ${2 + k} ${Y + 1} -30 ${2 + k} ${Y + 1 + k} -24 stone`);
+  owner.teleport({ x: 0.5, y: Y + 1, z: -27.5 });
+  c.entity?.teleport({ x: -2.5, y: Y + 1, z: -27.5 });
+  await system.waitTicks(20);
+  for (let k = 0; k < 8; k++) {
+    owner.teleport({ x: 2.5 + k, y: Y + 2 + k, z: -27.5 });
+    await system.waitTicks(10);
+  }
+  const tH = system.currentTick;
+  await waitUntil(() => Math.hypot(c.pos().x - owner.location.x, c.pos().z - owner.location.z) < 4 && Math.abs(c.pos().y - owner.location.y) < 2.5, 400);
+  check("climbs a 1-block-step hill after the owner", Math.hypot(c.pos().x - owner.location.x, c.pos().z - owner.location.z) < 4 && Math.abs(c.pos().y - owner.location.y) < 2.5,
+    `ticks=${system.currentTick - tH} dy=${(owner.location.y - c.pos().y).toFixed(1)} native=${!!c.flags.nativeFollow}`);
+  check("tamed to the owner (native follow)", !!c.entity?.getComponent("minecraft:tameable")?.isTamed);
+  owner.teleport({ x: 0.5, y: Y + 1, z: 6.5 });
+  await system.waitTicks(40);
   let walkSeen = false;
   // vem aqui: muda de lugar e chama
   owner.teleport({ x: -6.5, y: Y + 1, z: 2.5 });
@@ -249,7 +267,7 @@ export async function runSelfTest(mode = "") {
     r = await runGen(obtain(c, "minecraft:wooden_pickaxe", 1), 1200);
     check("craft wooden pickaxe (planks, sticks, table)", r.ok && inv.count(c, "minecraft:wooden_pickaxe") >= 1, r.err ?? "");
     r = await runGen(obtain(c, "minecraft:stone_pickaxe", 1), 2400);
-    check("stone pickaxe (mines real stone)", r.ok && inv.count(c, "minecraft:stone_pickaxe") >= 1, r.err ?? "");
+    check("stone pickaxe (mines real stone)", r.ok && inv.count(c, "minecraft:stone_pickaxe") >= 1, `${r.err ?? ""} pos=${fmt(c.pos())} ores=${findBlocks(dim, c.pos(), ["minecraft:iron_ore"], { r: 20, dy: 14, max: 9 }).length}`);
     const tables = findBlocks(dim, { x: 0, y: Y + 1, z: 0 }, ["minecraft:crafting_table"], { r: 32, dy: 8, max: 5 });
     check("temporary crafting table picked back up", tables.length === 0, `tables=${tables.length}`);
 
@@ -329,6 +347,23 @@ export async function runSelfTest(mode = "") {
 
     // 12) construção do jogador intacta no fim
     check("player planks wall intact", [-5, 0, 5].every((zz) => dim.getBlock({ x: 20, y: Y + 2, z: zz })?.typeId === "minecraft:oak_planks"));
+
+    // 12a) perto primeiro: uma árvore a 4 blocos e outra lembrada lá longe — ela tem que ir na de perto
+    {
+      const tree = (x, z) => {
+        cmd(dim, `fill ${x - 2} ${Y + 4} ${z - 2} ${x + 2} ${Y + 5} ${z + 2} oak_leaves`);
+        cmd(dim, `fill ${x} ${Y + 1} ${z} ${x} ${Y + 5} ${z} oak_log`);
+      };
+      tree(26, -8);
+      tree(-28, -28);
+      c.mem.remember("tree", { x: -28, y: Y + 1, z: -28 }, dim.id);
+      c.entity?.teleport({ x: 22.5, y: Y + 1, z: -8.5 });
+      await system.waitTicks(4);
+      const have = inv.count(c, { group: "log" });
+      const rn = await runGen(obtain(c, { group: "log" }, have + 2), 900);
+      check("nearest resource first (ignores far remembered tree)", rn.ok && dim.getBlock({ x: 26, y: Y + 1, z: -8 })?.typeId !== "minecraft:oak_log" &&
+        dim.getBlock({ x: -28, y: Y + 1, z: -28 })?.typeId === "minecraft:oak_log", rn.err ?? "");
+    }
 
     // 12b) regressão do crash: cercada por blocos do jogador, mandada minerar fundo
     {

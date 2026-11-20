@@ -30,7 +30,7 @@ from forge.lila_art import bake_lila, lila_model  # noqa: E402
 from forge.paint import bake  # noqa: E402
 from forge.render import render  # noqa: E402
 
-VERSION = [1, 2, 0]
+VERSION = [1, 3, 0]
 MIN_ENGINE = [1, 26, 30]
 SERVER_VERSION = "2.8.0"
 SERVER_UI_VERSION = "2.1.0"
@@ -227,6 +227,11 @@ def lila_bp_entity():
             },
             "component_groups": {
                 "lila:despawn": {"minecraft:instant_despawn": {"remove_child_entities": False}},
+                # seguir com a IA nativa do jogo: pula degraus, nada, abre portas e desvia como um mob de verdade
+                "lila:follow": {
+                    "minecraft:behavior.follow_owner": {"priority": 2, "speed_multiplier": 1.25, "start_distance": 4,
+                                                        "stop_distance": 2, "can_teleport": True, "ignore_vibration": True},
+                },
             },
             "components": {
                 "minecraft:type_family": {"family": ["lila", "lila_companion", "npc", "mob"]},
@@ -240,7 +245,8 @@ def lila_bp_entity():
                 "minecraft:jump.static": {},
                 "minecraft:can_climb": {},
                 "minecraft:movement.basic": {},
-                "minecraft:navigation.walk": {"can_path_over_water": True, "avoid_damage_blocks": True,
+                "minecraft:tameable": {"probability": 0.0},
+                "minecraft:navigation.walk": {"can_path_over_water": True, "avoid_damage_blocks": True, "can_jump": True, "can_swim": True, "can_walk_in_lava": False,
                                               "can_pass_doors": True, "can_open_doors": True},
                 "minecraft:nameable": {"always_show": False, "allow_name_tag_renaming": False},
                 "minecraft:persistent": {},
@@ -254,7 +260,7 @@ def lila_bp_entity():
                     "swing": True,
                 }]},
                 "minecraft:behavior.float": {"priority": 0},
-                "minecraft:behavior.look_at_player": {"priority": 8, "look_distance": 10, "probability": 0.03},
+                "minecraft:behavior.look_at_player": {"priority": 8, "look_distance": 8, "probability": 0.25},
                 "minecraft:behavior.random_look_around": {"priority": 9},
                 "minecraft:conditional_bandwidth_optimization": {},
                 "minecraft:experience_reward": {"on_death": "0"},
@@ -262,6 +268,8 @@ def lila_bp_entity():
             "events": {
                 "lila:despawn": {"add": {"component_groups": ["lila:despawn"]}},
                 "lila:interacted": {"remove": {"component_groups": []}},
+                "lila:follow_on": {"add": {"component_groups": ["lila:follow"]}},
+                "lila:follow_off": {"remove": {"component_groups": ["lila:follow"]}},
             },
         },
     }

@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.0
+- **Seguir como um mob de verdade**: ela é ligada ao dono (`tame`) e usa a IA nativa do jogo
+  (`follow_owner`) para te acompanhar — pula degraus, nada, abre portas e contorna sozinha.
+  Se empacar, o motor próprio assume por um trecho. Subir ladeira de degraus: 15 ticks no teste.
+- **Motor próprio mais suave**: degrau de 1 bloco vira um pulinho em arco (não fica batendo na
+  quina), não freia no centro de cada bloco em linha reta, resgate de travamento 2× mais rápido.
+- **Perto primeiro, longe só se precisar**: olha em volta (10 → 24 blocos) antes de usar a
+  memória; enxerga recursos expostos até 40 blocos; volta a lugares onde já viu o recurso;
+  explora em anéis crescentes (18 → 68 blocos) em vez de sair andando longe direto.
+- Mais "amiga": olha mais pra você quando está perto e acena se você agachar olhando pra ela.
+
 ## 1.2.0
 - **Animações voltaram**: o efeito de partícula da animação de invocar estava em formato de lista;
   o jogo exige linha do tempo (`{"0.0": ...}`) e por causa disso rejeitava o arquivo de animações

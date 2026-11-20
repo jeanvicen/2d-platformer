@@ -178,8 +178,18 @@ function* walkPath(c, path, run, replanEvery = 0) {
     if (fc === DOOR || hc === DOOR) openDoor(dim, node, openDoors);
     const dx = tgt.x - here.x, dz = tgt.z - here.z, dy = tgt.y - here.y;
     const dh = Math.sqrt(dx * dx + dz * dz);
-    // chegou no nó: passa para o próximo (sem gastar tick)
-    if (dh < 0.32 && dy > -1.2 && dy < 0.6) {
+    // degrau de 1 bloco logo à frente: pulinho em arco (como jogador), sem ficar batendo na quina
+    if (dy > 0.45 && dy < 1.3 && dh < 1.35) {
+      yield* stepTo(c, tgt, 5);
+      i++;
+      best = Infinity;
+      noProgress = 0;
+      continue;
+    }
+    // chegou no nó: passa para o próximo sem frear no centro se o próximo trecho é reto/plano
+    const nxt = path[i + 1];
+    const flatNext = nxt && nxt.y === node.y;
+    if ((dh < (flatNext ? 0.7 : 0.32)) && dy > -1.2 && dy < 0.6) {
       i++;
       best = Infinity;
       noProgress = 0;
@@ -223,7 +233,7 @@ function* walkPath(c, path, run, replanEvery = 0) {
     if (nd < best - 0.03) {
       best = nd;
       noProgress = 0;
-    } else if (++noProgress > 30) {
+    } else if (++noProgress > 15) {
       if (++rescues > 3) {
         halt(c);
         return "stuck";
@@ -269,7 +279,7 @@ export function* stepTo(c, to, frames = 4) {
   for (let k = 1; k <= frames; k++) {
     const t = k / frames;
     try {
-      e.teleport({ x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t + (up ? Math.sin(t * Math.PI) * 0.35 : 0), z: from.z + (to.z - from.z) * t }, { keepVelocity: false });
+      e.teleport({ x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t + (up ? Math.sin(t * Math.PI) * 0.65 : 0), z: from.z + (to.z - from.z) * t }, { keepVelocity: false });
     } catch {
       break;
     }

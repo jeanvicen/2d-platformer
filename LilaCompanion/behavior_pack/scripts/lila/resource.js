@@ -43,19 +43,20 @@ export function* chopTrees(c, want) {
   while (inv.count(c, { group: "log" }) < want && c.alive()) {
     yield 1;
     const here = c.pos();
-    const remembered = c.mem.nearest("tree", here, dim.id, 64);
-    let base;
-    if (remembered) {
-      const b = blockAt(dim, remembered.x, remembered.y, remembered.z);
-      if (b && isLog(b.typeId)) base = remembered;
-      else c.mem.forget("tree", remembered);
-    }
+    // olha em volta primeiro (perto → um pouco mais longe); a memória só entra se não houver nada à vista
+    const ok = (p) => isTreeLog(dim, p) && canBreak(c, dim, p, blockAt(dim, p.x, p.y, p.z)?.typeId);
+    let near = findBlocks(dim, here, LOG_TYPES, { r: 10, dy: 6, max: 1, filter: ok });
+    if (!near.length) near = findBlocks(dim, here, LOG_TYPES, { r: 24, dy: 10, max: 1, filter: ok });
+    let base = near[0] ? trunkBase(dim, near[0]) : undefined;
     if (!base) {
-      const logs = findBlocks(dim, here, LOG_TYPES, { r: 20, dy: 10, max: 6, filter: (p) => isTreeLog(dim, p) && canBreak(c, dim, p, blockAt(dim, p.x, p.y, p.z)?.typeId) });
-      // prefere o tronco mais baixo de cada árvore
-      base = logs.sort((a, b) => a.y - b.y || 0)[0];
-      for (const l of logs.slice(0, 6)) c.mem.remember("tree", l, dim.id);
+      const remembered = c.mem.nearest("tree", here, dim.id, 96);
+      if (remembered) {
+        const b = blockAt(dim, remembered.x, remembered.y, remembered.z);
+        if (b && isLog(b.typeId)) base = remembered;
+        else c.mem.forget("tree", remembered);
+      }
     }
+    if (base) c.flags.exploreRing = 0;
     if (!base) {
       if (++explorations > 10) throw new GoalError("não achei árvores por perto, mesmo explorando bem longe");
       yield* exploreStep(c, "árvores");
@@ -79,6 +80,17 @@ export function* chopTrees(c, want) {
     yield* replant(c, base);
   }
   return true;
+}
+
+/** Desce pelo tronco até a base da árvore (corta de baixo para cima, como jogador). */
+function trunkBase(dim, p) {
+  let q = { ...p };
+  for (let k = 0; k < 24; k++) {
+    const b = blockAt(dim, q.x, q.y - 1, q.z);
+    if (!b || !isLog(b.typeId)) break;
+    q = { x: q.x, y: q.y - 1, z: q.z };
+  }
+  return q;
 }
 
 function* replant(c, base) {
@@ -129,9 +141,14 @@ export function* mineFor(c, o) {
     yield 1; // toda volta cede um tick (nunca prende o jogo)
     const here = c.pos();
     // 1) visíveis num raio grande (cavernas, encostas) ou qualquer um bem pertinho
-    let list = findBlocks(dim, here, o.types, { r: 20, dy: 14, max: 30, filter: (p) => exposed(dim, p) && !lavaNear(dim, p) });
+    // o que está à vista (como um jogador enxerga): perto primeiro, depois até 40 blocos
+    let list = findBlocks(dim, here, o.types, { r: 16, dy: 12, max: 10, filter: (p) => exposed(dim, p) && !lavaNear(dim, p) });
+    if (!list.length) list = findBlocks(dim, here, o.types, { r: 40, dy: 16, max: 10, ms: 8, filter: (p) => exposed(dim, p) && !lavaNear(dim, p) });
     if (!list.length) list = findBlocks(dim, here, o.types, { r: 4, dy: 4, max: 10, filter: (p) => !lavaNear(dim, p) });
+    // lembra de ter visto antes? vai lá antes de cavar ou explorar
+    if (!list.length && (yield* goToRemembered(c, o.types))) continue;
     if (list.length) {
+      c.flags.exploreRing = 0;
       const target = list[0];
       const ok = yield* breakBlock(c, target, true);
       if (!ok) {
@@ -188,6 +205,32 @@ function* mineVein(c, start, types, item, want) {
       }
     }
   }
+}
+
+/** Vai até um lugar lembrado onde ela já viu esse recurso (minério, areia, água...). */
+function* goToRemembered(c, types) {
+  const dim = c.dim();
+  const kinds = new Set();
+  for (const id of types) {
+    if (ORE_OF[id]) kinds.add(`ore_${ORE_OF[id]}`);
+    if (id === "minecraft:sand") kinds.add("sand");
+    if (id === "minecraft:water") kinds.add("water");
+  }
+  let best;
+  for (const k of kinds) {
+    const m = c.mem.nearest(k, c.pos(), dim.id, 128);
+    if (m && (!best || Math.hypot(m.x - c.pos().x, m.z - c.pos().z) < Math.hypot(best.m.x - c.pos().x, best.m.z - c.pos().z))) best = { m, k };
+  }
+  if (!best) return false;
+  const b = blockAt(dim, best.m.x, best.m.y, best.m.z);
+  if (!b || !types.includes(b.typeId)) {
+    c.mem.forget(best.k, best.m);
+    return false;
+  }
+  say(c, "Lembro de ter visto isso por ali, vou lá.", { chatter: true });
+  const ok = yield* goTo(c, { x: best.m.x + 0.5, y: best.m.y, z: best.m.z + 0.5 }, { reach: 6, yTol: 6, run: true, timeout: 700 });
+  c.mem.forget(best.k, best.m); // visitado: chegando lá ela enxerga o resto; nunca fica indo e voltando
+  return ok;
 }
 
 /** Escadaria para baixo/cima até uma altura (2 de altura, sem cair em buracos, desvia de lava). */
@@ -350,9 +393,12 @@ export function* exploreStep(c, what) {
   const home = c.ownerPos();
   const roam = c.rec.settings.roam ?? 96;
   let best, bestScore = -Infinity;
-  for (let k = 0; k < 12; k++) {
+  // busca em anéis crescentes: primeiro dá uma olhada logo ali, só depois vai longe
+  const ring = Math.min(5, c.flags.exploreRing ?? 0);
+  c.flags.exploreRing = ring + 1;
+  for (let k = 0; k < 16; k++) {
     const ang = Math.random() * Math.PI * 2;
-    const d = 40 + Math.random() * 24;
+    const d = 18 + ring * 10 + Math.random() * 10;
     const q = { x: p.x + Math.cos(ang) * d, y: p.y, z: p.z + Math.sin(ang) * d };
     const fromHome = Math.hypot(q.x - home.x, q.z - home.z);
     let score = (c.mem.isExplored(q) ? -40 : 20) - Math.max(0, fromHome - roam * 2.5) * 2;
@@ -405,12 +451,16 @@ export function* digFor(c, types, item, want, label) {
   while (inv.count(c, item) < want && c.alive()) {
     yield 1;
     const here = c.pos();
-    const list = findBlocks(dim, here, types, { r: 24, dy: 10, max: 20, filter: (p) => exposed(dim, p) && canBreak(c, dim, p, blockAt(dim, p.x, p.y, p.z)?.typeId) && !lavaNear(dim, p) });
+    const okDig = (p) => exposed(dim, p) && canBreak(c, dim, p, blockAt(dim, p.x, p.y, p.z)?.typeId) && !lavaNear(dim, p);
+    let list = findBlocks(dim, here, types, { r: 16, dy: 10, max: 20, filter: okDig });
+    if (!list.length) list = findBlocks(dim, here, types, { r: 40, dy: 14, max: 20, ms: 8, filter: okDig });
+    if (!list.length && (yield* goToRemembered(c, types))) continue;
     if (!list.length) {
       if (++explorations > 8) throw new GoalError(`não achei ${label} por perto`);
       yield* exploreStep(c, label);
       continue;
     }
+    c.flags.exploreRing = 0;
     explorations = 0;
     // pega primeiro os mais altos (não cava buracos fundos no chão)
     list.sort((a, b) => b.y - a.y);

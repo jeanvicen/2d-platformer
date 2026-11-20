@@ -28,6 +28,14 @@ function start(c, desc, urgent = false) {
     return;
   }
   const job = { desc, gen, wait: 0, t0: system.currentTick };
+  if (urgent || desc.type !== "follow" && desc.type !== "tagalong") {
+    try {
+      if (c.flags.nativeFollow) c.entity?.triggerEvent("lila:follow_off");
+    } catch {
+      /* ignore */
+    }
+    c.flags.nativeFollow = false;
+  }
   if (urgent) c.urgent = job;
   else c.job = job;
   c.abortMove = false;
@@ -267,6 +275,24 @@ function watchOwner(c, o) {
     c.flags.ownerDark = !!blk && blk.getLightLevel() < 7 && !c.flags.ownerMoving;
   } catch {
     c.flags.ownerDark = false;
+  }
+  // você agachou olhando pra ela, pertinho: ela acena de volta (como amigos fazem no jogo)
+  try {
+    const dx = c.pos().x - o.location.x, dz = c.pos().z - o.location.z;
+    const dd = Math.hypot(dx, dz);
+    const v = o.getViewDirection();
+    if (o.isSneaking && dd < 6 && dd > 0.5 && (v.x * dx + v.z * dz) / dd > 0.85 && system.currentTick - (c.flags.lastWave ?? -999) > 200 && !c.urgent) {
+      c.flags.lastWave = system.currentTick;
+      const e = c.entity;
+      if (e) {
+        e.setRotation({ x: 0, y: (-Math.atan2(-dx, -dz) * 180) / Math.PI });
+        setAction(e, "wave");
+        system.runTimeout(() => setAction(c.entity, "idle"), 30);
+      }
+      say(c, pick(["Oi! 👋", "E aí!", "Tô aqui!", "Hehe, oi!"]).replace(" 👋", ""), { chatter: true });
+    }
+  } catch {
+    /* ignore */
   }
   // vida baixa: leva comida até ele (no máximo 1× por minuto)
   try {

@@ -15,7 +15,7 @@ import { buildBlueprint } from "./build.js";
 import { defend, fight, findThreat, huntFor } from "./combat.js";
 import { craft, freeSpotAround } from "./crafting.js";
 import * as inv from "./inventory.js";
-import { hold, setAction, sound } from "./anim.js";
+import { hold, setAction, setMove, sound } from "./anim.js";
 import { LINES, pick, say } from "./talk.js";
 import { keepLoaded } from "./areas.js";
 
@@ -117,24 +117,74 @@ export function* eat(c) {
 /** Seguir o dono a uma distância natural, olhando para ele e pegando itens perto. */
 export function* followOwner(c, ticks = Infinity) {
   const t0 = system.currentTick;
-  while (c.alive() && system.currentTick - t0 < ticks) {
-    const o = c.owner();
-    if (!o) {
-      yield* idleNear(c, 40);
-      continue;
-    }
-    if (o.dimension.id !== c.dim().id) {
-      yield 40;
-      continue;
-    }
-    const d = dist(c.pos(), o.location);
-    if (d > 5 || Math.abs(o.location.y - c.pos().y) > 4) {
-      yield* goTo(c, o.location, { reach: 3, yTol: 3, run: d > 10, follow: () => c.owner()?.location, timeout: 400 });
-    } else {
-      stop(c);
-      if (Math.random() < 0.08) face(c, o.location);
+  // a IA nativa do jogo faz o caminho (pula, nada, abre porta, contorna) — igual a um mob/jogador de verdade
+  const native = nativeFollow(c, true);
+  let stuck = 0;
+  let last = c.pos();
+  try {
+    while (c.alive() && system.currentTick - t0 < ticks) {
+      const o = c.owner();
+      if (!o) {
+        yield* idleNear(c, 40);
+        continue;
+      }
+      if (o.dimension.id !== c.dim().id) {
+        yield 40;
+        continue;
+      }
+      const d = dist(c.pos(), o.location);
+      if (!native) {
+        if (d > 5 || Math.abs(o.location.y - c.pos().y) > 4) {
+          yield* goTo(c, o.location, { reach: 3, yTol: 3, run: d > 10, follow: () => c.owner()?.location, timeout: 400 });
+        } else {
+          stop(c);
+          if (Math.random() < 0.08) face(c, o.location);
+          yield 10;
+        }
+        continue;
+      }
+      if (!c.flags.nativeFollow) nativeFollow(c, true);
+      setMove(c.entity, "none"); // a animação acompanha a velocidade real do corpo
       yield 10;
+      // reserva: se a IA nativa empacar longe de você, o nosso motor assume por um trecho
+      const moved = dist(c.pos(), last);
+      last = c.pos();
+      stuck = d > 6 && moved < 0.3 ? stuck + 10 : 0;
+      if (stuck >= 60) {
+        stuck = 0;
+        nativeFollow(c, false);
+        yield* goTo(c, o.location, { reach: 3, yTol: 3, run: true, follow: () => c.owner()?.location, timeout: 300 });
+        nativeFollow(c, true);
+      }
     }
+  } finally {
+    nativeFollow(c, false);
+  }
+}
+
+/** Liga/desliga o "seguir" nativo. Retorna true se ficou ligado. */
+export function nativeFollow(c, on) {
+  const e = c.entity;
+  if (!e?.isValid) return false;
+  try {
+    if (on) ensureTamed(c);
+    e.triggerEvent(on ? "lila:follow_on" : "lila:follow_off");
+    c.flags.nativeFollow = on;
+    return on && !!e.getComponent("minecraft:tameable")?.isTamed;
+  } catch {
+    return false;
+  }
+}
+
+/** Liga a Lila ao dono para a IA nativa saber quem seguir (sem dar nenhum item de domar). */
+export function ensureTamed(c) {
+  const e = c.entity, o = c.owner();
+  if (!e?.isValid || !o) return;
+  try {
+    if (e.getComponent("minecraft:tameable")?.isTamed) return;
+    e.getComponent("minecraft:tameable")?.tame(o);
+  } catch {
+    /* versão sem tame(): fica com o motor próprio */
   }
 }
 

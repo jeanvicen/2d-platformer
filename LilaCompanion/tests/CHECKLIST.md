@@ -4,7 +4,7 @@ Legenda: **PASS** = verificado de verdade · **FAIL** = falhou · **NOT TESTED**
 neste ambiente (sem cliente gráfico/celular).
 
 Ambiente: Bedrock Dedicated Server **1.26.65.1** oficial (Linux, sem jogadores), autoteste dentro do
-mundo `/scriptevent lila:selftest` — log completo em `tests/last_bds_run.log` (29/29 PASS) e `tests/last_bds_owner_run.log` com jogador simulado (11/11 PASS), versão 1.2.0.
+mundo `/scriptevent lila:selftest` — log completo em `tests/last_bds_run.log` (30/30 PASS) e `tests/last_bds_owner_run.log` com jogador simulado (13/13 PASS), versão 1.3.0.
 
 ## Carregamento e qualidade
 | Item | Resultado |
@@ -40,13 +40,16 @@ mundo `/scriptevent lila:selftest` — log completo em `tests/last_bds_run.log` 
 | Regressão do crash: cercada e mandada minerar fundo termina sem travar (522 ticks) | PASS |
 | Blocos do jogador intactos nesse cenário | PASS |
 | Andar com física (sem teleporte) chega ao destino | PASS |
+| Recurso mais perto primeiro (ignora árvore lembrada longe) | PASS |
 | Passo de script mais lento durante a autonomia < 60 ms (medido 12 ms) | PASS |
 
 ## Com jogador (jogador simulado do GameTest no servidor oficial)
 | Item | Resultado |
 |---|---|
 | Invocar na frente do dono | PASS |
-| Seguir o dono andando 18 blocos (distância final 1,0) | PASS |
+| Seguir o dono andando 18 blocos | PASS |
+| Subir ladeira de degraus de 1 bloco atrás do dono (15 ticks) | PASS |
+| Ligada ao dono para a IA nativa de seguir (tame) | PASS |
 | "vem aqui" (105 ticks) e propriedade de animação de andar ligada | PASS |
 | "pega 4 madeira" entregue no inventário do dono | PASS |
 | "arranja comida pra mim" em até 90 s (35 s, 8 itens) | PASS |
