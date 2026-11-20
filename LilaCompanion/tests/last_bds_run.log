@@ -1,254 +1,254 @@
 NO LOG FILE! - Failed to up file descriptor limit Operation not permitted
 NO LOG FILE! - setting up server logging...
-[2026-11-20 14:46:31:050 INFO] Starting Server
-[2026-11-20 14:46:31:050 INFO] Version: 1.26.65.1
-[2026-11-20 14:46:31:050 INFO] Session ID: e0deff18-81ae-48ce-a866-3752bea4fdc3
-[2026-11-20 14:46:31:050 INFO] Build ID: 53624744
-[2026-11-20 14:46:31:050 INFO] Branch: r/26_u6
-[2026-11-20 14:46:31:050 INFO] Commit ID: cdafb75c90a160d7dd40adc9769f2485a4a76a05
-[2026-11-20 14:46:31:050 INFO] Configuration: Publish
-[2026-11-20 14:46:31:050 INFO] Contents of server.properties: {"allow-cheats":"true","allow-inbound-script-debugging":"false","allow-list":"false","allow-outbound-script-debugging":"false","block-network-ids-are-hashes":"true","chat-restriction":"None","client-side-chunk-generation-enabled":"true","compression-algorithm":"zlib","compression-threshold":"1","content-log-console-output-enabled":"true","content-log-file-enabled":"true","content-log-level":"info","default-player-permission-level":"member","difficulty":"easy","disable-custom-skins":"false","disable-persona":"false","disable-player-interaction":"false","enable-lan-visibility":"false","force-gamemode":"false","gamemode":"survival","level-name":"lila_test","max-players":"10","max-threads":"8","online-mode":"false","persistent-ticking-area-max-chunks":"100","persistent-ticking-area-max-count":"10","player-idle-timeout":"30","player-movement-action-direction-threshold":"0.85","player-position-acceptance-threshold":"0.5","script-debugger-auto-attach":"disabled","server-authoritative-block-breaking-pick-range-scalar":"1.5","server-authoritative-dismount-strict":"false","server-authoritative-entity-attack-range-tolerance":"0.5","server-authoritative-entity-attack-range-validation":"disabled","server-authoritative-entity-attack-request-validation":"disabled","server-authoritative-entity-interactions-strict":"false","server-authoritative-movement-strict":"false","server-build-radius-ratio":"Disabled","server-name":"Dedicated Server","server-port":"41234","server-portv6":"41235","server-udp-ports":"19132","texturepack-required":"false","tick-distance":"4","transient-ticking-area-max-chunks":"300","transport":"nethernet","view-distance":"32"}
-[2026-11-20 14:46:31:050 INFO] Level Name: lila_test
-[2026-11-20 14:46:31:050 INFO] Profiler config ('bootstrap.json') load result: success=1, errorMessage=(null)
-[2026-11-20 14:46:31:051 INFO] No CDN config file found at: cdn_config.json for dedicated server
-[2026-11-20 14:46:31:051 INFO] Game mode: 0 Survival
-[2026-11-20 14:46:31:051 INFO] Difficulty: 1 EASY
-[2026-11-20 14:46:31:053 INFO] Content logging to console is enabled.
-[2026-11-20 14:46:31:054 INFO] 
+[2026-11-20 14:49:37:952 INFO] Starting Server
+[2026-11-20 14:49:37:952 INFO] Version: 1.26.65.1
+[2026-11-20 14:49:37:952 INFO] Session ID: a1de2b17-a312-4d5b-975b-959791088101
+[2026-11-20 14:49:37:952 INFO] Build ID: 53624744
+[2026-11-20 14:49:37:952 INFO] Branch: r/26_u6
+[2026-11-20 14:49:37:952 INFO] Commit ID: cdafb75c90a160d7dd40adc9769f2485a4a76a05
+[2026-11-20 14:49:37:952 INFO] Configuration: Publish
+[2026-11-20 14:49:37:953 INFO] Contents of server.properties: {"allow-cheats":"true","allow-inbound-script-debugging":"false","allow-list":"false","allow-outbound-script-debugging":"false","block-network-ids-are-hashes":"true","chat-restriction":"None","client-side-chunk-generation-enabled":"true","compression-algorithm":"zlib","compression-threshold":"1","content-log-console-output-enabled":"true","content-log-file-enabled":"true","content-log-level":"info","default-player-permission-level":"member","difficulty":"easy","disable-custom-skins":"false","disable-persona":"false","disable-player-interaction":"false","enable-lan-visibility":"false","force-gamemode":"false","gamemode":"survival","level-name":"lila_test","max-players":"10","max-threads":"8","online-mode":"false","persistent-ticking-area-max-chunks":"100","persistent-ticking-area-max-count":"10","player-idle-timeout":"30","player-movement-action-direction-threshold":"0.85","player-position-acceptance-threshold":"0.5","script-debugger-auto-attach":"disabled","server-authoritative-block-breaking-pick-range-scalar":"1.5","server-authoritative-dismount-strict":"false","server-authoritative-entity-attack-range-tolerance":"0.5","server-authoritative-entity-attack-range-validation":"disabled","server-authoritative-entity-attack-request-validation":"disabled","server-authoritative-entity-interactions-strict":"false","server-authoritative-movement-strict":"false","server-build-radius-ratio":"Disabled","server-name":"Dedicated Server","server-port":"41234","server-portv6":"41235","server-udp-ports":"19132","texturepack-required":"false","tick-distance":"4","transient-ticking-area-max-chunks":"300","transport":"nethernet","view-distance":"32"}
+[2026-11-20 14:49:37:953 INFO] Level Name: lila_test
+[2026-11-20 14:49:37:953 INFO] Profiler config ('bootstrap.json') load result: success=1, errorMessage=(null)
+[2026-11-20 14:49:37:954 INFO] No CDN config file found at: cdn_config.json for dedicated server
+[2026-11-20 14:49:37:954 INFO] Game mode: 0 Survival
+[2026-11-20 14:49:37:954 INFO] Difficulty: 1 EASY
+[2026-11-20 14:49:37:956 INFO] Content logging to console is enabled.
+[2026-11-20 14:49:37:957 INFO] 
 
 #####################################################
 #                                                   #
 #              CREATING VANILLA WORLD               #
 #                                                   #
 #####################################################
-[2026-11-20 14:46:31:421 INFO] Content logging to disk is enabled. Writing log to: ./ContentLog2026-11-20_14-46-31.txt
-[2026-11-20 14:46:31:422 INFO] Opening level 'worlds/lila_test/db'
-[2026-11-20 14:46:31:423 INFO] Accepting clients on 0.0.0.0:41234
-[2026-11-20 14:46:31:457 INFO] Pack Stack - [00] DR-0N Mega Drone (BP) (id: b461d112-57c7-4e8f-b4dc-395753b1764f, version: 2.0.0) @ behavior_packs/LilaCompanion_BP
-[2026-11-20 14:46:31:704 INFO] Signed in to signaling service successfully
-[2026-11-20 14:46:32:398 INFO] Server started.
-[2026-11-20 14:46:32:398 INFO] ================ TELEMETRY MESSAGE ===================
-[2026-11-20 14:46:32:398 INFO] Server Telemetry is currently not enabled. 
-[2026-11-20 14:46:32:398 INFO] Enabling this telemetry helps us improve the game.
-[2026-11-20 14:46:32:398 INFO] 
-[2026-11-20 14:46:32:398 INFO] To enable this feature, add the line 'emit-server-telemetry=true'
-[2026-11-20 14:46:32:398 INFO] to the server.properties file in the handheld/src-server directory
-[2026-11-20 14:46:32:398 INFO] ======================================================
-[2026-11-20 14:46:32:408 INFO] [Scripting] [Lila:boot] DR-0N Mega Drone carregado
+[2026-11-20 14:49:38:305 INFO] Content logging to disk is enabled. Writing log to: ./ContentLog2026-11-20_14-49-38.txt
+[2026-11-20 14:49:38:306 INFO] Opening level 'worlds/lila_test/db'
+[2026-11-20 14:49:38:306 INFO] Accepting clients on 0.0.0.0:41234
+[2026-11-20 14:49:38:339 INFO] Pack Stack - [00] DR-0N Mega Drone (BP) (id: b461d112-57c7-4e8f-b4dc-395753b1764f, version: 2.0.0) @ behavior_packs/LilaCompanion_BP
+[2026-11-20 14:49:38:572 INFO] Signed in to signaling service successfully
+[2026-11-20 14:49:39:180 INFO] Server started.
+[2026-11-20 14:49:39:180 INFO] ================ TELEMETRY MESSAGE ===================
+[2026-11-20 14:49:39:180 INFO] Server Telemetry is currently not enabled. 
+[2026-11-20 14:49:39:180 INFO] Enabling this telemetry helps us improve the game.
+[2026-11-20 14:49:39:180 INFO] 
+[2026-11-20 14:49:39:180 INFO] To enable this feature, add the line 'emit-server-telemetry=true'
+[2026-11-20 14:49:39:180 INFO] to the server.properties file in the handheld/src-server directory
+[2026-11-20 14:49:39:180 INFO] ======================================================
+[2026-11-20 14:49:39:189 INFO] [Scripting] [Lila:boot] DR-0N Mega Drone carregado
 
-[2026-11-20 14:46:37:538 INFO] Script event lila:selftest has been sent
-[2026-11-20 14:46:37:539 INFO] [Scripting] LILA-TEST START
+[2026-11-20 14:49:44:289 INFO] Script event lila:selftest has been sent
+[2026-11-20 14:49:44:290 INFO] [Scripting] LILA-TEST START
 
-[2026-11-20 14:46:38:787 INFO] [Scripting] LILA-TEST PASS arena chunks loaded
+[2026-11-20 14:49:45:438 INFO] [Scripting] LILA-TEST PASS arena chunks loaded
 
-[2026-11-20 14:46:39:586 INFO] [Scripting] LILA-TEST PASS spawn + adopt
+[2026-11-20 14:49:46:212 INFO] [Scripting] LILA-TEST PASS spawn + adopt
 
-[2026-11-20 14:46:39:833 INFO] [Scripting] LILA-TEST PASS creative: tool materializes instantly :: tier=diamond ticks=5
+[2026-11-20 14:49:46:462 INFO] [Scripting] LILA-TEST PASS creative: tool materializes instantly :: tier=diamond ticks=5
 
-[2026-11-20 14:46:40:086 INFO] [Scripting] LILA-TEST PASS creative: 64 logs instantly :: ticks=5
+[2026-11-20 14:49:46:712 INFO] [Scripting] LILA-TEST PASS creative: 64 logs instantly :: ticks=5
 
-[2026-11-20 14:46:41:886 INFO] [Scripting] LILA-TEST PASS all 9 forms switch (property + seats)
+[2026-11-20 14:49:48:512 INFO] [Scripting] LILA-TEST PASS all 9 forms switch (property + seats)
 
-[2026-11-20 14:46:42:387 INFO] [Scripting] LILA-TEST PASS colossus: giant scale :: scale=3.4000000953674316 hitbox-heights=4,8,12,18,24
+[2026-11-20 14:49:49:013 INFO] [Scripting] LILA-TEST PASS colossus: giant scale :: scale=3.4000000953674316 hitbox-heights=4,8,12,18,24
 
-[2026-11-20 14:46:43:588 INFO] [Scripting] LILA-TEST PASS colossus punch breaks blocks and hits :: stone left=29/105 zombie=down
+[2026-11-20 14:49:50:214 INFO] [Scripting] LILA-TEST PASS colossus punch breaks blocks and hits :: stone left=29/105 zombie=down
 
-[2026-11-20 14:46:44:037 INFO] [Scripting] [Lila:say] Torreta gigante armada e cravada no chão. Ninguém passa!
+[2026-11-20 14:49:50:663 INFO] [Scripting] [Lila:say] Torreta gigante armada e cravada no chão. Ninguém passa!
 
-[2026-11-20 14:46:46:087 INFO] [Scripting] [Lila:say] Forma de drone. Pronto pra próxima!
+[2026-11-20 14:49:52:713 INFO] [Scripting] [Lila:say] Forma de drone. Pronto pra próxima!
 
-[2026-11-20 14:46:46:087 INFO] [Scripting] LILA-TEST PASS giant turret form kills 3 zombies :: ticks=46 form=true
+[2026-11-20 14:49:52:713 INFO] [Scripting] LILA-TEST PASS giant turret form kills 3 zombies :: ticks=46 form=true
 
-[2026-11-20 14:46:46:087 INFO] [Scripting] LILA-TEST PASS turret folds back to drone when done
+[2026-11-20 14:49:52:713 INFO] [Scripting] LILA-TEST PASS turret folds back to drone when done
 
-[2026-11-20 14:46:47:837 INFO] [Scripting] [Lila:say] Construindo: Poço (11×11, ~0 mil blocos). Material infinito, bora!
+[2026-11-20 14:49:54:964 INFO] [Scripting] [Lila:say] Construindo: Poço (11×11, ~0 mil blocos). Material infinito, bora!
 
-[2026-11-20 14:46:47:841 INFO] [Scripting] [Lila:say] Poço: 25%
+[2026-11-20 14:49:54:968 INFO] [Scripting] [Lila:say] Poço: 25%
 
-[2026-11-20 14:46:47:841 INFO] [Scripting] [Lila:say] Poço: 50%
+[2026-11-20 14:49:54:969 INFO] [Scripting] [Lila:say] Poço: 50%
 
-[2026-11-20 14:46:47:842 INFO] [Scripting] [Lila:say] Poço: 75%
+[2026-11-20 14:49:54:969 INFO] [Scripting] [Lila:say] Poço: 75%
 
-[2026-11-20 14:46:47:842 INFO] [Scripting] [Lila:say] Poço pronto! Fica a 14 blocos na sua frente.
+[2026-11-20 14:49:55:014 INFO] [Scripting] [Lila:say] Poço pronto! Fica a 14 blocos na sua frente.
 
-[2026-11-20 14:46:49:837 INFO] [Scripting] LILA-TEST PASS mega: poco :: ticks=41 
+[2026-11-20 14:49:57:013 INFO] [Scripting] LILA-TEST PASS mega: poco :: ticks=42 
 
-[2026-11-20 14:46:52:093 INFO] [Scripting] [Lila:say] Construindo: Labirinto (35×35, ~3 mil blocos). Material infinito, bora!
+[2026-11-20 14:49:59:723 INFO] [Scripting] [Lila:say] Construindo: Labirinto (35×35, ~3 mil blocos). Material infinito, bora!
 
-[2026-11-20 14:46:52:191 INFO] [Scripting] [Lila:say] Labirinto: 25%
+[2026-11-20 14:49:59:868 INFO] [Scripting] [Lila:say] Labirinto: 25%
 
-[2026-11-20 14:46:52:193 INFO] [Scripting] [Lila:say] Labirinto: 50%
+[2026-11-20 14:49:59:915 INFO] [Scripting] [Lila:say] Labirinto: 50%
 
-[2026-11-20 14:46:52:240 INFO] [Scripting] [Lila:say] Labirinto: 75%
+[2026-11-20 14:49:59:919 INFO] [Scripting] [Lila:say] Labirinto: 75%
 
-[2026-11-20 14:46:52:243 INFO] [Scripting] [Lila:say] Labirinto pronto! Fica a 26 blocos na sua frente.
+[2026-11-20 14:49:59:967 INFO] [Scripting] [Lila:say] Labirinto pronto! Fica a 26 blocos na sua frente.
 
-[2026-11-20 14:46:54:237 INFO] [Scripting] LILA-TEST PASS mega: labirinto :: ticks=44 
+[2026-11-20 14:50:01:963 INFO] [Scripting] LILA-TEST PASS mega: labirinto :: ticks=46 
 
-[2026-11-20 14:46:56:787 INFO] [Scripting] [Lila:say] Construindo: Montanha-russa (47×47, ~1 mil blocos). Material infinito, bora!
+[2026-11-20 14:50:04:115 INFO] [Scripting] [Lila:say] Construindo: Montanha-russa (47×47, ~1 mil blocos). Material infinito, bora!
 
-[2026-11-20 14:46:56:938 INFO] [Scripting] [Lila:say] Montanha-russa: 25%
+[2026-11-20 14:50:04:217 INFO] [Scripting] [Lila:say] Montanha-russa: 25%
 
-[2026-11-20 14:46:56:942 INFO] [Scripting] [Lila:say] Montanha-russa: 50%
+[2026-11-20 14:50:04:265 INFO] [Scripting] [Lila:say] Montanha-russa: 50%
 
-[2026-11-20 14:46:56:944 INFO] [Scripting] [Lila:say] Montanha-russa: 75%
+[2026-11-20 14:50:04:267 INFO] [Scripting] [Lila:say] Montanha-russa: 75%
 
-[2026-11-20 14:46:56:995 INFO] [Scripting] [Lila:say] Montanha-russa pronto! Fica a 32 blocos na sua frente.
+[2026-11-20 14:50:04:270 INFO] [Scripting] [Lila:say] Montanha-russa pronto! Fica a 32 blocos na sua frente.
 
-[2026-11-20 14:46:58:988 INFO] [Scripting] LILA-TEST PASS mega: montanha_russa :: ticks=45 
+[2026-11-20 14:50:06:263 INFO] [Scripting] LILA-TEST PASS mega: montanha_russa :: ticks=44 
 
-[2026-11-20 14:47:00:546 INFO] [Scripting] LILA-TEST PASS roller coaster has a full closed track + cart :: rails=112 carts=1
+[2026-11-20 14:50:07:808 INFO] [Scripting] LILA-TEST PASS roller coaster has a full closed track + cart :: rails=112 carts=1
 
-[2026-11-20 14:47:03:344 INFO] [Scripting] [Lila:say] Construindo: Casa inteligente (33×33, ~9 mil blocos). Material infinito, bora!
+[2026-11-20 14:50:10:711 INFO] [Scripting] [Lila:say] Construindo: Casa inteligente (33×33, ~9 mil blocos). Material infinito, bora!
 
-[2026-11-20 14:47:03:495 INFO] [Scripting] [Lila:say] Casa inteligente: 25%
+[2026-11-20 14:50:10:814 INFO] [Scripting] [Lila:say] Casa inteligente: 25%
 
-[2026-11-20 14:47:03:544 INFO] [Scripting] [Lila:say] Casa inteligente: 50%
+[2026-11-20 14:50:10:862 INFO] [Scripting] [Lila:say] Casa inteligente: 50%
 
-[2026-11-20 14:47:03:546 INFO] [Scripting] [Lila:say] Casa inteligente: 75%
+[2026-11-20 14:50:10:864 INFO] [Scripting] [Lila:say] Casa inteligente: 75%
 
-[2026-11-20 14:47:03:548 INFO] [Scripting] [Lila:say] Casa inteligente pronto! Fica a 25 blocos na sua frente.
+[2026-11-20 14:50:10:866 INFO] [Scripting] [Lila:say] Casa inteligente pronto! Fica a 25 blocos na sua frente.
 
-[2026-11-20 14:47:05:543 INFO] [Scripting] LILA-TEST PASS mega: casa_tech :: ticks=45 
+[2026-11-20 14:50:12:860 INFO] [Scripting] LILA-TEST PASS mega: casa_tech :: ticks=44 
 
-[2026-11-20 14:47:07:601 INFO] [Scripting] [Lila:say] Construindo: Castelo (59×59, ~52 mil blocos). Material infinito, bora!
+[2026-11-20 14:50:14:916 INFO] [Scripting] [Lila:say] Construindo: Castelo (59×59, ~52 mil blocos). Material infinito, bora!
 
-[2026-11-20 14:47:08:448 INFO] [Scripting] [Lila:say] Castelo: 25%
+[2026-11-20 14:50:15:765 INFO] [Scripting] [Lila:say] Castelo: 25%
 
-[2026-11-20 14:47:08:700 INFO] [Scripting] [Lila:say] Castelo: 50%
+[2026-11-20 14:50:16:018 INFO] [Scripting] [Lila:say] Castelo: 50%
 
-[2026-11-20 14:47:08:998 INFO] [Scripting] [Lila:say] Castelo: 75%
+[2026-11-20 14:50:16:264 INFO] [Scripting] [Lila:say] Castelo: 75%
 
-[2026-11-20 14:47:09:248 INFO] [Scripting] [Lila:say] Castelo pronto! Fica a 38 blocos na sua frente.
+[2026-11-20 14:50:16:563 INFO] [Scripting] [Lila:say] Castelo pronto! Fica a 38 blocos na sua frente.
 
-[2026-11-20 14:47:11:245 INFO] [Scripting] LILA-TEST PASS mega: castelo :: ticks=74 
+[2026-11-20 14:50:18:562 INFO] [Scripting] LILA-TEST PASS mega: castelo :: ticks=74 
 
-[2026-11-20 14:47:11:514 INFO] [Scripting] LILA-TEST PASS mega: castelo really placed its blocks :: stone_bricks (amostra 1/27)=558
+[2026-11-20 14:50:18:852 INFO] [Scripting] LILA-TEST PASS mega: castelo really placed its blocks :: stone_bricks (amostra 1/27)=526
 
-[2026-11-20 14:47:14:622 INFO] [Scripting] [Lila:say] Construindo: Vila (81×81, ~12 mil blocos). Material infinito, bora!
+[2026-11-20 14:50:21:610 INFO] [Scripting] [Lila:say] Construindo: Vila (81×81, ~12 mil blocos). Material infinito, bora!
 
-[2026-11-20 14:47:14:978 INFO] [Scripting] [Lila:say] Vila: 25%
+[2026-11-20 14:50:21:913 INFO] [Scripting] [Lila:say] Vila: 25%
 
-[2026-11-20 14:47:15:073 INFO] [Scripting] [Lila:say] Vila: 50%
+[2026-11-20 14:50:21:966 INFO] [Scripting] [Lila:say] Vila: 50%
 
-[2026-11-20 14:47:15:126 INFO] [Scripting] [Lila:say] Vila: 75%
+[2026-11-20 14:50:22:062 INFO] [Scripting] [Lila:say] Vila: 75%
 
-[2026-11-20 14:47:15:175 INFO] [Scripting] [Lila:say] Vila pronto! Fica a 49 blocos na sua frente.
+[2026-11-20 14:50:22:111 INFO] [Scripting] [Lila:say] Vila pronto! Fica a 49 blocos na sua frente.
 
-[2026-11-20 14:47:17:172 INFO] [Scripting] LILA-TEST PASS mega: vila :: ticks=52 
+[2026-11-20 14:50:24:109 INFO] [Scripting] LILA-TEST PASS mega: vila :: ticks=51 
 
-[2026-11-20 14:47:19:472 INFO] [Scripting] [Lila:say] Construindo: Pirâmide (47×47, ~28 mil blocos). Material infinito, bora!
+[2026-11-20 14:50:26:459 INFO] [Scripting] [Lila:say] Construindo: Pirâmide (47×47, ~28 mil blocos). Material infinito, bora!
 
-[2026-11-20 14:47:19:725 INFO] [Scripting] [Lila:say] Pirâmide: 25%
+[2026-11-20 14:50:26:711 INFO] [Scripting] [Lila:say] Pirâmide: 25%
 
-[2026-11-20 14:47:19:772 INFO] [Scripting] [Lila:say] Pirâmide: 50%
+[2026-11-20 14:50:26:713 INFO] [Scripting] [Lila:say] Pirâmide: 50%
 
-[2026-11-20 14:47:19:877 INFO] [Scripting] [Lila:say] Pirâmide: 75%
+[2026-11-20 14:50:26:858 INFO] [Scripting] [Lila:say] Pirâmide: 75%
 
-[2026-11-20 14:47:19:918 INFO] [Scripting] [Lila:say] Pirâmide pronto! Fica a 32 blocos na sua frente.
+[2026-11-20 14:50:26:858 INFO] [Scripting] [Lila:say] Pirâmide pronto! Fica a 32 blocos na sua frente.
 
-[2026-11-20 14:47:21:921 INFO] [Scripting] LILA-TEST PASS mega: piramide :: ticks=50 
+[2026-11-20 14:50:28:859 INFO] [Scripting] LILA-TEST PASS mega: piramide :: ticks=49 
 
-[2026-11-20 14:47:23:973 INFO] [Scripting] [Lila:say] Construindo: Farol (17×17, ~3 mil blocos). Material infinito, bora!
+[2026-11-20 14:50:31:511 INFO] [Scripting] [Lila:say] Construindo: Farol (17×17, ~3 mil blocos). Material infinito, bora!
 
-[2026-11-20 14:47:24:073 INFO] [Scripting] [Lila:say] Farol: 25%
+[2026-11-20 14:50:31:610 INFO] [Scripting] [Lila:say] Farol: 25%
 
-[2026-11-20 14:47:24:127 INFO] [Scripting] [Lila:say] Farol: 50%
+[2026-11-20 14:50:31:659 INFO] [Scripting] [Lila:say] Farol: 50%
 
-[2026-11-20 14:47:24:223 INFO] [Scripting] [Lila:say] Farol: 75%
+[2026-11-20 14:50:31:665 INFO] [Scripting] [Lila:say] Farol: 75%
 
-[2026-11-20 14:47:24:276 INFO] [Scripting] [Lila:say] Farol pronto! Fica a 17 blocos na sua frente.
+[2026-11-20 14:50:31:762 INFO] [Scripting] [Lila:say] Farol pronto! Fica a 17 blocos na sua frente.
 
-[2026-11-20 14:47:26:272 INFO] [Scripting] LILA-TEST PASS mega: farol :: ticks=47 
+[2026-11-20 14:50:33:759 INFO] [Scripting] LILA-TEST PASS mega: farol :: ticks=46 
 
-[2026-11-20 14:47:28:775 INFO] [Scripting] [Lila:say] Construindo: Arranha-céu (25×25, ~91 mil blocos). Material infinito, bora!
+[2026-11-20 14:50:36:364 INFO] [Scripting] [Lila:say] Construindo: Arranha-céu (25×25, ~91 mil blocos). Material infinito, bora!
 
-[2026-11-20 14:47:29:825 INFO] [Scripting] [Lila:say] Arranha-céu: 25%
+[2026-11-20 14:50:37:213 INFO] [Scripting] [Lila:say] Arranha-céu: 25%
 
-[2026-11-20 14:47:29:926 INFO] [Scripting] [Lila:say] Arranha-céu: 50%
+[2026-11-20 14:50:37:312 INFO] [Scripting] [Lila:say] Arranha-céu: 50%
 
-[2026-11-20 14:47:30:027 INFO] [Scripting] [Lila:say] Arranha-céu: 75%
+[2026-11-20 14:50:37:411 INFO] [Scripting] [Lila:say] Arranha-céu: 75%
 
-[2026-11-20 14:47:30:124 INFO] [Scripting] [Lila:say] Arranha-céu pronto! Fica a 21 blocos na sua frente.
+[2026-11-20 14:50:37:460 INFO] [Scripting] [Lila:say] Arranha-céu pronto! Fica a 21 blocos na sua frente.
 
-[2026-11-20 14:47:32:122 INFO] [Scripting] LILA-TEST PASS mega: arranha_ceu :: ticks=68 
+[2026-11-20 14:50:39:460 INFO] [Scripting] LILA-TEST PASS mega: arranha_ceu :: ticks=63 
 
-[2026-11-20 14:47:32:398 INFO] [Scripting] LILA-TEST FAIL mega: arranha_ceu really placed its blocks :: light_blue_stained_glass (amostra 1/27)=118
+[2026-11-20 14:50:40:231 INFO] [Scripting] LILA-TEST PASS mega: arranha_ceu really placed its blocks :: light_blue_stained_glass (amostra 1/27)=386
 
-[2026-11-20 14:47:35:219 INFO] [Scripting] [Lila:say] Construindo: Estádio (89×89, ~39 mil blocos). Material infinito, bora!
+[2026-11-20 14:50:42:906 INFO] [Scripting] [Lila:say] Construindo: Estádio (89×89, ~39 mil blocos). Material infinito, bora!
 
-[2026-11-20 14:47:36:155 INFO] [Scripting] [Lila:say] Estádio: 25%
+[2026-11-20 14:50:43:740 INFO] [Scripting] [Lila:say] Estádio: 25%
 
-[2026-11-20 14:47:36:707 INFO] [Scripting] [Lila:say] Estádio: 50%
+[2026-11-20 14:50:44:336 INFO] [Scripting] [Lila:say] Estádio: 50%
 
-[2026-11-20 14:47:37:307 INFO] [Scripting] [Lila:say] Estádio: 75%
+[2026-11-20 14:50:44:839 INFO] [Scripting] [Lila:say] Estádio: 75%
 
-[2026-11-20 14:47:38:055 INFO] [Scripting] [Lila:say] Estádio pronto! Fica a 53 blocos na sua frente.
+[2026-11-20 14:50:45:589 INFO] [Scripting] [Lila:say] Estádio pronto! Fica a 53 blocos na sua frente.
 
-[2026-11-20 14:47:40:054 INFO] [Scripting] LILA-TEST PASS mega: estadio :: ticks=98 
+[2026-11-20 14:50:47:586 INFO] [Scripting] LILA-TEST PASS mega: estadio :: ticks=95 
 
-[2026-11-20 14:47:42:683 INFO] [Scripting] [Lila:say] Construindo: Montanha (73×73, ~53 mil blocos). Material infinito, bora!
+[2026-11-20 14:50:49:916 INFO] [Scripting] [Lila:say] Construindo: Montanha (73×73, ~54 mil blocos). Material infinito, bora!
 
-[2026-11-20 14:47:43:803 INFO] [Scripting] [Lila:say] Montanha: 25%
+[2026-11-20 14:50:51:085 INFO] [Scripting] [Lila:say] Montanha: 25%
 
-[2026-11-20 14:47:44:952 INFO] [Scripting] [Lila:say] Montanha: 50%
+[2026-11-20 14:50:52:387 INFO] [Scripting] [Lila:say] Montanha: 50%
 
-[2026-11-20 14:47:46:054 INFO] [Scripting] [Lila:say] Montanha: 75%
+[2026-11-20 14:50:53:638 INFO] [Scripting] [Lila:say] Montanha: 75%
 
-[2026-11-20 14:47:46:956 INFO] [Scripting] [Lila:say] Montanha pronto! Fica a 45 blocos na sua frente.
+[2026-11-20 14:50:54:740 INFO] [Scripting] [Lila:say] Montanha pronto! Fica a 45 blocos na sua frente.
 
-[2026-11-20 14:47:48:957 INFO] [Scripting] LILA-TEST PASS mega: montanha :: ticks=127 
+[2026-11-20 14:50:56:738 INFO] [Scripting] LILA-TEST PASS mega: montanha :: ticks=138 
 
-[2026-11-20 14:47:52:464 INFO] [Scripting] [Lila:say] Construindo: Cidade (139×139, ~243 mil blocos). Material infinito, bora!
+[2026-11-20 14:51:00:392 INFO] [Scripting] [Lila:say] Construindo: Cidade (139×139, ~330 mil blocos). Material infinito, bora!
 
-[2026-11-20 14:47:54:159 INFO] [Scripting] [Lila:say] Cidade: 25%
+[2026-11-20 14:51:02:391 INFO] [Scripting] [Lila:say] Cidade: 25%
 
-[2026-11-20 14:47:55:054 INFO] [Scripting] [Lila:say] Cidade: 50%
+[2026-11-20 14:51:03:190 INFO] [Scripting] [Lila:say] Cidade: 50%
 
-[2026-11-20 14:47:55:958 INFO] [Scripting] [Lila:say] Cidade: 75%
+[2026-11-20 14:51:04:389 INFO] [Scripting] [Lila:say] Cidade: 75%
 
-[2026-11-20 14:47:56:558 INFO] [Scripting] [Lila:say] Cidade pronto! Fica a 78 blocos na sua frente.
+[2026-11-20 14:51:05:088 INFO] [Scripting] [Lila:say] Cidade pronto! Fica a 78 blocos na sua frente.
 
-[2026-11-20 14:47:58:554 INFO] [Scripting] LILA-TEST PASS mega: cidade :: ticks=123 
+[2026-11-20 14:51:07:087 INFO] [Scripting] LILA-TEST PASS mega: cidade :: ticks=135 
 
-[2026-11-20 14:47:58:948 INFO] [Scripting] LILA-TEST PASS mega: cidade really placed its blocks :: black_concrete (amostra 1/27)=1303
+[2026-11-20 14:51:07:471 INFO] [Scripting] LILA-TEST PASS mega: cidade really placed its blocks :: black_concrete (amostra 1/27)=1303
 
-[2026-11-20 14:47:58:959 INFO] [Scripting] LILA-TEST PASS mega builds never freeze the game (step < 60 ms) :: maxStep=35ms
+[2026-11-20 14:51:07:479 INFO] [Scripting] LILA-TEST PASS mega builds never freeze the game (step < 60 ms) :: maxStep=35ms
 
-[2026-11-20 14:48:01:152 INFO] [Scripting] [Lila:say] Transformando tudo em volta em neve... segura aí!
+[2026-11-20 14:51:09:272 INFO] [Scripting] [Lila:say] Transformando tudo em volta em neve... segura aí!
 
-[2026-11-20 14:48:01:205 INFO] [Scripting] [Lila:say] Bioma: 0%
+[2026-11-20 14:51:09:279 INFO] [Scripting] [Lila:say] Bioma: 0%
 
-[2026-11-20 14:48:01:954 INFO] [Scripting] [Lila:say] Bioma: 17%
+[2026-11-20 14:51:10:027 INFO] [Scripting] [Lila:say] Bioma: 17%
 
-[2026-11-20 14:48:03:402 INFO] [Scripting] [Lila:say] Bioma: 33%
+[2026-11-20 14:51:11:436 INFO] [Scripting] [Lila:say] Bioma: 33%
 
-[2026-11-20 14:48:05:057 INFO] [Scripting] [Lila:say] Bioma: 50%
+[2026-11-20 14:51:13:131 INFO] [Scripting] [Lila:say] Bioma: 50%
 
-[2026-11-20 14:48:06:706 INFO] [Scripting] [Lila:say] Bioma: 67%
+[2026-11-20 14:51:14:779 INFO] [Scripting] [Lila:say] Bioma: 67%
 
-[2026-11-20 14:48:08:121 INFO] [Scripting] [Lila:say] Bioma: 83%
+[2026-11-20 14:51:16:180 INFO] [Scripting] [Lila:say] Bioma: 83%
 
-[2026-11-20 14:48:08:783 INFO] [Scripting] [Lila:say] Bioma: 100%
+[2026-11-20 14:51:16:842 INFO] [Scripting] [Lila:say] Bioma: 100%
 
-[2026-11-20 14:48:08:783 INFO] [Scripting] [Lila:say] Pronto: aqui agora é neve! (O jogo não deixa mudar a cor da grama/clima por script.)
+[2026-11-20 14:51:16:842 INFO] [Scripting] [Lila:say] Pronto: aqui agora é neve! (O jogo não deixa mudar a cor da grama/clima por script.)
 
-[2026-11-20 14:48:08:794 INFO] [Scripting] LILA-TEST PASS biome transform: snow :: snow layers(sample)=833 ticks=153 
+[2026-11-20 14:51:16:853 INFO] [Scripting] LILA-TEST PASS biome transform: snow :: snow layers(sample)=831 ticks=152 
 
-[2026-11-20 14:48:09:201 INFO] [Scripting] [Lila:say] Ai... já volto, prometo...
+[2026-11-20 14:51:17:272 INFO] [Scripting] [Lila:say] Ai... já volto, prometo...
 
-[2026-11-20 14:48:09:401 INFO] [Scripting] LILA-TEST PASS defeat in a form reverts to drone
+[2026-11-20 14:51:17:471 INFO] [Scripting] LILA-TEST PASS defeat in a form reverts to drone
 
-[2026-11-20 14:48:29:212 INFO] [Scripting] [Lila:say] Voltei! Bora continuar.
+[2026-11-20 14:51:37:273 INFO] [Scripting] [Lila:say] Voltei! Bora continuar.
 
-[2026-11-20 14:48:29:401 INFO] [Scripting] LILA-TEST PASS respawn after 20 s with inventory :: ticks=400 items 65->65
+[2026-11-20 14:51:37:472 INFO] [Scripting] LILA-TEST PASS respawn after 20 s with inventory :: ticks=400 items 65->65
 
-[2026-11-20 14:48:29:401 INFO] [Scripting] [Lila:say] Beleza, vou recarregar. É só me chamar no controle!
+[2026-11-20 14:51:37:472 INFO] [Scripting] [Lila:say] Beleza, vou recarregar. É só me chamar no controle!
 
-[2026-11-20 14:48:29:653 INFO] [Scripting] LILA-TEST PASS dismiss + resummon keeps everything
+[2026-11-20 14:51:37:726 INFO] [Scripting] LILA-TEST PASS dismiss + resummon keeps everything
 
-[2026-11-20 14:48:29:653 INFO] [Scripting] LILA-TEST DONE pass=29 fail=1
+[2026-11-20 14:51:37:726 INFO] [Scripting] LILA-TEST DONE pass=30 fail=0
 
-[2026-11-20 14:48:31:685 INFO] Server stop requested.
-[2026-11-20 14:48:31:733 INFO] Stopping server...
+[2026-11-20 14:51:39:780 INFO] Server stop requested.
+[2026-11-20 14:51:39:826 INFO] Stopping server...
 Quit correctly
