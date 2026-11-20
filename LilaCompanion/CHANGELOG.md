@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.1.0
+- **Constrói à mão, bloco por bloco** (novo padrão): nas megaconstruções e nos biomas o DR-0N voa
+  até cada ponto e coloca/quebra bloco por bloco, parte por parte (quadrados de 24×24), de baixo para
+  cima, em zigue-zague, com feixe de construção, som do material e poeira — como um jogador
+  construindo voando. Velocidade em Configurações (ou "constrói devagar/rápido/na hora"):
+  à mão ~10 blocos/s · normal ~60 · rápido ~500 · instantâneo (o jeito antigo). Ele avisa quanto
+  tempo a obra vai levar.
+- **Aplainar / destruir em volta**: "deixa tudo plano" tira tudo que é natural acima do chão num raio
+  (12 a 64), tapa buracos com terra/grama e deixa plano; "destrói tudo" (ou a opção no menu) tira
+  TUDO, inclusive construções — menos baús, camas e blocos que guardam itens.
+- **Recolher os itens do chão**: "recolhe os itens do chão" — ele voa até os itens e aspira tudo
+  (ficam com ele; peça "me dá tudo"). Também roda no fim do aplainar.
+- **Animações revisadas**: drone inclina suave conforme a velocidade e deita nas curvas; animação
+  própria de construção (inclina para o bloco, "bicos" mirando para baixo, olho pulsando) e de
+  quebrar; torres do tanque/escavadeira/torreta giram macio; helicóptero e jato inclinam suave;
+  passada do colosso entra e sai sem tranco; robô não mistura parado com andando.
+
 ## 2.0.0 — DR-0N Mega Drone
 - **A Lila saiu.** O add-on agora é só o DR-0N (pacotes renomeados para "DR-0N Mega Drone";
   arquivo `DR-0N_Mega_Drone.mcaddon`). Registros antigos da Lila são ignorados.

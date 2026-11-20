@@ -1,4 +1,4 @@
-# Checklist de aceitação — DR-0N Mega Drone 2.0
+# Checklist de aceitação — DR-0N Mega Drone 2.1
 
 Legenda: **PASS** = verificado de verdade · **NOT TESTED** = não dá para testar neste ambiente
 (servidor sem tela, sem celular, sem som).
@@ -21,6 +21,9 @@ com jogadores simulados "Dono" e "Intruso" → `tests/last_bds_owner_run.log`.
 | Item | Resultado |
 |---|---|
 | Itens infinitos: ferramenta e 64 troncos aparecem na hora | PASS |
+| Construção à mão (modo humano): poço bloco por bloco, drone voando por vários pontos, passo < 60 ms | PASS |
+| Aplainar: morro e árvore somem, chão fica plano, parede do jogador fica, itens do chão recolhidos | PASS |
+| Destruir tudo: construção some, baú fica | PASS |
 | As 9 formas trocam (propriedade da forma + número de assentos certo) | PASS |
 | Colosso: escala 3,4 e hitbox gigante (acerta raios de 4 a 24 blocos de altura) | PASS |
 | Soco do colosso quebra a parede e derruba o zumbi | PASS |
@@ -28,7 +31,7 @@ com jogadores simulados "Dono" e "Intruso" → `tests/last_bds_owner_run.log`.
 | 12 megaconstruções completas (poço, labirinto, montanha-russa, casa inteligente, castelo, vila, pirâmide, farol, arranha-céu, estádio, montanha, cidade) | PASS |
 | Blocos reais conferidos (cidade, castelo, arranha-céu) e montanha-russa com trilhos + carrinho | PASS |
 | Nenhum passo de script acima de 60 ms durante as obras (sem travar o jogo) | PASS |
-| Bioma de neve (camadas de neve no chão, árvores) | PASS |
+| Bioma de neve à mão, coluna por coluna (camadas de neve no chão, árvores) | PASS |
 | Derrota no meio de uma forma: desmonta e volta como drone em 20 s com o inventário | PASS |
 | Dispensar e invocar de novo mantém tudo | PASS |
 
@@ -51,7 +54,8 @@ com jogadores simulados "Dono" e "Intruso" → `tests/last_bds_owner_run.log`.
 | Modo proteger: ataca primeiro um zumbi a 20 blocos | PASS |
 | Exército: vira 10 robôs, derrubam monstros, levam maçã dourada com vida baixa | PASS |
 | "Cancelar" junta o exército de volta no drone | PASS |
-| "constrói um poço aqui" por texto; construção do jogador intacta | PASS |
+| "recolhe os itens do chão" por texto; "constrói na hora / devagar" muda a velocidade | PASS |
+| "constrói um poço aqui" por texto (à mão); construção do jogador intacta | PASS |
 
 ## Não testado (limite do ambiente)
 | Item | Resultado |

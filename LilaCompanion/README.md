@@ -113,8 +113,19 @@ automáticas, piscina iluminada, "placas solares", câmeras) · montanha (neve n
 cachoeira) · pirâmide · farol · arranha-céu de 30 andares · estádio. As casas antigas (cabana, casa,
 torre, mansão, fazenda...) continuam no menu.
 
+**Construção à mão (padrão):** ele voa até cada ponto e coloca bloco por bloco, parte por parte, de
+baixo para cima, como um jogador construindo voando (feixe, som do material, poeira). Velocidade em
+Configurações ou por texto ("constrói devagar", "constrói rápido", "constrói na hora"):
+à mão ~10 blocos/s · normal ~60 · rápido ~500 · instantâneo. Ele avisa o tempo estimado — obras
+gigantes à mão levam bastante (é um jogador construindo uma cidade!).
+
 Ele **não derruba construção sua**: a limpeza do terreno só tira blocos naturais e, se houver coisa
 sua no lugar, ele escolhe outro ao lado.
+
+**Aplainar / destruir em volta:** "deixa tudo plano" (ou menu) tira o que é natural acima do chão num
+raio de 12 a 64 blocos, tapa buracos e deixa plano. "destrói tudo" tira **tudo**, inclusive
+construções — menos baús, camas e blocos que guardam itens. No fim ele recolhe os itens do chão.
+**Recolher itens:** "recolhe os itens do chão" — ele aspira os itens em volta e guarda com ele.
 
 **Biomas** (raio de 36 blocos): neve, deserto, selva, cerejeiras, cogumelos, flores, floresta,
 pântano. *Limite do jogo:* script não troca o ID do bioma (o Bedrock não tem `/fillbiome`), então a

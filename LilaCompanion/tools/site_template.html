@@ -169,8 +169,14 @@ footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line)
 
   <section style="display:grid;gap:18px">
     <h2>Construções gigantes</h2>
-    <p class="note">Material infinito, montado por partes sem travar o jogo, com o drone voando pela obra. Castelo com fosso e torres · cidade com ruas, postes, prédios, arranha-céus e parque · vila com igreja e plantações · montanha-russa com subida, quedas, curvas, estação e carrinho · poço · labirinto gerado na hora com tesouro no centro · casa inteligente (luz automática à noite, portas automáticas, piscina iluminada) · montanha com neve no pico · pirâmide · farol · arranha-céu de 30 andares com heliponto · estádio. Ele nunca derruba construção sua: se tiver coisa sua no lugar, procura outro ao lado.</p>
+    <p class="note"><b>Ele constrói à mão:</b> voa até cada ponto e coloca bloco por bloco, parte por parte, de baixo para cima, como um jogador construindo voando (feixe, som do material, poeira). A velocidade muda em Configurações: à mão (~10 blocos/s), normal, rápido ou instantâneo.</p>
+    <p class="note">Material infinito, sem travar o jogo. Castelo com fosso e torres · cidade com ruas, postes, prédios, arranha-céus e parque · vila com igreja e plantações · montanha-russa com subida, quedas, curvas, estação e carrinho · poço · labirinto gerado na hora com tesouro no centro · casa inteligente (luz automática à noite, portas automáticas, piscina iluminada) · montanha com neve no pico · pirâmide · farol · arranha-céu de 30 andares com heliponto · estádio. Ele nunca derruba construção sua: se tiver coisa sua no lugar, procura outro ao lado.</p>
     <p class="note"><b>Biomas:</b> neve, deserto, selva, cerejeiras, cogumelos, flores, floresta e pântano num raio de 36 blocos. O jogo não deixa script trocar o ID do bioma, então a cor da grama e o clima continuam os de antes. O resto (chão, árvores, plantas, gelo) muda.</p>
+  </section>
+
+  <section style="display:grid;gap:18px">
+    <h2>Aplainar, destruir e limpar</h2>
+    <p class="note"><b>"deixa tudo plano"</b>: tira tudo que é natural acima do chão em volta de você (raio de 12 a 64), tapa buracos com terra e grama e deixa plano, quebrando bloco por bloco. <b>"destrói tudo"</b>: tira tudo, inclusive construções, menos baús, camas e blocos que guardam itens. <b>"recolhe os itens do chão"</b>: ele voa até os itens e aspira tudo (ficam com ele).</p>
   </section>
 
   <section style="display:grid;gap:18px">
@@ -187,6 +193,9 @@ footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line)
       <button class="cmd" type="button">me dá 64 diamantes</button>
       <button class="cmd" type="button">me fortalece</button>
       <button class="cmd" type="button">me protege</button>
+      <button class="cmd" type="button">deixa tudo plano</button>
+      <button class="cmd" type="button">recolhe os itens do chão</button>
+      <button class="cmd" type="button">constrói devagar</button>
       <button class="cmd" type="button">volta ao normal</button>
     </div>
   </section>

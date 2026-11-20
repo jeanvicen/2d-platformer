@@ -270,7 +270,7 @@ function* prepTile(dim, cx, cz, y0, x0, z0, x1, z1, height) {
     const wx = cx + x, wz = cz + z;
     let top;
     try {
-      top = dim.getTopmostBlock({ x: wx, z: wz }, y0 - 4);
+      top = dim.getTopmostBlock({ x: wx, z: wz }, Math.min(dim.heightRange.max - 1, y0 + height + 2)); // começa a busca de cima
     } catch {
       continue;
     }
@@ -410,7 +410,7 @@ export function* biomeTransform(c, biome) {
           // à mão: derruba a vegetação antiga desta coluna, de cima para baixo
           let tb;
           try {
-            tb = dim.getTopmostBlock({ x: wx, z: wz }, y + 1);
+            tb = dim.getTopmostBlock({ x: wx, z: wz }, Math.min(dim.heightRange.max - 1, y + 40)); // começa a busca de cima
           } catch {
             /* ignore */
           }
@@ -624,7 +624,7 @@ function* flattenStream(dim, cx, cz, y0, R) {
     const wx = cx + x, wz = cz + z;
     let top;
     try {
-      top = dim.getTopmostBlock({ x: wx, z: wz }, y0 - 3);
+      top = dim.getTopmostBlock({ x: wx, z: wz }, Math.min(dim.heightRange.max - 1, y0 + 80)); // começa a busca de cima
     } catch {
       continue;
     }
