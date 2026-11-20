@@ -102,10 +102,12 @@ export const CREATIVE_ITEMS = [
 ];
 
 /** Formas do DR-0N (índice = propriedade lila:form). */
-export const FORM_LIST = ["drone", "heli", "car", "excavator", "tank", "jet", "moto", "colossus", "turret"];
+export const FORM_LIST = ["drone", "heli", "car", "excavator", "tank", "jet", "moto", "colossus", "turret",
+  "swarm", "ship", "ufo", "sub", "boat", "truck", "stealth"];
 export const FORM_NAMES = {
   drone: "drone", heli: "helicóptero", car: "carro esportivo", excavator: "escavadeira", tank: "tanque de guerra",
-  jet: "caça a jato", moto: "moto", colossus: "colosso TITÃ", turret: "torreta gigante",
+  jet: "caça a jato", moto: "moto", colossus: "robô gigante TITÃ", turret: "torreta gigante", swarm: "enxame de nanorrobôs",
+  ship: "nave espacial", ufo: "disco voador", sub: "submarino", boat: "lancha", truck: "caminhão-monstro", stealth: "caça supersônico furtivo",
 };
 export const FORM_WORDS = {
   heli: ["helicoptero", "helicopteros", "heli", "helicopter", "chopper"],
@@ -115,7 +117,32 @@ export const FORM_WORDS = {
   jet: ["jato", "jatinho", "aviao", "aviao de guerra", "caca a jato", "aeronave", "jet", "plane"],
   moto: ["moto", "motoca", "motocicleta", "motinha", "bike", "motorcycle"],
   colossus: ["colosso", "colossal", "modo colosso", "modo colossal", "tita", "titan", "robozao", "robo gigante", "gigante",
-    "godzilla", "godzila", "kaiju", "mecha", "monstro gigante"],
+    "godzilla", "godzila", "kaiju", "mecha", "monstro gigante", "robo gigantesco", "robo colossal", "robo de batalha"],
+  ship: ["nave", "nave espacial", "navinha", "espaconave", "foguete", "starfighter", "spaceship", "nave de guerra", "nave alienigena"],
+  ufo: ["disco voador", "ovni", "ufo", "disco", "nave de et", "nave extraterrestre", "abducao"],
+  sub: ["submarino", "submarine", "sub", "submersivel", "submarino de guerra"],
+  boat: ["lancha", "barco", "bote", "barquinho", "jet ski", "jetski", "boat", "barco a motor", "lanchinha"],
+  truck: ["monster truck", "caminhao monstro", "caminhao-monstro", "caminhonete", "picape", "4x4", "jipe", "truck", "caminhao", "carro monstro"],
+  stealth: ["caca furtivo", "furtivo", "stealth", "supersonico", "jato supersonico", "aviao supersonico", "caca stealth", "caca invisivel",
+    "outro jato", "jato preto", "aviao preto", "caca supersonico"],
+};
+/** Enxame de nanorrobôs (modo novo da 2.2). */
+export const SWARM_WORDS = ["enxame", "nanorrobos", "nanorobos", "nano robos", "nanobots", "nanites", "nanitas", "modo enxame", "modo nano",
+  "nuvem de robos", "milhares de robos", "abelhas", "vespas", "marimbondos", "enxame de abelhas", "swarm"];
+export const SWARM_SHAPES = {
+  escudo: { name: "Escudo em volta de mim", w: ["escudo", "me protege com escudo", "escudo de enxame", "shield", "bolha", "campo de forca"] },
+  muralha: { name: "Muralha na frente", w: ["muralha", "parede", "muro", "barreira", "wall"] },
+  ponte: { name: "Ponte para onde eu olho", w: ["ponte", "bridge", "passarela"] },
+  escada: { name: "Escada para cima", w: ["escada", "escadaria", "degraus", "stairs"] },
+  cupula: { name: "Cúpula / abrigo", w: ["cupula", "abrigo", "domo", "bunker", "iglu", "casinha"] },
+  punho: { name: "Punho gigante", w: ["punho", "soco gigante", "mao gigante", "porrada", "fist"] },
+  espada: { name: "Espada giratória", w: ["espada", "lamina", "sword", "corte"] },
+  tornado: { name: "Tornado", w: ["tornado", "furacao", "redemoinho", "ciclone"] },
+  asas: { name: "Asas (pular mais alto e planar)", w: ["asas", "asa", "me faz voar", "wings", "planar"] },
+  elevador: { name: "Me levantar", w: ["me levanta", "elevador", "me sobe", "me leva pra cima", "me carrega"] },
+  ataque: { name: "Atacar o que eu olho", w: ["ataca", "ataque", "pega ele", "come ele", "devora", "pica", "ferroada"] },
+  devorar: { name: "Devorar tudo em volta (destruir)", w: ["devora tudo", "come tudo", "desintegra tudo", "destroi tudo em volta", "consome tudo",
+    "destroi tudo", "destruir tudo", "devorar tudo", "devora"] },
 };
 export const ARMY_WORDS = ["exercito", "modo exercito", "robos", "soldados", "tropa", "tropas", "army", "esquadrao", "se divide", "se explode",
   "batalhao", "robozinhos"];

@@ -1,6 +1,6 @@
 // DR-0N Mega Drone — ponto de entrada (APIs estáveis: @minecraft/server 2.x + server-ui 2.x).
 // Nada aparece quando o jogador entra no mundo: tudo começa quando ele fabrica o Controle do DR-0N.
-import { ButtonState, CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus, EntityDamageCause, InputButton, Player, system, world } from "@minecraft/server";
+import { CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus, EntityDamageCause, Player, system, world } from "@minecraft/server";
 import { every, startScheduler } from "./core/scheduler.js";
 import { logError, logInfo } from "./core/log.js";
 import { COMPANIONS, OWNER_PROP, adopt, companionForEntity, companionsOf, findEntityFor, isCompanionType, loadAllRecords, loadCompanion } from "./lila/companion.js";
@@ -9,7 +9,8 @@ import { backupInventory, defeat, tickDefeat } from "./lila/lifecycle.js";
 import { flushHud, resetWaypoint, updateHud } from "./lila/hud.js";
 import { riddenBy, rideTick } from "./lila/drone.js";
 import { fight, markAggro } from "./lila/combat.js";
-import { beam, formOf, formTick, isRideForm, jumpAction, primaryAttack, releaseRiders, riders } from "./lila/forms.js";
+import { formOf, formTick, isRideForm, primaryAttack, releaseRiders, riders } from "./lila/forms.js";
+import { shieldOn, swarmTick } from "./lila/swarm.js";
 import { armyActive, armyTick, ROBOT } from "./lila/army.js";
 import { particle, sound } from "./lila/anim.js";
 import { say } from "./lila/talk.js";
@@ -92,6 +93,7 @@ world.afterEvents.worldLoad.subscribe(() => {
           formTick(c); // veículos e colosso: você pilota, o cérebro descansa
           continue;
         }
+        if (c.alive() && formOf(c) === "swarm") swarmTick(c); // enxame: poderes + o cérebro de sempre
         // carona no drone: o dono pilota; o cérebro espera e retoma quando ele descer
         if (c.def?.flying && c.alive()) {
           const rider = riddenBy(c);
@@ -194,36 +196,7 @@ world.afterEvents.playerSwingStart.subscribe((ev) => {
   if (c) primaryAttack(c, ev.player);
 });
 
-world.afterEvents.playerButtonInput.subscribe((ev) => {
-  const p = ev.player;
-  const c = pilotOf(p);
-  if (!c || ev.newButtonState !== ButtonState.Pressed) return;
-  if (ev.button === InputButton.Jump) {
-    jumpAction(c);
-    return;
-  }
-  if (ev.button !== InputButton.Sneak) return;
-  const now = system.currentTick;
-  const last = c.flags.lastSneak ?? -99;
-  c.flags.lastSneak = now;
-  if (now - last <= 10) {
-    // agachar 2× = sair
-    c.flags.lastSneak = -99;
-    setDismount(p, true);
-    try {
-      c.entity?.getComponent("minecraft:rideable")?.ejectRider(p);
-    } catch {
-      /* ignore */
-    }
-    return;
-  }
-  // colosso: um toque = raio de plasma (espera um instante para ver se é o toque duplo)
-  if (formOf(c) === "colossus") {
-    system.runTimeout(() => {
-      if (c.flags.lastSneak === now && c.alive() && riders(c)[0]?.id === p.id) beam(c, p);
-    }, 11);
-  }
-});
+// Sair do veículo = agachar (o próprio jogo desmonta). Pular = o tick de pilotagem lê o botão.
 
 // ------------------------------------------------------------------ entidades
 world.afterEvents.entityLoad.subscribe((ev) => {
@@ -256,6 +229,14 @@ world.afterEvents.playerLeave.subscribe((ev) => {
 });
 
 // ------------------------------------------------------------------ dano
+function particleAt(e, id) {
+  try {
+    particle(e.dimension, id, { x: e.location.x, y: e.location.y + 1, z: e.location.z });
+  } catch {
+    /* ignore */
+  }
+}
+
 /** Dono pilotando o colosso: quase imortal. Dono batendo no próprio drone/robôs: sem dano. */
 world.beforeEvents.entityHurt.subscribe((ev) => {
   const e = ev.hurtEntity;
@@ -264,6 +245,25 @@ world.beforeEvents.entityHurt.subscribe((ev) => {
     for (const c of companionsOf(e.id)) {
       if (c.alive() && formOf(c) === "colossus" && riders(c).some((r) => r.id === e.id)) {
         ev.cancel = true;
+        return;
+      }
+      // escudo do enxame: nada passa (só o vazio do mundo e comandos)
+      const cause = ev.damageSource?.cause;
+      if (shieldOn(c) && cause !== "void" && cause !== "selfDestruct" && cause !== "override") {
+        ev.cancel = true;
+        const a = ev.damageSource?.damagingEntity;
+        system.run(() => {
+          try {
+            particleAt(e, "lila:nano_shield");
+            if (a && a.id !== e.id && a.isValid) {
+              const dx = a.location.x - e.location.x, dz = a.location.z - e.location.z, l = Math.hypot(dx, dz) || 1;
+              a.applyKnockback({ x: (dx / l) * 1.4, z: (dz / l) * 1.4 }, 0.4);
+              markAggro(c, a, 800);
+            }
+          } catch {
+            /* ignore */
+          }
+        });
         return;
       }
     }
@@ -284,7 +284,7 @@ world.beforeEvents.entityHurt.subscribe((ev) => {
     return;
   }
   const f = formOf(c);
-  ev.damage = ev.damage * (f === "colossus" ? 0.08 : f === "turret" ? 0.3 : f === "tank" ? 0.25 : 0.45);
+  ev.damage = ev.damage * (f === "colossus" ? 0.08 : f === "turret" ? 0.3 : f === "tank" ? 0.25 : f === "swarm" ? 0.15 : 0.45);
   let hp = 100;
   try {
     hp = e.getComponent("minecraft:health")?.currentValue ?? 100;

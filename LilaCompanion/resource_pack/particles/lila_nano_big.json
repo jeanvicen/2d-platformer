@@ -1,0 +1,71 @@
+{
+  "format_version": "1.10.0",
+  "particle_effect": {
+    "description": {
+      "identifier": "lila:nano_big",
+      "basic_render_parameters": {
+        "material": "particles_blend",
+        "texture": "textures/particle/lila/nano"
+      }
+    },
+    "components": {
+      "minecraft:emitter_rate_instant": {
+        "num_particles": 220
+      },
+      "minecraft:emitter_lifetime_once": {
+        "active_time": 0.05
+      },
+      "minecraft:emitter_shape_point": {
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "minecraft:particle_lifetime_expression": {
+        "max_lifetime": "math.random(0.45, 0.8)"
+      },
+      "minecraft:particle_initial_spin": {
+        "rotation": "math.random(0, 360)",
+        "rotation_rate": "math.random(-180, 180)"
+      },
+      "minecraft:particle_appearance_billboard": {
+        "size": [
+          "0.08 * (1 - v.particle_age / v.particle_lifetime * 0.7)",
+          "0.08 * (1 - v.particle_age / v.particle_lifetime * 0.7)"
+        ],
+        "facing_camera_mode": "rotate_xyz",
+        "uv": {
+          "texture_width": 16,
+          "texture_height": 16,
+          "uv": [
+            0,
+            0
+          ],
+          "uv_size": [
+            16,
+            16
+          ]
+        }
+      },
+      "minecraft:particle_appearance_tinting": {
+        "color": {
+          "interpolant": "v.particle_age / v.particle_lifetime",
+          "gradient": {
+            "0.0": "#FFB8F4FF",
+            "0.25": "#FF30404C",
+            "0.8": "#FF20262E",
+            "1.0": "#0020262E"
+          }
+        }
+      },
+      "minecraft:particle_motion_parametric": {
+        "relative_position": [
+          "math.cos((v.particle_random_1 * 360 + v.particle_age * 160 * (v.particle_random_4 > 0.5 ? 1 : -1))) * math.cos((v.particle_random_2 * 180 - 90)) * (4.5 * (0.75 + v.particle_random_3 * 0.25))",
+          "math.sin((v.particle_random_2 * 180 - 90)) * (4.5 * (0.75 + v.particle_random_3 * 0.25)) * 1.0 + math.sin(v.particle_age * 600 + v.particle_random_3 * 360) * 0.12",
+          "math.sin((v.particle_random_1 * 360 + v.particle_age * 160 * (v.particle_random_4 > 0.5 ? 1 : -1))) * math.cos((v.particle_random_2 * 180 - 90)) * (4.5 * (0.75 + v.particle_random_3 * 0.25))"
+        ]
+      }
+    }
+  }
+}

@@ -291,6 +291,18 @@
             },
             {
               "heli_fire": "v.form == 1"
+            },
+            {
+              "ship_fire": "v.form == 10"
+            },
+            {
+              "ufo_fire": "v.form == 11"
+            },
+            {
+              "sub_fire": "v.form == 12"
+            },
+            {
+              "swarm_fire": "v.form == 9"
             }
           ],
           "blend_transition": 0.2,
@@ -309,7 +321,13 @@
               "turret_missile": "v.form == 8"
             },
             {
-              "jet_missile": "v.form == 5"
+              "jet_missile": "v.form == 5 || v.form == 15"
+            },
+            {
+              "ufo_fire": "v.form == 11"
+            },
+            {
+              "swarm_fire": "v.form == 9"
             }
           ],
           "blend_transition": 0.2,

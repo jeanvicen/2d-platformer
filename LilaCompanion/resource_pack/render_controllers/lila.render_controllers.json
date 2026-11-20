@@ -36,7 +36,14 @@
             "Geometry.jet",
             "Geometry.moto",
             "Geometry.colossus",
-            "Geometry.turret_g"
+            "Geometry.turret_g",
+            "Geometry.swarm",
+            "Geometry.ship",
+            "Geometry.ufo",
+            "Geometry.sub",
+            "Geometry.boat",
+            "Geometry.truck",
+            "Geometry.stealth"
           ]
         },
         "textures": {
@@ -49,7 +56,14 @@
             "Texture.jet",
             "Texture.moto",
             "Texture.colossus",
-            "Texture.turret_g"
+            "Texture.turret_g",
+            "Texture.swarm",
+            "Texture.ship",
+            "Texture.ufo",
+            "Texture.sub",
+            "Texture.boat",
+            "Texture.truck",
+            "Texture.stealth"
           ]
         }
       },

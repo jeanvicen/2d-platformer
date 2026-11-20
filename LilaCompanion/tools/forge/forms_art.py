@@ -29,31 +29,41 @@ def _sym(b, center, size, paint):
 def heli_model():
     m = Model("geometry.lila.heli", 256, 256, density=2, bounds=(10, 5, (0, 1.6, 0)))
     root = m.bone("root", pivot=(0, 0, 0))
-    root.locators = {"muzzle": (0, 12, -40), "rotor": (0, 44, 2)}
+    root.locators = {"muzzle": (0, 12, -40), "rotor": (0, 50, 8)}
     b = m.bone("body", "root", pivot=(0, 20, 0))
-    b.box((0, 22, -4), (26, 22, 44), WHITE)            # cabine
+    b.box((0, 15, -4), (26, 8, 44), WHITE)             # casco baixo (até a cintura de quem senta)
     b.box((0, 11.5, -2), (24, 3, 40), GRAPH)           # barriga
-    b.box((0, 19, -30), (22, 14, 10), WHITE)           # nariz
-    b.box((0, 16, -37), (16, 9, 6), GRAPH)
-    b.box((0, 26, -29.5), (22.4, 9, 9), GLASS)         # para-brisa
-    _sym(b, (13.3, 25, -6), (0.6, 8, 22), GLASS)       # janelas laterais
+    b.box((0, 17, -30), (22, 10, 10), WHITE)           # nariz (baixo: não tapa a visão)
+    b.box((0, 15, -37), (16, 7, 6), GRAPH)
+    for x, z in ((-6.4, -17), (6.4, -17), (-6.4, 4), (6.4, 4)):
+        b.box((x, 19.6, z), (8, 1.2, 8), DARK)          # bancos
+        b.box((x, 23, z + 4.6), (8, 7, 1.2), DARK)
+    b.box((0, 21, -25), (10, 3, 2), GRAPH)             # painel
+    b.box((0, 22.6, -25), (6, 0.4, 1.4), CYAN)
     _sym(b, (13.4, 17, -4), (0.4, 1.4, 42), CYAN)      # faixa de luz
-    b.box((0, 35, 2), (18, 6, 26), GRAPH)              # turbina
-    _sym(b, (9.4, 35, -4), (0.6, 3, 6), ORANGE)        # entradas de ar
+    b.box((0, 29.5, 13), (4, 19, 4), GRAPH)            # mastro do rotor (atrás dos bancos)
+    b.box((0, 41, 8), (18, 6, 22), GRAPH)              # turbina (alta: acima da cabeça de quem senta)
+    _sym(b, (9.4, 41, 2), (0.6, 3, 6), ORANGE)         # entradas de ar
+    # capota: some quando alguém está dentro (visão completa de quem pilota)
+    cp = m.bone("canopy", "body", pivot=(0, 19, -4))
+    cp.box((0, 30.5, -4), (26, 5, 44), WHITE)          # teto
+    _sym(cp, (12.5, 24, 8), (1, 8, 20), WHITE)         # colunas traseiras
+    cp.box((0, 25, -29.5), (22.4, 8, 9), GLASS)        # para-brisa
+    _sym(cp, (13.3, 24, -10), (0.6, 8, 22), GLASS)     # janelas laterais
     b.box((0, 26, 38), (9, 9, 38), WHITE)              # cauda
     b.box((0, 27, 62), (6, 6, 14), WHITE)
     b.box((0, 36, 70), (2, 18, 10), GRAPH)             # deriva
     b.box((0, 27, 60), (22, 2, 6), GRAPH)              # estabilizador
-    _sym(b, (13.6, 20, -22), (0.8, 2, 2), ORANGE)      # luzes de navegação
+    _sym(b, (13.6, 18, -22), (0.8, 2, 2), ORANGE)      # luzes de navegação
     b.box((0, 9, -26), (6, 3, 6), DARK)                # metralhadora frontal
     b.box((0, 9, -33), (2, 2, 10), DARK)
-    rot = m.bone("rotor_main", "body", pivot=(0, 40, 2))
-    rot.box((0, 40, 2), (3, 6, 3), DARK)
-    rot.box((0, 43.5, 2), (7, 2, 7), GRAPH)
-    rot.cube((3.5, 43, -2.5), (64, 1, 5), DARK)
-    rot.cube((-67.5, 43, -2.5), (64, 1, 5), DARK)
-    rot.cube((-2.5, 43, 5.5), (5, 1, 64), DARK)
-    rot.cube((-2.5, 43, -67.5), (5, 1, 64), DARK)
+    rot = m.bone("rotor_main", "body", pivot=(0, 46, 8))
+    rot.box((0, 46, 8), (3, 6, 3), DARK)
+    rot.box((0, 49.5, 8), (7, 2, 7), GRAPH)
+    rot.cube((3.5, 49, 5.5), (64, 1, 5), DARK)
+    rot.cube((-67.5, 49, 5.5), (64, 1, 5), DARK)
+    rot.cube((-2.5, 49, 11.5), (5, 1, 64), DARK)
+    rot.cube((-2.5, 49, -61.5), (5, 1, 64), DARK)
     tail = m.bone("rotor_tail", "body", pivot=(2, 36, 72))
     tail.cube((1.5, 28, 71), (1, 16, 2), DARK)
     tail.cube((1.5, 35, 64), (1, 2, 16), DARK)
@@ -72,8 +82,16 @@ def car_model():
     b.box((0, 7, 0), (32, 7, 70), GRAPH)               # chassi
     b.box((0, 12.5, 2), (31, 5, 66), STRIPE)           # carroceria com faixa
     b.box((0, 15.6, -22), (29, 1.4, 22), WHITE)        # capô
-    b.box((0, 19, 4), (27, 8, 28), GLASS)              # cabine
-    b.box((0, 23.6, 5), (26, 1.4, 24), WHITE)          # teto
+    for x, z in ((-7.2, -1), (7.2, -1), (-7.2, 15), (7.2, 15)):
+        b.box((x, 15.6, z), (9, 1.4, 8), DARK)          # bancos
+        b.box((x, 19, z + 4.4), (9, 6, 1.4), DARK)
+    b.box((-7.2, 19, -8), (6, 6, 1), GRAPH)            # volante
+    b.box((0, 17.6, -11), (28, 3, 3), GRAPH)           # painel
+    cp = m.bone("canopy", "body", pivot=(0, 16, 4))
+    cp.box((0, 20, -7.5), (27, 7, 1), GLASS)           # para-brisa
+    _sym(cp, (13.5, 20, 6), (0.6, 7, 26), GLASS)       # vidros laterais
+    cp.box((0, 20, 19.5), (27, 7, 1), GLASS)           # vidro traseiro
+    cp.box((0, 24, 6), (27, 1.4, 28), WHITE)           # teto
     b.box((0, 16, 26), (30, 2, 18), WHITE)             # traseira
     _sym(b, (10, 19, 33), (2, 4, 2), DARK)             # aerofólio
     b.box((0, 21.6, 33), (31, 1, 6), GRAPH)
@@ -107,12 +125,19 @@ def excavator_model():
     cab.box((0, 16, 0), (34, 4, 34), YELLOW)
     cab.box((0, 24, 9), (32, 12, 16), YELLOW)              # motor
     cab.box((0, 21, 18.5), (32, 10, 3), HAZARD)            # contrapeso
-    cab.box((-8, 29, -6), (14, 22, 18), YELLOW)            # cabine
-    cab.box((-8, 31, -15.3), (12, 14, 0.6), GLASS)
-    cab.box((-15.3, 31, -6), (0.6, 12, 14), GLASS)
-    cab.box((-0.7, 31, -6), (0.6, 12, 14), GLASS)
+    cab.box((-8, 19, -6), (14, 2, 18), YELLOW)             # piso da cabine
+    cab.box((-8, 20.6, -4), (8, 1.4, 7), DARK)             # banco
+    cab.box((-8, 24, -0.4), (8, 7, 1.2), DARK)
+    _sym(cab, (4, 23, -13), (1.2, 6, 1.2), DARK)           # alavancas
     cab.box((8, 33, 12), (2, 10, 2), DARK)                 # escape
-    cab.box((-8, 41, -6), (3, 2, 3), ORANGE)               # giroflex
+    cp = m.bone("canopy", "cab", pivot=(-8, 20, -6))
+    for x, z in ((-14.5, -14.5), (-1.5, -14.5), (-14.5, 2.5), (-1.5, 2.5)):
+        cp.box((x, 30, z), (1, 20, 1), YELLOW)             # colunas
+    cp.box((-8, 40.5, -6), (14, 1.4, 18), YELLOW)          # teto
+    cp.box((-8, 30, -15.3), (12, 18, 0.6), GLASS)
+    cp.box((-15.3, 30, -6), (0.6, 18, 16), GLASS)
+    cp.box((-0.7, 30, -6), (0.6, 18, 16), GLASS)
+    cp.box((-8, 42, -6), (3, 2, 3), ORANGE)                # giroflex
     cab.box((10, 21, -16.3), (8, 2, 0.6), CYAN)
     boom = m.bone("boom", "cab", pivot=(6, 20, -14), rotation=(-32, 0, 0))
     boom.cube((3, 17, -52), (6, 6, 40), YELLOW)
@@ -167,7 +192,11 @@ def jet_model():
     b.box((0, 14, 0), (16, 14, 96), GRAPH)                  # fuselagem
     b.box((0, 13, -56), (12, 10, 16), GRAPH)                # nariz
     b.box((0, 12.5, -66.5), (6, 5, 5), DARK)
-    b.box((0, 22.5, -30), (10, 7, 24), GLASS)               # cockpit
+    b.box((0, 21.6, -31), (8, 1.2, 8), DARK)                # assento ejetor
+    b.box((0, 25, -26.6), (8, 7, 1.2), DARK)
+    b.box((0, 23, -37), (8, 3, 3), GRAPH)                   # painel
+    cp = m.bone("canopy", "body", pivot=(0, 21, -30))
+    cp.box((0, 24.5, -30), (10, 7, 24), GLASS)              # cockpit (bolha)
     _sym(b, (9.5, 12, -14), (4, 8, 20), DARK)               # entradas de ar
     _sym(b, (24, 12, 6), (32, 2, 30), WHITE)                # asas (em degraus = enflechadas)
     _sym(b, (40, 12, 14), (16, 2, 20), WHITE)

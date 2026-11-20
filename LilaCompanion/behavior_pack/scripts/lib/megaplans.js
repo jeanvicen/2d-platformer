@@ -31,9 +31,14 @@ class P {
     this.ops.push(["f", Math.min(x0, x1), Math.min(y0, y1), Math.min(z0, z1), Math.max(x0, x1), Math.max(y0, y1), Math.max(z0, z1), b, st]);
     return this;
   }
-  s(x, y, z, b, st) {
-    this.ops.push(["s", x, y, z, b, st]);
+  s(x, y, z, b, st, pair) {
+    this.ops.push(pair ? ["s", x, y, z, b, st, pair] : ["s", x, y, z, b, st]);
     return this;
+  }
+  /** porta com as duas metades colocadas juntas */
+  door(x, y, z, b, card) {
+    const st = { "minecraft:cardinal_direction": card, upper_block_bit: false };
+    return this.s(x, y, z, b, st, [0, 1, 0, { ...st, upper_block_bit: true }]);
   }
   /** paredes de uma caixa (sem teto/chão) */
   walls(x0, y0, z0, x1, y1, z1, b) {
@@ -211,8 +216,7 @@ function cottage(p, ox, oz, wood, R) {
   p.f(ox - W + 1, 1, oz - D + 1, ox + W - 1, 4, oz + D - 1, "minecraft:air");
   for (const [x, z] of [[-W, -D], [W, -D], [-W, D], [W, D]]) p.f(ox + x, 1, oz + z, ox + x, 4, oz + z, `minecraft:${wood === "oak" ? "spruce" : "oak"}_log`);
   p.f(ox - 1, 1, oz - D, ox - 1, 2, oz - D, "minecraft:air");
-  p.s(ox - 1, 1, oz - D, `minecraft:${wood === "oak" ? "wooden" : wood}_door`, { direction: 1, upper_block_bit: false });
-  p.s(ox - 1, 2, oz - D, `minecraft:${wood === "oak" ? "wooden" : wood}_door`, { direction: 1, upper_block_bit: true });
+  p.door(ox - 1, 1, oz - D, `minecraft:${wood === "oak" ? "wooden" : wood}_door`, "south");
   p.f(ox + 1, 2, oz - D, ox + 1, 3, oz - D, "minecraft:glass_pane");
   p.f(ox - W, 2, oz, ox - W, 3, oz, "minecraft:glass_pane").f(ox + W, 2, oz, ox + W, 3, oz, "minecraft:glass_pane");
   // telhado em degraus (cumeeira no eixo x)
@@ -456,10 +460,10 @@ export function casa_tech() {
   // portas automáticas: porta de ferro com placa de pressão dos dois lados
   for (const [x, z, dz] of [[0, -D, -1], [W, 0, 0]]) {
     if (dz) {
-      p.s(x, 1, z, "minecraft:iron_door", { direction: 3, upper_block_bit: false }).s(x, 2, z, "minecraft:iron_door", { direction: 3, upper_block_bit: true });
+      p.door(x, 1, z, "minecraft:iron_door", "south");
       p.s(x, 1, z - 1, "minecraft:stone_pressure_plate").s(x, 1, z + 1, "minecraft:stone_pressure_plate");
     } else {
-      p.s(x, 1, z, "minecraft:iron_door", { direction: 2, upper_block_bit: false }).s(x, 2, z, "minecraft:iron_door", { direction: 2, upper_block_bit: true });
+      p.door(x, 1, z, "minecraft:iron_door", "west");
       p.s(x + 1, 1, z, "minecraft:stone_pressure_plate").s(x - 1, 1, z, "minecraft:stone_pressure_plate");
     }
   }

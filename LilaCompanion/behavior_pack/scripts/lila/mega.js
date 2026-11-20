@@ -136,17 +136,17 @@ function* playerBlocks(dim, cx, cz, y0, half) {
  */
 export function* megaBuild(c, key, o = {}) {
   const make = PLANS[key];
-  if (!make) throw new GoalError(`não conheço a construção "${key}"`);
+  if (!make && !o.plan) throw new GoalError(`não conheço a construção "${key}"`);
   const owner = c.owner();
   const dim = c.dim();
-  const plan = make(Math.floor(Math.random() * 1e6));
+  const plan = o.plan ?? make(Math.floor(Math.random() * 1e6));
   const ref = owner && owner.dimension.id === dim.id ? owner.location : c.pos();
   const view = owner ? owner.getViewDirection() : { x: 0, y: 0, z: 1 };
   const vl = Math.hypot(view.x, view.z) || 1;
   const fwd = { x: view.x / vl, z: view.z / vl };
   const dist = plan.half + (o.here ? 3 : 8);
   let cx = Math.round(ref.x + fwd.x * dist), cz = Math.round(ref.z + fwd.z * dist);
-  const label = MEGA[key]?.name ?? plan.name;
+  const label = o.label ?? MEGA[key]?.name ?? plan.name;
   say(c, `Construindo: ${label} (${plan.half * 2 + 1}×${plan.half * 2 + 1}, ~${Math.round(volume(plan) / 1000)} mil blocos). Material infinito, bora!`, { force: true });
   const area = loadArea(dim, c, { x: cx - plan.half - 2, z: cz - plan.half - 2 }, { x: cx + plan.half + 2, z: cz + plan.half + 2 });
   try {
@@ -193,6 +193,11 @@ export function* megaBuild(c, key, o = {}) {
             const p = perm(op[4], op[5]);
             const b = p && dim.getBlock({ x: cx + op[1], y: y0 + op[2], z: cz + op[3] });
             b?.setPermutation(p);
+            if (op[6]) {
+              // par: metade de cima da porta / cabeceira da cama, junto no mesmo instante
+              const q = perm(op[4], op[6][3]);
+              if (q) dim.getBlock({ x: cx + op[1] + op[6][0], y: y0 + op[2] + op[6][1], z: cz + op[3] + op[6][2] })?.setPermutation(q);
+            }
           } else if (op[0] === "e") {
             dim.spawnEntity(op[4], { x: cx + op[1], y: y0 + op[2], z: cz + op[3] });
           } else if (op[0] === "c") {
@@ -316,11 +321,11 @@ function* planTile(plan, cx, cz, y0, x0, z0, x1, z1) {
         if (y < op[2] || y > op[5]) continue;
         const ax = Math.max(op[1], x0), bx = Math.min(op[4], x1), az = Math.max(op[3], z0), bz = Math.min(op[6], z1);
         for (let x = ax; x <= bx; x++) for (let z = az; z <= bz; z++) layer.set((x + 4096) * 8192 + (z + 4096), [op[7], op[8], x, z]);
-      } else if (op[2] === y) layer.set((op[1] + 4096) * 8192 + (op[3] + 4096), [op[4], op[5], op[1], op[3]]);
+      } else if (op[2] === y) layer.set((op[1] + 4096) * 8192 + (op[3] + 4096), [op[4], op[5], op[1], op[3], op[6]]);
     }
-    const cells = [...layer.values()].map(([id, st, x, z]) => ({ x, z, id, st }));
+    const cells = [...layer.values()].map(([id, st, x, z, pair]) => ({ x, z, id, st, pair }));
     for (const w of serpentine(cells)) {
-      yield { x: cx + w.x, y: y0 + y, z: cz + w.z, id: w.id, st: w.st };
+      yield { x: cx + w.x, y: y0 + y, z: cz + w.z, id: w.id, st: w.st, pair: w.pair };
     }
     yield 0;
   }
@@ -585,7 +590,7 @@ const CONTAINER_IDS = ["minecraft:chest", "minecraft:trapped_chest", "minecraft:
  * baús/camas/blocos que guardam itens), tapa buracos com terra/grama e recolhe os itens do chão.
  * @param {Companion} c
  */
-export function* flatten(c, radius = 24, all = false) {
+export function* flatten(c, radius = 24, all = false, speedOverride = undefined) {
   const owner = c.owner();
   const dim = c.dim();
   const ref = owner && owner.dimension.id === dim.id ? owner.location : c.pos();
@@ -598,7 +603,7 @@ export function* flatten(c, radius = 24, all = false) {
     if (!b || (!b.isAir && !b.isLiquid && !PLANTS.includes(b.typeId))) break;
     y0--;
   }
-  const speed = speedOf(c);
+  const speed = speedOverride ?? speedOf(c);
   say(c, all
     ? `Destruindo TUDO num raio de ${R} blocos e deixando plano (menos baús e camas)...`
     : `Aplainando o terreno num raio de ${R} blocos (só natureza; suas construções ficam)...`, { force: true });

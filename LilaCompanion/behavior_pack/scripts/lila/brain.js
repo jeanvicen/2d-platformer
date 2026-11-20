@@ -2,7 +2,7 @@
 // sono) e, quando ninguém pede nada, decide sozinha o que fazer como uma jogadora de verdade
 // (IA por utilidade: cada opção recebe uma nota conforme a situação e a melhor vence).
 import { system, world } from "@minecraft/server";
-import { parseCommands, describe } from "../lib/intent.js";
+import { parseCommands, describe, swarmShapeOf } from "../lib/intent.js";
 import { ORES, TIER_RANK } from "../lib/items.js";
 import { GoalError } from "./companion.js";
 import { runGoal, goalLabel } from "./goals.js";
@@ -16,6 +16,7 @@ import { LINES, pick, say } from "./talk.js";
 import { logError } from "../core/log.js";
 import { missions, mount } from "./drone.js";
 import { formOf, setForm, releaseRiders } from "./forms.js";
+import { clearSwarm, doShape } from "./swarm.js";
 import { armyActive, merge, command as armyCommand } from "./army.js";
 import { FORM_NAMES } from "../lib/catalog.js";
 import { overBudget } from "../core/budget.js";
@@ -361,17 +362,26 @@ export function metabolism(c) {
  * @param {string} text
  */
 export function command(c, text) {
+  // em forma de enxame, "ponte", "escudo", "tornado"... são formas do enxame
+  if (formOf(c) === "swarm" && !/cancel|normal|para tudo|volta/.test(text.toLowerCase())) {
+    const sh = swarmShapeOf(text);
+    if (sh) {
+      handleIntents(c, [{ type: "swarm", shape: sh }], text);
+      return;
+    }
+  }
   const intents = parseCommands(text);
   if (!intents.length) return;
   handleIntents(c, intents, text);
 }
 
 const GOAL_TYPES = new Set(["gather", "craft", "build", "farm", "food", "give", "explore", "hunt", "attack", "sleep", "home", "torches", "deposit", "come",
-  "mega", "biome", "kit", "flatten", "vacuum"]);
+  "mega", "biome", "kit", "flatten", "vacuum", "arch"]);
 
 /** "Cancelar": larga tudo e volta a ser o drone normal (junta o exército, desfaz veículo/colosso/torreta). */
 export function backToNormal(c, quiet = false) {
   abortAll(c);
+  clearSwarm(c);
   if (armyActive(c)) merge(c);
   else if (c.alive() && formOf(c) !== "drone") {
     releaseRiders(c);
@@ -412,6 +422,23 @@ export function handleIntents(c, intents, raw = "") {
         }
         if (c.rec.mode === "turret") c.rec.mode = "follow";
         setForm(c, it.form);
+        break;
+      }
+      case "swarm": {
+        const o = c.owner();
+        if (!c.alive() || !o) {
+          say(c, "Me invoque primeiro!", { force: true });
+          break;
+        }
+        if (armyActive(c)) merge(c);
+        if (formOf(c) !== "swarm") {
+          if (c.rec.mode === "turret") c.rec.mode = "follow";
+          setForm(c, "swarm");
+        }
+        if (it.shape === "devorar") {
+          abortAll(c);
+          newGoals.push({ type: "flatten", args: { radius: 16, all: true, speed: "rapido" }, origin: "cmd", label: "enxame devorando tudo em volta" });
+        } else if (it.shape) doShape(c, it.shape, o);
         break;
       }
       case "pause":

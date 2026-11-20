@@ -28,6 +28,7 @@ from forge.paint import bake  # noqa: E402
 from forge import drone_art  # noqa: E402
 from forge.drone_anims import DRONE_ACTIONS, drone_anims, drone_controllers  # noqa: E402
 from forge.forms_art import FORMS as FORM_MODELS  # noqa: E402
+from forge.forms_art2 import FORMS2  # noqa: E402
 from forge.colossus_art import colossus_model, robot_model  # noqa: E402
 from forge.forms_anims import (FORM_IDS, INITIALIZE, PRE_ANIMATION, ROBOT_ACTIONS, form_anims, form_controllers,  # noqa: E402
                                robot_anims, robot_controllers)
@@ -36,7 +37,7 @@ from forge.render import render  # noqa: E402
 
 MOVES = ["none", "walk", "run", "swim", "climb", "fall", "sneak"]
 
-VERSION = [2, 1, 0]
+VERSION = [2, 2, 0]
 MIN_ENGINE = [1, 26, 30]
 SERVER_VERSION = "2.8.0"
 SERVER_UI_VERSION = "2.1.0"
@@ -161,7 +162,8 @@ FRIENDLY = [
 
 
 # ============================================================ DR-0N (drone + formas)
-FORM_ORDER = ["drone", "heli", "car", "excavator", "tank", "jet", "moto", "colossus", "turret"]
+FORM_ORDER = ["drone", "heli", "car", "excavator", "tank", "jet", "moto", "colossus", "turret",
+              "swarm", "ship", "ufo", "sub", "boat", "truck", "stealth"]
 GEO_KEY = {"drone": "default", "turret": "turret_g"}
 assert [FORM_IDS[k] for k in FORM_ORDER] == list(range(len(FORM_ORDER)))
 
@@ -169,17 +171,23 @@ assert [FORM_IDS[k] for k in FORM_ORDER] == list(range(len(FORM_ORDER)))
 COL_SCALE = 3.4
 SEATS = {
     "drone": [[0, 1.55, 0]],
-    "heli": [[-0.4, 0.75, -1.05], [0.4, 0.75, -1.05], [-0.4, 0.75, 0.25], [0.4, 0.75, 0.25]],
-    "car": [[-0.45, 0.42, -0.05], [0.45, 0.42, -0.05], [-0.45, 0.48, 0.95], [0.45, 0.48, 0.95]],
-    "excavator": [[-0.5, 1.15, -0.4], [0.75, 1.35, 0.9]],
+    "heli": [[-0.4, 0.98, -1.06], [0.4, 0.98, -1.06], [-0.4, 0.98, 0.25], [0.4, 0.98, 0.25]],
+    "car": [[-0.45, 0.72, -0.06], [0.45, 0.72, -0.06], [-0.45, 0.72, 0.94], [0.45, 0.72, 0.94]],
+    "excavator": [[-0.5, 1.05, -0.25], [0.5, 1.6, 0.6]],
     "tank": [[0.5, 1.55, 0.6], [-0.5, 1.55, 0.6], [0, 1.05, 1.9]],
-    "jet": [[0, 1.0, -1.9], [0, 1.05, -1.2]],
+    "jet": [[0, 1.1, -1.94], [0, 1.05, -1.2]],
     "moto": [[0, 0.82, 0.35], [0, 0.88, 0.95]],
-    # cabeça (piloto) + cabines no peito + ombros + base da cauda
-    "colossus": [[0, 5.9, -2.5], [-0.55, 4.2, -0.4], [0.55, 4.2, -0.4], [-1.4, 5.0, -0.2], [1.4, 5.0, -0.2], [0, 3.2, 1.4]],
+    # piloto EM CIMA da cabeça (visão 360°), ombreiras e topo da mochila (em blocos sem escala)
+    "colossus": [[0, 7.58, -0.06], [-1.85, 7.06, 0], [1.85, 7.06, 0], [-0.5, 6.76, 1.12], [0.5, 6.76, 1.12]],
+    "ship": [[0, 0.92, -0.875], [0, 0.92, 0.25]],
+    "ufo": [[0, 0.92, -0.375], [-0.56, 0.92, 0.44], [0.56, 0.92, 0.44]],
+    "sub": [[0, 1.07, -0.75], [-0.31, 1.08, 0.875], [0.31, 1.08, 1.5]],
+    "boat": [[-0.375, 0.45, -0.375], [0.375, 0.45, -0.375], [-0.4, 0.45, 1.0], [0.4, 0.45, 1.0]],
+    "truck": [[-0.47, 1.77, -0.125], [0.47, 1.77, -0.125], [-0.6, 1.7, 1.4], [0.6, 1.7, 1.4]],
+    "stealth": [[0, 1.0, -1.875]],
 }
 FORM_PHYS = {
-    # (largura, altura, gravidade, escala, vida)
+    # (largura, altura, gravidade, escala, vida). Submarino e lancha: gravidade feita pelo script (boiam).
     "drone": (1.4, 1.2, False, 1.0, 300),
     "heli": (2.6, 2.4, False, 1.0, 400),
     "car": (2.2, 1.4, True, 1.0, 400),
@@ -187,8 +195,15 @@ FORM_PHYS = {
     "tank": (3.2, 2.2, True, 1.0, 900),
     "jet": (3.0, 1.6, False, 1.0, 400),
     "moto": (0.9, 1.3, True, 1.0, 300),
-    "colossus": (2.4, 7.6, True, COL_SCALE, 4000),
+    "colossus": (2.6, 7.6, True, COL_SCALE, 4000),
     "turret": (2.2, 3.4, True, 1.7, 1500),
+    "swarm": (0.8, 0.8, False, 1.0, 300),
+    "ship": (3.0, 1.6, False, 1.0, 600),
+    "ufo": (3.6, 1.8, False, 1.0, 700),
+    "sub": (2.4, 2.0, False, 1.0, 700),
+    "boat": (2.2, 1.0, False, 1.0, 400),
+    "truck": (3.0, 2.8, True, 1.0, 800),
+    "stealth": (3.2, 1.4, False, 1.0, 500),
 }
 
 
@@ -265,6 +280,7 @@ def build_drone(previews):
     models = {"drone": (m, tex)}
     builders = dict(FORM_MODELS)
     builders["colossus"] = colossus_model
+    builders.update(FORMS2)
     for key, fn in builders.items():
         fm = fn()
         geo = fm.to_json()
@@ -290,7 +306,8 @@ def build_drone(previews):
                {"intro": "v.form != 7"}, {"intro_colossus": "v.form == 7"},
                {"heli": "v.form == 1"}, {"car": "v.form == 2"}, {"excavator": "v.form == 3"}, {"tank": "v.form == 4"},
                {"jet": "v.form == 5"}, {"moto": "v.form == 6"}, {"col_idle": "v.form == 7"}, {"col_walk": "v.form == 7"},
-               {"turret_g": "v.form == 8"}, "ctrl_form"]
+               {"turret_g": "v.form == 8"}, {"swarm": "v.form == 9"}, {"ship": "v.form == 10"}, {"ufo": "v.form == 11"},
+               {"sub": "v.form == 12"}, {"boat": "v.form == 13"}, {"truck": "v.form == 14"}, {"stealth": "v.form == 15"}, "ctrl_form"]
     wjson(os.path.join(RP, "entity", "lila", "drone.entity.json"), {
         "format_version": "1.10.0",
         "minecraft:client_entity": {"description": {
@@ -458,7 +475,7 @@ def build_render_controllers():
                 "is_hurt_color": {"r": "0.85", "g": "0.25", "b": "0.25", "a": "0.35"},
                 "on_fire_color": {"r": "1.0", "g": "0.5", "b": "0.2", "a": "0.4"},
             },
-            # uma entidade, nove formas: a propriedade lila:form escolhe geometria e textura
+            # uma entidade, dezesseis formas: a propriedade lila:form escolhe geometria e textura
             "controller.render.lila.forms": {
                 "arrays": {"geometries": {"Array.geo": geo}, "textures": {"Array.tex": tex}},
                 "geometry": "Array.geo[q.property('lila:form')]",
@@ -530,6 +547,17 @@ def soft_texture(size=16):
     return img
 
 
+def nano_texture(size=8):
+    """Nanorrobô: quadradinho com borda clara (de longe vira um pontinho cintilante)."""
+    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    px = img.load()
+    for y in range(1, size - 1):
+        for x in range(1, size - 1):
+            edge = x in (1, size - 2) or y in (1, size - 2)
+            px[x, y] = (255, 255, 255, 255) if edge else (200, 200, 200, 255)
+    return img
+
+
 def build_particles():
     wpng(os.path.join(RP, "textures", "particle", "lila", "soft.png"), soft_texture())
     point = {"minecraft:emitter_shape_point": {"offset": [0, 0, 0]}}
@@ -559,8 +587,36 @@ def build_particles():
                                    {"0.0": "#E0B8A080", "1.0": "#00705840"}, accel=(0, -1.0, 0), drag=2.5,
                                    shape={"minecraft:emitter_shape_sphere": {"offset": [0, 0.5, 0], "radius": 1.5, "direction": "outwards"}}),
     }
+    # laser vermelho (nave) e violeta (disco voador), bolhas (torpedo)
+    fx["lila_laser.json"] = particle("lila:laser", "textures/particle/lila/soft", 2, (0.1, 0.18), (0.0, 0.05), 0.32,
+                                     {"0.0": "#FFFFE0E0", "0.4": "#FFFF3030", "1.0": "#00A00000"}, accel=(0, 0, 0), shape=point, duration=0.05)
+    fx["lila_vlaser.json"] = particle("lila:vlaser", "textures/particle/lila/soft", 2, (0.12, 0.2), (0.0, 0.05), 0.42,
+                                      {"0.0": "#FFFFF0FF", "0.4": "#FFB040FF", "1.0": "#004000A0"}, accel=(0, 0, 0), shape=point, duration=0.05)
+    fx["lila_bubbles.json"] = particle("lila:bubbles", "textures/particle/lila/nano", 6, (0.5, 1.2), (0.2, 0.8), 0.14,
+                                       {"0.0": "#E0E8FFFF", "1.0": "#0080C0FF"}, accel=(0, 2.0, 0), drag=1.5,
+                                       shape={"minecraft:emitter_shape_sphere": {"offset": [0, 0, 0], "radius": 0.4, "direction": "outwards"}})
+    # nanorrobôs: pontinhos escuros com brilho ciano. "cloud"/"shield" orbitam o centro (movimento paramétrico)
+    nano_grad = {"0.0": "#FFB8F4FF", "0.25": "#FF30404C", "0.8": "#FF20262E", "1.0": "#0020262E"}
+    fx["lila_nano_point.json"] = particle("lila:nano_point", "textures/particle/lila/nano", 10, (0.35, 0.7), (0.2, 0.9), 0.08, nano_grad,
+                                          accel=(0, 0, 0), drag=3.0,
+                                          shape={"minecraft:emitter_shape_sphere": {"offset": [0, 0, 0], "radius": 0.4, "direction": "outwards"}})
+    for name, n, R, ry, spd in (("nano_cloud", 70, 1.5, 0.8, 300), ("nano_shield", 160, 2.5, 1.0, 220), ("nano_big", 220, 4.5, 1.0, 160)):
+        d = particle(f"lila:{name}", "textures/particle/lila/nano", n, (0.45, 0.8), (0.0, 0.0), 0.08, nano_grad, accel=(0, 0, 0), shape=point,
+                     duration=0.05)
+        comps = d["particle_effect"]["components"]
+        comps.pop("minecraft:particle_motion_dynamic", None)
+        comps.pop("minecraft:particle_initial_speed", None)
+        ang = f"(v.particle_random_1 * 360 + v.particle_age * {spd} * (v.particle_random_4 > 0.5 ? 1 : -1))"
+        phi = "(v.particle_random_2 * 180 - 90)"
+        rr = f"({R} * (0.75 + v.particle_random_3 * 0.25))"
+        comps["minecraft:particle_motion_parametric"] = {"relative_position": [
+            f"math.cos({ang}) * math.cos({phi}) * {rr}",
+            f"math.sin({phi}) * {rr} * {ry} + math.sin(v.particle_age * 600 + v.particle_random_3 * 360) * 0.12",
+            f"math.sin({ang}) * math.cos({phi}) * {rr}"]}
+        fx[f"lila_{name}.json"] = d
     for fname, data in fx.items():
         wjson(os.path.join(RP, "particles", fname), data)
+    wpng(os.path.join(RP, "textures", "particle", "lila", "nano.png"), nano_texture())
     wpng(os.path.join(RP, "textures", "particle", "lila", "sparkle.png"), star_texture())
     wpng(os.path.join(RP, "textures", "particle", "lila", "leaf.png"), leaf_texture())
     emerald = {"0.0": "#FFE6FFF0", "0.35": "#FF5BE0A0", "1.0": "#0018804F"}

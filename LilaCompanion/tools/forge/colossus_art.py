@@ -1,6 +1,5 @@
-"""TITÃ — o modo colossal do DR-0N: um mecha-kaiju metálico original (bípede de pernas
-digitígradas, cauda longa em 4 segmentos, nadadeiras dorsais que brilham ao carregar o raio,
-mandíbula articulada, reator no peito e cabine de vidro no alto da cabeça).
+"""TITÃ — o modo colossal do DR-0N: um robô gigante humanoide original (visor em T, reator no
+peito, ombreiras, propulsores nas costas). O piloto vai em cima da cabeça.
 Também o robô-soldado do modo exército (humanoide original com visor, propulsor e blaster).
 
 16 unidades = 1 bloco; a entidade aplica escala grande (minecraft:scale) no colosso."""
@@ -14,6 +13,8 @@ PLATE = Paint(mat="metal", color=(58, 64, 78), color2=(120, 130, 150), seed=63)
 STEEL = Paint(mat="metal", color=(150, 158, 172), color2=(236, 240, 248), seed=65)
 SEAM = Paint(mat="glow", color=(40, 210, 255), color2=(220, 252, 255), seed=67)
 HOT = Paint(mat="glow", color=(255, 120, 30), color2=(255, 230, 160), seed=69)
+ARMOR = Paint(mat="metal", color=(196, 202, 214), color2=(248, 250, 255), seed=71)
+TRIM = Paint(mat="metal", color=(200, 60, 40), color2=(255, 140, 110), seed=73)
 
 
 def _pair(m, name, parent, pivot, build):
@@ -28,104 +29,102 @@ def _pair(m, name, parent, pivot, build):
 
 
 def colossus_model():
+    """Robô gigante humanoide original (TITÃ): pés blindados, joelheiras, reator no peito,
+    ombreiras enormes, mochila com 2 propulsores e cabeça com visor em T. O piloto vai EM CIMA
+    da cabeça (plataforma com corrimão baixo = visão 360°); passageiros nas ombreiras e na mochila.
+    Altura sem escala: 7,6 blocos (×3,4 no jogo ≈ 26 blocos)."""
     m = Model("geometry.lila.colossus", 256, 256, density=2, bounds=(12, 10, (0, 4, 0)))
     root = m.bone("root", pivot=(0, 0, 0))
-    root.locators = {"mouth": (0, 86, -60), "fist_r": (26, 34, -18), "fist_l": (-26, 34, -18), "core": (0, 70, -18)}
-    hips = m.bone("hips", "root", pivot=(0, 48, 6))
-    hips.box((0, 50, 6), (30, 14, 22), GUN)
-    hips.box((0, 44, 0), (22, 4, 14), PLATE)
-    # pernas digitígradas: coxa → canela (inclinada pra trás) → pé com garras
+    root.locators = {"visor": (0, 116, -11), "fist_r": (31, 52, -6), "fist_l": (-31, 52, -6), "core": (0, 95, -15)}
+    hips = m.bone("hips", "root", pivot=(0, 66, 0))
+    hips.box((0, 66, 0), (34, 12, 20), GUN)
+    hips.box((0, 62, -10.6), (14, 8, 1.4), TRIM)             # placa frontal
+    hips.box((0, 64, -11.5), (8, 2, 0.6), SEAM)
+    for s_ in (-1, 1):
+        hips.box((s_ * 17.6, 64, 0), (2, 10, 14), PLATE)       # saias laterais
+
     def thigh(b, s):
-        b.box((s * 14, 40, 4), (13, 22, 15), GUN)
-        b.box((s * 20.6, 42, 4), (1, 12, 8), PLATE)
-        b.box((s * 20.9, 42, 4), (0.4, 8, 1), SEAM)
-    _pair(m, "thigh", "hips", (14, 50, 6), thigh)
+        b.box((s * 12, 53, 0), (14, 26, 14), ARMOR)
+        b.box((s * 12, 53, -7.4), (8, 18, 1), PLATE)
+        b.box((s * 19.2, 53, 0), (0.6, 16, 2), SEAM)
+    _pair(m, "thigh", "hips", (12, 64, 0), thigh)
 
     def shin(b, s):
-        b.box((s * 14, 20, 8), (10, 22, 10), PLATE)
-        b.box((s * 14, 20, 2.6), (6, 16, 1), SEAM)
-        b.box((s * 14, 30, 9), (12, 6, 12), STEEL)          # joelho
-    _pair(m, "shin", ("thigh_l", "thigh_r"), (14, 30, 6), shin)
+        b.box((s * 12, 24, 1), (13, 32, 13), ARMOR)
+        b.box((s * 12, 40, -6), (15, 10, 5), TRIM)              # joelheira
+        b.box((s * 12, 40, -8.8), (6, 2, 0.6), SEAM)
+        b.box((s * 12, 22, -5.8), (5, 18, 1), SEAM)
+        b.box((s * 12, 26, 8), (9, 20, 3), GUN)                  # panturrilha (pistões)
+    _pair(m, "shin", ("thigh_l", "thigh_r"), (12, 40, 0), shin)
 
     def foot(b, s):
-        b.box((s * 14, 4, 0), (15, 8, 22), DARK)
-        for dx in (-5, 0, 5):
-            b.box((s * 14 + dx, 2.5, -13), (3, 5, 6), STEEL)    # garras
-        b.box((s * 14, 3, 12), (4, 4, 6), STEEL)                # esporão traseiro
-        b.box((s * 14, 8.4, -6), (10, 0.6, 1), SEAM)
-    _pair(m, "foot", ("shin_l", "shin_r"), (14, 9, 8), foot)
+        b.box((s * 12, 4, -2), (17, 8, 28), DARK)
+        b.box((s * 12, 9, -2), (13, 3, 18), ARMOR)
+        b.box((s * 12, 4, -16.3), (12, 4, 0.6), HOT)
+        b.box((s * 12, 2, 12), (10, 4, 4), STEEL)                # calcanhar
+    _pair(m, "foot", ("shin_l", "shin_r"), (12, 8, 0), foot)
 
-    torso = m.bone("torso", "hips", pivot=(0, 56, 4))
-    torso.box((0, 70, 0), (40, 30, 32), GUN)
-    torso.box((0, 58, -4), (30, 10, 24), PLATE)               # abdômen
-    for y in (54, 58, 62):
-        torso.box((0, y, -16.4), (24, 2.5, 1), PLATE)         # placas da barriga
-    torso.box((0, 72, -16.6), (14, 14, 1.4), DARK)            # moldura do reator
-    torso.box((0, 72, -17.4), (10, 10, 1), SEAM)              # reator
-    torso.box((0, 72, -17.9), (4, 4, 0.6), STEEL)
-    for s in (-1, 1):
-        torso.box((s * 22, 80, -2), (10, 8, 26), STEEL)       # ombreiras
-        torso.box((s * 22, 84.5, -2), (8, 1, 22), SEAM)
-        torso.box((s * 20.6, 66, -8), (0.6, 14, 1), SEAM)     # costuras de luz
-    torso.box((0, 86, 8), (30, 2, 16), PLATE)
-    torso.box((-6, 79, 16.6), (6, 8, 1), HOT)                 # exaustores nas costas
-    torso.box((6, 79, 16.6), (6, 8, 1), HOT)
-    # nadadeiras dorsais (brilham ao carregar o raio)
-    dorsal = m.bone("dorsal", "torso", pivot=(0, 86, 4))
-    glow = m.bone("dorsal_glow", "torso", pivot=(0, 86, 4))
-    for k, (z, h) in enumerate(((-6, 16), (2, 20), (10, 18), (18, 14), (26, 10))):
-        dorsal.box((0, 86 + h / 2, z), (3, h, 6), PLATE)
-        glow.box((0, 86 + h / 2 + 1, z), (3.6, h - 4, 3), SEAM)
-    neck = m.bone("neck", "torso", pivot=(0, 80, -14))
-    neck.box((0, 84, -22), (16, 14, 18), PLATE)
-    neck.box((0, 91.4, -22), (4, 1, 14), SEAM)
-    head = m.bone("head", "neck", pivot=(0, 86, -30))
-    head.box((0, 91, -42), (22, 16, 26), GUN)                 # crânio
-    head.box((0, 97.5, -47), (24, 4, 14), PLATE)              # sobrancelha
-    head.box((0, 93, -55.4), (18, 3, 1), SEAM)                # visor dos olhos
-    head.box((-5, 93, -55.9), (3, 1.5, 0.6), STEEL)
-    head.box((5, 93, -55.9), (3, 1.5, 0.6), STEEL)
-    head.box((0, 87, -58), (15, 8, 10), GUN)                  # focinho
-    head.box((0, 102, -36), (4, 8, 18), PLATE)                # crista
-    head.box((0, 106.5, -34), (2, 1, 12), SEAM)
-    head.box((0, 99.6, -40), (12, 1, 12), GLASS)              # cabine do piloto
-    for s in (-1, 1):
-        head.box((s * 11.4, 92, -38), (1, 4, 10), SEAM)
-        head.box((s * 9, 101, -30), (3, 5, 4), PLATE)         # chifres
-    jaw = m.bone("jaw", "head", pivot=(0, 85, -34))
-    jaw.box((0, 81.5, -48), (16, 5, 26), PLATE)
-    jaw.box((0, 84.5, -48), (12, 1, 20), SEAM)                # garganta acesa (raio)
-    for x in (-5, -1.5, 1.5, 5):
-        jaw.box((x, 85, -59.5), (2, 3, 2), STEEL)             # dentes de baixo
-    for x in (-5, -1.5, 1.5, 5):
-        head.box((x, 82.5, -60.5), (2, 3, 2), STEEL)          # dentes de cima
+    torso = m.bone("torso", "hips", pivot=(0, 72, 0))
+    torso.box((0, 77, 0), (24, 10, 16), PLATE)                  # abdômen
+    for y in (74, 78):
+        torso.box((0, y, -8.4), (16, 2.5, 1), GUN)
+    torso.box((0, 95, 0), (46, 26, 28), ARMOR)                  # peito
+    torso.box((0, 99, -14.4), (36, 10, 1), TRIM)
+    torso.box((0, 90, -14.6), (18, 14, 1.4), DARK)              # moldura do reator
+    core = m.bone("core", "torso", pivot=(0, 90, -15.5))
+    core.box((0, 90, -15.4), (12, 10, 1), SEAM)                 # reator
+    core.box((0, 90, -16), (5, 5, 0.6), STEEL)
+    for s_ in (-1, 1):
+        torso.box((s_ * 18, 86, -14.6), (8, 3, 1), HOT)         # entradas de ar
+        torso.box((s_ * 23.4, 95, 0), (0.6, 18, 2), SEAM)
+    torso.box((0, 108.5, 0), (20, 2, 14), PLATE)                 # gola
+    # mochila com 2 propulsores (acendem no pulo)
+    torso.box((0, 97, 18), (30, 20, 8), PLATE)
+    torso.box((0, 107.5, 18), (30, 1, 8), STEEL)                 # topo da mochila (assentos)
+    for s_ in (-1, 1):
+        torso.box((s_ * 9, 90, 24), (8, 18, 6), GUN)
+        torso.box((s_ * 9, 80, 24), (6, 3, 6), DARK)
+    jets = m.bone("jets", "torso", pivot=(0, 79, 24))
+    for s_ in (-1, 1):
+        jets.box((s_ * 9, 74, 24), (5, 8, 5), HOT)
+        jets.box((s_ * 9, 69, 24), (3, 6, 3), SEAM)
+    neck = m.bone("neck", "torso", pivot=(0, 108, -1))
+    neck.box((0, 110.5, -1), (10, 4, 10), DARK)
+    head = m.bone("head", "neck", pivot=(0, 112, -1))
+    head.box((0, 116, -1), (18, 9, 18), ARMOR)                  # capacete
+    head.box((0, 120.6, -1), (18, 0.6, 18), PLATE)               # plataforma do piloto (topo da cabeça)
+    for x, z, w, d in ((0, -9.8, 18, 0.6), (0, 7.8, 18, 0.6), (-8.8, -1, 0.6, 18), (8.8, -1, 0.6, 18)):
+        head.box((x, 121.8, z), (w, 1.8, d), STEEL)              # corrimão baixo (não tapa a visão)
+    head.box((0, 121.2, -1), (6, 0.4, 6), SEAM)                  # marca do assento
+    visor = m.bone("visor", "head", pivot=(0, 116, -10.5))
+    visor.box((0, 117, -10.4), (14, 2.4, 1), SEAM)               # visor em T
+    visor.box((0, 114, -10.4), (3, 4, 1), SEAM)
+    head.box((0, 112.6, -10.3), (10, 2, 1), TRIM)               # queixo
+    for s_ in (-1, 1):
+        head.box((s_ * 9.6, 117, -1), (1.4, 6, 8), PLATE)        # orelhas/antenas laterais
+        head.box((s_ * 10.6, 121, 2), (0.8, 6, 0.8), STEEL)
+        head.box((s_ * 10.6, 124.4, 2), (1.2, 1.2, 1.2), HOT)
 
     def upper(b, s):
-        b.box((s * 26, 68, -6), (11, 22, 11), GUN)
-        b.box((s * 31.8, 68, -6), (0.6, 14, 2), SEAM)
-    _pair(m, "arm", "torso", (24, 78, -4), upper)
+        b.box((s * 30, 106, 0), (18, 12, 22), ARMOR)             # ombreira enorme (assento)
+        b.box((s * 30, 112.4, 0), (16, 0.8, 20), TRIM)
+        b.box((s * 39.3, 106, 0), (0.6, 6, 16), SEAM)
+        b.box((s * 31, 91, 0), (11, 20, 11), GUN)                # braço
+    _pair(m, "arm", "torso", (28, 104, 0), upper)
 
     def fore(b, s):
-        b.box((s * 26, 50, -10), (10, 18, 10), PLATE)
-        b.box((s * 26, 52, -15.4), (6, 10, 1), SEAM)
-        b.box((s * 26, 59, -9), (12, 4, 12), STEEL)           # cotovelo
-    _pair(m, "forearm", ("arm_l", "arm_r"), (26, 59, -8), fore)
+        b.box((s * 31, 71, -1), (12, 20, 12), ARMOR)
+        b.box((s * 31, 80, -1), (13, 4, 13), STEEL)              # cotovelo
+        b.box((s * 31, 72, -7.4), (6, 12, 1), SEAM)
+        b.box((s * 37.5, 70, -1), (1, 14, 8), GUN)               # lâmina do antebraço
+    _pair(m, "forearm", ("arm_l", "arm_r"), (31, 81, -1), fore)
 
     def hand(b, s):
-        b.box((s * 26, 37, -13), (11, 9, 11), DARK)
-        for dx in (-3.5, 0, 3.5):
-            b.box((s * 26 + dx, 30, -17), (2.4, 9, 2.4), STEEL)   # garras
-        b.box((s * 26, 37, -18.7), (6, 2, 0.6), HOT)
-    _pair(m, "hand", ("forearm_l", "forearm_r"), (26, 42, -11), hand)
-    # cauda em 4 segmentos (ondula ao andar)
-    prev = "hips"
-    segs = ((52, 18, 16, 14, 24), (50, 42, 12, 11, 22), (47, 63, 9, 8, 22), (44, 84, 6, 5, 22))
-    for i, (y, z0, w, h, ln) in enumerate(segs):
-        t = m.bone(f"tail{i + 1}", prev, pivot=(0, y, z0))
-        t.box((0, y, z0 + ln / 2), (w, h, ln), GUN if i % 2 == 0 else PLATE)
-        t.box((0, y + h / 2 + 1.5, z0 + ln / 2), (2, 3, ln * 0.6), SEAM)
-        prev = f"tail{i + 1}"
-    m.get("tail4").box((0, 44, 108), (3, 3, 5), HOT)
+        b.box((s * 31, 55, -2), (12, 11, 12), DARK)              # punho
+        b.box((s * 31, 57, -8.4), (10, 3, 1), STEEL)             # dedos
+        b.box((s * 31, 53, -8.4), (10, 3, 1), STEEL)
+        b.box((s * 31, 60.8, -2), (8, 0.6, 8), HOT)
+    _pair(m, "hand", ("forearm_l", "forearm_r"), (31, 61, -1), hand)
     return m
 
 

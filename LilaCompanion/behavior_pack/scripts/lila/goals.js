@@ -21,6 +21,7 @@ import { keepLoaded } from "./areas.js";
 import { missions, orbitOwner, remember, scanOwner } from "./drone.js";
 import { turretGoal } from "./forms.js";
 import { megaBuild, biomeTransform, flatten, sweepGround } from "./mega.js";
+import { archPlan, facingQuarter, SIZES, STYLES, TYPES, OBJECTS } from "../lib/archgen.js";
 import { deploy, empower, armyActive } from "./army.js";
 import { isCreative, materialize, strengthKit, equipArmor, giveStacks, buff } from "./creative.js";
 
@@ -363,7 +364,8 @@ export function runGoal(c, g) {
     case "turret": return turretGoal(c);
     case "mega": return megaBuild(c, a.key, { here: a.here });
     case "biome": return biomeTransform(c, a.biome);
-    case "flatten": return flatten(c, a.radius ?? 24, !!a.all);
+    case "flatten": return flatten(c, a.radius ?? 24, !!a.all, a.speed);
+    case "arch": return archBuild(c, a);
     case "vacuum": return sweepGround(c, a.radius ?? 32);
     case "army": return (function* () {
       yield* deploy(c, a.count ?? c.rec.settings.army ?? 10);
@@ -562,6 +564,7 @@ export function goalLabel(g) {
     case "mega": return `construindo ${a.key ?? ""}`.trim();
     case "biome": return `transformando o bioma (${a.biome ?? ""})`;
     case "flatten": return a.all ? "destruindo tudo e deixando plano" : "aplainando o terreno";
+    case "arch": return `construindo ${archName(a)}`;
     case "vacuum": return "recolhendo os itens do chão";
     case "army": return "virando exército";
     case "kit": return "te deixando mais forte";
@@ -581,3 +584,27 @@ export function goalLabel(g) {
 }
 
 export { ItemStack, toolInfo };
+
+/** Nome legível de uma construção do catálogo. */
+export function archName(a) {
+  const t = TYPES.find((x) => x.key === a.kind) ?? OBJECTS.find((x) => x.key === a.kind);
+  const st = STYLES.find((x) => x.key === a.style) ?? STYLES[0];
+  const sz = SIZES.find((x) => x.key === a.size) ?? SIZES[1];
+  return `${t?.name ?? a.kind}${TYPES.some((x) => x.key === a.kind) ? ` ${sz.name.toLowerCase()}` : ""} (${st.name})`;
+}
+
+/** Catálogo 2.2: gera a planta (virada para você) e constrói à mão como as megaconstruções. */
+function* archBuild(c, a) {
+  const o = c.owner();
+  let q = 0;
+  try {
+    const v = o?.getViewDirection();
+    if (v) q = facingQuarter(v.x, v.z);
+  } catch {
+    /* ignore */
+  }
+  const style = a.style ?? STYLES[Math.floor(Math.random() * STYLES.length)].key;
+  const size = a.size ?? "medio";
+  const plan = archPlan(a.kind, style, size, q, Math.floor(Math.random() * 1000));
+  return yield* megaBuild(c, "arch", { plan, label: archName({ ...a, style, size }), here: a.here });
+}

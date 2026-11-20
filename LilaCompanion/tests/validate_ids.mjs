@@ -15,6 +15,7 @@ const EXTRA = new Set([
   "minecraft:is_tamed", "minecraft:is_sheared", "minecraft:color", "minecraft:cardinal_direction", "minecraft:vertical_half",
   "minecraft:circle", "minecraft:on_sheared", "minecraft:sheared", "minecraft:overworld", "minecraft:nether", "minecraft:the_end",
   "minecraft:equippable", "minecraft:rideable", "minecraft:player.hunger", "minecraft:onfire", "minecraft:enchantable", "minecraft:riding", "minecraft:scale",
+  "minecraft:projectile",
 ]);
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../behavior_pack/scripts");
 const files = [];

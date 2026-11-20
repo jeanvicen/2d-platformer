@@ -15,7 +15,14 @@
         "jet": "textures/entity/lila/jet",
         "moto": "textures/entity/lila/moto",
         "turret_g": "textures/entity/lila/turret_g",
-        "colossus": "textures/entity/lila/colossus"
+        "colossus": "textures/entity/lila/colossus",
+        "ship": "textures/entity/lila/ship",
+        "ufo": "textures/entity/lila/ufo",
+        "sub": "textures/entity/lila/sub",
+        "boat": "textures/entity/lila/boat",
+        "truck": "textures/entity/lila/truck",
+        "stealth": "textures/entity/lila/stealth",
+        "swarm": "textures/entity/lila/swarm"
       },
       "geometry": {
         "default": "geometry.lila.drone",
@@ -26,7 +33,14 @@
         "jet": "geometry.lila.jet",
         "moto": "geometry.lila.moto",
         "turret_g": "geometry.lila.turret_g",
-        "colossus": "geometry.lila.colossus"
+        "colossus": "geometry.lila.colossus",
+        "ship": "geometry.lila.ship",
+        "ufo": "geometry.lila.ufo",
+        "sub": "geometry.lila.sub",
+        "boat": "geometry.lila.boat",
+        "truck": "geometry.lila.truck",
+        "stealth": "geometry.lila.stealth",
+        "swarm": "geometry.lila.swarm"
       },
       "animations": {
         "base": "animation.lila.drone.base",
@@ -69,6 +83,17 @@
         "col_roar": "animation.lila.form.col_roar",
         "col_wave": "animation.lila.form.col_wave",
         "col_defeat": "animation.lila.form.col_defeat",
+        "ship": "animation.lila.form.ship",
+        "ship_fire": "animation.lila.form.ship_fire",
+        "ufo": "animation.lila.form.ufo",
+        "ufo_fire": "animation.lila.form.ufo_fire",
+        "sub": "animation.lila.form.sub",
+        "sub_fire": "animation.lila.form.sub_fire",
+        "boat": "animation.lila.form.boat",
+        "truck": "animation.lila.form.truck",
+        "stealth": "animation.lila.form.stealth",
+        "swarm": "animation.lila.form.swarm",
+        "swarm_fire": "animation.lila.form.swarm_fire",
         "ctrl_move": "controller.animation.lila.drone.move",
         "ctrl_act": "controller.animation.lila.drone.action",
         "ctrl_form": "controller.animation.lila.form.action"
@@ -78,10 +103,11 @@
       },
       "scripts": {
         "initialize": [
-          "v.dtilt = 0; v.htilt = 0; v.jpitch = 0; v.aims = 0; v.pits = 0; v.cwd = 0; v.cws = 0; v.wheel = 0; v.pby = q.body_y_rotation; v.lean = 0; v.tf = 9; v.pf = q.property('lila:form'); v.gspin = 0; v.gear = 1;"
+          "v.ride = 0; v.dtilt = 0; v.htilt = 0; v.jpitch = 0; v.aims = 0; v.pits = 0; v.cwd = 0; v.cws = 0; v.wheel = 0; v.pby = q.body_y_rotation; v.lean = 0; v.tf = 9; v.pf = q.property('lila:form'); v.gspin = 0; v.gear = 1;"
         ],
         "pre_animation": [
           "v.form = q.property('lila:form');",
+          "v.ride = math.lerp(v.ride, q.has_rider ? 1 : 0, 0.15);",
           "v.tf = (v.form != v.pf) ? 0 : v.tf + q.delta_time; v.pf = v.form;",
           "v.dir = (q.property('lila:move') == 'sneak') ? -1 : 1;",
           "v.wheel = v.wheel + q.ground_speed * math.min(q.delta_time, 0.1) * 160 * v.dir;",
@@ -142,6 +168,27 @@
           },
           {
             "turret_g": "v.form == 8"
+          },
+          {
+            "swarm": "v.form == 9"
+          },
+          {
+            "ship": "v.form == 10"
+          },
+          {
+            "ufo": "v.form == 11"
+          },
+          {
+            "sub": "v.form == 12"
+          },
+          {
+            "boat": "v.form == 13"
+          },
+          {
+            "truck": "v.form == 14"
+          },
+          {
+            "stealth": "v.form == 15"
           },
           "ctrl_form"
         ]

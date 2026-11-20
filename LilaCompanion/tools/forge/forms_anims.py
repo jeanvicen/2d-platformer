@@ -1,7 +1,7 @@
 """Animações das formas do DR-0N e do robô-soldado (Molang contínuo = suave em qualquer FPS).
 
 Variáveis calculadas em pre_animation (cliente, a cada quadro):
-  v.form  forma atual (0 drone … 8 torreta)      v.tf   segundos desde a última transformação
+  v.form  forma atual (0 drone … 15 caça furtivo)  v.ride capota recolhida (alguém dentro)      v.tf   segundos desde a última transformação
   v.wheel ângulo acumulado das rodas              v.lean inclinação suavizada pela curva
   v.aim   mira (graus) da torre/cabine            v.gspin giro da metralhadora rotativa
 """
@@ -18,11 +18,15 @@ def cwalk(amp, freq, phase=0.0, base=0.0):
 
 P = "animation.lila.form"
 ACT = "q.property('lila:action')"
-FORM_IDS = {"drone": 0, "heli": 1, "car": 2, "excavator": 3, "tank": 4, "jet": 5, "moto": 6, "colossus": 7, "turret": 8}
+FORM_IDS = {"drone": 0, "heli": 1, "car": 2, "excavator": 3, "tank": 4, "jet": 5, "moto": 6, "colossus": 7, "turret": 8,
+            "swarm": 9, "ship": 10, "ufo": 11, "sub": 12, "boat": 13, "truck": 14, "stealth": 15}
+# capota (vidro/teto) recolhe quando alguém está dentro: quem pilota vê tudo
+CANOPY = "1 - v.ride * 0.98"
 
-INITIALIZE = ["v.dtilt = 0; v.htilt = 0; v.jpitch = 0; v.aims = 0; v.pits = 0; v.cwd = 0; v.cws = 0; v.wheel = 0; v.pby = q.body_y_rotation; v.lean = 0; v.tf = 9; v.pf = q.property('lila:form'); v.gspin = 0; v.gear = 1;"]
+INITIALIZE = ["v.ride = 0; v.dtilt = 0; v.htilt = 0; v.jpitch = 0; v.aims = 0; v.pits = 0; v.cwd = 0; v.cws = 0; v.wheel = 0; v.pby = q.body_y_rotation; v.lean = 0; v.tf = 9; v.pf = q.property('lila:form'); v.gspin = 0; v.gear = 1;"]
 PRE_ANIMATION = [
     "v.form = q.property('lila:form');",
+    "v.ride = math.lerp(v.ride, q.has_rider ? 1 : 0, 0.15);",
     "v.tf = (v.form != v.pf) ? 0 : v.tf + q.delta_time; v.pf = v.form;",
     "v.dir = (q.property('lila:move') == 'sneak') ? -1 : 1;",
     "v.wheel = v.wheel + q.ground_speed * math.min(q.delta_time, 0.1) * 160 * v.dir;",
@@ -62,6 +66,7 @@ def form_anims():
         "rotor_tail": bone(rot=["q.anim_time * 2200", 0, 0]),
         "body": bone(rot=["v.htilt", 0, "-v.lean * 0.6"]),
         "root": bone(pos=[0, "q.is_on_ground ? 0 : math.sin(q.anim_time * 100) * 0.5", 0]),
+        "canopy": bone(scale=CANOPY),
     })
     add("heli_fire", {"body": bone(pos=[0, 0, osc(0.4, 2400)])}, loop=True)
 
@@ -74,6 +79,7 @@ def form_anims():
         "wheel_rr": bone(rot=[spin, 0, 0]),
         "body": bone(rot=["math.sin(q.anim_time * 900) * 0.25 * math.min(1, q.ground_speed / 4)", 0, "v.lean * 0.18"],
                      pos=[0, "math.sin(q.anim_time * 1100) * 0.08", 0]),
+        "canopy": bone(scale=CANOPY),
     })
 
     # ---------------- escavadeira
@@ -81,6 +87,7 @@ def form_anims():
         "cab": bone(rot=[0, "v.aims", 0]),
         "boom": bone(rot=[osc(1.2, 60), 0, 0]),
         "tracks": bone(pos=[0, "math.sin(q.anim_time * 1400) * 0.12 * math.min(1, q.ground_speed)", 0]),
+        "canopy": bone(scale=CANOPY),
     })
     add("exc_dig", {
         "boom": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.3, [22, 0, 0]), (0.6, [10, 0, 0]), (0.9, [-8, 0, 0]), (1.2, [0, 0, 0])])),
@@ -104,6 +111,7 @@ def form_anims():
         "flame": bone(scale=["0.5 + math.min(1, q.ground_speed / 18) * 0.9 + math.sin(q.anim_time * 2600) * 0.06"] * 3),
         "gear": bone(scale="v.gear", pos=[0, "(1 - v.gear) * 4", 0]),
         "body": bone(rot=["v.jpitch", 0, "v.lean * 1.4"]),
+        "canopy": bone(scale=CANOPY),
     })
     add("jet_missile", {"body": bone(pos=[0, 0, osc(0.6, 1800)])}, loop=True)
 
@@ -131,73 +139,126 @@ def form_anims():
         "pod_r": bone(pos=smooth_keys([(0, [0, 0, 0]), (0.15, [0, 0, 3]), (0.6, [0, 0, 0])])),
     }, loop="hold", length=0.7)
 
-    # ---------------- colosso
-    # passada pesada pela distância andada (os pés não escorregam), corpo balança e a cauda ondula
+    # ---------------- colosso (robô humanoide; a cabeça fica firme: o piloto vai em cima dela)
     F = 60.0
+    knee = lambda ph: f"math.max(0, math.sin(v.cwd * {F} + {ph})) * 38 * v.cws + 3"
     add("col_idle", {
-        "torso": bone(rot=[osc(1.2, 50, base=6), 0, 0], pos=[0, osc(0.5, 50), 0]),
-        "head": bone(rot=[osc(2, 40, base=-4), osc(6, 23), 0]),
-        "jaw": bone(rot=[osc(1.5, 47, base=2), 0, 0]),
-        **{f"tail{i}": bone(rot=[osc(1.5, 38, phase=i * 40, base=-4 if i == 1 else 3), osc(6 + i * 2, 34, phase=i * 55), 0]) for i in range(1, 5)},
-        "dorsal_glow": bone(scale=[1, "1 + math.sin(q.anim_time * 120) * 0.04", 1]),
-        "arm_l": bone(rot=[osc(2, 50, base=-6), 0, osc(1.5, 50, base=-8)]),
-        "arm_r": bone(rot=[osc(2, 50, phase=40, base=-6), 0, osc(1.5, 50, phase=40, base=8)]),
-        "forearm_l": bone(rot=[-18, 0, 0]), "forearm_r": bone(rot=[-18, 0, 0]),
+        "torso": bone(rot=[osc(0.8, 45, base=2), 0, 0]),
+        "core": bone(scale=["1", "1 + math.sin(q.anim_time * 160) * 0.08", "1"]),
+        "visor": bone(scale=["1 + math.sin(q.anim_time * 90) * 0.03", "1", "1"]),
+        "arm_l": bone(rot=[osc(2, 45, base=-4), 0, osc(1, 45, base=-6)]),
+        "arm_r": bone(rot=[osc(2, 45, phase=40, base=-4), 0, osc(1, 45, phase=40, base=6)]),
+        "forearm_l": bone(rot=[-14, 0, 0]), "forearm_r": bone(rot=[-14, 0, 0]),
+        "jets": bone(scale=["1", "q.is_on_ground ? 0.25 : 1.5 + math.sin(q.anim_time * 2600) * 0.2", "1"]),
+        "thigh_l": bone(rot=["q.is_on_ground ? 0 : -18", 0, 0]), "shin_l": bone(rot=["q.is_on_ground ? 0 : 30", 0, 0]),
+        "thigh_r": bone(rot=["q.is_on_ground ? 0 : -6", 0, 0]), "shin_r": bone(rot=["q.is_on_ground ? 0 : 14", 0, 0]),
     })
     add("col_walk", {
-        "thigh_l": bone(rot=[cwalk(26, F), 0, 0]),
-        "thigh_r": bone(rot=[cwalk(26, F, phase=180), 0, 0]),
-        "shin_l": bone(rot=[cwalk(-18, F, phase=70, base=6), 0, 0]),
-        "shin_r": bone(rot=[cwalk(-18, F, phase=250, base=6), 0, 0]),
-        "foot_l": bone(rot=[cwalk(14, F, phase=140), 0, 0]),
-        "foot_r": bone(rot=[cwalk(14, F, phase=320), 0, 0]),
-        "hips": bone(pos=[0, f"math.abs(math.cos(v.cwd * {F})) * 2.2 * v.cws", 0],
-                     rot=[0, cwalk(5, F), cwalk(3, F)]),
-        "torso": bone(rot=[0, cwalk(-6, F), cwalk(-3, F)]),
-        "arm_l": bone(rot=[cwalk(-22, F), 0, 0]),
-        "arm_r": bone(rot=[cwalk(-22, F, phase=180), 0, 0]),
-        **{f"tail{i}": bone(rot=[0, cwalk(8 + i * 3, F, phase=60 + i * 45), 0]) for i in range(1, 5)},
+        "thigh_l": bone(rot=[cwalk(24, F), 0, 0]),
+        "thigh_r": bone(rot=[cwalk(24, F, phase=180), 0, 0]),
+        "shin_l": bone(rot=[knee(0), 0, 0]),
+        "shin_r": bone(rot=[knee(3.14159), 0, 0]),
+        "foot_l": bone(rot=[cwalk(-8, F, phase=60), 0, 0]),
+        "foot_r": bone(rot=[cwalk(-8, F, phase=240), 0, 0]),
+        "hips": bone(pos=[0, f"math.abs(math.cos(v.cwd * {F})) * 0.8 * v.cws", 0], rot=[0, cwalk(3, F), 0]),
+        "torso": bone(rot=[0, cwalk(-3, F), cwalk(-1.5, F)]),
+        "arm_l": bone(rot=[cwalk(-20, F), 0, 0]),
+        "arm_r": bone(rot=[cwalk(-20, F, phase=180), 0, 0]),
     })
     add("col_punch", {
-        "arm_r": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.25, [-150, -20, 30]), (0.42, [-70, 10, 0]), (0.9, [0, 0, 0])])),
-        "forearm_r": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.25, [-60, 0, 0]), (0.42, [0, 0, 0]), (0.9, [0, 0, 0])])),
-        "torso": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.25, [-8, 18, 0]), (0.42, [14, -22, 0]), (0.9, [0, 0, 0])])),
-        "head": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.25, [-10, 0, 0]), (0.42, [8, 0, 0]), (0.9, [0, 0, 0])])),
-        "jaw": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.3, [25, 0, 0]), (0.9, [0, 0, 0])])),
+        "arm_r": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.22, [30, 0, 12]), (0.42, [-95, 0, -6]), (0.9, [0, 0, 0])])),
+        "forearm_r": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.22, [-85, 0, 0]), (0.42, [-4, 0, 0]), (0.9, [0, 0, 0])])),
+        "arm_l": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.42, [-35, 0, -10]), (0.9, [0, 0, 0])])),
+        "forearm_l": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.42, [-70, 0, 0]), (0.9, [0, 0, 0])])),
+        "torso": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.22, [0, 14, 0]), (0.42, [5, -16, 0]), (0.9, [0, 0, 0])])),
     }, loop="hold", length=0.9)
-    add("col_stomp", {
-        "hips": bone(pos=smooth_keys([(0, [0, 0, 0]), (0.3, [0, -6, 0]), (0.55, [0, 12, 0]), (0.8, [0, -7, 0]), (1.2, [0, 0, 0])])),
-        "thigh_l": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.3, [-30, 0, 0]), (0.55, [-45, 0, 0]), (0.8, [10, 0, 0]), (1.2, [0, 0, 0])])),
-        "thigh_r": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.3, [-30, 0, 0]), (0.55, [-45, 0, 0]), (0.8, [10, 0, 0]), (1.2, [0, 0, 0])])),
-        "shin_l": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.3, [40, 0, 0]), (0.55, [50, 0, 0]), (0.8, [-10, 0, 0]), (1.2, [0, 0, 0])])),
-        "shin_r": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.3, [40, 0, 0]), (0.55, [50, 0, 0]), (0.8, [-10, 0, 0]), (1.2, [0, 0, 0])])),
-        "arm_l": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.5, [-60, 0, -40]), (0.8, [20, 0, -10]), (1.2, [0, 0, 0])])),
-        "arm_r": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.5, [-60, 0, 40]), (0.8, [20, 0, 10]), (1.2, [0, 0, 0])])),
-        "head": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.5, [-25, 0, 0]), (0.8, [15, 0, 0]), (1.2, [0, 0, 0])])),
-        "jaw": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.5, [40, 0, 0]), (1.2, [0, 0, 0])])),
+    add("col_stomp", {   # agacha, salta com os propulsores e cai com tudo
+        "hips": bone(pos=smooth_keys([(0, [0, 0, 0]), (0.3, [0, -8, 0]), (0.55, [0, 2, 0]), (0.9, [0, -6, 0]), (1.2, [0, 0, 0])])),
+        "thigh_l": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.3, [-40, 0, 0]), (0.55, [-10, 0, 0]), (0.9, [-35, 0, 0]), (1.2, [0, 0, 0])])),
+        "thigh_r": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.3, [-40, 0, 0]), (0.55, [-10, 0, 0]), (0.9, [-35, 0, 0]), (1.2, [0, 0, 0])])),
+        "shin_l": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.3, [62, 0, 0]), (0.55, [12, 0, 0]), (0.9, [55, 0, 0]), (1.2, [0, 0, 0])])),
+        "shin_r": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.3, [62, 0, 0]), (0.55, [12, 0, 0]), (0.9, [55, 0, 0]), (1.2, [0, 0, 0])])),
+        "foot_l": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.3, [-22, 0, 0]), (0.9, [-20, 0, 0]), (1.2, [0, 0, 0])])),
+        "foot_r": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.3, [-22, 0, 0]), (0.9, [-20, 0, 0]), (1.2, [0, 0, 0])])),
+        "arm_l": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.5, [-50, 0, -30]), (0.9, [20, 0, -20]), (1.2, [0, 0, 0])])),
+        "arm_r": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.5, [-50, 0, 30]), (0.9, [20, 0, 20]), (1.2, [0, 0, 0])])),
+        "jets": bone(scale=smooth_keys([(0, [1, 0.3, 1]), (0.35, [1.2, 2.2, 1.2]), (0.8, [1, 1.2, 1]), (1.2, [1, 0.3, 1])])),
     }, loop="hold", length=1.2)
-    add("col_beam", {
-        "jaw": bone(rot=["math.min(1, q.anim_time * 2) * 42", 0, 0]),
-        "head": bone(rot=["math.min(1, q.anim_time * 2) * 12 + math.sin(q.anim_time * 2400) * 0.8", osc(1, 1900), 0]),
-        "neck": bone(rot=["math.min(1, q.anim_time * 2) * 10", 0, 0]),
-        "torso": bone(rot=["math.min(1, q.anim_time * 2) * -6", 0, 0]),
-        "dorsal_glow": bone(scale=["1 + math.min(1, q.anim_time) * 0.25", "1 + math.min(1, q.anim_time) * 0.35 + math.sin(q.anim_time * 1500) * 0.08", "1 + math.min(1, q.anim_time) * 0.25"]),
-        "arm_l": bone(rot=[-30, 0, -25]), "arm_r": bone(rot=[-30, 0, 25]),
-        **{f"tail{i}": bone(rot=[-4 - i * 2, osc(2, 1200, phase=i * 60), 0]) for i in range(1, 5)},
+    add("col_beam", {   # raio pelo visor: postura firme, braços em guarda, reator no máximo
+        "visor": bone(scale=["1 + math.min(1, q.anim_time * 2) * 0.35", "1 + math.min(1, q.anim_time * 2) * 0.6 + math.sin(q.anim_time * 2200) * 0.1", "1"]),
+        "core": bone(scale="1 + math.min(1, q.anim_time) * 0.3"),
+        "torso": bone(rot=["math.min(1, q.anim_time * 2) * 4 + math.sin(q.anim_time * 2400) * 0.4", 0, 0]),
+        "arm_l": bone(rot=[-45, 0, -20]), "arm_r": bone(rot=[-45, 0, 20]),
+        "forearm_l": bone(rot=[-70, 0, 0]), "forearm_r": bone(rot=[-70, 0, 0]),
+        "thigh_l": bone(rot=[-12, 0, -4]), "thigh_r": bone(rot=[8, 0, 4]), "shin_l": bone(rot=[16, 0, 0]),
     }, loop=True)
-    add("col_roar", {
-        "head": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.4, [-38, 0, 0]), (1.6, [-34, 8, 0]), (2.2, [0, 0, 0])])),
-        "neck": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.4, [-20, 0, 0]), (1.6, [-18, 0, 0]), (2.2, [0, 0, 0])])),
-        "jaw": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.4, [48, 0, 0]), (1.7, [44, 0, 0]), (2.2, [0, 0, 0])])),
-        "arm_l": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.5, [-70, 0, -50]), (1.6, [-60, 0, -45]), (2.2, [0, 0, 0])])),
-        "arm_r": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.5, [-70, 0, 50]), (1.6, [-60, 0, 45]), (2.2, [0, 0, 0])])),
-        "torso": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.4, [-12, 0, 0]), (1.6, [-10, 0, 0]), (2.2, [0, 0, 0])])),
-        "dorsal_glow": bone(scale=smooth_keys([(0, [1, 1, 1]), (0.5, [1.2, 1.4, 1.2]), (1.6, [1.2, 1.4, 1.2]), (2.2, [1, 1, 1])])),
-        **{f"tail{i}": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.5, [-10, 0, 0]), (1.6, [-8, 0, 0]), (2.2, [0, 0, 0])])) for i in range(1, 5)},
+    add("col_roar", {   # pose de poder: braços pra cima, propulsores e reator acesos
+        "arm_l": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.5, [-160, 0, -25]), (1.6, [-155, 0, -30]), (2.2, [0, 0, 0])])),
+        "arm_r": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.5, [-160, 0, 25]), (1.6, [-155, 0, 30]), (2.2, [0, 0, 0])])),
+        "forearm_l": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.5, [-30, 0, 0]), (2.2, [0, 0, 0])])),
+        "forearm_r": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.5, [-30, 0, 0]), (2.2, [0, 0, 0])])),
+        "torso": bone(rot=smooth_keys([(0, [0, 0, 0]), (0.4, [-8, 0, 0]), (1.6, [-6, 0, 0]), (2.2, [0, 0, 0])])),
+        "core": bone(scale=smooth_keys([(0, [1, 1, 1]), (0.5, [1.4, 1.4, 1.4]), (1.6, [1.4, 1.4, 1.4]), (2.2, [1, 1, 1])])),
+        "jets": bone(scale=smooth_keys([(0, [1, 0.3, 1]), (0.5, [1.3, 2.4, 1.3]), (1.6, [1.3, 2.2, 1.3]), (2.2, [1, 0.3, 1])])),
     }, loop="hold", length=2.2)
-    add("col_wave", {"arm_l": bone(rot=[-150, 0, osc(25, 360, base=-20)]), "forearm_l": bone(rot=[osc(20, 360, base=-20), 0, 0])}, loop=True)
-    add("col_defeat", {"hips": bone(pos=smooth_keys([(0, [0, 0, 0]), (1.4, [0, -30, 0])]), rot=smooth_keys([(0, [0, 0, 0]), (1.4, [30, 0, 0])]))},
-        loop="hold", length=1.5)
+    add("col_wave", {"arm_l": bone(rot=[-160, 0, osc(20, 360, base=-15)]), "forearm_l": bone(rot=[osc(20, 360, base=-25), 0, 0])}, loop=True)
+    add("col_defeat", {   # cai de joelhos
+        "hips": bone(pos=smooth_keys([(0, [0, 0, 0]), (1.4, [0, -22, 0])])),
+        "thigh_l": bone(rot=smooth_keys([(0, [0, 0, 0]), (1.4, [-80, 0, 0])])), "shin_l": bone(rot=smooth_keys([(0, [0, 0, 0]), (1.4, [90, 0, 0])])),
+        "thigh_r": bone(rot=smooth_keys([(0, [0, 0, 0]), (1.4, [-10, 0, 0])])), "shin_r": bone(rot=smooth_keys([(0, [0, 0, 0]), (1.4, [90, 0, 0])])),
+        "torso": bone(rot=smooth_keys([(0, [0, 0, 0]), (1.4, [20, 0, 0])])),
+        "arm_l": bone(rot=smooth_keys([(0, [0, 0, 0]), (1.4, [-20, 0, -10])])), "arm_r": bone(rot=smooth_keys([(0, [0, 0, 0]), (1.4, [-20, 0, 10])])),
+    }, loop="hold", length=1.5)
+
+    # ---------------- formas novas (2.2)
+    add("ship", {
+        "thrust": bone(scale=["1", "1", "0.6 + math.min(1, q.ground_speed / 14) * 1.2 + math.sin(q.anim_time * 2600) * 0.08"]),
+        "gear": bone(scale="v.gear", pos=[0, "(1 - v.gear) * 4", 0]),
+        "body": bone(rot=["v.jpitch * 0.8", 0, "v.lean * 1.2"], pos=[0, "q.is_on_ground ? 0 : math.sin(q.anim_time * 80) * 0.4", 0]),
+        "canopy": bone(scale=CANOPY),
+    })
+    add("ship_fire", {"body": bone(pos=[0, 0, osc(0.5, 2000)])}, loop=True)
+    add("ufo", {
+        "ring": bone(rot=[0, "q.anim_time * 220", 0]),
+        "body": bone(rot=["v.htilt * 0.5", 0, "-v.lean * 0.4"], pos=[0, "q.is_on_ground ? 0 : math.sin(q.anim_time * 70) * 0.8", 0]),
+        "gear": bone(scale="v.gear", pos=[0, "(1 - v.gear) * 3", 0]),
+        "canopy": bone(scale=CANOPY),
+    })
+    add("ufo_fire", {"ring": bone(rot=[0, "q.anim_time * 1400", 0])}, loop=True)
+    add("sub", {
+        "prop": bone(rot=[0, 0, "v.wheel * 3"]),
+        "body": bone(rot=["v.jpitch * 0.6", 0, "v.lean * 0.3"], pos=[0, "math.sin(q.anim_time * 50) * 0.3", 0]),
+        "canopy": bone(scale=CANOPY),
+    })
+    add("sub_fire", {"body": bone(pos=[0, 0, osc(0.6, 1600)])}, loop=True)
+    add("boat", {
+        "prop": bone(rot=[0, 0, "v.wheel * 4"]),
+        "motor": bone(rot=[0, "math.clamp(v.lean * 1.2, -25, 25)", 0]),
+        "body": bone(rot=["-math.clamp(q.ground_speed * 0.5, 0, 8) + math.sin(q.anim_time * 160) * 0.8", 0, "v.lean * 0.5 + math.sin(q.anim_time * 110) * 1.2"]),
+    })
+    add("truck", {
+        "wheel_fl": bone(rot=["v.wheel * 0.7", "math.clamp(-v.lean * 1.4, -28, 28)", 0]),
+        "wheel_fr": bone(rot=["v.wheel * 0.7", "math.clamp(-v.lean * 1.4, -28, 28)", 0]),
+        "wheel_rl": bone(rot=["v.wheel * 0.7", 0, 0]),
+        "wheel_rr": bone(rot=["v.wheel * 0.7", 0, 0]),
+        "body": bone(rot=["math.sin(q.anim_time * 500) * 0.6 * math.min(1, q.ground_speed / 4)", 0, "v.lean * 0.3"],
+                     pos=[0, "math.sin(q.anim_time * 700) * 0.4 * math.min(1, q.ground_speed / 4)", 0]),
+        "canopy": bone(scale=CANOPY),
+    })
+    add("stealth", {
+        "flame": bone(scale=["0.5 + math.min(1, q.ground_speed / 24) * 1.1 + math.sin(q.anim_time * 2600) * 0.06"] * 3),
+        "gear": bone(scale="v.gear", pos=[0, "(1 - v.gear) * 4", 0]),
+        "body": bone(rot=["v.jpitch", 0, "v.lean * 1.6"]),
+        "canopy": bone(scale=CANOPY),
+    })
+    add("swarm", {
+        "orbit0": bone(rot=["q.anim_time * 300", "q.anim_time * 140", 0]),
+        "orbit1": bone(rot=[0, "q.anim_time * -260", "q.anim_time * 120"]),
+        "orbit2": bone(rot=["q.anim_time * 90", "q.anim_time * 200", "q.anim_time * -60"]),
+        "core": bone(pos=[0, osc(1.2, 120), 0], scale="1 + math.sin(q.anim_time * 400) * 0.12"),
+    })
+    add("swarm_fire", {"orbit0": bone(scale=osc(0.4, 900, base=1.3)), "orbit1": bone(scale=osc(0.4, 900, phase=90, base=1.3)),
+                       "orbit2": bone(scale=osc(0.4, 900, phase=180, base=1.3))}, loop=True)
     return A
 
 
@@ -206,8 +267,9 @@ def form_controllers():
     by_action = {
         "work": [("col_punch", 7), ("exc_dig", 3)],
         "place": [("col_stomp", 7)],
-        "shoot": [("tank_fire", 4), ("turret_fire", 8), ("heli_fire", 1)],
-        "charge": [("col_beam", 7), ("turret_missile", 8), ("jet_missile", 5)],
+        "shoot": [("tank_fire", 4), ("turret_fire", 8), ("heli_fire", 1), ("ship_fire", 10), ("ufo_fire", 11), ("sub_fire", 12),
+                  ("swarm_fire", 9)],
+        "charge": [("col_beam", 7), ("turret_missile", 8), ("jet_missile", "5 || v.form == 15"), ("ufo_fire", 11), ("swarm_fire", 9)],
         "celebrate": [("col_roar", 7)],
         "wave": [("col_wave", 7)],
         "defeat": [("col_defeat", 7)],

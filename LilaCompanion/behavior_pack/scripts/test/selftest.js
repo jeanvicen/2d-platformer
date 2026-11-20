@@ -2,13 +2,15 @@
 // Sem "owner": monta uma arena no céu e testa o DR-0N sozinho (criativo, todas as formas, colosso,
 // torreta, megaconstruções, bioma, derrota). Com "owner": usa jogadores simulados (Dono e Intruso)
 // para testar pilotagem, imortalidade no colosso, revide contra jogador, exército e entregas.
-import { ItemStack, system, world } from "@minecraft/server";
+import { BlockPermutation, ItemStack, system, world } from "@minecraft/server";
 import { COMPANIONS, Companion, ENTITY_ID, OWNER_PROP, adopt, compKey, loadCompanion, newRecord } from "../lila/companion.js";
 import * as inv from "../lila/inventory.js";
 import { obtain } from "../lila/planner.js";
 import { command, handleIntents, stats } from "../lila/brain.js";
 import { summon, dismiss, restoreBodyForTest, RESPAWN_TICKS } from "../lila/lifecycle.js";
-import { formOf, riders, setForm, turretGoal, primaryAttack } from "../lila/forms.js";
+import { formOf, riders, setForm, turretGoal, primaryAttack, testDrive, tractor, jumpAction } from "../lila/forms.js";
+import { archPlan, catalogList, TOTAL } from "../lib/archgen.js";
+import { NANO_BLOCK } from "../lila/swarm.js";
 import { megaBuild, biomeTransform, flatten, sweepGround } from "../lila/mega.js";
 import { armyActive, robotsOf } from "../lila/army.js";
 import { FORM_LIST } from "../lib/catalog.js";
@@ -160,7 +162,8 @@ async function soloTests(dim, check) {
   check("creative: 64 logs instantly", r.ok && inv.count(c, { group: "log" }) >= 64 && r.ticks < 20, `ticks=${r.ticks}`);
 
   // todas as formas: propriedade, assentos e escala
-  const SEATS = { drone: 1, heli: 4, car: 4, excavator: 2, tank: 3, jet: 2, moto: 2, colossus: 6, turret: 0 };
+  const SEATS = { drone: 1, heli: 4, car: 4, excavator: 2, tank: 3, jet: 2, moto: 2, colossus: 5, turret: 0, swarm: 0, ship: 2, ufo: 3, sub: 3,
+    boat: 4, truck: 4, stealth: 1 };
   let formsOk = 0;
   const bad = [];
   for (const f of FORM_LIST) {
@@ -176,7 +179,7 @@ async function soloTests(dim, check) {
     if (prop === FORM_LIST.indexOf(f) && seats === SEATS[f]) formsOk++;
     else bad.push(`${f}:prop=${prop},seats=${seats}`);
   }
-  check("all 9 forms switch (property + seats)", formsOk === FORM_LIST.length, bad.join(" "));
+  check(`all ${FORM_LIST.length} forms switch (property + seats)`, formsOk === FORM_LIST.length, bad.join(" "));
 
   // colosso: escala e tamanho real da hitbox (raio horizontal em várias alturas)
   setForm(c, "colossus", { mount: false, quiet: true });
@@ -211,6 +214,11 @@ async function soloTests(dim, check) {
   setForm(c, "drone", { mount: false, quiet: true });
   await system.waitTicks(4);
   c.entity?.teleport({ x: 0.5, y: Y + 2, z: 0.5 });
+
+  // ---------------- 2.2: pilotagem de verdade (velocidade comandada, pulo, água, voo, salto do TITÃ)
+  await vehicleTests(c, dim, check);
+  c.entity?.teleport({ x: 0.5, y: Y + 2, z: 0.5 });
+  await system.waitTicks(4);
 
   // torreta gigante: pousa, vira arma e derruba 3 zumbis
   const zs = [0, 1, 2].map((k) => dim.spawnEntity("minecraft:zombie", { x: 8 + k * 3, y: Y + 1, z: 16 }));
@@ -283,6 +291,9 @@ async function soloTests(dim, check) {
     dropArea("lila_test_flat");
   }
 
+  // ---------------- 2.2: catálogo de construções (1000+)
+  await catalogTests(c, dim, check);
+
   // megaconstruções (cada uma longe, numa área própria carregada) — modo instantâneo para o teste caber no tempo
   c.rec.settings.buildSpeed = "instantaneo";
   /** @type {[string, number][]} */
@@ -347,6 +358,209 @@ async function soloTests(dim, check) {
   check("dismiss + resummon keeps everything", !!back && inv.totalItems(c) === items);
 }
 
+// ======================================================================== 2.2: veículos
+async function driveRun(c, form, ticks, input, at) {
+  setForm(c, form, { mount: false, quiet: true });
+  await system.waitTicks(3);
+  c.entity?.teleport(at, { rotation: { x: 0, y: 0 }, keepVelocity: false });
+  await system.waitTicks(6);
+  c.flags.testDriving = true;
+  c.flags.spd = 0;
+  c.flags.fv = undefined;
+  c.flags.jumpHeld = false;
+  c.flags.lastPos = undefined;
+  const p0 = c.pos();
+  let maxY = p0.y, minY = p0.y;
+  for (let i = 0; i < ticks; i++) {
+    c.flags.testInput = typeof input === "function" ? input(i) : input;
+    try {
+      testDrive(c, form);
+    } catch (e) {
+      log(`drive error ${form}: ${e}`);
+    }
+    await system.waitTicks(1);
+    const q = c.pos();
+    maxY = Math.max(maxY, q.y);
+    minY = Math.min(minY, q.y);
+  }
+  c.flags.testInput = undefined;
+  const q = c.pos();
+  c.flags.testDriving = false;
+  return { dist: Math.hypot(q.x - p0.x, q.z - p0.z), up: maxY - p0.y, down: p0.y - minY, end: q, y0: p0.y };
+}
+
+async function vehicleTests(c, dim, check) {
+  const TX = 5000, WX = 5100;
+  await area(dim, "lila_test_track", TX - 12, -12, WX + 12, 200);
+  // pista de pedra reta e um canal de água fundo
+  cmd(dim, `fill ${TX - 6} ${Y - 1} -6 ${TX + 6} ${Y - 1} 190 stone`);
+  cmd(dim, `fill ${TX - 6} ${Y} -6 ${TX + 6} ${Y + 10} 190 air`);
+  cmd(dim, `fill ${WX - 7} ${Y - 9} -7 ${WX + 7} ${Y - 8} 190 stone`);
+  cmd(dim, `fill ${WX - 6} ${Y - 7} -6 ${WX + 6} ${Y - 1} 190 water`);
+  cmd(dim, `fill ${WX - 6} ${Y} -6 ${WX + 6} ${Y + 8} 190 air`);
+  await system.waitTicks(10);
+  const fwd = { mv: { x: 0, y: 1 }, yaw: 0 };
+  const start = { x: TX + 0.5, y: Y + 0.1, z: 0.5 };
+  // terrestres: 3 s acelerando em linha reta (no 2.1 o carro andava ~15% do que devia)
+  const out = [];
+  let groundOk = true;
+  /** @type {[string, number][]} */
+  const GROUND = [["car", 30], ["moto", 32], ["truck", 26], ["tank", 14], ["excavator", 12]];
+  for (const [f, min] of GROUND) {
+    const r = await driveRun(c, f, 60, fwd, start);
+    out.push(`${f}=${(r.dist / 3).toFixed(1)}b/s`);
+    if (r.dist < min) groundOk = false;
+  }
+  check("ground vehicles are fast now (3 s full throttle)", groundOk, out.join(" "));
+  // pular = o veículo pula
+  const rj = await driveRun(c, "car", 20, (i) => ({ mv: { x: 0, y: 0 }, yaw: 0, jump: i >= 2 && i <= 3 }), start);
+  check("jump button makes the car jump", rj.up >= 1.0, `up=${rj.up.toFixed(2)} blocks`);
+  const rt = await driveRun(c, "truck", 24, (i) => ({ mv: { x: 0, y: 0 }, yaw: 0, jump: i >= 2 && i <= 3 }), start);
+  check("monster truck jumps higher", rt.up >= 2.0, `up=${rt.up.toFixed(2)} blocks`);
+  // helicóptero: pular sobe, acelerar anda; disco e nave voam
+  const rh = await driveRun(c, "heli", 30, { mv: { x: 0, y: 0 }, yaw: 0, jump: true }, { x: TX + 0.5, y: Y + 2, z: 0.5 });
+  const rh2 = await driveRun(c, "heli", 40, { mv: { x: 0, y: 1 }, yaw: 0, view: { x: 0, y: 0, z: 1 } }, { x: TX + 0.5, y: Y + 4, z: 0.5 });
+  check("helicopter: jump climbs, throttle flies forward", rh.up >= 4 && rh2.dist >= 15, `climb=${rh.up.toFixed(1)} dist=${rh2.dist.toFixed(1)}`);
+  const rs = await driveRun(c, "ship", 40, { mv: { x: 0, y: 1 }, yaw: 0, view: { x: 0, y: 0.2, z: 0.98 } }, { x: TX + 0.5, y: Y + 3, z: 0.5 });
+  const ru = await driveRun(c, "ufo", 40, { mv: { x: 0, y: 1 }, yaw: 0, view: { x: 0, y: 0, z: 1 } }, { x: TX + 0.5, y: Y + 3, z: 0.5 });
+  check("spaceship and UFO fly", rs.dist >= 25 && ru.dist >= 20, `ship=${rs.dist.toFixed(1)} ufo=${ru.dist.toFixed(1)}`);
+  const rst = await driveRun(c, "stealth", 40, { mv: { x: 0, y: 1 }, yaw: 0, view: { x: 0, y: 0.05, z: 1 } }, { x: TX + 0.5, y: Y + 4, z: 0.5 });
+  check("stealth fighter is the fastest", rst.dist >= 40, `dist=${rst.dist.toFixed(1)} in 2 s`);
+  // lancha: anda rápido na água e boia
+  const rb = await driveRun(c, "boat", 60, fwd, { x: WX + 0.5, y: Y - 0.3, z: 0.5 });
+  check("speedboat: fast on water and floats", rb.dist >= 25 && rb.end.y > Y - 1.5 && rb.end.y < Y + 1.2, `dist=${rb.dist.toFixed(1)} y=${(rb.end.y - Y).toFixed(2)}`);
+  // submarino: mergulha olhando pra baixo e anda debaixo d'água
+  const rsub = await driveRun(c, "sub", 50, { mv: { x: 0, y: 1 }, yaw: 0, view: { x: 0, y: -0.55, z: 0.83 } }, { x: WX + 0.5, y: Y - 3, z: 40.5 });
+  check("submarine dives and moves underwater", rsub.down >= 2 && rsub.dist >= 10 && rsub.end.y < Y - 1, `down=${rsub.down.toFixed(1)} dist=${rsub.dist.toFixed(1)}`);
+  // armas novas (botão de ataque) com um "piloto" de mentira
+  const stub = { id: "stub", getHeadLocation: () => ({ ...c.pos(), y: c.pos().y + 2 }), getViewDirection: () => ({ x: 0, y: -0.3, z: 0.95 }) };
+  const fired = [];
+  for (const [f, flag] of [["ship", "cdLaser"], ["sub", "cdTorpedo"], ["stealth", "cdMissile"], ["truck", "cdNitro"], ["ufo", "cdUfo"]]) {
+    setForm(c, f, { mount: false, quiet: true });
+    await system.waitTicks(3);
+    c.flags[flag] = 0;
+    primaryAttack(c, stub);
+    await system.waitTicks(2);
+    if ((c.flags[flag] ?? 0) > 0) fired.push(f);
+  }
+  check("new vehicle weapons fire (lasers, torpedo, missiles, nitro, disintegrator)", fired.length === 5, fired.join(","));
+  // raio trator do disco voador
+  setForm(c, "ufo", { mount: false, quiet: true });
+  c.flags.testDriving = true;
+  c.entity?.teleport({ x: TX + 0.5, y: Y + 8, z: 60.5 }, { keepVelocity: false });
+  await system.waitTicks(4);
+  const z1 = dim.spawnEntity("minecraft:zombie", { x: TX + 1.5, y: Y, z: 60.5 });
+  await system.waitTicks(4);
+  tractor(c);
+  await system.waitTicks(5);
+  let lev = false;
+  try {
+    lev = !!z1.getEffect("levitation");
+  } catch {
+    /* ignore */
+  }
+  check("UFO tractor beam lifts what is below", lev);
+  try {
+    z1.remove();
+  } catch {
+    /* ignore */
+  }
+  c.flags.testDriving = false;
+  // salto do TITÃ
+  setForm(c, "colossus", { mount: false, quiet: true });
+  c.entity?.teleport({ x: TX + 0.5, y: Y + 0.1, z: 120.5 }, { keepVelocity: false });
+  await system.waitTicks(40);
+  const cy0 = c.pos().y;
+  let cmax = cy0;
+  c.flags.cdStomp = 0;
+  jumpAction(c);
+  for (let i = 0; i < 30; i++) {
+    await system.waitTicks(1);
+    cmax = Math.max(cmax, c.pos().y);
+  }
+  check("TITAN robot jumps (thrusters)", cmax - cy0 >= 4, `up=${(cmax - cy0).toFixed(1)} blocks`);
+  setForm(c, "drone", { mount: false, quiet: true });
+  await system.waitTicks(4);
+  c.entity?.teleport({ x: 0.5, y: Y + 2, z: 0.5 });
+  await system.waitTicks(2);
+  dropArea("lila_test_track");
+}
+
+// ======================================================================== 2.2: catálogo de construções
+async function catalogTests(c, dim, check) {
+  // 1) todas as plantas do catálogo geram, e TODO bloco+estado usado existe no jogo de verdade
+  const list = catalogList();
+  const combos = new Map();
+  let errs = 0;
+  for (let i = 0; i < list.length; i++) {
+    const it = list[i];
+    try {
+      for (const op of archPlan(it.kind, it.style, it.size, i % 4).ops) {
+        if (op[0] === "f") combos.set(`${op[7]}|${JSON.stringify(op[8] ?? {})}`, [op[7], op[8]]);
+        else if (op[0] === "s") {
+          combos.set(`${op[4]}|${JSON.stringify(op[5] ?? {})}`, [op[4], op[5]]);
+          if (op[6]) combos.set(`${op[4]}|${JSON.stringify(op[6][3] ?? {})}`, [op[4], op[6][3]]);
+        }
+      }
+    } catch {
+      errs++;
+    }
+    if (i % 150 === 0) await system.waitTicks(1);
+  }
+  const badSt = [];
+  let k = 0;
+  for (const [key, [id, st]] of combos) {
+    try {
+      BlockPermutation.resolve(id, st ?? {});
+    } catch {
+      badSt.push(key);
+    }
+    if (++k % 300 === 0) await system.waitTicks(1);
+  }
+  check(`catalog: all ${list.length} constructions generate (TOTAL=${TOTAL})`, errs === 0 && list.length >= 1000, `errors=${errs}`);
+  check("catalog: every block + state used exists in the real game", badSt.length === 0, `combos=${combos.size} bad=${badSt.length} ${badSt.slice(0, 6).join(" ; ")}`);
+
+  // 2) constrói algumas de verdade e confere porta (2 metades), cama (pé + cabeceira) e móveis
+  const samples = [["casa", "medieval", "medio", "instantaneo"], ["padaria", "japones", "pequeno", "instantaneo"], ["hospital", "moderno", "medio", "instantaneo"],
+    ["casa", "rustico", "pequeno", "rapido"], ["fonte", "colonial", "medio", "rapido"]];
+  let x = 4200;
+  stats.maxStepMs = 0;
+  for (const [kind, style, size, speed] of samples) {
+    await area(dim, "lila_test_arch", x - 40, -20, x + 40, 70);
+    c.entity?.teleport({ x: x + 0.5, y: Y + 1, z: 0.5 }, { rotation: { x: 0, y: 0 } });
+    cmd(dim, `fill ${x - 30} ${Y - 2} -10 ${x + 30} ${Y - 1} 60 dirt`);
+    cmd(dim, `fill ${x - 30} ${Y} -10 ${x + 30} ${Y} 60 grass_block`);
+    await system.waitTicks(4);
+    c.rec.settings.buildSpeed = speed;
+    const b0 = c.rec.stats.built;
+    const plan = archPlan(kind, style, size, 0);
+    const r = await runGen(megaBuild(c, "arch", { plan, label: plan.name }), 9000);
+    const lb = c.flags.lastBuild ?? { cx: x, cz: 20, y0: Y, half: 20 };
+    let doorsLo = 0, doorsUp = 0, bedHead = 0, bedFoot = 0, furn = 0;
+    const FURN = /chest|barrel|furnace|smoker|bookshelf|lectern|cauldron|crafting_table|lantern|brewing_stand|bell/;
+    for (let bx = lb.cx - lb.half; bx <= lb.cx + lb.half; bx++) for (let by = lb.y0; by <= lb.y0 + 14; by++) for (let bz = lb.cz - lb.half; bz <= lb.cz + lb.half; bz++) {
+      const b = dim.getBlock({ x: bx, y: by, z: bz });
+      if (!b || b.isAir) continue;
+      const id = b.typeId;
+      if (id.endsWith("_door") || id === "minecraft:wooden_door") {
+        if (b.permutation.getState("upper_block_bit")) doorsUp++;
+        else doorsLo++;
+      } else if (id === "minecraft:bed") {
+        if (b.permutation.getState("head_piece_bit")) bedHead++;
+        else bedFoot++;
+      } else if (FURN.test(id)) furn++;
+    }
+    const isHouse = kind !== "fonte";
+    const ok = r.ok && c.rec.stats.built === b0 + 1 && (!isHouse || (doorsLo >= 1 && doorsLo === doorsUp && furn >= 4)) && bedHead === bedFoot;
+    check(`catalog build: ${plan.name} [${speed}]`, ok, `ticks=${r.ticks} doors=${doorsLo}/${doorsUp} beds=${bedFoot}/${bedHead} furniture=${furn} ${r.err ?? ""}`);
+    c.entity?.teleport({ x: 0.5, y: Y + 2, z: 0.5 });
+    await system.waitTicks(2);
+    dropArea("lila_test_arch");
+    x += 100;
+  }
+  check("catalog builds never freeze the game (step < 60 ms)", stats.maxStepMs < 60, `maxStep=${stats.maxStepMs}ms`);
+}
+
 // ======================================================================== com jogadores simulados
 async function ownerTests(dim, check) {
   cmd(dim, "scriptevent lilatest:spawn_owner");
@@ -385,12 +599,19 @@ async function ownerTests(dim, check) {
   cmd(dim, `scriptevent lilatest:act Dono swing`);
   await system.waitTicks(6);
   check("attack button fires the heli gun", (c.flags.cdGun ?? 0) > 0, `cd=${c.flags.cdGun}`);
-  try {
-    c.entity?.getComponent("minecraft:rideable")?.ejectRider(owner);
-  } catch {
-    /* ignore */
+  // sair = AGACHAR (o jogo desmonta; o add-on não bloqueia mais)
+  cmd(dim, `scriptevent lilatest:act Dono sneak`);
+  await waitUntil(() => !riders(c).some((x) => x.id === owner.id), 40);
+  const sneakOut = !riders(c).some((x) => x.id === owner.id);
+  if (!sneakOut) {
+    try {
+      c.entity?.getComponent("minecraft:rideable")?.ejectRider(owner);
+    } catch {
+      /* ignore */
+    }
   }
   await waitUntil(() => formOf(c) === "drone", 40);
+  check("sneak = get out of the vehicle", sneakOut);
   check("leaving a vehicle turns it back into the drone", formOf(c) === "drone");
 
   // tanque com canhão
@@ -408,8 +629,9 @@ async function ownerTests(dim, check) {
   await system.waitTicks(5);
   command(c, "modo colosso");
   await waitUntil(() => riders(c)[0]?.id === owner.id, 120);
-  check("colossus: owner is in the head seat", formOf(c) === "colossus" && riders(c)[0]?.id === owner.id,
-    `pilot height=${(owner.location.y - c.pos().y).toFixed(1)} blocks`);
+  const ph = owner.location.y - c.pos().y;
+  check("TITAN: owner rides ON TOP of the head (~26 blocks up)", formOf(c) === "colossus" && riders(c)[0]?.id === owner.id && ph > 23,
+    `pilot height=${ph.toFixed(1)} blocks`);
   const hp0 = hp(owner);
   try {
     owner.applyDamage(8);
@@ -420,7 +642,8 @@ async function ownerTests(dim, check) {
   check("colossus: pilot is (almost) immortal", hp(owner) >= hp0, `hp ${hp0}->${hp(owner)}`);
   cmd(dim, `scriptevent lilatest:act Dono swing`);
   await system.waitTicks(4);
-  check("colossus: attack button = punch", c.entity?.getProperty("lila:action") === "work" || (c.flags.cdPunch ?? 0) > 0);
+  check("TITAN: attack button = punch (near) / visor beam (far)", c.entity?.getProperty("lila:action") === "work" || (c.flags.cdPunch ?? 0) > 0 || (c.flags.cdBeam ?? 0) > 0,
+    `punch=${c.flags.cdPunch ?? 0} beam=${c.flags.cdBeam ?? 0}`);
   try {
     c.entity?.getComponent("minecraft:rideable")?.ejectRider(owner);
   } catch {
@@ -431,6 +654,52 @@ async function ownerTests(dim, check) {
   handleIntents(c, [{ type: "stop" }]);
   await system.waitTicks(10);
   check("cancel turns the colossus back into the drone", formOf(c) === "drone");
+
+  // nave espacial: entra, laser no botão de ataque
+  command(c, "vira nave espacial");
+  await waitUntil(() => riders(c).some((x) => x.id === owner.id), 60);
+  cmd(dim, `scriptevent lilatest:act Dono swing`);
+  await system.waitTicks(6);
+  check("'vira nave espacial': owner flies it, lasers fire", formOf(c) === "ship" && riders(c).some((x) => x.id === owner.id) && (c.flags.cdLaser ?? 0) > 0);
+  handleIntents(c, [{ type: "stop" }]);
+  await system.waitTicks(10);
+
+  // ENXAME de nanorrobôs: escudo, picadas, formas, cancelar desmancha tudo
+  owner.teleport({ x: 0.5, y: Y + 1, z: 6.5 });
+  await system.waitTicks(4);
+  command(c, "modo enxame");
+  await system.waitTicks(10);
+  check("'modo enxame': drone becomes the nano swarm with shield", formOf(c) === "swarm" && !!c.flags.swarmShield);
+  const sh0 = hp(owner);
+  try {
+    owner.applyDamage(8);
+  } catch {
+    /* ignore */
+  }
+  await system.waitTicks(2);
+  check("swarm shield: owner takes no damage", hp(owner) >= sh0, `hp ${sh0}->${hp(owner)}`);
+  const arrow = dim.spawnEntity("minecraft:arrow", { x: 2.5, y: Y + 2, z: 6.5 });
+  await waitUntil(() => !arrow.isValid, 30);
+  check("swarm shield: arrows near you are destroyed", !arrow.isValid);
+  const sz = dim.spawnEntity("minecraft:zombie", { x: 0.5, y: Y + 1, z: 14.5 });
+  await waitUntil(() => dead(sz), 300);
+  check("swarm stings monsters near you to death", dead(sz));
+  owner.teleport({ x: 0.5, y: Y + 1, z: -10.5 }, { rotation: { x: 0, y: 0 } });
+  await system.waitTicks(6);
+  command(c, "enxame faz uma muralha");
+  await system.waitTicks(20);
+  const wallN = countBlocks(dim, NANO_BLOCK, -8, Y + 1, -9, 8, Y + 6, -4);
+  check("swarm shape: wall of nanobots", wallN >= 30, `blocks=${wallN}`);
+  command(c, "ponte");
+  await system.waitTicks(30);
+  const bridgeN = countBlocks(dim, NANO_BLOCK, -3, Y - 1, -9, 3, Y, 30);
+  check("swarm shape: bridge where you look", bridgeN >= 30, `blocks=${bridgeN}`);
+  handleIntents(c, [{ type: "stop" }]);
+  await system.waitTicks(10);
+  const leftN = countBlocks(dim, NANO_BLOCK, -8, Y - 1, -9, 8, Y + 6, 30);
+  check("cancel dissolves the swarm shapes and returns to drone", formOf(c) === "drone" && leftN === 0, `left=${leftN}`);
+  owner.teleport({ x: 0.5, y: Y + 1, z: 6.5 });
+  await system.waitTicks(4);
 
   // outro jogador bate em você: o DR-0N revida nele
   owner.teleport({ x: 0.5, y: Y + 1, z: 6.5 });
@@ -507,6 +776,12 @@ async function ownerTests(dim, check) {
   command(c, "constrói um poço aqui");
   await waitUntil(() => c.rec.stats.built > b0, 2400);
   check("'constrói um poço aqui' (mega builder by text)", c.rec.stats.built > b0);
+  // catálogo por texto
+  const b1 = c.rec.stats.built;
+  command(c, "constrói na hora");
+  command(c, "faz uma cafeteria pequena estilo colorido");
+  await waitUntil(() => c.rec.stats.built > b1, 2400);
+  check("'faz uma cafeteria pequena estilo colorido' (catalog by text)", c.rec.stats.built > b1);
   check("player build untouched", dim.getBlock({ x: 20, y: Y + 2, z: 0 })?.typeId === "minecraft:oak_planks");
 }
 

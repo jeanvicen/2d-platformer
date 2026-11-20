@@ -2,13 +2,15 @@
 // megaconstruções, biomas, itens infinitos, kit de força...). "Cancelar" sempre volta ao normal.
 import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
 import { BLUEPRINTS } from "../lib/blueprints.js";
-import { BIOMES, CREATIVE_ITEMS, FORM_NAMES, MEGA } from "../lib/catalog.js";
+import { BIOMES, CREATIVE_ITEMS, FORM_NAMES, MEGA, SWARM_SHAPES } from "../lib/catalog.js";
 import { loadCompanion } from "../lila/companion.js";
 import { summon, dismiss } from "../lila/lifecycle.js";
 import { command, handleIntents, inventoryText, statusText } from "../lila/brain.js";
 import { goalLabel } from "../lila/goals.js";
 import { missions } from "../lila/drone.js";
-import { formOf, isRideForm, isVehicle, beam, roar, stomp, switchSeat, mountOwner, riders } from "../lila/forms.js";
+import { formOf, isRideForm, isVehicle, beam, roar, stomp, switchSeat, mountOwner, riders, jumpAction, tractor } from "../lila/forms.js";
+import { shieldOn } from "../lila/swarm.js";
+import * as A from "../lib/archgen.js";
 import { armyActive, command as armyCommand, empower, robotsOf } from "../lila/army.js";
 import { findItemType } from "../lila/creative.js";
 import { say } from "../lila/talk.js";
@@ -42,12 +44,20 @@ const I = {
   kit: "textures/items/totem",
   flatten: "textures/items/diamond_shovel",
   sweep: "textures/items/hopper",
+  swarm: "textures/items/glowstone_dust",
+  house: "textures/items/door_wood",
 };
 
 const EXAMPLES = [
   "— escolha um exemplo —",
   "vira helicóptero",
   "modo colosso",
+  "modo enxame",
+  "enxame faz uma ponte",
+  "vira submarino",
+  "vira nave espacial",
+  "constrói uma padaria pequena estilo medieval",
+  "constrói uma casa moderna grande",
   "modo exército com 10 robôs",
   "constrói um castelo aqui",
   "faz uma cidade inteira",
@@ -98,10 +108,12 @@ export async function openController(player) {
       ["§l✎ Escrever ordem", I.write, () => writeOrder(player)],
       ["§c§l✖ Cancelar tudo §r§c(volta ao normal)", I.cancel, () => handleIntents(c, [{ type: "stop" }])],
       ["§bVeículos…", I.vehicle, () => vehicleMenu(player)],
-      [formOf(c) === "colossus" ? "§6Entrar no colosso (cabeça)" : "§6§lModo COLOSSO", I.colossus, () => (formOf(c) === "colossus" ? mountOwner(c, player) : handleIntents(c, [{ type: "form", form: "colossus" }]))],
+      [formOf(c) === "colossus" ? "§6Subir no TITÃ (em cima da cabeça)" : "§6§lRobô gigante TITÃ", I.colossus, () => (formOf(c) === "colossus" ? mountOwner(c, player) : handleIntents(c, [{ type: "form", form: "colossus" }]))],
+      [formOf(c) === "swarm" ? "§d§lEnxame: formas e poderes…" : "§d§lModo ENXAME (nanorrobôs)", I.swarm, () => (formOf(c) === "swarm" ? swarmMenu(player) : handleIntents(c, [{ type: "swarm" }]))],
       [c.rec.mode === "turret" ? "§cDesmontar a torreta" : "§cTorreta gigante", I.turret, () => handleIntents(c, [{ type: c.rec.mode === "turret" ? "stop" : "turret" }])],
       [army ? "§aComandar o exército…" : "§aModo EXÉRCITO", I.army, () => (army ? armyMenu(player) : handleIntents(c, [{ type: "army", count: c.rec.settings.army ?? 10 }]))],
       ["§eConstruções gigantes…", I.build, () => buildMenu(player)],
+      ["§eCatálogo: 1000+ construções…", I.house, () => archMenu(player)],
       ["§2Transformar bioma…", I.biome, () => biomeMenu(player)],
       ["§6Aplainar / destruir em volta…", I.flatten, () => flattenMenu(player)],
       ["§6Recolher os itens do chão", I.sweep, () => handleIntents(c, [{ type: "vacuum", radius: 32 }])],
@@ -148,16 +160,67 @@ async function writeOrder(player) {
 
 async function vehicleMenu(player) {
   const c = comp(player);
-  const list = [["heli", "textures/items/elytra"], ["car", "textures/items/minecart_normal"], ["excavator", "textures/items/iron_shovel"],
-    ["tank", "textures/items/fireworks"], ["jet", "textures/items/elytra"], ["moto", "textures/items/saddle"]];
+  const list = [["heli", "textures/items/elytra"], ["car", "textures/items/minecart_normal"], ["moto", "textures/items/saddle"],
+    ["truck", "textures/items/minecart_chest"], ["excavator", "textures/items/iron_shovel"], ["tank", "textures/items/fireworks"],
+    ["jet", "textures/items/elytra"], ["stealth", "textures/items/phantom_membrane"], ["ship", "textures/items/nether_star"],
+    ["ufo", "textures/items/ender_eye"], ["boat", "textures/items/boat_oak"], ["sub", "textures/items/heart_of_the_sea"]];
   const f = new ActionFormData().title("§l§bVeículos")
-    .body("§fEle vira o veículo e você já entra no volante.\n§7Andar = acelerar · olhar = direção · pular = subir/pular · bater = arma · agachar 2× = sair (ele volta a ser drone). Outros jogadores podem entrar de carona tocando no veículo.");
+    .body("§fEle vira o veículo e você já entra (a capota recolhe: você enxerga tudo).\n§7Andar = acelerar · olhar = direção (voadores sobem/descem para onde você olha) · pular = pular/subir · bater = arma · §fAGACHAR = sair§7 (ele volta a ser drone). Outros jogadores entram de carona tocando no veículo.");
   for (const [k, icon] of list) f.button(`§l${FORM_NAMES[k][0].toUpperCase()}${FORM_NAMES[k].slice(1)}`, icon);
   f.button("Voltar", I.back);
   const r = await show(player, f);
   if (!r || r.canceled || r.selection === undefined) return;
   if (r.selection >= list.length) return openController(player);
   handleIntents(c, [{ type: "form", form: list[r.selection][0] }]);
+}
+
+/** Enxame de nanorrobôs: formas e poderes. */
+async function swarmMenu(player) {
+  const c = comp(player);
+  const keys = Object.keys(SWARM_SHAPES);
+  const f = new ActionFormData().title("§l§dEnxame de nanorrobôs")
+    .body(`§fMilhares de nanorrobôs. Eles continuam fazendo tudo que o drone faz e picam sozinhos os monstros perto de você.\n§7Escudo: ${shieldOn(c) ? "§aLIGADO (nada te acerta)" : "§cdesligado"}`);
+  for (const k of keys) f.button(k === "escudo" ? `${SWARM_SHAPES[k].name}: ${shieldOn(c) ? "§cdesligar" : "§aligar"}` : SWARM_SHAPES[k].name, I.swarm);
+  f.button("§c✖ Voltar a ser drone", I.cancel);
+  f.button("Voltar", I.back);
+  const r = await show(player, f);
+  if (!r || r.canceled || r.selection === undefined) return;
+  if (r.selection === keys.length) return handleIntents(c, [{ type: "stop" }]);
+  if (r.selection > keys.length) return openController(player);
+  handleIntents(c, [{ type: "swarm", shape: keys[r.selection] }]);
+}
+
+/** Catálogo de 1000+ construções (tipo × estilo × tamanho), todas mobiliadas por dentro. */
+async function archMenu(player) {
+  const c = comp(player);
+  const cats = A.CATEGORIES;
+  const f = new ActionFormData().title("§l§eCatálogo de construções")
+    .body(`§f${A.TOTAL} construções diferentes (${A.TYPES.length} tipos × ${A.STYLES.length} estilos × ${A.SIZES.length} tamanhos + ${A.OBJECTS.length} objetos/decorações), todas com interior arrumado e mobiliado.\n§7Ele constrói à mão, voando, bloco por bloco (velocidade em Configurações).`);
+  for (const cat of cats) f.button(`§l${cat.name}`, I.house);
+  f.button("§dSurpresa (uma aleatória)", I.creative);
+  f.button("Voltar", I.back);
+  const r = await show(player, f);
+  if (!r || r.canceled || r.selection === undefined) return;
+  if (r.selection === cats.length) {
+    const t = A.TYPES[Math.floor(Math.random() * A.TYPES.length)];
+    return handleIntents(c, [{ type: "arch", kind: t.key, style: A.STYLES[Math.floor(Math.random() * A.STYLES.length)].key, size: A.SIZES[Math.floor(Math.random() * 3)].key }]);
+  }
+  if (r.selection > cats.length) return openController(player);
+  const cat = cats[r.selection];
+  const types = A.TYPES.filter((t) => t.cat === cat.key);
+  const isObj = cat.key === "objetos";
+  const items = isObj ? A.OBJECTS : types;
+  const m = new ModalFormData().title(`§l${cat.name}`)
+    .dropdown("O quê?", items.map((t) => t.name), { defaultValueIndex: 0 })
+    .dropdown("Estilo", A.STYLES.map((s) => s.name), { defaultValueIndex: 0 });
+  if (!isObj) m.dropdown("Tamanho", A.SIZES.map((s) => s.name), { defaultValueIndex: 1 });
+  m.submitButton("§lConstruir aqui");
+  const r2 = await show(player, m);
+  if (!r2 || r2.canceled || !r2.formValues) return;
+  const it = items[Number(r2.formValues[0] ?? 0)];
+  const st = A.STYLES[Number(r2.formValues[1] ?? 0)];
+  const sz = isObj ? A.SIZES[1] : A.SIZES[Number(r2.formValues[2] ?? 1)];
+  handleIntents(c, [{ type: "arch", kind: it.key, style: st.key, size: sz.key }]);
 }
 
 /** Painel de quem está pilotando (usar o controle dentro do veículo/colosso). */
@@ -167,21 +230,25 @@ async function pilotPanel(player) {
   const col = f === "colossus";
   /** @type {[string, string, () => any][]} */
   const b = col ? [
-    ["§l§cRaio de plasma", I.colossus, () => beam(c, player)],
-    ["§6Rugido", "textures/items/goat_horn", () => roar(c)],
+    ["§l§cRaio do visor", I.colossus, () => beam(c, player)],
+    ["§6Pose de poder (monstros ficam fracos)", "textures/items/goat_horn", () => roar(c)],
+    ["§eSalto com pisão", "textures/items/iron_boots", () => jumpAction(c)],
     ["§ePisão (onda de choque)", "textures/items/iron_boots", () => stomp(c)],
     ["Ir para a cabeça (pilotar)", I.ride, () => switchSeat(c, player, true)],
-    ["Ir para uma cabine", I.ride, () => switchSeat(c, player, false) || say(c, "Precisa de alguém na cabeça pra você ir pra uma cabine.", { force: true })],
-    ["Sair (ele fica colosso)", I.back, () => exit(c, player)],
+    ["Ir para uma ombreira", I.ride, () => switchSeat(c, player, false) || say(c, "Precisa de alguém na cabeça pra você ir pra ombreira.", { force: true })],
+    ["Sair (ele fica TITÃ)", I.back, () => exit(c, player)],
     ["§c✖ Voltar a ser drone", I.cancel, () => handleIntents(c, [{ type: "stop" }])],
   ] : [
+    .../** @type {[string, string, () => any][]} */ (f === "ufo" ? [["§dRaio trator (abduzir)", "textures/items/ender_eye", () => tractor(c)]] : []),
     ["Sair (vira drone de novo)", I.back, () => exit(c, player)],
     ["§c✖ Cancelar tudo", I.cancel, () => handleIntents(c, [{ type: "stop" }])],
   ];
+  const weapon = ({ heli: "metralhadora", tank: "canhão", jet: "mísseis", stealth: "mísseis", excavator: "cavar", car: "turbo", moto: "turbo",
+    truck: "turbo", boat: "turbo", ship: "lasers", ufo: "raio desintegrador (olhando pra baixo: raio trator)", sub: "torpedo" })[f] ?? "arma";
   const form = new ActionFormData().title(`§l§bPainel — ${FORM_NAMES[f]}`)
     .body(col
-      ? "§fVocê está na cabeça do TITÃ: quase imortal aqui dentro.\n§7andar = mover · bater = soco · pular = pisão · agachar = raio · agachar 2× = sair"
-      : `§fPilotando: ${FORM_NAMES[f]}.\n§7bater = ${({ heli: "metralhadora", tank: "canhão", jet: "mísseis", excavator: "cavar", car: "buzina", moto: "buzina" })[f] ?? "arma"} · agachar 2× = sair`);
+      ? "§fVocê está em cima da cabeça do TITÃ: quase imortal aqui.\n§7andar = mover · bater perto = soco · mirar longe + bater = raio do visor · pular = salto com pisão · agachar = sair"
+      : `§fPilotando: ${FORM_NAMES[f]}.\n§7bater = ${weapon} · pular = ${["heli", "ship", "ufo", "sub"].includes(f) ? "subir" : f === "jet" || f === "stealth" ? "pós-combustor" : "pular"} · agachar = sair`);
   for (const [t, icon] of b) form.button(t, icon);
   const r = await show(player, form);
   if (!r || r.canceled || r.selection === undefined) return;

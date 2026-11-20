@@ -2,8 +2,9 @@
 // Converte frases livres em uma lista ordenada de intenções que viram objetivos do planejador:
 //   "pega 20 madeira e depois faz uma casa aqui" -> [gather log x20, build casa (aqui)]
 import { normalize, parseAmount, similar, tokens } from "./text.js";
+import { findArch } from "./archgen.js";
 import { ARMOR_WORDS, BLUEPRINT_WORDS, ITEMS, TIER_WORDS, TOOL_WORDS } from "./lexicon.js";
-import { ARMY_WORDS, BIOMES, CREATIVE_ITEMS, DESTROY_WORDS, FLATTEN_WORDS, FORM_WORDS, KIT_WORDS, MEGA, NORMAL_WORDS, SPEED_WORDS, VACUUM_WORDS } from "./catalog.js";
+import { ARMY_WORDS, BIOMES, CREATIVE_ITEMS, DESTROY_WORDS, FLATTEN_WORDS, FORM_WORDS, KIT_WORDS, MEGA, NORMAL_WORDS, SPEED_WORDS, SWARM_SHAPES, SWARM_WORDS, VACUUM_WORDS } from "./catalog.js";
 
 /**
  * @typedef {{type:string, [k:string]:any}} Intent
@@ -139,6 +140,12 @@ const V = {
  * @param {string} text
  * @returns {Intent[]}
  */
+/** Já em forma de enxame: "faz uma ponte", "escudo", "tornado"... viram formas do enxame. */
+export function swarmShapeOf(text) {
+  const tok = tokens(normalize(text));
+  return tok.length ? findKey(tok, SWARM_SHAPES) : null;
+}
+
 export function parseCommands(text) {
   const norm = normalize(text);
   if (!norm) return [];
@@ -190,6 +197,8 @@ export function parseOne(s) {
   // ---- 2.0: voltar ao normal, formas, exército, kit, megaconstruções e biomas
   if (has(tok, NORMAL_WORDS)) return { type: "normal" };
   if (has(tok, KIT_WORDS)) return { type: "kit" };
+  // enxame de nanorrobôs (antes de "destrói tudo": "enxame, devora tudo" é do enxame)
+  if (has(tok, SWARM_WORDS) && !has(tok, V.give)) return { type: "swarm", shape: findKey(tok, SWARM_SHAPES) ?? undefined };
   if (has(tok, VACUUM_WORDS)) return { type: "vacuum", radius: amount ?? 32 };
   if (has(tok, FLATTEN_WORDS) || has(tok, DESTROY_WORDS)) {
     const all = has(tok, DESTROY_WORDS) || has(tok, ["construcoes", "construcao", "casas", "inclusive", "ate as"]);
@@ -204,6 +213,17 @@ export function parseOne(s) {
   const biome = findKey(tok, BIOMES);
   if (biome && has(tok, ["bioma", "transforma", "transformar", "transforme", "muda", "mudar", "mude", "vira", "virar", "deixa", "faz"])) {
     return { type: "biome", biome };
+  }
+  // catálogo de 1000+ construções: "faz uma padaria pequena estilo japonês", "constrói uma fonte"
+  const ar = findArch(tok);
+  if (ar.kind && (has(tok, V.build) || has(tok, V.craft) || has(tok, ["quero", "queria", "bora", "vamos", "cria", "gera", "ergue", "monta"]))) {
+    const strong = !!(ar.style || ar.size);
+    const megaHit = findKey(tok, MEGA);
+    const megaLen = megaHit ? Math.max(...MEGA[megaHit].w.filter((w) => ` ${tok.join(" ")} `.includes(` ${w} `) || tok.includes(w)).map((w) => w.length), 0) : 0;
+    const bpHit = findBlueprint(tok);
+    if ((!megaHit || strong || ar.len > megaLen) && (!bpHit || strong || ar.multi)) {
+      return { type: "arch", kind: ar.kind, style: ar.style ?? undefined, size: ar.size ?? undefined, here };
+    }
   }
   const mega = findKey(tok, MEGA);
   if (mega && (has(tok, V.build) || has(tok, V.craft) || has(tok, ["quero", "queria", "bora", "vamos", "cria", "gera"]) || tok.length <= 3)) {
@@ -319,6 +339,8 @@ export function describe(it) {
     case "kit": return "te deixar mais forte";
     case "flatten": return it.all ? "destruir tudo em volta e deixar plano" : "aplainar o terreno em volta";
     case "vacuum": return "recolher os itens do chão";
+    case "arch": return `construir: ${it.kind.replace(/_/g, " ")}${it.size ? ` ${it.size}` : ""}${it.style ? ` (${it.style})` : ""}`;
+    case "swarm": return "enxame de nanorrobôs";
     case "explore": return "explorar";
     case "hunt": return "caçar";
     case "torches": return "iluminar a área";

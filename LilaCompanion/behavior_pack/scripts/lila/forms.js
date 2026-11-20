@@ -1,11 +1,12 @@
-// Formas do DR-0N: veículos (helicóptero, carro, escavadeira, tanque, jato, moto), o colosso
-// TITÃ e a torreta gigante. É sempre a MESMA entidade (inventário, memórias e vida continuam):
-// a forma troca grupos de componentes (hitbox, gravidade, assentos, escala) e a geometria.
+// Formas do DR-0N: veículos (helicóptero, carro, escavadeira, tanque, jato, moto, nave espacial,
+// disco voador, submarino, lancha, caminhão-monstro, caça furtivo), o robô gigante TITÃ e a torreta
+// gigante. É sempre a MESMA entidade (inventário, memórias e vida continuam): a forma troca grupos
+// de componentes (hitbox, gravidade, assentos, escala) e a geometria.
 //
-// Controles quando você está dentro:
-//   andar = acelerar/ré · olhar = direção · pular = subir (voadores) / pulo / pisão (colosso)
-//   bater (botão de ataque) = arma da forma · agachar segurado = descer (voadores) / freio
-//   agachar 2× rápido = sair · usar o controle = painel do piloto
+// Controles quando você está dentro (2.2):
+//   andar = acelerar/ré · olhar = direção (voadores sobem/descem para onde você olha)
+//   pular = o veículo pula (terrestres/lancha) · sobe (voadores) · turbo (jatos) · salto com pisão (TITÃ)
+//   bater (botão de ataque) = arma da forma · AGACHAR = sair · usar o controle = painel do piloto
 import { BlockVolume, ButtonState, EntityDamageCause, InputButton, InputPermissionCategory, system } from "@minecraft/server";
 import { FORM_LIST, FORM_NAMES } from "../lib/catalog.js";
 import { blockAt } from "./world.js";
@@ -19,19 +20,30 @@ import { logError } from "../core/log.js";
 /** @typedef {import("@minecraft/server").Player} Player */
 /** @typedef {{x:number,y:number,z:number}} Vec */
 
-export const VEHICLES = ["heli", "car", "excavator", "tank", "jet", "moto"];
+export const VEHICLES = ["heli", "car", "excavator", "tank", "jet", "moto", "ship", "ufo", "sub", "boat", "truck", "stealth"];
 export const formOf = (c) => c.rec.form ?? "drone";
 export const isVehicle = (f) => VEHICLES.includes(f);
 export const isRideForm = (f) => isVehicle(f) || f === "colossus";
+const FLIERS = new Set(["heli", "jet", "ship", "ufo", "stealth"]);
 
-const SPEC = {
-  heli: { speed: 0.95, fly: true, sound: "lila.heli", every: 19, vol: 1.0, pitch: 1 },
-  car: { speed: 1.15, ground: true, sound: "lila.engine", every: 19, vol: 0.8, pitch: 1, hop: 0.45, accel: 0.07 },
-  excavator: { speed: 0.34, ground: true, sound: "lila.engine", every: 19, vol: 0.9, pitch: 0.55, hop: 0.55, accel: 0.05 },
-  tank: { speed: 0.4, ground: true, sound: "lila.engine", every: 19, vol: 1.0, pitch: 0.45, hop: 0.55, accel: 0.04 },
-  jet: { speed: 2.4, fly: true, sound: "lila.jet", every: 23, vol: 1.2, pitch: 1 },
-  moto: { speed: 1.35, ground: true, sound: "lila.engine", every: 19, vol: 0.8, pitch: 1.5, hop: 0.45, accel: 0.09 },
-  colossus: { speed: 0.6, ground: true, colossus: true },
+/**
+ * Velocidades em blocos por tick (×20 = blocos/s). A velocidade é COMANDADA (guardada em
+ * c.flags.spd), não lida de volta da entidade: lida depois do atrito, ela travava o carro em ~15%.
+ */
+export const SPEC = {
+  heli: { mode: "hover", speed: 1.0, climb: 0.55, follow: 0.8, turn: 0.25, k: 0.12, sound: "lila.heli", every: 19, vol: 1.0, pitch: 1 },
+  ufo: { mode: "hover", speed: 1.4, climb: 0.8, follow: 0.6, turn: 0.5, k: 0.16, sound: "beacon.ambient", every: 40, vol: 1.0, pitch: 1.6 },
+  ship: { mode: "hover", speed: 1.8, climb: 0.9, follow: 1.0, turn: 0.3, k: 0.1, sound: "lila.jet", every: 23, vol: 1.0, pitch: 1.4 },
+  jet: { mode: "jet", speed: 2.2, min: 0.45, sound: "lila.jet", every: 23, vol: 1.2, pitch: 1 },
+  stealth: { mode: "jet", speed: 3.0, min: 0.5, sound: "lila.jet", every: 23, vol: 1.3, pitch: 0.8 },
+  car: { mode: "ground", speed: 1.25, accel: 0.06, hop: 0.5, jump: 0.6, sound: "lila.engine", every: 19, vol: 0.8, pitch: 1 },
+  moto: { mode: "ground", speed: 1.45, accel: 0.08, hop: 0.5, jump: 0.6, sound: "lila.engine", every: 19, vol: 0.8, pitch: 1.5 },
+  excavator: { mode: "ground", speed: 0.5, accel: 0.05, hop: 0.55, jump: 0.55, sound: "lila.engine", every: 19, vol: 0.9, pitch: 0.55 },
+  tank: { mode: "ground", speed: 0.6, accel: 0.04, hop: 0.55, jump: 0.55, sound: "lila.engine", every: 19, vol: 1.0, pitch: 0.45 },
+  truck: { mode: "ground", speed: 1.1, accel: 0.06, hop: 0.6, jump: 0.95, crush: true, sound: "lila.engine", every: 19, vol: 1.2, pitch: 0.7 },
+  boat: { mode: "boat", speed: 1.5, accel: 0.05, jump: 0.55, sound: "lila.engine", every: 19, vol: 0.8, pitch: 1.3 },
+  sub: { mode: "sub", speed: 0.8, k: 0.08, sound: "lila.engine", every: 25, vol: 0.6, pitch: 0.4 },
+  colossus: { mode: "ground", speed: 0.6, accel: 0.2, colossus: true },
 };
 const SCALE = 3.4; // escala do colosso (igual ao pacote)
 
@@ -137,6 +149,7 @@ export function setForm(c, form, o = {}) {
   }
   // dono (e quem estava junto) entra na forma nova
   const owner = c.owner();
+  if (form === "swarm") c.flags.swarmShield = true;
   if (o.mount !== false && isRideForm(form) && owner) {
     system.runTimeout(() => {
       if (!c.alive()) return;
@@ -147,10 +160,14 @@ export function setForm(c, form, o = {}) {
   if (prev !== form && !o.quiet) {
     const msgs = {
       drone: "Forma de drone. Pronto pra próxima!",
-      colossus: "MODO COLOSSO! Você está na cabeça: andar = mover · bater = soco · pular = pisão · agachar = raio de plasma · agachar 2× = sair.",
+      colossus: "ROBÔ GIGANTE TITÃ! Você está em cima da cabeça: andar = mover · bater perto = soco · mirar longe e bater = raio do visor · pular = salto com pisão · agachar = sair.",
       turret: "Torreta gigante armada e cravada no chão. Ninguém passa!",
+      swarm: "ENXAME! Virei milhares de nanorrobôs. Escudo em volta de você ligado. Me peça: muralha, ponte, escada, cúpula, punho, espada, tornado, asas, ataca, devora tudo.",
+      sub: "Submarino! Olhe pra baixo e acelere pra mergulhar. Bater = torpedo. Você respira e enxerga debaixo d'água. Agachar = sair.",
+      boat: "Lancha! Na água ela voa. Pular = salto nas ondas, bater = turbo. Agachar = sair.",
+      ufo: "Disco voador! Bater = raio desintegrador · olhando pra baixo = raio trator (abduz quem estiver embaixo). Agachar = sair.",
     };
-    say(c, msgs[form] ?? `Virei ${FORM_NAMES[form]}! Andar acelera, olhar dá a direção, bater usa a arma, agachar 2× sai.`, { force: true });
+    say(c, msgs[form] ?? `Virei ${FORM_NAMES[form]}! Andar acelera, olhar dá a direção, pular ${FLIERS.has(form) ? "sobe" : "pula"}, bater usa a arma, agachar sai.`, { force: true });
   }
   return true;
 }
@@ -254,30 +271,37 @@ export function areaDamage(c, at, r, dmg, knock = 1.2, up = 0.4) {
 // ------------------------------------------------------------------ por tick
 /**
  * Um tick da forma (veículos e colosso). Retorna true se cuidou do tick (cérebro descansa).
+ * Sair = agachar (o jogo desmonta sozinho; o add-on não bloqueia mais isso).
  * @param {Companion} c
  */
 export function formTick(c) {
   const f = formOf(c);
   const e = c.entity;
   if (!e?.isValid || !isRideForm(f)) return false;
+  if (c.flags.testDriving) return true; // autoteste dirigindo direto
   const owner = c.owner();
   const rs = riders(c);
   const piloting = !!owner && rs.some((r) => r.id === owner.id);
+  if (owner && !c.flags.permFixed) {
+    setPerm(owner, true); // mundos da 2.1 podiam ter ficado com "descer" bloqueado
+    c.flags.permFixed = true;
+  }
+  if (f === "sub" && system.currentTick % 40 === 0) subPerks(rs);
   if (piloting && owner) {
     c.flags.hadDriver = true;
-    if (!c.flags.permOff) {
-      setPerm(owner, false);
-      c.flags.permOff = true;
-    }
+    c.flags.piloting = true;
     if (f === "colossus" && rs[0]?.id !== owner.id) {
-      // dono numa cabine: o colosso fica parado (só a cabeça pilota)
+      // dono numa ombreira/mochila: o robô fica parado (só quem está na cabeça pilota)
       idleTick(c, f);
       return true;
     }
     drive(c, owner, f);
     return true;
   }
-  if (c.flags.permOff) releaseRiders(c);
+  if (c.flags.piloting) {
+    c.flags.piloting = false;
+    onExit(c, owner, f);
+  }
   if (isVehicle(f)) {
     // você desceu do veículo: ele volta a ser drone (e retoma o que fazia)
     if (c.flags.hadDriver || system.currentTick - (c.flags.formAt ?? 0) > 200) {
@@ -290,15 +314,52 @@ export function formTick(c) {
   return true;
 }
 
+/** Saiu do veículo (agachou): do alto, cai devagar em vez de se esborrachar. */
+function onExit(c, owner, f) {
+  c.flags.spd = 0;
+  c.flags.fv = undefined;
+  if (!owner?.isValid) return;
+  let high = f === "colossus";
+  try {
+    if (!owner.dimension.getBlockBelow(owner.location, { maxDistance: 4 })) high = true;
+  } catch {
+    /* ignore */
+  }
+  if (high) {
+    try {
+      owner.addEffect("slow_falling", 240, { amplifier: 0, showParticles: false });
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+/** Submarino: quem está dentro respira, enxerga e se move bem debaixo d'água. */
+function subPerks(rs) {
+  for (const r of rs) {
+    try {
+      r.addEffect("water_breathing", 300, { amplifier: 0, showParticles: false });
+      r.addEffect("night_vision", 400, { amplifier: 0, showParticles: false });
+      r.addEffect("conduit_power", 300, { amplifier: 0, showParticles: false });
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
 function idleTick(c, f) {
   const e = c.entity;
   if (!e) return;
   try {
     const v = e.getVelocity();
-    e.applyImpulse({ x: -v.x * 0.5, y: SPEC[f]?.fly ? -v.y : 0, z: -v.z * 0.5 });
+    const spec = SPEC[f] ?? {};
+    let vy = FLIERS.has(f) ? -v.y : 0;
+    if (spec.mode === "boat" || spec.mode === "sub") vy = floatY(c, f) - v.y;
+    e.applyImpulse({ x: -v.x * 0.5, y: vy, z: -v.z * 0.5 });
   } catch {
     /* ignore */
   }
+  c.flags.spd = 0;
   setMove(e, "none");
   // colosso parado ainda protege: pisa em monstros que chegarem perto
   if (f === "colossus" && system.currentTick % 40 === 0) {
@@ -307,21 +368,68 @@ function idleTick(c, f) {
   }
 }
 
+const isWater = (b) => !!b && (b.typeId === "minecraft:water" || b.typeId === "minecraft:flowing_water" || (b.isWaterlogged ?? false));
+
+/** Nível da água sob a entidade (topo do bloco de água mais alto), ou null. */
+function waterTop(dim, p) {
+  const x = Math.floor(p.x), z = Math.floor(p.z), y0 = Math.floor(p.y);
+  for (let y = y0 + 1; y >= y0 - 2; y--) if (isWater(blockAt(dim, x, y, z))) return y + 1;
+  return null;
+}
+
+/** Velocidade vertical desejada para boiar (lancha) / ficar neutro (submarino) ou cair (fora d'água). */
+function floatY(c, f) {
+  const e = c.entity;
+  const p = e.location;
+  const top = waterTop(e.dimension, p);
+  const v = e.getVelocity();
+  if (f === "sub") {
+    if (isWater(blockAt(e.dimension, Math.floor(p.x), Math.floor(p.y + 1), Math.floor(p.z)))) return 0;
+    if (top !== null) return Math.max(-0.2, (top - 1.2 - p.y) * 0.3);
+  } else if (top !== null) return Math.max(-0.3, Math.min(0.3, (top - 0.3 - p.y) * 0.4));
+  return e.isOnGround ? 0 : Math.max(-1.4, v.y - 0.08); // fora d'água: gravidade "de mentira"
+}
+
+/** Lê o controle do piloto (ou a entrada simulada do autoteste). */
+function readInput(c, owner) {
+  const ti = c.flags.testInput;
+  if (ti) {
+    return { mv: ti.mv ?? { x: 0, y: 0 }, jump: !!ti.jump, look: ti.yaw ?? c.entity.getRotation().y, view: ti.view ?? viewOf(ti.yaw ?? c.entity.getRotation().y, 0) };
+  }
+  let mv = { x: 0, y: 0 }, jump = false;
+  try {
+    mv = owner.inputInfo.getMovementVector();
+    jump = owner.inputInfo.getButtonState(InputButton.Jump) === ButtonState.Pressed;
+  } catch {
+    /* sem leitura de controle nessa versão */
+  }
+  return { mv, jump, look: owner.getRotation().y, view: owner.getViewDirection() };
+}
+
+const viewOf = (yaw, pitch) => {
+  const r = (yaw * Math.PI) / 180, q = (pitch * Math.PI) / 180;
+  return { x: -Math.sin(r) * Math.cos(q), y: -Math.sin(q), z: Math.cos(r) * Math.cos(q) };
+};
+
+/** Aproxima uma velocidade comandada (vetor) e aplica: impulso = alvo − velocidade atual. */
+function push(c, e, want, k) {
+  const fv = c.flags.fv ?? { x: 0, y: 0, z: 0 };
+  fv.x += (want.x - fv.x) * k;
+  fv.y += (want.y - fv.y) * k;
+  fv.z += (want.z - fv.z) * k;
+  c.flags.fv = fv;
+  const v = e.getVelocity();
+  e.applyImpulse({ x: fv.x - v.x, y: fv.y - v.y, z: fv.z - v.z });
+  return fv;
+}
+
 /** Pilotagem. */
 function drive(c, owner, f) {
   const e = c.entity;
   const spec = SPEC[f];
-  let mv = { x: 0, y: 0 };
-  let jump = false, sneak = false;
-  try {
-    mv = owner.inputInfo.getMovementVector();
-    jump = owner.inputInfo.getButtonState(InputButton.Jump) === ButtonState.Pressed;
-    sneak = owner.inputInfo.getButtonState(InputButton.Sneak) === ButtonState.Pressed;
-  } catch {
-    /* sem leitura de controle nessa versão */
-  }
-  const look = owner.getRotation().y;
-  const view = owner.getViewDirection();
+  const { mv, jump, look, view } = readInput(c, owner);
+  const jumpEdge = jump && !c.flags.jumpHeld;
+  c.flags.jumpHeld = jump;
   const cur = e.getRotation().y;
   let v = { x: 0, y: 0, z: 0 };
   try {
@@ -329,53 +437,60 @@ function drive(c, owner, f) {
   } catch {
     /* ignore */
   }
-  const hs = Math.hypot(v.x, v.z);
   let yaw = cur;
-  if (spec.fly) {
-    // voadores: viram para onde você olha
+  if (spec.mode === "hover") {
+    // helicóptero / disco / nave: vai para onde você olha; olhar pra baixo e acelerar = desce
+    yaw = cur + wrap(look - cur) * spec.turn;
+    const fwd = yawDir(look);
+    const side = { x: -fwd.z, z: fwd.x };
+    const s = spec.speed * (mv.y >= 0 ? mv.y : mv.y * 0.5);
+    const vy = jump ? spec.climb : mv.y > 0.1 ? view.y * s * spec.follow : 0;
+    push(c, e, { x: fwd.x * s + side.x * mv.x * spec.speed * 0.5, y: vy, z: fwd.z * s + side.z * mv.x * spec.speed * 0.5 }, spec.k);
+  } else if (spec.mode === "jet") {
+    // jatos: velocidade mínima no ar, pular = pós-combustor, puxar pra trás = freio aerodinâmico
     yaw = cur + wrap(look - cur) * 0.25;
-    const fwd = yawDir(yaw);
-    if (f === "jet") {
-      const air = !e.isOnGround;
-      const throttle = sneak ? 0.15 : Math.max(mv.y, air ? 0.45 : 0) * (jump ? 1.6 : 1);
-      const s = spec.speed * throttle;
-      const want = { x: view.x * s, y: air || throttle > 0.6 ? view.y * s : 0, z: view.z * s };
-      e.applyImpulse({ x: (want.x - v.x) * 0.25, y: (want.y - v.y) * 0.25, z: (want.z - v.z) * 0.25 });
+    const air = !e.isOnGround;
+    let throttle = mv.y > 0.1 ? mv.y : mv.y < -0.1 ? (air ? 0.25 : 0) : air ? spec.min : 0;
+    if (jump) throttle = Math.max(throttle, 1) * 1.5;
+    const s = spec.speed * throttle;
+    push(c, e, { x: view.x * s, y: air || throttle > 0.55 ? view.y * s : 0, z: view.z * s }, 0.08);
+  } else if (spec.mode === "sub") {
+    yaw = cur + wrap(look - cur) * 0.2;
+    const p = e.location;
+    const under = isWater(blockAt(e.dimension, Math.floor(p.x), Math.floor(p.y + 1), Math.floor(p.z)));
+    const fwd = yawDir(look);
+    if (under) {
+      // debaixo d'água: 3D para onde você olha; pular = subir; não sai voando da água
+      const s = spec.speed * (mv.y >= 0 ? mv.y : mv.y * 0.5);
+      let vy = jump ? 0.4 : mv.y > 0.1 ? view.y * s : 0;
+      const head = blockAt(e.dimension, Math.floor(p.x), Math.floor(p.y + 2.2), Math.floor(p.z));
+      if (vy > 0 && !isWater(head) && !jump) vy = 0;
+      push(c, e, { x: fwd.x * s, y: vy, z: fwd.z * s }, spec.k);
     } else {
-      const s = spec.speed * mv.y;
-      const side = { x: -fwd.z, z: fwd.x };
-      const want = { x: fwd.x * s + side.x * mv.x * 0.5, y: jump ? 0.45 : sneak ? -0.45 : 0, z: fwd.z * s + side.z * mv.x * 0.5 };
-      e.applyImpulse({ x: (want.x - v.x) * 0.3, y: (want.y - v.y) * 0.35, z: (want.z - v.z) * 0.3 });
+      // na superfície: navega; olhar pra baixo e acelerar = mergulha. Em terra: se arrasta.
+      const top = waterTop(e.dimension, p);
+      const s = (top !== null ? spec.speed * 0.8 : 0.1) * (mv.y >= 0 ? mv.y : mv.y * 0.5);
+      let vy = floatY(c, f);
+      if (top !== null && mv.y > 0.1 && view.y < -0.25) vy = view.y * s;
+      c.flags.fv = { x: fwd.x * s, y: vy, z: fwd.z * s };
+      e.applyImpulse({ x: fwd.x * s - v.x, y: vy - v.y, z: fwd.z * s - v.z });
     }
   } else {
-    // terrestres (e colosso): esterça em direção ao olhar; velocidade com aceleração
-    const rate = f === "colossus" ? 3 : 3 + Math.min(6, hs * 8);
-    const diff = wrap(look - cur) + mv.x * -25;
-    yaw = cur + Math.max(-rate, Math.min(rate, diff));
-    const fwd = yawDir(yaw);
-    const target = spec.speed * (mv.y >= 0 ? mv.y : mv.y * 0.5) * (sneak && f !== "colossus" ? 0 : 1);
-    const along = v.x * fwd.x + v.z * fwd.z;
-    const ns = along + (target - along) * (spec.accel ?? 0.2);
-    let vy = v.y;
-    // degrau na frente: pulinho (carros/moto) ou subida (colosso)
-    if (Math.abs(target) > 0.05) {
-      const ahead = { x: e.location.x + fwd.x * (f === "colossus" ? 4.5 : 1.6) * Math.sign(target || 1), y: e.location.y, z: e.location.z + fwd.z * (f === "colossus" ? 4.5 : 1.6) * Math.sign(target || 1) };
-      const b0 = blockAt(e.dimension, Math.floor(ahead.x), Math.floor(ahead.y), Math.floor(ahead.z));
-      const b1 = blockAt(e.dimension, Math.floor(ahead.x), Math.floor(ahead.y) + 1, Math.floor(ahead.z));
-      if (b0 && !b0.isAir && !b0.isLiquid && f !== "colossus" && b1?.isAir && e.isOnGround) vy = spec.hop ?? 0.45;
-      if (f === "colossus") colossusStep(c, fwd, Math.sign(target));
-    }
-    if (jump && f !== "colossus" && e.isOnGround && !c.flags.jumpHeld) vy = spec.hop ?? 0.45;
-    c.flags.jumpHeld = jump;
-    e.applyImpulse({ x: fwd.x * ns - v.x, y: vy - v.y, z: fwd.z * ns - v.z });
-    setMove(e, ns < -0.02 ? "sneak" : Math.abs(ns) > 0.5 ? "run" : Math.abs(ns) > 0.02 ? "walk" : "none");
+    yaw = groundDrive(c, e, spec, f, mv, jump, jumpEdge, look, v);
   }
   try {
     e.setRotation({ x: 0, y: yaw });
   } catch {
     /* ignore */
   }
-  if (spec.fly) setMove(e, hs > 0.5 ? "run" : hs > 0.03 ? "walk" : "none");
+  let hs = 0;
+  try {
+    const nv = e.getVelocity();
+    hs = Math.hypot(nv.x, nv.z);
+  } catch {
+    /* ignore */
+  }
+  if (spec.mode !== "ground" && spec.mode !== "boat") setMove(e, hs > 0.5 ? "run" : hs > 0.03 ? "walk" : "none");
   // mira da torre (tanque) / cabine (escavadeira) acompanha o seu olhar
   if ((f === "tank" || f === "excavator") && system.currentTick % 2 === 0) {
     try {
@@ -394,6 +509,79 @@ function drive(c, owner, f) {
     }
   }
   if (f === "colossus") colossusTick(c, hs);
+  if (spec.crush && hs > 0.4 && system.currentTick % 4 === 0) crush(c, hs);
+  if (c.flags.testLog) c.flags.testLog.push({ x: e.location.x, y: e.location.y, z: e.location.z });
+}
+
+/** Autoteste: um tick de pilotagem com a entrada simulada em c.flags.testInput (sem jogador). */
+export function testDrive(c, f = formOf(c)) {
+  drive(c, /** @type {any} */ (undefined), f);
+}
+
+/** Terrestres, lancha e colosso: esterça para o olhar, velocidade comandada com aceleração. */
+function groundDrive(c, e, spec, f, mv, jump, jumpEdge, look, v) {
+  const cur = e.getRotation().y;
+  const now = system.currentTick;
+  let spd = c.flags.spd ?? 0;
+  const rate = f === "colossus" ? 3 : 3 + Math.min(7, Math.abs(spd) * 6);
+  const diff = wrap(look - cur) + mv.x * -25;
+  const yaw = cur + Math.max(-rate, Math.min(rate, diff));
+  const fwd = yawDir(yaw);
+  const p = e.location;
+  let top = null;
+  if (spec.mode === "boat") top = waterTop(e.dimension, p);
+  const max = spec.mode === "boat" && top === null ? 0.15 : spec.speed; // lancha encalhada quase não anda
+  const target = max * (mv.y >= 0 ? mv.y : mv.y * 0.5);
+  spd += (target - spd) * (spec.accel ?? 0.2) * (Math.abs(target) < Math.abs(spd) ? 1.8 : 1);
+  if ((c.flags.nitroUntil ?? 0) > now && mv.y > -0.1) spd = Math.max(spd, max * 1.7);
+  // bateu numa parede: perde velocidade (em vez de ficar "empurrando" para sempre)
+  const lp = c.flags.lastPos;
+  if (lp) {
+    const moved = Math.hypot(p.x - lp.x, p.z - lp.z);
+    c.flags.stuckT = Math.abs(spd) > 0.2 && moved < Math.abs(spd) * 0.3 ? (c.flags.stuckT ?? 0) + 1 : 0;
+    if (c.flags.stuckT > 3) spd *= 0.6;
+  }
+  c.flags.lastPos = { x: p.x, z: p.z };
+  c.flags.spd = spd;
+  let vy = spec.mode === "boat" ? floatY(c, f) : v.y;
+  // degrau na frente: pulinho automático (carros/moto/caminhão) ou subida (colosso)
+  if (Math.abs(spd) > 0.05) {
+    const sg = Math.sign(spd);
+    if (f === "colossus") colossusStep(c, fwd, sg);
+    else if (e.isOnGround && spec.mode === "ground") {
+      const ahead = 0.9 + Math.abs(spd) * 2.2;
+      const ax = Math.floor(p.x + fwd.x * ahead * sg), az = Math.floor(p.z + fwd.z * ahead * sg);
+      const b0 = blockAt(e.dimension, ax, Math.floor(p.y), az);
+      const b1 = blockAt(e.dimension, ax, Math.floor(p.y) + 1, az);
+      if (b0 && !b0.isAir && !b0.isLiquid && b1?.isAir) vy = spec.hop ?? 0.5;
+    }
+  }
+  if (jumpEdge) {
+    if (f === "colossus") colossusJump(c);
+    else if (spec.mode === "boat" ? top !== null && p.y > top - 0.8 : e.isOnGround) {
+      vy = spec.jump ?? 0.55;
+      sound(e, "random.door_close", 0.6, 0.5);
+    }
+  }
+  if (f === "colossus" && (c.flags.colJumpAt ?? -1) === now) vy = 1.15;
+  e.applyImpulse({ x: fwd.x * spd - v.x, y: vy - v.y, z: fwd.z * spd - v.z });
+  setMove(e, spd < -0.02 ? "sneak" : Math.abs(spd) > 0.5 ? "run" : Math.abs(spd) > 0.02 ? "walk" : "none");
+  return yaw;
+}
+
+/** Caminhão-monstro: passa por cima de monstros e amassa plantas/cercas na frente. */
+function crush(c, hs) {
+  const e = c.entity;
+  const fwd = yawDir(e.getRotation().y);
+  const at = { x: e.location.x + fwd.x * 2.2, y: e.location.y + 0.8, z: e.location.z + fwd.z * 2.2 };
+  if (areaDamage(c, at, 2.4, 6 + hs * 10, 1.4, 0.6) > 0) sound(e, "random.anvil_land", 0.6, 0.6);
+  try {
+    const vol = new BlockVolume({ x: Math.floor(at.x - 1), y: Math.floor(at.y - 0.5), z: Math.floor(at.z - 1) },
+      { x: Math.floor(at.x + 1), y: Math.floor(at.y + 1), z: Math.floor(at.z + 1) });
+    e.dimension.fillBlocks(vol, "minecraft:air", { blockFilter: { includeTypes: SOFT } });
+  } catch {
+    /* ignore */
+  }
 }
 
 // ------------------------------------------------------------------ armas (botão de ataque)
@@ -406,24 +594,142 @@ export function primaryAttack(c, owner) {
     c.flags[k] = now + t;
     return true;
   };
-  if (f === "colossus" && cd("cdPunch", 16)) return punch(c, owner);
+  if (f === "colossus") {
+    // mirando longe = raio do visor; perto = soco
+    const far = d3(aimPoint(c, owner, 120), c.pos()) > 18;
+    if (far && now >= (c.flags.cdBeam ?? 0)) {
+      beam(c, owner);
+      return true;
+    }
+    if (cd("cdPunch", 16)) return punch(c, owner);
+    return false;
+  }
   if (f === "tank" && cd("cdShell", 28)) return cannon(c, owner);
-  if (f === "jet" && cd("cdMissile", 18)) return missiles(c, owner);
+  if ((f === "jet" || f === "stealth") && cd("cdMissile", f === "stealth" ? 12 : 18)) return missiles(c, owner);
   if (f === "heli" && cd("cdGun", 3)) return heliGun(c, owner);
   if (f === "excavator" && cd("cdDig", 14)) return dig(c, owner);
-  if ((f === "car" || f === "moto") && cd("cdHorn", 20)) {
-    sound(c.entity, "note.bass", 1, 0.6);
-    sound(c.entity, "note.bass", 1, 0.8);
-  }
+  if (f === "ship" && cd("cdLaser", 5)) return shipLaser(c, owner);
+  if (f === "ufo" && cd("cdUfo", 10)) return ufoAttack(c, owner);
+  if (f === "sub" && cd("cdTorpedo", 24)) return torpedo(c, owner);
+  if ((f === "car" || f === "moto" || f === "truck" || f === "boat") && cd("cdNitro", 70)) return nitro(c);
   return false;
 }
 
-/** Botão de pular (no colosso = pisão). */
+/** Botão de pular (o tick de pilotagem já trata; isto é para o painel e o autoteste). */
 export function jumpAction(c) {
-  if (formOf(c) !== "colossus") return;
-  if (system.currentTick < (c.flags.cdStomp ?? 0)) return;
-  c.flags.cdStomp = system.currentTick + 30;
-  stomp(c);
+  if (formOf(c) === "colossus") colossusJump(c);
+}
+
+/** Turbo (carro, moto, caminhão, lancha): 2 s de arrancada com chamas. */
+function nitro(c) {
+  const e = c.entity;
+  c.flags.nitroUntil = system.currentTick + 40;
+  sound(e, "lila.jet", 1.0, 1.7);
+  sound(e, "note.bass", 1, 0.6);
+  for (let k = 0; k < 8; k += 2) {
+    system.runTimeout(() => {
+      if (!c.alive()) return;
+      const fwd = yawDir(c.entity.getRotation().y);
+      const p = c.pos();
+      particle(c.dim(), "lila:fire", { x: p.x - fwd.x * 1.8, y: p.y + 0.5, z: p.z - fwd.z * 1.8 });
+    }, k * 5);
+  }
+  return true;
+}
+
+/** Nave: lasers gêmeos das pontas das asas. */
+function shipLaser(c, owner) {
+  const dim = c.dim();
+  const e = c.entity;
+  const at = aimPoint(c, owner, 110);
+  setAction(e, "shoot");
+  system.runTimeout(() => getAction(c.entity) === "shoot" && setAction(c.entity, "idle"), 6);
+  sound(e, "lila.laser", 1.2, 1.3);
+  const fwd = yawDir(e.getRotation().y);
+  for (const side of [-1, 1]) {
+    const from = { x: e.location.x - fwd.z * 2.3 * side + fwd.x * 0.4, y: e.location.y + 0.7, z: e.location.z + fwd.x * 2.3 * side + fwd.z * 0.4 };
+    trail(dim, from, at, "lila:laser", 1.6);
+  }
+  particle(dim, "lila:fire", at);
+  areaDamage(c, at, 2.2, 16, 0.6, 0.1);
+  if (c.rec.settings.destroy !== false && system.currentTick % 2 === 0) smash(dim, at, 1.2);
+  return true;
+}
+
+/** Disco voador: olhando pra baixo = raio trator (abduz); senão, raio desintegrador. */
+function ufoAttack(c, owner) {
+  let view = { x: 0, y: -1, z: 0 };
+  try {
+    view = c.flags.testInput?.view ?? owner.getViewDirection();
+  } catch {
+    /* ignore */
+  }
+  if (view.y < -0.75) return tractor(c);
+  const dim = c.dim();
+  const e = c.entity;
+  const from = { x: e.location.x, y: e.location.y + 0.4, z: e.location.z };
+  const at = aimPoint(c, owner, 110);
+  setAction(e, "shoot");
+  system.runTimeout(() => getAction(c.entity) === "shoot" && setAction(c.entity, "idle"), 8);
+  sound(e, "lila.beam", 1.2, 1.7);
+  trail(dim, from, at, "lila:vlaser", 1.3);
+  particle(dim, "lila:shock", at);
+  if (c.rec.settings.destroy !== false) smash(dim, at, 2.2);
+  areaDamage(c, at, 3.2, 26, 0.8, 0.3);
+  return true;
+}
+
+/** Raio trator: ergue monstros, bichos e itens que estiverem embaixo do disco. */
+export function tractor(c) {
+  const e = c.entity;
+  const dim = c.dim();
+  const p = c.pos();
+  setAction(e, "charge");
+  system.runTimeout(() => getAction(c.entity) === "charge" && setAction(c.entity, "idle"), 40);
+  sound(e, "beacon.power", 1.4, 1.5);
+  sound(e, "lila.beam", 0.8, 2);
+  for (let y = 0; y < 24; y += 2) particle(dim, "lila:scan", { x: p.x + (Math.random() - 0.5) * 3, y: p.y - y, z: p.z + (Math.random() - 0.5) * 3 });
+  const keep = new Set([c.rec.ownerId, e.id, ...riders(c).map((r) => r.id)]);
+  let n = 0;
+  try {
+    for (const t of dim.getEntities({ location: { x: p.x, y: p.y - 16, z: p.z }, maxDistance: 20 })) {
+      if (keep.has(t.id) || t.typeId === "lila:robot" || t.typeId === "lila:drone" || t.location.y > p.y) continue;
+      if (Math.hypot(t.location.x - p.x, t.location.z - p.z) > 5.5) continue;
+      if (t.typeId === "minecraft:player" && !c.flags.aggro?.has(t.id)) continue;
+      if (t.typeId === "minecraft:item" || t.typeId === "minecraft:xp_orb") {
+        t.teleport({ x: p.x, y: p.y - 1.5, z: p.z });
+      } else {
+        t.addEffect("levitation", 70, { amplifier: 4, showParticles: true });
+      }
+      n++;
+    }
+  } catch (err) {
+    logError("forms.tractor", err);
+  }
+  return n >= 0;
+}
+
+/** Submarino: torpedo com rastro de bolhas (explode debaixo d'água também). */
+function torpedo(c, owner) {
+  const dim = c.dim();
+  const from = muzzle(c, 3.2, 0.7);
+  const at = aimPoint(c, owner, 100);
+  setAction(c.entity, "shoot");
+  system.runTimeout(() => getAction(c.entity) === "shoot" && setAction(c.entity, "idle"), 10);
+  sound(c.entity, "lila.missile", 1.2, 0.7);
+  sound(c.entity, "bubble.upinside", 1, 1);
+  trail(dim, from, at, "lila:bubbles", 2.4);
+  system.runTimeout(() => {
+    try {
+      dim.createExplosion(at, 3.2, { breaksBlocks: c.rec.settings.destroy !== false, causesFire: false, source: c.entity });
+    } catch {
+      smash(dim, at, 2.6);
+    }
+    areaDamage(c, at, 5, 30, 1.4, 0.5);
+    particle(dim, "lila:bubbles", at);
+    particle(dim, "lila:shock", at);
+  }, Math.min(14, Math.ceil(d3(from, at) / 8)));
+  return true;
 }
 
 /** Ponto onde o olhar do piloto encosta (bloco ou longe). */
@@ -548,6 +854,12 @@ function dig(c, owner) {
 function colossusTick(c, hs) {
   const e = c.entity;
   if (!e) return;
+  // pouso do salto: onda de choque
+  if (!e.isOnGround) c.flags.colAir = (c.flags.colAir || 0) + 1;
+  else if (c.flags.colAir > 8) {
+    c.flags.colAir = 0;
+    landShock(c);
+  } else c.flags.colAir = 0;
   // passos pesados: som, poeira e tremor no ritmo da passada
   c.flags.stride = (c.flags.stride ?? 0) + hs;
   if (c.flags.stride > 5.5) {
@@ -638,6 +950,20 @@ function punch(c, owner) {
   return true;
 }
 
+function landShock(c) {
+  const at = c.pos();
+  const dim = c.dim();
+  for (let k = 0; k < 3; k++) particle(dim, "lila:shock", { x: at.x, y: at.y + 0.3 + k * 0.4, z: at.z });
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * Math.PI * 2;
+    particle(dim, "lila:dust", { x: at.x + Math.cos(a) * 8, y: at.y + 0.3, z: at.z + Math.sin(a) * 8 });
+  }
+  areaDamage(c, at, 14, 50, 3.4, 1.0);
+  sound(c.entity, "lila.stomp", 2.4, 0.7);
+  sound(c.entity, "random.explode", 2, 0.4);
+  shake(dim, at, 0.8, 1.4, 70);
+}
+
 export function stomp(c) {
   const e = c.entity;
   if (!e) return;
@@ -660,7 +986,34 @@ export function stomp(c) {
   system.runTimeout(() => getAction(c.entity) === "place" && setAction(c.entity, "idle"), 24);
 }
 
-/** Raio de plasma pela boca, para onde você olha (carrega 1 s, dispara 2,5 s). */
+/** Salto do TITÃ: agacha, os propulsores acendem, sobe ~8 blocos e cai com onda de choque. */
+function colossusJump(c) {
+  const e = c.entity;
+  const now = system.currentTick;
+  if (!e || now < (c.flags.cdStomp ?? 0) || !e.isOnGround) return;
+  c.flags.cdStomp = now + 40;
+  c.flags.colJumpAt = now + 6;
+  c.flags.colAir = false;
+  setAction(e, "place");
+  sound(e, "lila.servo", 1, 0.5);
+  system.runTimeout(() => {
+    if (!c.alive()) return;
+    sound(c.entity, "lila.jet", 2, 0.6);
+    sound(c.entity, "mob.enderdragon.flap", 1.5, 0.5);
+    const p = c.pos();
+    for (const s of [-1, 1]) particle(c.dim(), "lila:fire", { x: p.x + s * 1.2, y: p.y + 4, z: p.z + 2 });
+    if (!c.flags.piloting) {
+      try {
+        c.entity.applyImpulse({ x: 0, y: 1.15, z: 0 });
+      } catch {
+        /* ignore */
+      }
+    }
+  }, 6);
+  system.runTimeout(() => getAction(c.entity) === "place" && setAction(c.entity, "idle"), 26);
+}
+
+/** Raio do visor, para onde você olha (carrega 1 s, dispara 2,5 s). */
 export function beam(c, owner) {
   const e = c.entity;
   if (!e || system.currentTick < (c.flags.cdBeam ?? 0)) return;
@@ -681,7 +1034,7 @@ export function beam(c, owner) {
       sound(c.entity, "lila.beam", 2, 1);
     }
     if (k > 20 && k % 2 === 0) {
-      const mouth = colossusFront(c, 2.9 * SCALE, 5.35 * SCALE);
+      const mouth = colossusFront(c, 0.8 * SCALE, 7.25 * SCALE); // visor em T
       const o = c.owner();
       const dir = o && riders(c).some((r) => r.id === o.id) ? o.getViewDirection() : (() => {
         const f = yawDir(c.entity.getRotation().y);

@@ -26,6 +26,17 @@ system.afterEvents.scriptEventReceive.subscribe((ev) => {
         const t = world.getEntity(target);
         if (t) p.attackEntity(t);
       } else if (act === "remove") p.remove?.();
+      else if (act === "sneak") {
+        // agachar (o jogo desmonta de veículos assim)
+        p.isSneaking = true;
+        system.runTimeout(() => {
+          try {
+            p.isSneaking = false;
+          } catch {
+            /* ignore */
+          }
+        }, 12);
+      }
     }
   } catch (e) {
     console.info(`LILA-HARNESS error ${e}`);

@@ -13,7 +13,7 @@ import { breathe } from "../core/budget.js";
 import { logError } from "../core/log.js";
 
 /** @typedef {import("./companion.js").Companion} Companion */
-/** @typedef {{x:number,y:number,z:number,id:string,st?:any,soft?:boolean,natural?:boolean}} Work */
+/** @typedef {{x:number,y:number,z:number,id:string,st?:any,soft?:boolean,natural?:boolean,pair?:any[]}} Work */
 
 export const SPEEDS = {
   humano: { per: 1, every: 2, reach: 5, glide: 0.35, sfx: 1, fx: 1, label: "humano (devagar, bloco por bloco)", rate: 10 },
@@ -117,7 +117,7 @@ export class Placer {
       if (b.isAir || UNBREAKABLE.has(cur)) return;
       if (this.all ? CONTAINERS.test(cur) : !(this.natural?.has(cur) || b.isLiquid)) return;
     } else {
-      if (cur === w.id && !w.st) return; // já está certo
+      if (cur === w.id && !w.st && !w.pair) return; // já está certo
       if (w.soft && !(b.isAir || b.isLiquid || this.natural?.has(cur))) return;
       if (UNBREAKABLE.has(cur)) return;
     }
@@ -135,7 +135,14 @@ export class Placer {
     setAction(e, breaking ? "work" : "place");
     try {
       if (breaking) b.setType("minecraft:air");
-      else b.setPermutation(/** @type {any} */ (p));
+      else {
+        b.setPermutation(/** @type {any} */ (p));
+        if (w.pair) {
+          // segunda metade (porta de cima / cabeceira da cama) no mesmo instante
+          const q = perm(w.id, w.pair[3]);
+          if (q) dim.getBlock({ x: w.x + w.pair[0], y: w.y + w.pair[1], z: w.z + w.pair[2] })?.setPermutation(q);
+        }
+      }
     } catch (err) {
       logError("hand.set", `${w.id}: ${err}`);
       return;
