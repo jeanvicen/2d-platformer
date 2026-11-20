@@ -18,6 +18,7 @@ import * as inv from "./inventory.js";
 import { hold, setAction, setMove, sound } from "./anim.js";
 import { LINES, pick, say } from "./talk.js";
 import { keepLoaded } from "./areas.js";
+import { missions, orbitOwner, remember, scanOwner, turret } from "./drone.js";
 
 /** @typedef {import("./companion.js").Companion} Companion */
 /** @typedef {import("./companion.js").GoalDesc} GoalDesc */
@@ -116,6 +117,7 @@ export function* eat(c) {
 
 /** Seguir o dono a uma distância natural, olhando para ele e pegando itens perto. */
 export function* followOwner(c, ticks = Infinity) {
+  if (c.def?.flying) return yield* orbitOwner(c, ticks);
   const t0 = system.currentTick;
   // a IA nativa do jogo faz o caminho (pula, nada, abre porta, contorna) — igual a um mob/jogador de verdade
   const native = nativeFollow(c, true);
@@ -344,6 +346,20 @@ export function runGoal(c, g) {
   switch (g.type) {
     case "follow": return followOwner(c);
     case "tagalong": return followOwner(c, a.ticks ?? 240);
+    case "turret": return turret(c);
+    case "scan": return (function* () {
+      scanOwner(c);
+      yield 30;
+    })();
+    case "mission": return (function* () {
+      const m = missions(c).find((x) => x.key === a.key);
+      if (!m) return;
+      say(c, `Missão aceita: ${m.title} — ${m.desc}.`, { force: true });
+      yield* runGoal(c, { ...m.goal, origin: "cmd" });
+      c.rec.stats.missions = (c.rec.stats.missions ?? 0) + 1;
+      remember(c, `Missão concluída: ${m.title}`);
+      say(c, `Missão concluída: ${m.title}!`, { force: true });
+    })();
     case "stay": return stayHere(c);
     case "come": return (function* () {
       const o = c.owner();

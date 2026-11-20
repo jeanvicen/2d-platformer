@@ -85,7 +85,7 @@ export function* quickBreak(c, p, o = {}) {
   face(c, p);
   const kind = toolFor(id);
   setAction(c.entity, kind === "axe" ? "chop" : kind === "shovel" || kind === "hoe" || kind === "none" ? (p.y < c.pos().y ? "dig" : "mine") : "mine");
-  const ticks = breakTicks(id, tinfo);
+  const ticks = breakTicks(id, tinfo, c.def?.mineSpeed ?? 1.6);
   const snd = digSound(id);
   for (let t = 0; t < ticks; t++) {
     if (t % 4 === 0) sound(c.entity, snd, 0.5, 0.8);

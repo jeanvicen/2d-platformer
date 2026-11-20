@@ -4,7 +4,7 @@ Legenda: **PASS** = verificado de verdade · **FAIL** = falhou · **NOT TESTED**
 neste ambiente (sem cliente gráfico/celular).
 
 Ambiente: Bedrock Dedicated Server **1.26.65.1** oficial (Linux, sem jogadores), autoteste dentro do
-mundo `/scriptevent lila:selftest` — log completo em `tests/last_bds_run.log` (30/30 PASS) e `tests/last_bds_owner_run.log` com jogador simulado (13/13 PASS), versão 1.3.0.
+mundo `/scriptevent lila:selftest` — log completo em `tests/last_bds_run.log` (30/30 PASS) e `tests/last_bds_owner_run.log` com jogador simulado (24/24 PASS, Lila + DR-0N), versão 1.4.0.
 
 ## Carregamento e qualidade
 | Item | Resultado |
@@ -57,6 +57,17 @@ mundo `/scriptevent lila:selftest` — log completo em `tests/last_bds_run.log` 
 | "me dá tudo" (ela fica só com as ferramentas) | PASS |
 | Formato estrito dos arquivos de animação/controlador (o que o celular rejeitava) | PASS |
 
+## DR-0N com jogador (jogador simulado)
+| Item | Resultado |
+|---|---|
+| Invocar o drone junto com a Lila | PASS |
+| Voar em órbita em volta do dono (3,2 blocos, 2,9 de altura) | PASS |
+| Passar voando por cima de muro de 9 blocos até o dono (50 ticks) | PASS |
+| Modo torreta mata 3 zumbis (145 ticks) | PASS |
+| Carona: dono sobe; ao descer ele volta a trabalhar | PASS |
+| "pega 4 madeira" voando e entrega (160 ticks) | PASS |
+| Escaneamento do dono e lista de missões | PASS |
+
 ## Não testado (precisa de cliente/celular)
 | Item | Resultado |
 |---|---|
@@ -64,4 +75,6 @@ mundo `/scriptevent lila:selftest` — log completo em `tests/last_bds_run.log` 
 | Item 3D do controle na mão (1ª e 3ª pessoa) | NOT TESTED |
 | Menu do controle no toque (itemUse no Android) | NOT TESTED |
 | HUD na barra de ação e ponto na barra de localização | NOT TESTED |
+| Pilotagem na carona com o controle de toque (entrada do jogador real) | NOT TESTED (jogador simulado não mexe o analógico) |
+| Visual do drone, hélices e metralhadora no cliente | NOT TESTED (só renderização própria) |
 | Plantação completa, mansão e exploração muito longa | NOT TESTED (tempo de teste) |

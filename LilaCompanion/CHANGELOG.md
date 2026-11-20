@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.4.0
+- **Novo companheiro: DR-0N**, drone-robô grande com controle próprio (ferro, vidro, redstone e
+  diamante). Mesmo cérebro da Lila (planeja, coleta, minera, fabrica, constrói, planta), porém
+  voa (motor de voo: direto, por cima de obstáculos ou por terra), é ~2× mais rápido, minera 2×
+  mais rápido, enxerga mais longe, tem 160 de vida e inventário de 54 espaços.
+- **Metralhadora e modo torreta** (pousa, trava as pernas e metralha monstros num raio grande).
+- **Carona**: suba nele (toque de mão vazia ou "me dá carona"); você pilota olhando e andando,
+  pular sobe; agachar desce e ele volta ao que estava fazendo. Atira em monstros durante o voo.
+- **Escaneamento** do dono, **memórias** (diário + lugares lembrados) e **missões** com progresso.
+- **"Cancelar tarefas"** no topo do menu dos dois controles.
+- `/drone <ordem>`; HUD mostra os dois na mesma linha; Lila e DR-0N podem estar juntos.
+
 ## 1.3.0
 - **Seguir como um mob de verdade**: ela é ligada ao dono (`tame`) e usa a IA nativa do jogo
   (`follow_owner`) para te acompanhar — pula degraus, nada, abre portas e contorna sozinha.

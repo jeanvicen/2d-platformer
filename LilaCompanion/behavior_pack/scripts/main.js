@@ -3,47 +3,51 @@
 import { CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus, Player, system, world } from "@minecraft/server";
 import { every, startScheduler } from "./core/scheduler.js";
 import { logError, logInfo } from "./core/log.js";
-import { COMPANIONS, ENTITY_ID, OWNER_PROP, adopt, findEntityFor, loadAllRecords, loadCompanion } from "./lila/companion.js";
+import { COMPANIONS, OWNER_PROP, adopt, companionForEntity, companionsOf, findEntityFor, isCompanionType, loadAllRecords, loadCompanion } from "./lila/companion.js";
 import { command, metabolism, sense, tick } from "./lila/brain.js";
 import { backupInventory, defeat, tickDefeat } from "./lila/lifecycle.js";
-import { resetWaypoint, updateHud } from "./lila/hud.js";
+import { flushHud, resetWaypoint, updateHud } from "./lila/hud.js";
+import { riddenBy, rideTick } from "./lila/drone.js";
 import { fight } from "./lila/combat.js";
 import { openController } from "./ui/controller.js";
 import { runSelfTest } from "./test/selftest.js";
-import { LILA } from "./lila/registry.js";
+import { SUMMONS } from "./lila/registry.js";
 
-const CONTROLLER = LILA.controller;
+/** Item de controle -> tipo de companheira. */
+const CONTROLLERS = Object.fromEntries([...SUMMONS.values()].map((d) => [d.controller, d.key]));
 
 // ------------------------------------------------------------------ registro antecipado
 system.beforeEvents.startup.subscribe((ev) => {
   try {
     const optional = [];
     for (let i = 1; i <= 8; i++) optional.push({ name: `p${i}`, type: CustomCommandParamType.String });
-    ev.customCommandRegistry.registerCommand({
-      name: "lila:lila",
-      description: "Dá uma ordem para a Lila. Ex.: /lila pega 20 madeira (sem texto: abre o menu)",
-      permissionLevel: CommandPermissionLevel.Any,
-      cheatsRequired: false,
-      optionalParameters: optional,
-    }, (origin, ...args) => {
-      const src = origin.sourceEntity ?? origin.initiator;
-      if (!(src instanceof Player)) return { status: CustomCommandStatus.Failure, message: "Só jogadores podem usar /lila." };
-      const text = args.filter((a) => typeof a === "string" && a.length).join(" ");
-      system.run(() => {
-        const c = loadCompanion(src);
-        if (!text) {
-          openController(src);
-          return;
-        }
-        if (!c.rec.summoned || !c.alive()) {
-          src.sendMessage("§a[Lila]§r Me invoque primeiro com o §lControle da Lila§r.");
-          return;
-        }
-        src.sendMessage(`§7Você » Lila: §f${text}`);
-        command(c, text);
+    for (const def of SUMMONS.values()) {
+      ev.customCommandRegistry.registerCommand({
+        name: def.command ?? `lila:${def.key}`,
+        description: `Dá uma ordem para ${def.name}. Ex.: /${(def.command ?? def.key).split(":")[1]} pega 20 madeira (sem texto: abre o menu)`,
+        permissionLevel: CommandPermissionLevel.Any,
+        cheatsRequired: false,
+        optionalParameters: optional,
+      }, (origin, ...args) => {
+        const src = origin.sourceEntity ?? origin.initiator;
+        if (!(src instanceof Player)) return { status: CustomCommandStatus.Failure, message: "Só jogadores podem usar este comando." };
+        const text = args.filter((x) => typeof x === "string" && x.length).join(" ");
+        system.run(() => {
+          const c = loadCompanion(src, def.key);
+          if (!text) {
+            openController(src, def.key);
+            return;
+          }
+          if (!c.rec.summoned || !c.alive()) {
+            src.sendMessage(`${def.chatTag}Me invoque primeiro com o §l${def.key === "drone" ? "Controle do DR-0N" : "Controle da Lila"}§r.`);
+            return;
+          }
+          src.sendMessage(`§7Você » ${def.name}: §f${text}`);
+          command(c, text);
+        });
+        return { status: CustomCommandStatus.Success };
       });
-      return { status: CustomCommandStatus.Success };
-    });
+    }
   } catch (e) {
     logError("startup.command", e);
   }
@@ -68,6 +72,19 @@ world.afterEvents.worldLoad.subscribe(() => {
       }
       if (!c.owner() && !c.flags.test) continue; // dono offline: ela espera
       try {
+        // carona: o dono pilota; o cérebro espera e retoma quando ele descer
+        if (c.def?.flying && c.alive()) {
+          const rider = riddenBy(c);
+          if (rider) {
+            c.flags.ridden = true;
+            rideTick(c, rider);
+            continue;
+          }
+          if (c.flags.ridden) {
+            c.flags.ridden = false;
+            c.abortMove = true; // replaneja o caminho a partir de onde ele foi deixado
+          }
+        }
         tick(c);
       } catch (e) {
         logError("lila.tick", e);
@@ -75,6 +92,7 @@ world.afterEvents.worldLoad.subscribe(() => {
     }
   });
   every("lila.sense", 10, () => {
+    const owners = new Map();
     for (const c of COMPANIONS.values()) {
       if (!c.owner() && !c.flags.test) continue;
       try {
@@ -85,12 +103,15 @@ world.afterEvents.worldLoad.subscribe(() => {
             resetWaypoint(c);
           }
         }
-        sense(c);
+        if (!c.flags.ridden) sense(c);
         updateHud(c);
+        const o = c.owner();
+        if (o) owners.set(o.id, o);
       } catch (e) {
         logError("lila.sense", e);
       }
     }
+    for (const o of owners.values()) flushHud(o, companionsOf(o.id));
   }, 3);
   every("lila.slow", 20, () => {
     for (const c of COMPANIONS.values()) {
@@ -117,48 +138,52 @@ world.afterEvents.worldLoad.subscribe(() => {
 
 // ------------------------------------------------------------------ controle
 world.afterEvents.itemUse.subscribe((ev) => {
-  if (ev.itemStack?.typeId !== CONTROLLER) return;
-  openController(ev.source);
+  const kind = CONTROLLERS[ev.itemStack?.typeId ?? ""];
+  if (kind) openController(ev.source, kind);
 });
 
 world.afterEvents.playerInteractWithBlock.subscribe((ev) => {
-  if (ev.itemStack?.typeId !== CONTROLLER) return;
-  openController(ev.player);
+  const kind = CONTROLLERS[ev.itemStack?.typeId ?? ""];
+  if (kind) openController(ev.player, kind);
 });
 
 world.afterEvents.playerInteractWithEntity.subscribe((ev) => {
   const t = ev.target;
-  if (t?.typeId !== ENTITY_ID) return;
+  if (!t || !isCompanionType(t.typeId)) return;
   const owner = t.getDynamicProperty(OWNER_PROP);
+  const c = companionForEntity(t);
   if (owner !== ev.player.id) {
-    const c = COMPANIONS.get(String(owner));
-    ev.player.sendMessage(`§a[Lila]§r Oi! Eu sou a Lila de ${c?.rec.ownerName ?? "outra pessoa"}. Fabrique o seu Controle da Lila para ter a sua!`);
+    ev.player.sendMessage(`${c?.def.chatTag ?? "§a[Lila]§r "}Oi! Eu sou ${c?.def.name ?? "a Lila"} de ${c?.rec.ownerName ?? "outra pessoa"}. Fabrique o seu controle para ter o seu!`);
     return;
   }
-  openController(ev.player);
+  // tocar no drone de mão vazia = subir nele (carona); com o controle = menu
+  const held = ev.player.getComponent("minecraft:inventory")?.container?.getItem(ev.player.selectedSlotIndex)?.typeId;
+  if (c?.def.flying && held !== c.def.controller) return;
+  openController(ev.player, c?.kind ?? "lila");
 });
 
 // ------------------------------------------------------------------ entidades
 world.afterEvents.entityLoad.subscribe((ev) => {
-  if (ev.entity?.typeId === ENTITY_ID) {
+  if (ev.entity && isCompanionType(ev.entity.typeId)) {
     const c = adopt(ev.entity);
     if (c) resetWaypoint(c);
   }
 });
 
 world.afterEvents.playerSpawn.subscribe((ev) => {
-  // nada é mostrado ao entrar: só reconecta a Lila de quem já tem
-  const c = loadCompanion(ev.player);
-  if (c.rec.summoned && !c.alive()) {
-    const e = findEntityFor(c);
-    if (e) adopt(e);
+  // nada é mostrado ao entrar: só reconecta as companheiras de quem já tem
+  for (const kind of SUMMONS.keys()) {
+    const c = loadCompanion(ev.player, kind);
+    if (c.rec.summoned && !c.alive()) {
+      const e = findEntityFor(c);
+      if (e) adopt(e);
+    }
   }
 });
 
 world.afterEvents.playerLeave.subscribe((ev) => {
-  const c = COMPANIONS.get(ev.playerId);
   try {
-    c?.flush();
+    for (const c of companionsOf(ev.playerId)) c.flush();
   } catch (e) {
     logError("leave", e);
   }
@@ -167,9 +192,8 @@ world.afterEvents.playerLeave.subscribe((ev) => {
 // ------------------------------------------------------------------ dano: resistência e derrota
 world.beforeEvents.entityHurt.subscribe((ev) => {
   const e = ev.hurtEntity;
-  if (e.typeId !== ENTITY_ID) return;
-  const owner = e.getDynamicProperty(OWNER_PROP);
-  const c = COMPANIONS.get(String(owner));
+  if (!isCompanionType(e.typeId)) return;
+  const c = companionForEntity(e);
   if (!c) return;
   if (c.rec.defeat) {
     ev.cancel = true;
@@ -186,7 +210,7 @@ world.beforeEvents.entityHurt.subscribe((ev) => {
     ev.cancel = true;
     system.run(() => defeat(c));
   }
-}, { entityFilter: { type: ENTITY_ID } });
+}, { entityFilter: { families: ["lila_companion"] } });
 
 /** Resistência: metade do dano normal, menos ainda com armadura no inventário. */
 function armorFactor(c) {
@@ -213,25 +237,28 @@ function armorFactor(c) {
 // Quem machucar o dono (ou ela) vira alvo imediato.
 world.afterEvents.entityHurt.subscribe((ev) => {
   const attacker = ev.damageSource.damagingEntity;
-  if (!attacker || attacker.typeId === "minecraft:player" || attacker.typeId === ENTITY_ID) return;
+  if (!attacker || attacker.typeId === "minecraft:player" || isCompanionType(attacker.typeId)) return;
   const hurt = ev.hurtEntity;
-  let c;
-  if (hurt.typeId === "minecraft:player") c = COMPANIONS.get(hurt.id);
-  else if (hurt.typeId === ENTITY_ID) c = COMPANIONS.get(String(hurt.getDynamicProperty(OWNER_PROP)));
-  if (!c || !c.alive() || c.rec.defeat || c.urgent) return;
+  /** @type {any[]} */
+  let list = [];
+  if (hurt.typeId === "minecraft:player") list = companionsOf(hurt.id);
+  else if (isCompanionType(hurt.typeId)) list = [companionForEntity(hurt)];
   try {
     if (attacker.getComponent("minecraft:tameable")?.isTamed) return;
   } catch {
     /* ignore */
   }
-  const gen = fight(c, attacker, 400);
-  c.urgent = { desc: { type: "defend", origin: "auto" }, gen, wait: 0, t0: system.currentTick };
+  for (const c of list) {
+    if (!c || !c.alive() || c.rec.defeat || c.urgent || c.flags.ridden) continue;
+    const gen = fight(c, attacker, 400);
+    c.urgent = { desc: { type: "defend", origin: "auto" }, gen, wait: 0, t0: system.currentTick };
+  }
 });
 
 // Morte de verdade (ex.: /kill): mesmo assim ela volta em 20 s.
 world.afterEvents.entityDie.subscribe((ev) => {
   const e = ev.deadEntity;
-  if (e?.typeId !== ENTITY_ID) return;
+  if (!e || !isCompanionType(e.typeId)) return;
   for (const c of COMPANIONS.values()) {
     if (c.entity === e || c.rec.entityId === e.id) {
       if (!c.rec.defeat) {

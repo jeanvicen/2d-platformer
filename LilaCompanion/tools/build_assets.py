@@ -28,9 +28,11 @@ from forge.anim import controllers_file  # noqa: E402
 from forge.lila_anims import ACTIONS, MOVES, action_controller, lila_anims, move_controller  # noqa: E402
 from forge.lila_art import bake_lila, lila_model  # noqa: E402
 from forge.paint import bake  # noqa: E402
+from forge import drone_art  # noqa: E402
+from forge.drone_anims import DRONE_ACTIONS, drone_anims, drone_controllers  # noqa: E402
 from forge.render import render  # noqa: E402
 
-VERSION = [1, 3, 0]
+VERSION = [1, 4, 0]
 MIN_ENGINE = [1, 26, 30]
 SERVER_VERSION = "2.8.0"
 SERVER_UI_VERSION = "2.1.0"
@@ -56,16 +58,19 @@ LANGS = {
         "entity.lila:lila.name": "Lila",
         "item.lila.controller.name": "Lila's Controller",
         "action.interact.lila.talk": "Talk",
+        "entity.lila:drone.name": "DR-0N", "item.lila.drone_controller.name": "DR-0N Remote", "action.interact.lila.ride": "Ride",
     },
     "pt_BR": {
         "entity.lila:lila.name": "Lila",
         "item.lila.controller.name": "Controle da Lila",
         "action.interact.lila.talk": "Conversar",
+        "entity.lila:drone.name": "DR-0N", "item.lila.drone_controller.name": "Controle do DR-0N", "action.interact.lila.ride": "Subir",
     },
 }
 LANGS["pt_PT"] = dict(LANGS["pt_BR"])
 LANGS["es_ES"] = {"entity.lila:lila.name": "Lila", "item.lila.controller.name": "Mando de Lila",
-                  "action.interact.lila.talk": "Hablar"}
+                  "action.interact.lila.talk": "Hablar", "entity.lila:drone.name": "DR-0N",
+                  "item.lila.drone_controller.name": "Mando del DR-0N", "action.interact.lila.ride": "Montar"}
 
 
 def wjson(path, data):
@@ -284,7 +289,8 @@ def build_controller(previews):
     wpng(os.path.join(RP, "textures", "items", "lila", "controller.png"), icon)
     wjson(os.path.join(RP, "textures", "item_texture.json"), {
         "resource_pack_name": "lila", "texture_name": "atlas.items",
-        "texture_data": {"lila_controller": {"textures": "textures/items/lila/controller"}}})
+        "texture_data": {"lila_controller": {"textures": "textures/items/lila/controller"},
+                         "lila_drone_controller": {"textures": "textures/items/lila/drone_controller"}}})
 
     hm = controller_art.held_model()
     wjson(os.path.join(RP, "models", "entity", "lila", "controller_held.geo.json"), hm.to_json())
@@ -337,6 +343,112 @@ def build_controller(previews):
     if previews:
         os.makedirs(PREVIEW_DIR, exist_ok=True)
         wpng(os.path.join(PREVIEW_DIR, "controller.png"), render(im, itex, size=360, yaw=-22, pitch=24, ssaa=3))
+
+
+# ============================================================ DR-0N (drone)
+def build_drone(previews):
+    m = drone_art.drone_model()
+    wjson(os.path.join(RP, "models", "entity", "lila", "drone.geo.json"), m.to_json())
+    tex = bake(m)
+    wpng(os.path.join(RP, "textures", "entity", "lila", "drone.png"), tex)
+    A = drone_anims()
+    wjson(os.path.join(RP, "animations", "lila", "drone.animation.json"),
+          {"format_version": "1.10.0", "animations": {name: data for _, (name, data) in A.items()}})
+    wjson(os.path.join(RP, "animation_controllers", "lila", "drone.ac.json"), controllers_file(drone_controllers()))
+    amap = {k: name for k, (name, _) in A.items()}
+    amap["ctrl_move"] = "controller.animation.lila.drone.move"
+    amap["ctrl_act"] = "controller.animation.lila.drone.action"
+    wjson(os.path.join(RP, "entity", "lila", "drone.entity.json"), {
+        "format_version": "1.10.0",
+        "minecraft:client_entity": {"description": {
+            "identifier": "lila:drone",
+            "materials": {"default": "entity_emissive_alpha"},
+            "textures": {"default": "textures/entity/lila/drone"},
+            "geometry": {"default": "geometry.lila.drone"},
+            "animations": amap,
+            "particle_effects": {"sparkle": "lila:sparkle"},
+            "scripts": {"animate": ["base", "look", "ctrl_move", "ctrl_act"]},
+            "render_controllers": ["controller.render.lila.lila"],
+        }}})
+    wjson(os.path.join(BP, "entities", "drone.json"), {
+        "format_version": ENTITY_FORMAT,
+        "minecraft:entity": {
+            "description": {"identifier": "lila:drone", "is_spawnable": False, "is_summonable": True, "properties": {
+                "lila:action": {"type": "enum", "values": DRONE_ACTIONS, "default": "idle", "client_sync": True},
+                "lila:move": {"type": "enum", "values": MOVES, "default": "none", "client_sync": True}}},
+            "component_groups": {"lila:despawn": {"minecraft:instant_despawn": {"remove_child_entities": False}}},
+            "components": {
+                "minecraft:type_family": {"family": ["lila_drone", "lila_companion", "npc", "mob"]},
+                "minecraft:health": {"value": 160, "max": 160},
+                "minecraft:attack": {"damage": 6},
+                "minecraft:movement": {"value": 0.3},
+                "minecraft:collision_box": {"width": 1.4, "height": 1.2},
+                "minecraft:physics": {"has_gravity": False, "has_collision": True},
+                "minecraft:pushable": {"is_pushable": False, "is_pushable_by_piston": True},
+                "minecraft:knockback_resistance": {"value": 1.0},
+                "minecraft:nameable": {"always_show": False, "allow_name_tag_renaming": False},
+                "minecraft:persistent": {},
+                "minecraft:fire_immune": {},
+                "minecraft:breathable": {"total_supply": 60, "suffocate_time": 0, "breathes_water": True},
+                "minecraft:damage_sensor": {"triggers": FRIENDLY},
+                "minecraft:inventory": {"inventory_size": 54, "container_type": "inventory", "private": True},
+                "minecraft:rideable": {"seat_count": 1, "family_types": ["player"], "interact_text": "action.interact.lila.ride",
+                                       "crouching_skip_interact": True, "pull_in_entities": False,
+                                       "seats": [{"position": [0, 1.55, 0]}]},
+                "minecraft:interact": {"interactions": [{
+                    "on_interact": {"filters": {"all_of": [{"test": "is_family", "subject": "other", "value": "player"},
+                                                           {"test": "has_equipment", "subject": "other", "domain": "hand", "value": "lila:drone_controller"}]},
+                                    "event": "lila:interacted", "target": "self"},
+                    "interact_text": "action.interact.lila.talk", "swing": True}]},
+                "minecraft:behavior.look_at_player": {"priority": 8, "look_distance": 10, "probability": 0.2},
+                "minecraft:conditional_bandwidth_optimization": {},
+                "minecraft:experience_reward": {"on_death": "0"},
+            },
+            "events": {"lila:despawn": {"add": {"component_groups": ["lila:despawn"]}},
+                       "lila:interacted": {"remove": {"component_groups": []}}},
+        }})
+    # controle do drone
+    im = drone_art.remote_icon()
+    itex = bake(im)
+    im.to_json()
+    wpng(os.path.join(RP, "textures", "items", "lila", "drone_controller.png"), render(im, itex, size=64, yaw=-20, pitch=20, ssaa=4))
+    hm = drone_art.remote_held()
+    wjson(os.path.join(RP, "models", "entity", "lila", "drone_remote_held.geo.json"), hm.to_json())
+    wpng(os.path.join(RP, "textures", "entity", "lila", "drone_remote_held.png"), bake(hm))
+    wjson(os.path.join(RP, "attachables", "lila", "drone_controller.json"), {
+        "format_version": "1.10.0",
+        "minecraft:attachable": {"description": {
+            "identifier": "lila:drone_controller",
+            "materials": {"default": "entity_emissive_alpha", "enchanted": "entity_emissive_alpha"},
+            "textures": {"default": "textures/entity/lila/drone_remote_held", "enchanted": "textures/misc/enchanted_item_glint"},
+            "geometry": {"default": "geometry.lila.drone_remote_held"},
+            "animations": {"first": "animation.lila.controller.first", "third": "animation.lila.controller.third",
+                           "idle": "animation.lila.controller.idle"},
+            "scripts": {"animate": [{"first": "c.is_first_person"}, {"third": "!c.is_first_person"}, "idle"]},
+            "render_controllers": ["controller.render.lila.item"],
+        }}})
+    wjson(os.path.join(BP, "items", "drone_controller.json"), {
+        "format_version": ITEM_FORMAT,
+        "minecraft:item": {
+            "description": {"identifier": "lila:drone_controller", "menu_category": {"category": "equipment"}},
+            "components": {"minecraft:icon": "lila_drone_controller", "minecraft:display_name": {"value": "item.lila.drone_controller.name"},
+                           "minecraft:max_stack_size": 1, "minecraft:hand_equipped": False, "minecraft:allow_off_hand": True,
+                           "minecraft:rarity": "epic", "minecraft:tags": {"tags": ["lila:controller"]}}}})
+    wjson(os.path.join(BP, "recipes", "drone_controller.json"), {
+        "format_version": "1.20.10",
+        "minecraft:recipe_shaped": {
+            "description": {"identifier": "lila:drone_controller"}, "tags": ["crafting_table"],
+            "pattern": ["IGI", "RDR", "I I"],
+            "key": {"I": {"item": "minecraft:iron_ingot"}, "G": {"item": "minecraft:glass"}, "R": {"item": "minecraft:redstone"},
+                    "D": {"item": "minecraft:diamond"}},
+            "unlock": [{"item": "minecraft:diamond"}],
+            "result": {"item": "lila:drone_controller"}}})
+    if previews:
+        os.makedirs(PREVIEW_DIR, exist_ok=True)
+        for i, (y, p) in enumerate(((-30, 18), (150, 22))):
+            wpng(os.path.join(PREVIEW_DIR, f"drone_view_{i}.png"), render(m, tex, size=520, yaw=y, pitch=p, outline=True))
+        wpng(os.path.join(PREVIEW_DIR, "drone_controller.png"), render(im, itex, size=360, yaw=-20, pitch=20, ssaa=3))
+    return m
 
 
 def build_render_controllers():
@@ -415,6 +527,14 @@ def build_particles():
     wjson(os.path.join(RP, "particles", "lila_ping.json"),
           particle("lila:ping", "textures/particle/lila/sparkle", 10, (0.4, 0.8), (0.4, 1.0), 0.12, gold,
                    shape={"minecraft:emitter_shape_sphere": {"offset": [0, 0.2, 0], "radius": 0.3, "direction": "outwards"}}))
+    wjson(os.path.join(RP, "particles", "lila_tracer.json"),
+          particle("lila:tracer", "textures/particle/lila/sparkle", 1, (0.08, 0.14), (0.0, 0.05), 0.09,
+                   {"0.0": "#FFFFF4B0", "1.0": "#00FF8A20"}, accel=(0, 0, 0), duration=0.05,
+                   shape={"minecraft:emitter_shape_point": {"offset": [0, 0, 0]}}))
+    wjson(os.path.join(RP, "particles", "lila_scan.json"),
+          particle("lila:scan", "textures/particle/lila/sparkle", 3, (0.5, 0.9), (0.2, 0.5), 0.12,
+                   {"0.0": "#FFB0F4FF", "1.0": "#0020A0FF"}, accel=(0, 1.2, 0), duration=0.05,
+                   shape={"minecraft:emitter_shape_point": {"offset": [0, 0, 0]}}))
     wjson(os.path.join(RP, "particles", "lila_heart.json"),
           particle("lila:respawn", "textures/particle/lila/sparkle", 64, (0.8, 1.8), (0.6, 2.2), 0.2, emerald,
                    accel=(0, 1.6, 0), duration=0.6,
@@ -445,6 +565,7 @@ def main():
     clean()
     m, tex = build_lila(previews)
     build_controller(previews)
+    build_drone(previews)
     build_render_controllers()
     build_particles()
     build_texts()

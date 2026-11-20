@@ -8,7 +8,9 @@
  *   key:string, name:string, entity:string, controller:string,
  *   health:number, strength:number, respawnTicks:number,
  *   color:{red:number, green:number, blue:number}, chatTag:string,
- *   defaults:{mode:string, roam:number, hunt:boolean}
+ *   defaults:{mode:string, roam:number, hunt:boolean},
+ *   flying?:boolean, speed?:number, mineSpeed?:number, vision?:number, gun?:{damage:number, every:number, range:number},
+ *   actionMap?:Record<string,string>, command?:string, recSuffix?:string
  * }} SummonDef
  */
 
@@ -33,7 +35,31 @@ export const LILA = registerSummon({
   respawnTicks: 400, // 20 segundos
   color: { red: 0.25, green: 0.9, blue: 0.55 },
   chatTag: "§a§lLila§r§7 »§r ",
-  defaults: { mode: "auto", roam: 96, hunt: false },
+  defaults: { mode: "auto", roam: 64, hunt: false },
+  speed: 1, mineSpeed: 1.6, vision: 40, command: "lila:lila", recSuffix: "",
+});
+
+/**
+ * DR-0N: drone-robô grande que voa. Mesmo cérebro da Lila (planeja, coleta, fabrica, constrói),
+ * porém voa, é mais rápido, minera mais rápido, enxerga mais longe e tem metralhadora/torreta.
+ * O drone não tem as ações de corpo humano: elas são traduzidas para as dele (actionMap).
+ */
+export const DRONE = registerSummon({
+  key: "drone",
+  name: "DR-0N",
+  entity: "lila:drone",
+  controller: "lila:drone_controller",
+  health: 160,
+  strength: 6,
+  respawnTicks: 400,
+  color: { red: 0.3, green: 0.75, blue: 1.0 },
+  chatTag: "§b§lDR-0N§r§7 »§r ",
+  defaults: { mode: "auto", roam: 160, hunt: false },
+  flying: true, speed: 2.2, mineSpeed: 3.2, vision: 64,
+  gun: { damage: 5, every: 3, range: 28 },
+  command: "lila:drone", recSuffix: ":drone",
+  actionMap: { mine: "work", chop: "work", dig: "work", attack: "shoot", eat: "charge", sit: "turret", farm: "work",
+    place: "place", craft: "craft", wave: "wave", sleep: "sleep", defeat: "defeat", summon: "summon", celebrate: "celebrate", think: "scan", idle: "idle" },
 });
 
 /** Definição pela entidade (ex.: ao carregar o mundo). */

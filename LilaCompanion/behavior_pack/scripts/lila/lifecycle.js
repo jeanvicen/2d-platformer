@@ -15,7 +15,7 @@ import { logError } from "../core/log.js";
 
 export const RESPAWN_TICKS = LILA.respawnTicks;
 
-const sid = (c, kind) => `lila:${kind}_${c.rec.ownerId.replace(/[^a-zA-Z0-9]/g, "").slice(-12)}`;
+const sid = (c, kind) => `lila:${kind}_${c.kind}_${c.rec.ownerId.replace(/[^a-zA-Z0-9]/g, "").slice(-12)}`;
 
 /** Ponto seguro na frente do jogador. */
 function spotNear(player) {
@@ -32,9 +32,9 @@ function restoreBody(c, structureId, dim, loc) {
   const sm = world.structureManager;
   try {
     if (!sm.get(structureId)) return undefined;
-    const before = new Set(dim.getEntities({ type: ENTITY_ID, location: loc, maxDistance: 4 }).map((e) => e.id));
+    const before = new Set(dim.getEntities({ type: c.def.entity, location: loc, maxDistance: 4 }).map((e) => e.id));
     sm.place(structureId, dim, { x: Math.floor(loc.x), y: Math.floor(loc.y), z: Math.floor(loc.z) }, { includeEntities: true, includeBlocks: false });
-    const found = dim.getEntities({ type: ENTITY_ID, location: loc, maxDistance: 4 }).find((e) => !before.has(e.id) && e.getDynamicProperty(OWNER_PROP) === c.rec.ownerId);
+    const found = dim.getEntities({ type: c.def.entity, location: loc, maxDistance: 4 }).find((e) => !before.has(e.id) && e.getDynamicProperty(OWNER_PROP) === c.rec.ownerId);
     sm.delete(structureId);
     if (found) {
       found.teleport(loc, { keepVelocity: false });
@@ -98,7 +98,7 @@ export function summon(c, player) {
   if (c.rec.saved?.sid) e = restoreBody(c, c.rec.saved.sid, player.dimension, loc);
   if (!e) {
     try {
-      e = player.dimension.spawnEntity(ENTITY_ID, loc);
+      e = player.dimension.spawnEntity(c.def.entity, loc);
       e.setDynamicProperty(OWNER_PROP, c.rec.ownerId);
     } catch (err) {
       logError("life.spawn", err);
@@ -110,7 +110,7 @@ export function summon(c, player) {
   adopt(e);
   c.entity = e;
   try {
-    e.nameTag = "Lila";
+    e.nameTag = c.def.name;
   } catch {
     /* ignore */
   }
@@ -181,7 +181,7 @@ export function defeat(c) {
   setAction(e, "defeat");
   sound(e, "mob.player.hurt", 1, 1.3);
   const id = sid(c, "defeat");
-  c.rec.defeat = { left: RESPAWN_TICKS, sid: id, goals: c.rec.goals.slice() };
+  c.rec.defeat = { left: c.def.respawnTicks ?? RESPAWN_TICKS, sid: id, goals: c.rec.goals.slice() };
   c.save();
   system.runTimeout(() => {
     if (!c.entity?.isValid) return;
@@ -216,9 +216,9 @@ export function tickDefeat(c) {
   let fromBackup = false;
   if (!e) {
     try {
-      e = dim.spawnEntity(ENTITY_ID, loc);
+      e = dim.spawnEntity(c.def.entity, loc);
       e.setDynamicProperty(OWNER_PROP, c.rec.ownerId);
-      e.nameTag = "Lila";
+      e.nameTag = c.def.name;
       fromBackup = true;
     } catch (err) {
       logError("life.respawn", err);

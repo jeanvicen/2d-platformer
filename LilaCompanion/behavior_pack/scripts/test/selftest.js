@@ -12,12 +12,13 @@ import { blueprintBlock } from "../lib/recipes.js";
 import { command, handleIntents, stats, statusText } from "../lila/brain.js";
 import { loadCompanion } from "../lila/companion.js";
 import { summon } from "../lila/lifecycle.js";
+import { missions, riddenBy, scanOwner } from "../lila/drone.js";
 import { isFood } from "../lib/items.js";
 import { mineFor } from "../lila/resource.js";
 import { defend } from "../lila/combat.js";
 import { dismiss, restoreBodyForTest, RESPAWN_TICKS } from "../lila/lifecycle.js";
 import { readJSON } from "../core/persistence.js";
-import { recKey } from "../lila/companion.js";
+import { compKey, recKey } from "../lila/companion.js";
 import { toWorld } from "../lila/build.js";
 import { findBlocks } from "../lila/world.js";
 import { logError } from "../core/log.js";
@@ -123,7 +124,7 @@ function spawnTestLila(dim) {
   rec.pos = { ...rec.anchor };
   const c = new Companion(rec);
   c.flags.test = true;
-  COMPANIONS.set(OWNER, c);
+  COMPANIONS.set(compKey(OWNER, "lila"), c);
   const e = dim.spawnEntity(ENTITY_ID, { x: 0.5, y: Y + 1, z: 0.5 });
   e.setDynamicProperty(OWNER_PROP, OWNER);
   adopt(e);
@@ -211,6 +212,67 @@ async function ownerTests(dim, check) {
   const left = Object.keys(inv.summary(c)).filter((id) => !/_(pickaxe|axe|shovel|sword|hoe)$/.test(id));
   check("'me dá tudo' keeps only her tools", left.length === 0, `left=${left.join(",")}`);
   check("status answers", statusText(c).includes("Vida"));
+  await droneTests(dim, check, owner, pcount);
+}
+
+/** DR-0N com o dono: voar, seguir em órbita, passar por cima de muro, torreta, carona, coleta, escaneamento. */
+async function droneTests(dim, check, owner, pcount) {
+  owner.teleport({ x: 0.5, y: Y + 1, z: 6.5 });
+  await system.waitTicks(10);
+  const d = loadCompanion(owner, "drone");
+  check("drone: summon", summon(d, owner) && d.alive() && d.entity?.typeId === "lila:drone");
+  // órbita: anda 20 blocos e ele vem voando em volta
+  handleIntents(d, [{ type: "follow" }]);
+  for (let k = 0; k < 20; k++) {
+    owner.teleport({ x: 0.5 - k, y: Y + 1, z: 6.5 });
+    await system.waitTicks(5);
+  }
+  await system.waitTicks(80);
+  const dd = Math.hypot(d.pos().x - owner.location.x, d.pos().z - owner.location.z);
+  check("drone: flies around the owner", dd < 8 && d.pos().y > owner.location.y + 0.5, `dist=${dd.toFixed(1)} h=${(d.pos().y - owner.location.y).toFixed(1)}`);
+  // muro alto entre os dois: tem que passar voando por cima
+  cmd(dim, `fill -26 ${Y + 1} -12 -26 ${Y + 9} 12 cobblestone`);
+  d.entity?.teleport({ x: -22.5, y: Y + 2, z: 0.5 });
+  owner.teleport({ x: -30.5, y: Y + 1, z: 0.5 });
+  await system.waitTicks(4);
+  handleIntents(d, [{ type: "stay" }]);
+  await system.waitTicks(4);
+  const tw = system.currentTick;
+  command(d, "vem aqui");
+  await waitUntil(() => Math.hypot(d.pos().x - owner.location.x, d.pos().z - owner.location.z) < 4, 400);
+  check("drone: flies over a 9-block wall to the owner", Math.hypot(d.pos().x - owner.location.x, d.pos().z - owner.location.z) < 4, `ticks=${system.currentTick - tw}`);
+  check("drone: player wall intact", dim.getBlock({ x: -26, y: Y + 5, z: 0 })?.typeId === "minecraft:cobblestone");
+  cmd(dim, `fill -26 ${Y + 1} -12 -26 ${Y + 9} 12 air`);
+  owner.teleport({ x: 0.5, y: Y + 1, z: 6.5 });
+  await system.waitTicks(10);
+  // torreta: zumbis por perto
+  const zs = [0, 1, 2].map((k) => dim.spawnEntity("minecraft:zombie", { x: 8 + k * 2, y: Y + 1, z: 14 }));
+  command(d, "modo torreta");
+  const tt = system.currentTick;
+  await waitUntil(() => zs.every((z) => !z.isValid || (z.getComponent("minecraft:health")?.currentValue ?? 0) <= 0), 500);
+  check("drone: turret mode kills 3 zombies", zs.every((z) => !z.isValid || (z.getComponent("minecraft:health")?.currentValue ?? 0) <= 0) && d.rec.mode === "turret", `ticks=${system.currentTick - tt}`);
+  // carona
+  handleIntents(d, [{ type: "follow" }]);
+  await system.waitTicks(20);
+  command(d, "me dá carona");
+  await system.waitTicks(10);
+  check("drone: owner can ride it", !!riddenBy(d));
+  try {
+    d.entity?.getComponent("minecraft:rideable")?.ejectRider(owner);
+  } catch {
+    /* ignore */
+  }
+  await system.waitTicks(20);
+  check("drone: resumes work after the ride", !riddenBy(d) && !d.flags.ridden);
+  // coleta voando + entrega
+  const logs0 = pcount((id) => /_log$/.test(id));
+  command(d, "pega 4 madeira");
+  const tg = system.currentTick;
+  await waitUntil(() => pcount((id) => /_log$/.test(id)) >= logs0 + 4, 2400);
+  check("drone: 'pega 4 madeira' (flying) delivers", pcount((id) => /_log$/.test(id)) >= logs0 + 4, `ticks=${system.currentTick - tg}`);
+  check("drone: scan reports owner", scanOwner(d, true).includes("vida"));
+  check("drone: missions list", missions(d).length >= 8);
+  check("drone: lila still alive alongside", !!loadCompanion(owner, "lila").alive());
 }
 
 /** @param {string} mode */

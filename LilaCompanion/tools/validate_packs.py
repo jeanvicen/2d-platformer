@@ -203,11 +203,13 @@ rp_ents = {j["minecraft:client_entity"]["description"]["identifier"] for j in js
 for e in bp_ents:
     if e not in rp_ents:
         errors.append(f"entidade {e} sem client entity")
-# propriedades usadas nas animações existem
+# propriedades usadas nas animações existem (cada arquivo confere com a entidade dele)
 for e, j in bp_ents.items():
     props = j["minecraft:entity"]["description"].get("properties", {})
     for p, jj in jsons.items():
-        if not jj:
+        if not jj or "/resource_pack/" not in p:
+            continue
+        if ("drone" in os.path.basename(p)) != (e == "lila:drone"):
             continue
         for m in re.finditer(r"q\.property\('([^']+)'\) [=!]= '([^']+)'", json.dumps(jj)):
             name, val = m.group(1), m.group(2)

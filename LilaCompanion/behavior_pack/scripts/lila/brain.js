@@ -14,6 +14,7 @@ import * as inv from "./inventory.js";
 import { setAction, getAction } from "./anim.js";
 import { LINES, pick, say } from "./talk.js";
 import { logError } from "../core/log.js";
+import { missions, mount } from "./drone.js";
 import { overBudget } from "../core/budget.js";
 
 /** @typedef {import("./companion.js").Companion} Companion */
@@ -121,6 +122,7 @@ function pickNext(c) {
   }
   const mode = c.rec.mode;
   if (mode === "stay") return start(c, { type: "stay", origin: "auto" });
+  if (mode === "turret") return start(c, { type: "turret", origin: "auto" });
   if (mode === "follow" || mode === "guard") {
     if (nightTime() && !findThreat(c) && ownerResting(c)) return start(c, { type: "sleep", origin: "auto" });
     return start(c, { type: "follow", origin: "auto" });
@@ -378,6 +380,7 @@ export function handleIntents(c, intents, raw = "") {
         break;
       case "auto":
         abortAll(c);
+        if (c.rec.mode === "turret") setAction(c.entity, "idle");
         c.rec.mode = "auto";
         say(c, "Modo livre! Vou cuidar da minha vida e ficar de olho em você.", { force: true });
         break;
@@ -390,6 +393,25 @@ export function handleIntents(c, intents, raw = "") {
         c.flags.wake = true;
         say(c, "Tô acordada!", { force: true });
         break;
+      case "turret":
+        abortAll(c);
+        c.rec.mode = c.def?.gun ? "turret" : "guard";
+        if (!c.def?.gun) say(c, "Não tenho arma de torreta, mas fico de guarda-costas!", { force: true });
+        break;
+      case "scan":
+        newGoals.push({ type: "scan", args: {}, origin: "cmd", label: "escanear você" });
+        break;
+      case "ride": {
+        const o = c.owner();
+        if (!c.def?.flying) say(c, "Eu não consigo te carregar... mas o DR-0N consegue!", { force: true });
+        else if (o && !mount(c, o)) say(c, "Não consegui te pegar agora. Chega mais perto!", { force: true });
+        break;
+      }
+      case "missions": {
+        const ms = missions(c);
+        say(c, "Missões: " + ms.map((m) => `${m.done ? "§a✔" : "§e•"} ${m.title} (${Math.min(m.have, m.need)}/${m.need})§r`).join("  "), { force: true });
+        break;
+      }
       case "sethome": {
         const o = c.owner();
         const p = o?.location ?? c.pos();

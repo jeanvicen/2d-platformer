@@ -1,0 +1,212 @@
+{
+  "format_version": "1.21.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "lila:drone",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "properties": {
+        "lila:action": {
+          "type": "enum",
+          "values": [
+            "idle",
+            "work",
+            "place",
+            "shoot",
+            "charge",
+            "turret",
+            "craft",
+            "wave",
+            "sleep",
+            "defeat",
+            "summon",
+            "celebrate",
+            "scan"
+          ],
+          "default": "idle",
+          "client_sync": true
+        },
+        "lila:move": {
+          "type": "enum",
+          "values": [
+            "none",
+            "walk",
+            "run",
+            "swim",
+            "climb",
+            "fall",
+            "sneak"
+          ],
+          "default": "none",
+          "client_sync": true
+        }
+      }
+    },
+    "component_groups": {
+      "lila:despawn": {
+        "minecraft:instant_despawn": {
+          "remove_child_entities": false
+        }
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "lila_drone",
+          "lila_companion",
+          "npc",
+          "mob"
+        ]
+      },
+      "minecraft:health": {
+        "value": 160,
+        "max": 160
+      },
+      "minecraft:attack": {
+        "damage": 6
+      },
+      "minecraft:movement": {
+        "value": 0.3
+      },
+      "minecraft:collision_box": {
+        "width": 1.4,
+        "height": 1.2
+      },
+      "minecraft:physics": {
+        "has_gravity": false,
+        "has_collision": true
+      },
+      "minecraft:pushable": {
+        "is_pushable": false,
+        "is_pushable_by_piston": true
+      },
+      "minecraft:knockback_resistance": {
+        "value": 1.0
+      },
+      "minecraft:nameable": {
+        "always_show": false,
+        "allow_name_tag_renaming": false
+      },
+      "minecraft:persistent": {},
+      "minecraft:fire_immune": {},
+      "minecraft:breathable": {
+        "total_supply": 60,
+        "suffocate_time": 0,
+        "breathes_water": true
+      },
+      "minecraft:damage_sensor": {
+        "triggers": [
+          {
+            "on_damage": {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "player"
+              }
+            },
+            "deals_damage": "no"
+          },
+          {
+            "on_damage": {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "lila"
+              }
+            },
+            "deals_damage": "no"
+          },
+          {
+            "cause": "fall",
+            "deals_damage": "no"
+          },
+          {
+            "cause": "suffocation",
+            "deals_damage": "no"
+          },
+          {
+            "cause": "drowning",
+            "deals_damage": "no"
+          },
+          {
+            "cause": "fly_into_wall",
+            "deals_damage": "no"
+          }
+        ]
+      },
+      "minecraft:inventory": {
+        "inventory_size": 54,
+        "container_type": "inventory",
+        "private": true
+      },
+      "minecraft:rideable": {
+        "seat_count": 1,
+        "family_types": [
+          "player"
+        ],
+        "interact_text": "action.interact.lila.ride",
+        "crouching_skip_interact": true,
+        "pull_in_entities": false,
+        "seats": [
+          {
+            "position": [
+              0,
+              1.55,
+              0
+            ]
+          }
+        ]
+      },
+      "minecraft:interact": {
+        "interactions": [
+          {
+            "on_interact": {
+              "filters": {
+                "all_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "player"
+                  },
+                  {
+                    "test": "has_equipment",
+                    "subject": "other",
+                    "domain": "hand",
+                    "value": "lila:drone_controller"
+                  }
+                ]
+              },
+              "event": "lila:interacted",
+              "target": "self"
+            },
+            "interact_text": "action.interact.lila.talk",
+            "swing": true
+          }
+        ]
+      },
+      "minecraft:behavior.look_at_player": {
+        "priority": 8,
+        "look_distance": 10,
+        "probability": 0.2
+      },
+      "minecraft:conditional_bandwidth_optimization": {},
+      "minecraft:experience_reward": {
+        "on_death": "0"
+      }
+    },
+    "events": {
+      "lila:despawn": {
+        "add": {
+          "component_groups": [
+            "lila:despawn"
+          ]
+        }
+      },
+      "lila:interacted": {
+        "remove": {
+          "component_groups": []
+        }
+      }
+    }
+  }
+}

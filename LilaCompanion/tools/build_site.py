@@ -44,6 +44,7 @@ def main():
         "%%CONTROLLER%%": img("controller", 220),
         "%%V0%%": img("lila_view_0", 300), "%%V2%%": img("lila_view_2", 300),
         "%%PMINE%%": img("lila_pose_mine", 300), "%%PSIT%%": img("lila_pose_sit", 300),
+        "%%DRONE0%%": img("drone_view_0", 300), "%%DRONE1%%": img("drone_view_1", 300), "%%DRONECTL%%": img("drone_controller", 220),
         "%%TESTS%%": tests_rows(), "%%B64%%": base64.b64encode(addon).decode(),
         "%%SIZE%%": f"{len(addon) / 1024:.0f}", "%%SHA%%": hashlib.sha256(addon).hexdigest()[:16],
         "%%RAW%%": RAW, "%%VERSION%%": ver,

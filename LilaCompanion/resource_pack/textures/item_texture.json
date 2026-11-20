@@ -4,6 +4,9 @@
   "texture_data": {
     "lila_controller": {
       "textures": "textures/items/lila/controller"
+    },
+    "lila_drone_controller": {
+      "textures": "textures/items/lila/drone_controller"
     }
   }
 }

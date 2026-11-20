@@ -8,7 +8,7 @@ import { logError } from "../core/log.js";
 const R = 24;
 
 function areaId(c) {
-  return `lila_${c.rec.ownerId.replace(/[^a-zA-Z0-9]/g, "").slice(-10)}`;
+  return `lila_${c.kind ?? "lila"}_${c.rec.ownerId.replace(/[^a-zA-Z0-9]/g, "").slice(-10)}`;
 }
 
 /**

@@ -92,6 +92,10 @@ const V = {
   home: ["vai pra casa", "vai para casa", "volta pra base", "volta pra casa", "vai pra base", "go home"],
   torches: ["coloca tocha", "coloca tochas", "ilumina", "iluminar", "acende", "poe tochas", "bota tocha", "bota tochas"],
   deposit: ["guarda no bau", "guarda as coisas", "guarda tudo", "deposita", "esvazia", "organiza", "store"],
+  turret: ["modo torreta", "torreta", "turret", "vira torreta", "vira uma torreta", "defende aqui"],
+  scan: ["escaneia", "escaneie", "escanear", "me escaneia", "scan", "analisa", "analisar", "escaneamento"],
+  ride: ["carona", "me leva", "me carrega", "deixa eu subir", "quero subir", "quero voar", "me da carona", "voar com voce", "montar"],
+  missions: ["missoes", "missao", "quests", "quest", "objetivos"],
   thanks: ["obrigado", "obrigada", "valeu", "vlw", "brigado", "thanks", "mandou bem", "parabens", "boa garota"],
   hello: ["oi", "ola", "eae", "e ai", "salve", "bom dia", "boa tarde", "boa noite", "hello", "hi"],
 };
@@ -149,6 +153,10 @@ export function parseOne(s) {
   const amount = parseAmount(s, null);
 
   if (has(tok, V.dismiss) && !has(tok, V.give)) return { type: "dismiss" };
+  if (has(tok, V.turret)) return { type: "turret" };
+  if (has(tok, V.scan)) return { type: "scan" };
+  if (has(tok, V.ride)) return { type: "ride" };
+  if (has(tok, V.missions)) return { type: "missions" };
   if (has(tok, V.sethome)) return { type: "sethome" };
   if (has(tok, V.home)) return { type: "home" };
   if (has(tok, V.deposit)) return { type: "deposit" };

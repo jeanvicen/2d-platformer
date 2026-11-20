@@ -12,6 +12,15 @@ sozinha como uma jogadora de verdade, decidindo o que fazer.
 
 ---
 
+## DR-0N — o drone-robô (novo)
+
+Segundo companheiro com controle próprio (**Controle do DR-0N**: ferro ×4, vidro, redstone ×2 e
+diamante na bancada: `F V F / R D R / F _ F`). Faz tudo que a Lila faz, só que **voando** e mais
+rápido; tem **metralhadora** e **modo torreta**, **escaneia** você, guarda **memórias** e propõe
+**missões**. **Carona**: toque nele de mão vazia (ou diga "me dá carona"), olhe para onde quer ir
+e ande para frente; pular sobe; agachar desce. Quando você desce, ele volta ao que estava fazendo.
+Comandos: `/drone <ordem>`, "modo torreta", "escaneia", "missões".
+
 ## 1. Download e instalação (Android)
 
 1. Baixe **`Lila_Companion.mcaddon`** (pasta `dist/` ou a página de download).

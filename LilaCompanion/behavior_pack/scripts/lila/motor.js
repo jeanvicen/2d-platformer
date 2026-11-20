@@ -7,6 +7,7 @@ import { canBreak, face, placeAt, quickBreak } from "./blocks.js";
 import * as inv from "./inventory.js";
 import { setAction, setMove, hold } from "./anim.js";
 import { logError } from "../core/log.js";
+import { flyTo } from "./drone.js";
 
 /** @typedef {{x:number,y:number,z:number}} Vec */
 /** @typedef {import("./companion.js").Companion} Companion */
@@ -69,9 +70,12 @@ function waypoint(c, target, maxLeg = 36) {
  * Vai até um alvo. Retorna true ao chegar, false se desistiu (raro: só após todas as recuperações).
  * @param {Companion} c
  * @param {Vec} target
- * @param {{reach?:number, yTol?:number, run?:boolean, timeout?:number, allowTeleport?:boolean, follow?:()=>Vec|undefined}} o
+ * @param {{reach?:number, yTol?:number, run?:boolean, timeout?:number, allowTeleport?:boolean, follow?:()=>Vec|undefined, noFly?:boolean}} o
  */
 export function* goTo(c, target, o = {}) {
+  if (c.def?.flying && !o.noFly) {
+    return yield* flyTo(c, target, { ...o, ground: (t) => goTo(c, t, { ...o, noFly: true, allowTeleport: true }) });
+  }
   const reach = o.reach ?? 1.6;
   const yTol = o.yTol ?? 2.5;
   let failures = 0;
@@ -218,6 +222,7 @@ function* walkPath(c, path, run, replanEvery = 0) {
       lastJump = ticks;
     } else if (inWater && dy > -0.3) imp.y = Math.max(0, 0.07 - v.y); // nada para cima
     else if (climbing && dy > 0.2) imp.y = 0.14 - v.y; // sobe a escada
+    if (c.def?.flying) imp.y = Math.max(-0.4, Math.min(0.4, dy * 0.3)) - v.y; // sem gravidade: ajusta a altura
     try {
       e.applyImpulse(imp);
       if (dh > 0.05) e.setRotation({ x: 0, y: (-Math.atan2(dx, dz) * 180) / Math.PI });

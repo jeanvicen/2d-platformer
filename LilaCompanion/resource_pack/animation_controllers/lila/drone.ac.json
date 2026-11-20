@@ -1,0 +1,227 @@
+{
+  "format_version": "1.10.0",
+  "animation_controllers": {
+    "controller.animation.lila.drone.move": {
+      "initial_state": "default",
+      "states": {
+        "default": {
+          "animations": [
+            "still"
+          ],
+          "blend_transition": 0.3,
+          "transitions": [
+            {
+              "dash": "q.property('lila:move') == 'run' || q.ground_speed > 6"
+            },
+            {
+              "fly": "q.property('lila:move') != 'none' || q.ground_speed > 0.5"
+            }
+          ]
+        },
+        "fly": {
+          "animations": [
+            "fly"
+          ],
+          "blend_transition": 0.3,
+          "transitions": [
+            {
+              "dash": "q.property('lila:move') == 'run' || q.ground_speed > 6"
+            },
+            {
+              "default": "q.property('lila:move') == 'none' && q.ground_speed < 0.3"
+            }
+          ]
+        },
+        "dash": {
+          "animations": [
+            "dash"
+          ],
+          "blend_transition": 0.3,
+          "transitions": [
+            {
+              "fly": "q.property('lila:move') != 'run' && q.ground_speed < 5"
+            }
+          ]
+        }
+      }
+    },
+    "controller.animation.lila.drone.action": {
+      "initial_state": "default",
+      "states": {
+        "default": {
+          "blend_transition": 0.2,
+          "transitions": [
+            {
+              "work": "q.property('lila:action') == 'work'"
+            },
+            {
+              "place": "q.property('lila:action') == 'place'"
+            },
+            {
+              "shoot": "q.property('lila:action') == 'shoot'"
+            },
+            {
+              "charge": "q.property('lila:action') == 'charge'"
+            },
+            {
+              "turret": "q.property('lila:action') == 'turret'"
+            },
+            {
+              "craft": "q.property('lila:action') == 'craft'"
+            },
+            {
+              "wave": "q.property('lila:action') == 'wave'"
+            },
+            {
+              "sleep": "q.property('lila:action') == 'sleep'"
+            },
+            {
+              "defeat": "q.property('lila:action') == 'defeat'"
+            },
+            {
+              "summon": "q.property('lila:action') == 'summon'"
+            },
+            {
+              "celebrate": "q.property('lila:action') == 'celebrate'"
+            },
+            {
+              "scan": "q.property('lila:action') == 'scan'"
+            }
+          ]
+        },
+        "work": {
+          "animations": [
+            "work"
+          ],
+          "blend_transition": 0.15,
+          "transitions": [
+            {
+              "default": "q.property('lila:action') != 'work'"
+            }
+          ]
+        },
+        "place": {
+          "animations": [
+            "place"
+          ],
+          "blend_transition": 0.15,
+          "transitions": [
+            {
+              "default": "q.property('lila:action') != 'place'"
+            }
+          ]
+        },
+        "shoot": {
+          "animations": [
+            "shoot"
+          ],
+          "blend_transition": 0.15,
+          "transitions": [
+            {
+              "default": "q.property('lila:action') != 'shoot'"
+            }
+          ]
+        },
+        "charge": {
+          "animations": [
+            "charge"
+          ],
+          "blend_transition": 0.15,
+          "transitions": [
+            {
+              "default": "q.property('lila:action') != 'charge'"
+            }
+          ]
+        },
+        "turret": {
+          "animations": [
+            "turret"
+          ],
+          "blend_transition": 0.15,
+          "transitions": [
+            {
+              "default": "q.property('lila:action') != 'turret'"
+            }
+          ]
+        },
+        "craft": {
+          "animations": [
+            "craft"
+          ],
+          "blend_transition": 0.15,
+          "transitions": [
+            {
+              "default": "q.property('lila:action') != 'craft'"
+            }
+          ]
+        },
+        "wave": {
+          "animations": [
+            "wave"
+          ],
+          "blend_transition": 0.15,
+          "transitions": [
+            {
+              "default": "q.property('lila:action') != 'wave'"
+            }
+          ]
+        },
+        "sleep": {
+          "animations": [
+            "sleep"
+          ],
+          "blend_transition": 0.15,
+          "transitions": [
+            {
+              "default": "q.property('lila:action') != 'sleep'"
+            }
+          ]
+        },
+        "defeat": {
+          "animations": [
+            "defeat"
+          ],
+          "blend_transition": 0.15,
+          "transitions": [
+            {
+              "default": "q.property('lila:action') != 'defeat'"
+            }
+          ]
+        },
+        "summon": {
+          "animations": [
+            "summon"
+          ],
+          "blend_transition": 0.15,
+          "transitions": [
+            {
+              "default": "q.property('lila:action') != 'summon'"
+            }
+          ]
+        },
+        "celebrate": {
+          "animations": [
+            "celebrate"
+          ],
+          "blend_transition": 0.15,
+          "transitions": [
+            {
+              "default": "q.property('lila:action') != 'celebrate'"
+            }
+          ]
+        },
+        "scan": {
+          "animations": [
+            "scan"
+          ],
+          "blend_transition": 0.15,
+          "transitions": [
+            {
+              "default": "q.property('lila:action') != 'scan'"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

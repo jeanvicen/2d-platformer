@@ -1,0 +1,52 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "lila:drone",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/lila/drone"
+      },
+      "geometry": {
+        "default": "geometry.lila.drone"
+      },
+      "animations": {
+        "base": "animation.lila.drone.base",
+        "look": "animation.lila.drone.look",
+        "fly": "animation.lila.drone.fly",
+        "dash": "animation.lila.drone.dash",
+        "still": "animation.lila.drone.still",
+        "work": "animation.lila.drone.work",
+        "place": "animation.lila.drone.place",
+        "shoot": "animation.lila.drone.shoot",
+        "charge": "animation.lila.drone.charge",
+        "turret": "animation.lila.drone.turret",
+        "craft": "animation.lila.drone.craft",
+        "wave": "animation.lila.drone.wave",
+        "scan": "animation.lila.drone.scan",
+        "celebrate": "animation.lila.drone.celebrate",
+        "sleep": "animation.lila.drone.sleep",
+        "defeat": "animation.lila.drone.defeat",
+        "summon": "animation.lila.drone.summon",
+        "ctrl_move": "controller.animation.lila.drone.move",
+        "ctrl_act": "controller.animation.lila.drone.action"
+      },
+      "particle_effects": {
+        "sparkle": "lila:sparkle"
+      },
+      "scripts": {
+        "animate": [
+          "base",
+          "look",
+          "ctrl_move",
+          "ctrl_act"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.lila.lila"
+      ]
+    }
+  }
+}

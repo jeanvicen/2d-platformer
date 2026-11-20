@@ -13,13 +13,14 @@ import { say, pick, LINES } from "./talk.js";
 import { obtain } from "./planner.js";
 import { logError } from "../core/log.js";
 import { LILA } from "./registry.js";
+import { gunFight } from "./drone.js";
 
 /** @typedef {import("./companion.js").Companion} Companion */
 /** @typedef {import("@minecraft/server").Entity} Entity */
 
 export const STRENGTH = LILA.strength; // multiplicador sobre o dano de um jogador com a mesma arma
 const NEVER = new Set(["minecraft:player", "minecraft:villager", "minecraft:villager_v2", "minecraft:wandering_trader", "minecraft:iron_golem",
-  "minecraft:snow_golem", "minecraft:allay", "minecraft:copper_golem", "lila:lila", "minecraft:armor_stand", "minecraft:item", "minecraft:xp_orb"]);
+  "minecraft:snow_golem", "minecraft:allay", "minecraft:copper_golem", "lila:lila", "lila:drone", "minecraft:armor_stand", "minecraft:item", "minecraft:xp_orb"]);
 
 /** Melhor arma: espada > machado > qualquer ferramenta > mão. */
 export function bestWeapon(c) {
@@ -97,6 +98,7 @@ export function findThreat(c) {
  * @param {Entity} target
  */
 export function* fight(c, target, maxTicks = 600) {
+  if (c.def?.gun) return yield* gunFight(c, target, maxTicks);
   const t0 = system.currentTick;
   const w = bestWeapon(c);
   hold(c.entity, w.tool?.id);
@@ -124,7 +126,7 @@ export function* fight(c, target, maxTicks = 600) {
       if (system.currentTick - c.lastHit >= 11) {
         c.lastHit = system.currentTick;
         setAction(c.entity, "attack");
-        const dmg = w.damage * STRENGTH;
+        const dmg = w.damage * (c.def?.strength ?? STRENGTH);
         try {
           target.applyDamage(dmg, { cause: EntityDamageCause.entityAttack, damagingEntity: c.entity });
           const kx = lastLoc.x - p.x, kz = lastLoc.z - p.z;

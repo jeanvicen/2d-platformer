@@ -6,6 +6,8 @@ import { loadCompanion } from "../lila/companion.js";
 import { summon, dismiss } from "../lila/lifecycle.js";
 import { command, handleIntents, inventoryText, statusText } from "../lila/brain.js";
 import { goalLabel } from "../lila/goals.js";
+import { missions } from "../lila/drone.js";
+import { say } from "../lila/talk.js";
 import { show } from "./forms.js";
 import { logError } from "../core/log.js";
 
@@ -28,11 +30,23 @@ const I = {
   pause: "textures/items/redstone_dust",
   settings: "textures/items/comparator",
   dismiss: "textures/items/ender_eye",
+  cancel: "textures/blocks/barrier",
+  ride: "textures/items/saddle",
+  turret: "textures/items/crossbow_standby",
+  scan: "textures/items/spyglass",
+  missions: "textures/items/book_enchanted",
+  memory: "textures/items/map_filled",
+  drone: "textures/items/lila/drone_controller",
   summon: "textures/items/lila/controller",
   torch: "textures/blocks/torch_on",
   home: "textures/items/emerald",
   back: "textures/items/arrow",
 };
+
+/** Qual companheira o jogador está controlando agora (Lila ou DR-0N). */
+const KIND = new Map();
+const comp = (player) => loadCompanion(player, KIND.get(player.id) ?? "lila");
+const isDrone = (player) => KIND.get(player.id) === "drone";
 
 const EXAMPLES = [
   "— escolha um exemplo —",
@@ -54,16 +68,19 @@ const EXAMPLES = [
  * Abre o menu principal do controle.
  * @param {import("@minecraft/server").Player} player
  */
-export async function openController(player) {
+export async function openController(player, kind = "lila") {
+  KIND.set(player.id, kind);
   try {
-    const c = loadCompanion(player);
+    const c = comp(player);
     if (!c.rec.summoned || (!c.alive() && !c.rec.defeat)) {
       const f = new ActionFormData()
-        .title("§l§2Controle da Lila")
+        .title(isDrone(player) ? "§l§bControle do DR-0N" : "§l§2Controle da Lila")
         .body(c.rec.defeat
-          ? `§7A Lila está se recuperando. Volta em §e${Math.ceil(c.rec.defeat.left / 20)}s§7.`
-          : "§fA §aLila§f é sua companheira: coleta, minera, fabrica, constrói, planta, cozinha, explora e te protege.\n\n§7Quando você não pede nada, ela joga sozinha como uma jogadora de verdade.")
-        .button("§l§2Invocar Lila", I.summon)
+          ? `§7${c.def.name} está se recuperando. Volta em §e${Math.ceil(c.rec.defeat.left / 20)}s§7.`
+          : isDrone(player)
+            ? "§fO §bDR-0N§f é um drone-robô: voa, coleta, minera, fabrica, constrói, explora longe, escaneia, tem metralhadora, vira torreta e te dá carona.\n\n§7Sem ordens, ele joga sozinho e te protege."
+            : "§fA §aLila§f é sua companheira: coleta, minera, fabrica, constrói, planta, cozinha, explora e te protege.\n\n§7Quando você não pede nada, ela joga sozinha como uma jogadora de verdade.")
+        .button(isDrone(player) ? "§l§bInvocar DR-0N" : "§l§2Invocar Lila", isDrone(player) ? I.drone : I.summon)
         .button("Como funciona", I.info);
       const r = await show(player, f);
       if (!r || r.canceled) return;
@@ -73,11 +90,19 @@ export async function openController(player) {
     }
     const cur = c.urgent?.desc ?? c.job?.desc ?? c.rec.goals[0];
     const f = new ActionFormData()
-      .title("§l§2Controle da Lila")
+      .title(isDrone(player) ? "§l§bControle do DR-0N" : "§l§2Controle da Lila")
       .body(`§7${statusText(c)}\n§fAgora: §a${goalLabel(cur)}${c.rec.paused ? " §c(pausada)" : ""}`);
     /** @type {[string, string, () => any][]} */
     const buttons = [
       ["§l✎ Escrever ordem", I.write, () => writeOrder(player)],
+      ["§c✖ Cancelar tarefas", I.cancel, () => handleIntents(c, [{ type: "stop" }])],
+      ...(isDrone(player) ? /** @type {[string, string, () => any][]} */ ([
+        ["§bCarona (subir no drone)", I.ride, () => handleIntents(c, [{ type: "ride" }])],
+        [c.rec.mode === "turret" ? "§bSair do modo torreta" : "§bModo torreta", I.turret, () => handleIntents(c, [{ type: c.rec.mode === "turret" ? "follow" : "turret" }])],
+        ["§bEscanear você", I.scan, () => handleIntents(c, [{ type: "scan" }])],
+        ["§bMissões", I.missions, () => missionsMenu(player)],
+        ["§bMemórias", I.memory, () => memoriesMenu(player)],
+      ]) : []),
       ["Me seguir", I.follow, () => handleIntents(c, [{ type: "follow" }])],
       ["Ficar aqui", I.stay, () => handleIntents(c, [{ type: "stay" }])],
       ["Vem aqui", I.come, () => handleIntents(c, [{ type: "come" }])],
@@ -108,10 +133,10 @@ export async function openController(player) {
 }
 
 async function writeOrder(player) {
-  const c = loadCompanion(player);
+  const c = comp(player);
   const f = new ModalFormData()
-    .title("§l§2Ordem para a Lila")
-    .textField("§fO que a Lila deve fazer?\n§7Pode encadear: \"pega madeira e depois faz uma casa aqui\"", "ex.: minera ferro e faz uma picareta", { defaultValue: "" })
+    .title(`§l§2Ordem para ${c.def.name}`)
+    .textField(`§fO que ${c.def.name} deve fazer?\n§7Pode encadear: \"pega madeira e depois faz uma casa aqui\"`, "ex.: minera ferro e faz uma picareta", { defaultValue: "" })
     .dropdown("§7ou toque num exemplo:", EXAMPLES, { defaultValueIndex: 0 })
     .submitButton("§lEnviar");
   const r = await show(player, f);
@@ -120,12 +145,12 @@ async function writeOrder(player) {
   const ex = Number(r.formValues[1] ?? 0);
   const order = text || (ex > 0 ? EXAMPLES[ex] : "");
   if (!order) return;
-  player.sendMessage(`§7Você » Lila: §f${order}`);
+  player.sendMessage(`§7Você » ${c.def.name}: §f${order}`);
   command(c, order);
 }
 
 async function mineMenu(player) {
-  const c = loadCompanion(player);
+  const c = comp(player);
   /** @type {any[]} */
   const opts = [
     ["Pedra (pedregulho)", "textures/blocks/cobblestone", { id: "minecraft:cobblestone" }, 64],
@@ -143,13 +168,13 @@ async function mineMenu(player) {
   f.button("Voltar", I.back);
   const r = await show(player, f);
   if (!r || r.canceled || r.selection === undefined) return;
-  if (r.selection >= opts.length) return openController(player);
+  if (r.selection >= opts.length) return openController(player, KIND.get(player.id) ?? "lila");
   const [, , item, n] = opts[r.selection];
   handleIntents(c, [{ type: "gather", item, count: n }]);
 }
 
 async function buildMenu(player) {
-  const c = loadCompanion(player);
+  const c = comp(player);
   const keys = Object.keys(BLUEPRINTS);
   const f = new ModalFormData()
     .title("§lConstruir")
@@ -164,7 +189,7 @@ async function buildMenu(player) {
 }
 
 async function farmMenu(player) {
-  const c = loadCompanion(player);
+  const c = comp(player);
   const crops = [["Trigo", "minecraft:wheat_seeds"], ["Cenoura", "minecraft:carrot"], ["Batata", "minecraft:potato"], ["Beterraba", "minecraft:beetroot_seeds"]];
   const f = new ModalFormData()
     .title("§lPlantação")
@@ -177,7 +202,7 @@ async function farmMenu(player) {
 }
 
 async function craftMenu(player) {
-  const c = loadCompanion(player);
+  const c = comp(player);
   /** @type {any[]} */
   const opts = [
     ["Picareta (melhor possível)", "textures/items/iron_pickaxe", { toolKind: "pickaxe" }, 1],
@@ -200,13 +225,13 @@ async function craftMenu(player) {
   f.button("Voltar", I.back);
   const r = await show(player, f);
   if (!r || r.canceled || r.selection === undefined) return;
-  if (r.selection >= opts.length) return openController(player);
+  if (r.selection >= opts.length) return openController(player, KIND.get(player.id) ?? "lila");
   const [, , item, n] = opts[r.selection];
   handleIntents(c, [{ type: "craft", item, count: n }]);
 }
 
 async function infoMenu(player) {
-  const c = loadCompanion(player);
+  const c = comp(player);
   const s = c.rec.stats;
   const base = c.rec.base ? `${c.rec.base.x}, ${c.rec.base.y}, ${c.rec.base.z}` : "não definida";
   const queue = c.rec.goals.map((g, i) => `${i + 1}. ${goalLabel(g)}`).join("\n") || "§7(vazia)";
@@ -222,11 +247,11 @@ async function infoMenu(player) {
   if (r.selection === 0) handleIntents(c, [{ type: "give", all: true }]);
   else if (r.selection === 1) handleIntents(c, [{ type: "deposit" }]);
   else if (r.selection === 2) handleIntents(c, [{ type: "stop" }]);
-  else if (r.selection === 3) return openController(player);
+  else if (r.selection === 3) return openController(player, KIND.get(player.id) ?? "lila");
 }
 
 async function settingsMenu(player) {
-  const c = loadCompanion(player);
+  const c = comp(player);
   const st = c.rec.settings;
   const hud = ["auto", "always", "off"];
   const chat = ["normal", "pouco", "silencio"];
@@ -260,4 +285,39 @@ async function help(player) {
     ].join("\n\n"))
     .button("Entendi!");
   await show(player, f);
+}
+
+async function missionsMenu(player) {
+  const c = comp(player);
+  const ms = missions(c);
+  const f = new ActionFormData().title("§l§bMissões do DR-0N").body(`§7Missões concluídas: §e${c.rec.stats.missions ?? 0}§7. Toque numa missão para o DR-0N cumprir.`);
+  for (const m of ms) f.button(`${m.done ? "§a✔ " : ""}${m.title}\n§8${m.desc} (${Math.min(m.have, m.need)}/${m.need})`, I.missions);
+  f.button("Voltar", I.back);
+  const r = await show(player, f);
+  if (!r || r.canceled || r.selection === undefined) return;
+  if (r.selection >= ms.length) return openController(player, "drone");
+  const m = ms[r.selection];
+  if (m.done) {
+    say(c, `Essa missão já está cumprida: ${m.title}.`, { force: true });
+    return;
+  }
+  abortAndQueue(c, { type: "mission", args: { key: m.key }, origin: "cmd", label: m.title });
+}
+
+function abortAndQueue(c, g) {
+  handleIntents(c, [{ type: "stop" }]);
+  c.rec.goals.push(g);
+  c.rec.mode = c.rec.mode === "turret" ? "follow" : c.rec.mode;
+  c.save();
+}
+
+async function memoriesMenu(player) {
+  const c = comp(player);
+  const diary = (c.rec.diary ?? []).slice(-12).reverse().map((d) => `§7•§f ${d.msg}`).join("\n") || "§7(ainda sem memórias)";
+  const spots = Object.entries(c.mem.spots).filter(([, v]) => v.length).map(([k, v]) => `${k.replace("ore_", "minério de ").replace("tree", "árvores").replace("water", "água").replace("sand", "areia").replace("table", "bancada").replace("furnace", "fornalha").replace("chest", "baú")}: ${v.length}`).join(" · ") || "nada ainda";
+  const f = new ActionFormData().title("§l§bMemórias do DR-0N")
+    .body(`§bDiário:§f\n${diary}\n\n§bLugares que ele lembra:§f ${spots}\n§bÁreas mapeadas:§f ${c.mem.explored.length}\n§bMissões concluídas:§f ${c.rec.stats.missions ?? 0}`)
+    .button("Voltar", I.back);
+  const r = await show(player, f);
+  if (r && !r.canceled) return openController(player, "drone");
 }

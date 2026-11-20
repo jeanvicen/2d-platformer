@@ -1,77 +1,99 @@
 NO LOG FILE! - Failed to up file descriptor limit Operation not permitted
 NO LOG FILE! - setting up server logging...
-[2026-11-20 02:57:37:983 INFO] Starting Server
-[2026-11-20 02:57:37:983 INFO] Version: 1.26.65.1
-[2026-11-20 02:57:37:983 INFO] Session ID: 07e459cd-d5d5-49ff-a74c-510a1cc34665
-[2026-11-20 02:57:37:983 INFO] Build ID: 53624744
-[2026-11-20 02:57:37:983 INFO] Branch: r/26_u6
-[2026-11-20 02:57:37:983 INFO] Commit ID: cdafb75c90a160d7dd40adc9769f2485a4a76a05
-[2026-11-20 02:57:37:983 INFO] Configuration: Publish
-[2026-11-20 02:57:37:984 INFO] Contents of server.properties: {"allow-cheats":"true","allow-inbound-script-debugging":"false","allow-list":"false","allow-outbound-script-debugging":"false","block-network-ids-are-hashes":"true","chat-restriction":"None","client-side-chunk-generation-enabled":"true","compression-algorithm":"zlib","compression-threshold":"1","content-log-console-output-enabled":"true","content-log-file-enabled":"true","content-log-level":"info","default-player-permission-level":"member","difficulty":"easy","disable-custom-skins":"false","disable-persona":"false","disable-player-interaction":"false","enable-lan-visibility":"false","force-gamemode":"false","gamemode":"survival","level-name":"lila_test","max-players":"10","max-threads":"8","online-mode":"false","persistent-ticking-area-max-chunks":"100","persistent-ticking-area-max-count":"10","player-idle-timeout":"30","player-movement-action-direction-threshold":"0.85","player-position-acceptance-threshold":"0.5","script-debugger-auto-attach":"disabled","server-authoritative-block-breaking-pick-range-scalar":"1.5","server-authoritative-dismount-strict":"false","server-authoritative-entity-attack-range-tolerance":"0.5","server-authoritative-entity-attack-range-validation":"disabled","server-authoritative-entity-attack-request-validation":"disabled","server-authoritative-entity-interactions-strict":"false","server-authoritative-movement-strict":"false","server-build-radius-ratio":"Disabled","server-name":"Dedicated Server","server-port":"41234","server-portv6":"41235","server-udp-ports":"19132","texturepack-required":"false","tick-distance":"4","transient-ticking-area-max-chunks":"300","transport":"nethernet","view-distance":"32"}
-[2026-11-20 02:57:37:984 INFO] Level Name: lila_test
-[2026-11-20 02:57:37:984 INFO] Profiler config ('bootstrap.json') load result: success=1, errorMessage=(null)
-[2026-11-20 02:57:37:987 INFO] No CDN config file found at: cdn_config.json for dedicated server
-[2026-11-20 02:57:37:987 INFO] Game mode: 0 Survival
-[2026-11-20 02:57:37:987 INFO] Difficulty: 1 EASY
-[2026-11-20 02:57:37:989 INFO] Content logging to console is enabled.
-[2026-11-20 02:57:37:991 INFO] 
+[2026-11-20 03:46:17:201 INFO] Starting Server
+[2026-11-20 03:46:17:201 INFO] Version: 1.26.65.1
+[2026-11-20 03:46:17:201 INFO] Session ID: 88df7e1e-650b-4397-9202-0cb421bd7596
+[2026-11-20 03:46:17:201 INFO] Build ID: 53624744
+[2026-11-20 03:46:17:201 INFO] Branch: r/26_u6
+[2026-11-20 03:46:17:201 INFO] Commit ID: cdafb75c90a160d7dd40adc9769f2485a4a76a05
+[2026-11-20 03:46:17:201 INFO] Configuration: Publish
+[2026-11-20 03:46:17:201 INFO] Contents of server.properties: {"allow-cheats":"true","allow-inbound-script-debugging":"false","allow-list":"false","allow-outbound-script-debugging":"false","block-network-ids-are-hashes":"true","chat-restriction":"None","client-side-chunk-generation-enabled":"true","compression-algorithm":"zlib","compression-threshold":"1","content-log-console-output-enabled":"true","content-log-file-enabled":"true","content-log-level":"info","default-player-permission-level":"member","difficulty":"easy","disable-custom-skins":"false","disable-persona":"false","disable-player-interaction":"false","enable-lan-visibility":"false","force-gamemode":"false","gamemode":"survival","level-name":"lila_test","max-players":"10","max-threads":"8","online-mode":"false","persistent-ticking-area-max-chunks":"100","persistent-ticking-area-max-count":"10","player-idle-timeout":"30","player-movement-action-direction-threshold":"0.85","player-position-acceptance-threshold":"0.5","script-debugger-auto-attach":"disabled","server-authoritative-block-breaking-pick-range-scalar":"1.5","server-authoritative-dismount-strict":"false","server-authoritative-entity-attack-range-tolerance":"0.5","server-authoritative-entity-attack-range-validation":"disabled","server-authoritative-entity-attack-request-validation":"disabled","server-authoritative-entity-interactions-strict":"false","server-authoritative-movement-strict":"false","server-build-radius-ratio":"Disabled","server-name":"Dedicated Server","server-port":"41234","server-portv6":"41235","server-udp-ports":"19132","texturepack-required":"false","tick-distance":"4","transient-ticking-area-max-chunks":"300","transport":"nethernet","view-distance":"32"}
+[2026-11-20 03:46:17:201 INFO] Level Name: lila_test
+[2026-11-20 03:46:17:201 INFO] Profiler config ('bootstrap.json') load result: success=1, errorMessage=(null)
+[2026-11-20 03:46:17:214 INFO] No CDN config file found at: cdn_config.json for dedicated server
+[2026-11-20 03:46:17:214 INFO] Game mode: 0 Survival
+[2026-11-20 03:46:17:214 INFO] Difficulty: 1 EASY
+[2026-11-20 03:46:17:216 INFO] Content logging to console is enabled.
+[2026-11-20 03:46:17:218 INFO] 
 
 #####################################################
 #                                                   #
 #               LOADING VANILLA WORLD               #
 #                                                   #
 #####################################################
-[2026-11-20 02:57:38:417 INFO] Content logging to disk is enabled. Writing log to: ./ContentLog2026-11-20_02-57-38.txt
-[2026-11-20 02:57:38:417 INFO] Experiment(s) active: gtst
-[2026-11-20 02:57:38:418 INFO] Opening level 'worlds/lila_test/db'
-[2026-11-20 02:57:38:418 INFO] Accepting clients on 0.0.0.0:41234
-[2026-11-20 02:57:38:454 INFO] Pack Stack - [00] Lila Companion (BP) (id: b461d112-57c7-4e8f-b4dc-395753b1764f, version: 1.2.0) @ behavior_packs/LilaCompanion_BP
-[2026-11-20 02:57:38:454 INFO] Pack Stack - [01] Lila Test Harness (somente testes) (id: 3622d7a5-68c8-4403-8bd4-af06c807551a, version: 1.0.0) @ behavior_packs/LilaTestHarness
-[2026-11-20 02:57:38:726 INFO] Signed in to signaling service successfully
-[2026-11-20 02:57:39:433 INFO] Server started.
-[2026-11-20 02:57:39:433 INFO] ================ TELEMETRY MESSAGE ===================
-[2026-11-20 02:57:39:433 INFO] Server Telemetry is currently not enabled. 
-[2026-11-20 02:57:39:433 INFO] Enabling this telemetry helps us improve the game.
-[2026-11-20 02:57:39:433 INFO] 
-[2026-11-20 02:57:39:433 INFO] To enable this feature, add the line 'emit-server-telemetry=true'
-[2026-11-20 02:57:39:433 INFO] to the server.properties file in the handheld/src-server directory
-[2026-11-20 02:57:39:433 INFO] ======================================================
-[2026-11-20 02:57:39:444 INFO] [Scripting] [Lila:boot] Lila Companion carregado
+[2026-11-20 03:46:17:588 INFO] Content logging to disk is enabled. Writing log to: ./ContentLog2026-11-20_03-46-17.txt
+[2026-11-20 03:46:17:589 INFO] Experiment(s) active: gtst
+[2026-11-20 03:46:17:589 INFO] Opening level 'worlds/lila_test/db'
+[2026-11-20 03:46:17:590 INFO] Accepting clients on 0.0.0.0:41234
+[2026-11-20 03:46:17:627 INFO] Pack Stack - [00] Lila Companion (BP) (id: b461d112-57c7-4e8f-b4dc-395753b1764f, version: 1.3.0) @ behavior_packs/LilaCompanion_BP
+[2026-11-20 03:46:17:627 INFO] Pack Stack - [01] Lila Test Harness (somente testes) (id: 3622d7a5-68c8-4403-8bd4-af06c807551a, version: 1.0.0) @ behavior_packs/LilaTestHarness
+[2026-11-20 03:46:17:991 INFO] Signed in to signaling service successfully
+[2026-11-20 03:46:18:802 INFO] Server started.
+[2026-11-20 03:46:18:802 INFO] ================ TELEMETRY MESSAGE ===================
+[2026-11-20 03:46:18:802 INFO] Server Telemetry is currently not enabled. 
+[2026-11-20 03:46:18:802 INFO] Enabling this telemetry helps us improve the game.
+[2026-11-20 03:46:18:802 INFO] 
+[2026-11-20 03:46:18:802 INFO] To enable this feature, add the line 'emit-server-telemetry=true'
+[2026-11-20 03:46:18:802 INFO] to the server.properties file in the handheld/src-server directory
+[2026-11-20 03:46:18:802 INFO] ======================================================
+[2026-11-20 03:46:18:813 INFO] [Scripting] [Lila:boot] Lila Companion carregado
 
-[2026-11-20 02:57:44:565 INFO] Script event lila:selftest has been sent
-[2026-11-20 02:57:44:566 INFO] [Scripting] LILA-TEST START
+[2026-11-20 03:46:23:958 INFO] Script event lila:selftest has been sent
+[2026-11-20 03:46:23:959 INFO] [Scripting] LILA-TEST START
 
-[2026-11-20 02:57:46:159 INFO] [Scripting] LILA-TEST PASS arena chunks loaded
+[2026-11-20 03:46:25:303 INFO] [Scripting] LILA-TEST PASS arena chunks loaded
 
-[2026-11-20 02:57:46:704 INFO] Player Spawned: Dono xuid: , pfid: 
-[2026-11-20 02:57:46:704 INFO] [Scripting] LILA-HARNESS owner spawned -8589934591
+[2026-11-20 03:46:25:886 INFO] Player Spawned: Dono xuid: , pfid: 
+[2026-11-20 03:46:25:886 INFO] [Scripting] LILA-HARNESS owner spawned -8589934591
 
-[2026-11-20 02:57:46:953 INFO] [Scripting] LILA-TEST PASS simulated owner joined
+[2026-11-20 03:46:26:130 INFO] [Scripting] LILA-TEST PASS simulated owner joined
 
-[2026-11-20 02:57:46:956 INFO] [Scripting] LILA-TEST PASS summon in front of owner
+[2026-11-20 03:46:26:133 INFO] [Scripting] LILA-TEST PASS summon in front of owner
 
-[2026-11-20 02:57:58:353 INFO] [Scripting] LILA-TEST PASS follows the owner while walking :: dist=3.2
+[2026-11-20 03:46:37:531 INFO] [Scripting] LILA-TEST PASS follows the owner while walking :: dist=3.2
 
-[2026-11-20 02:58:04:104 INFO] [Scripting] LILA-TEST PASS climbs a 1-block-step hill after the owner :: ticks=15 dy=1.8 native=true
+[2026-11-20 03:46:43:281 INFO] [Scripting] LILA-TEST PASS climbs a 1-block-step hill after the owner :: ticks=15 dy=1.8 native=true
 
-[2026-11-20 02:58:04:104 INFO] [Scripting] LILA-TEST PASS tamed to the owner (native follow)
+[2026-11-20 03:46:43:281 INFO] [Scripting] LILA-TEST PASS tamed to the owner (native follow)
 
-[2026-11-20 02:58:08:353 INFO] [Scripting] LILA-TEST PASS 'vem aqui' brings her to the owner :: ticks=45
+[2026-11-20 03:46:47:281 INFO] [Scripting] LILA-TEST PASS 'vem aqui' brings her to the owner :: ticks=40
 
-[2026-11-20 02:58:08:353 INFO] [Scripting] LILA-TEST PASS walk animation property set while moving
+[2026-11-20 03:46:47:281 INFO] [Scripting] LILA-TEST PASS walk animation property set while moving
 
-[2026-11-20 02:58:24:604 INFO] [Scripting] LILA-TEST PASS 'pega 4 madeira' delivers logs to the owner :: logs=4 goal=-
+[2026-11-20 03:47:03:282 INFO] [Scripting] LILA-TEST PASS 'pega 4 madeira' delivers logs to the owner :: logs=4 goal=-
 
-[2026-11-20 02:59:09:853 INFO] [Scripting] LILA-TEST PASS 'arranja comida pra mim' brings food within 90 s :: food=7 ticks=905 job=follow
+[2026-11-20 03:47:51:031 INFO] [Scripting] LILA-TEST PASS 'arranja comida pra mim' brings food within 90 s :: food=5 ticks=955 job=follow
 
-[2026-11-20 02:59:45:853 INFO] [Scripting] LILA-TEST PASS 'faz uma picareta de pedra' crafts and delivers :: ticks=720 job=follow
+[2026-11-20 03:48:15:031 INFO] [Scripting] LILA-TEST PASS 'faz uma picareta de pedra' crafts and delivers :: ticks=480 job=-
 
-[2026-11-20 02:59:46:354 INFO] [Scripting] LILA-TEST PASS 'me dá tudo' keeps only her tools :: left=
+[2026-11-20 03:48:15:532 INFO] [Scripting] LILA-TEST PASS 'me dá tudo' keeps only her tools :: left=
 
-[2026-11-20 02:59:46:354 INFO] [Scripting] LILA-TEST PASS status answers
+[2026-11-20 03:48:15:532 INFO] [Scripting] LILA-TEST PASS status answers
 
-[2026-11-20 02:59:46:354 INFO] [Scripting] LILA-TEST DONE pass=13 fail=0
+[2026-11-20 03:48:16:032 INFO] [Scripting] LILA-TEST PASS drone: summon
 
-[2026-11-20 02:59:48:366 INFO] Server stop requested.
-[2026-11-20 02:59:48:413 INFO] Stopping server...
+[2026-11-20 03:48:25:031 INFO] [Scripting] LILA-TEST PASS drone: flies around the owner :: dist=3.2 h=2.9
+
+[2026-11-20 03:48:27:932 INFO] [Scripting] LILA-TEST PASS drone: flies over a 9-block wall to the owner :: ticks=50
+
+[2026-11-20 03:48:27:932 INFO] [Scripting] LILA-TEST PASS drone: player wall intact
+
+[2026-11-20 03:48:35:682 INFO] [Scripting] LILA-TEST PASS drone: turret mode kills 3 zombies :: ticks=145
+
+[2026-11-20 03:48:37:182 INFO] [Scripting] LILA-TEST PASS drone: owner can ride it
+
+[2026-11-20 03:48:38:182 INFO] [Scripting] LILA-TEST PASS drone: resumes work after the ride
+
+[2026-11-20 03:48:46:183 INFO] [Scripting] LILA-TEST PASS drone: 'pega 4 madeira' (flying) delivers :: ticks=160
+
+[2026-11-20 03:48:46:183 INFO] [Scripting] LILA-TEST PASS drone: scan reports owner
+
+[2026-11-20 03:48:46:184 INFO] [Scripting] LILA-TEST PASS drone: missions list
+
+[2026-11-20 03:48:46:184 INFO] [Scripting] LILA-TEST PASS drone: lila still alive alongside
+
+[2026-11-20 03:48:46:184 INFO] [Scripting] LILA-TEST DONE pass=24 fail=0
+
+[2026-11-20 03:48:48:189 INFO] Server stop requested.
+[2026-11-20 03:48:48:236 INFO] Stopping server...
 Quit correctly

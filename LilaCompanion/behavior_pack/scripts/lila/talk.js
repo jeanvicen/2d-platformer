@@ -27,7 +27,7 @@ export function say(c, msg, o = {}) {
   c.lastSay = now;
   if (o.chatter) c.lastChatter = now;
   try {
-    p.sendMessage(TAG + msg);
+    p.sendMessage((c.def?.chatTag ?? TAG) + msg);
     if (o.sound !== false) p.playSound("random.orb", { volume: 0.25, pitch: 1.7 });
   } catch {
     /* jogador saiu */

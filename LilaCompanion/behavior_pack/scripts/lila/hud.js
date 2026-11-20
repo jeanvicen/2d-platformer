@@ -24,6 +24,7 @@ export function arrowFor(playerYaw, from, to) {
  * @param {Companion} c
  */
 export function updateHud(c) {
+  c.flags.hudText = "";
   const o = c.owner();
   if (!o) return;
   const mode = c.rec.settings.hud;
@@ -41,15 +42,15 @@ export function updateHud(c) {
   }
   let text;
   if (c.rec.defeat) {
-    text = `§aLila§r §7volta em §e${Math.max(1, Math.ceil(c.rec.defeat.left / 20))}s`;
+    text = `${c.kind === "drone" ? "§b" : "§a"}${c.def?.name ?? "Lila"}§r §7volta em §e${Math.max(1, Math.ceil(c.rec.defeat.left / 20))}s`;
   } else if (!c.rec.summoned) {
     if (!holding) return;
-    text = "§aLila§r §7descansando — use o controle para chamar";
+    text = `${c.kind === "drone" ? "§b" : "§a"}${c.def?.name ?? "Lila"}§r §7descansando — use o controle para chamar`;
   } else if (!c.alive()) {
     if (!holding && mode !== "always") return;
-    text = "§aLila§r §7fora de alcance (área não carregada)";
+    text = `${c.kind === "drone" ? "§b" : "§a"}${c.def?.name ?? "Lila"}§r §7fora de alcance (área não carregada)`;
   } else if (c.dim().id !== o.dimension.id) {
-    text = `§aLila§r §7está ${DIM_PT[c.dim().id] ?? "em outra dimensão"}`;
+    text = `${c.kind === "drone" ? "§b" : "§a"}${c.def?.name ?? "Lila"}§r §7está ${DIM_PT[c.dim().id] ?? "em outra dimensão"}`;
   } else {
     const p = c.pos();
     const d = Math.hypot(p.x - o.location.x, p.z - o.location.z);
@@ -58,20 +59,16 @@ export function updateHud(c) {
     const dy = p.y - o.location.y;
     const vert = dy > 4 ? " §b▲" : dy < -4 ? " §b▼" : "";
     const cur = c.urgent?.desc ?? c.job?.desc;
-    text = `§aLila §f${arrow} §e${Math.round(d)}m${vert}§r §7· ${goalLabel(cur)}`;
+    text = `${c.kind === "drone" ? "§b" : "§a"}${c.def?.name ?? "Lila"} §f${arrow} §e${Math.round(d)}m${vert}§r §7· ${goalLabel(cur)}`;
   }
-  try {
-    o.onScreenDisplay.setActionBar(text);
-  } catch (e) {
-    logError("hud.bar", e);
-  }
+  c.flags.hudText = text;
 }
 
 function ensureNative(c, o) {
   if (!c.alive() || c.waypoint) return;
   try {
     const wp = new EntityWaypoint(c.entity, { textureBoundsList: [{ lowerBound: 0, texture: WaypointTexture.Circle }] },
-      { showInvisible: true, showSneaking: true, showDead: false }, LILA.color);
+      { showInvisible: true, showSneaking: true, showDead: false }, c.def?.color ?? LILA.color);
     o.locatorBar.addWaypoint(wp);
     c.waypoint = wp;
   } catch {
@@ -94,4 +91,15 @@ export function resetWaypoint(c) {
   const o = c.owner();
   if (o) removeNative(c, o);
   c.waypoint = null;
+}
+
+/** Junta as linhas de todas as companheiras do dono numa barra só (sem piscar uma por cima da outra). */
+export function flushHud(owner, comps) {
+  const parts = comps.map((c) => c.flags.hudText).filter(Boolean);
+  if (!parts.length) return;
+  try {
+    owner.onScreenDisplay.setActionBar(parts.join("  §8|  "));
+  } catch (e) {
+    logError("hud.bar", e);
+  }
 }
