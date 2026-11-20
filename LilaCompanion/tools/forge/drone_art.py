@@ -1,6 +1,6 @@
-"""DR-0N — drone-robô original: casco branco/grafite com luzes ciano, olho-sensor,
-quatro braços com hélices, duas metralhadoras sob o corpo, pernas de pouso e antena.
-Também o controle do drone (tablet com antena)."""
+"""DR-0N — robô de peças flutuantes (2.2; antes era um drone de hélices): cabeça, tronco com
+núcleo, duas mãos e detritos orbitando. Também o controle (tablet com antena) e as tintas
+compartilhadas pelas outras formas (WHITE, GRAPH, CYAN...)."""
 from __future__ import annotations
 
 from .geom import Model, Paint
@@ -16,58 +16,108 @@ GLASS = Paint(mat="crystal", color=(20, 120, 170), color2=(190, 240, 255), seed=
 RED = Paint(mat="glow", color=(255, 40, 40), color2=(255, 190, 170), seed=35)
 
 
+ROCK = Paint(mat="stone", color=(112, 116, 124), color2=(168, 172, 180), seed=37)       # casco de pedra-metal
+PLATE = Paint(mat="metal", color=(92, 98, 108), color2=(150, 158, 170), seed=39)       # placas e dedos
+STEEL = Paint(mat="metal", color=(150, 156, 166), color2=(220, 226, 236), seed=41)     # parafusos, dentes
+SOCKET = Paint(mat="matte", color=(18, 22, 28), seed=43)                               # cavidades (aparecem quando desliga)
+CORE = Paint(mat="glow", color=(40, 215, 235), color2=(200, 255, 255), seed=45)        # brilho ciano
+CORE_DIM = Paint(mat="glow", color=(20, 150, 170), color2=(120, 230, 240), seed=47)
+
+# peças soltas que orbitam (engrenagens, parafusos, lascas): nome, posição, tipo
+DEBRIS = [("gear0", (-12, 30, -3), "gear"), ("gear1", (11, 8, 4), "gear"), ("gear2", (-8, 4, 3), "gear"),
+          ("bolt0", (-13, 21, 2), "bolt"), ("bolt1", (17, 27, -2), "bolt"), ("shard0", (11, 32, 2), "shard"),
+          ("shard1", (8, 3, -6), "shard"), ("shard2", (-3, 2, -7), "shard")]
+
+
 def drone_model():
-    m = Model("geometry.lila.drone", 128, 128, density=4, bounds=(4, 3, (0, 1.2, 0)))
+    """DR-0N (2.2): robô de peças flutuantes, original — cabeça arredondada de pedra-metal com dois
+    olhos ciano e boca brilhando, tronco cúbico com núcleo de energia, duas mãos soltas com dedos e
+    engrenagens/parafusos orbitando. Nada é ligado: cada parte flutua no seu lugar (dá pra desmontar
+    no chão quando desligado e remontar voando ao ligar). As partes que brilham ficam em ossos
+    próprios (eyes, mouth, core, glow_hr, glow_hl) para apagar quando ele desliga."""
+    m = Model("geometry.lila.drone", 256, 256, density=4, bounds=(4, 4, (0, 1.4, 0)))
     root = m.bone("root", pivot=(0, 0, 0))
-    root.locators = {"ground": (0, 0, 0), "muzzle": (0, 6, -14), "seat": (0, 20, 0)}
-    body = m.bone("body", "root", pivot=(0, 14, 0))
-    # casco
-    body.cube((-8, 10, -8), (16, 7, 16), WHITE)
-    body.cube((-9, 12, -6), (18, 3, 12), GRAPH)        # cinta lateral
-    body.cube((-6, 9, -6), (12, 1, 12), DARK)          # base
-    body.cube((-6, 17, -6), (12, 2, 12), STRIPE)       # tampa com faixa de aviso
-    body.cube((-4, 19, -4), (8, 1, 8), GRAPH)          # assento/topo
-    for sx in (-1, 1):                                  # luzes laterais
-        body.cube((sx * 9 - (1 if sx > 0 else 0) + (0 if sx > 0 else -0.01), 13, -4), (1, 1, 8), CYAN)
-    body.cube((-7, 10.5, 7.5), (14, 1, 1), ORANGE)    # luz traseira
-    # olho-sensor
-    eye = m.bone("eye", "body", pivot=(0, 13.5, -8.5))
-    eye.cube((-4, 11.5, -9), (8, 4, 1), DARK)
-    eye.cube((-3, 12, -9.6), (6, 3, 1), GLASS)
-    eye.cube((-1, 12.5, -10), (2, 2, 1), CYAN)
-    # antena
-    ant = m.bone("antenna", "body", pivot=(4, 19, 3))
-    ant.cube((3.5, 19, 2.5), (1, 6, 1), GRAPH)
-    ant.cube((3, 25, 2), (2, 2, 2), ORANGE)
-    # braços com hélices
-    for i, (ax, az) in enumerate(((-1, -1), (1, -1), (-1, 1), (1, 1))):
-        arm = m.bone(f"arm{i}", "body", pivot=(ax * 7, 15, az * 7))
-        ox, oz = ax * 7, az * 7
-        ex, ez = ax * 15, az * 15
-        # braço diagonal em degraus (blocos alinhados = sem rotação de cubo)
-        for k in range(4):
-            t = (k + 0.5) / 4
-            cx, cz = ox + (ex - ox) * t, oz + (ez - oz) * t
-            arm.cube((cx - 1.5, 14, cz - 1.5), (3, 2, 3), GRAPH)
-        arm.cube((ex - 2.5, 13, ez - 2.5), (5, 3, 5), WHITE)   # motor
-        arm.cube((ex - 1, 16, ez - 1), (2, 1, 2), CYAN)
-        rot = m.bone(f"rotor{i}", f"arm{i}", pivot=(ex, 17.2, ez))
-        rot.cube((ex - 8, 17, ez - 0.75), (16, 0.5, 1.5), DARK)
-        rot.cube((ex - 0.75, 17, ez - 8), (1.5, 0.5, 16), DARK)
-        rot.cube((ex - 1, 16.8, ez - 1), (2, 1, 2), GRAPH)
-    # metralhadoras
-    for side, sx in (("gun_r", -1), ("gun_l", 1)):
-        g = m.bone(side, "body", pivot=(sx * 5, 9, -2))
-        g.cube((sx * 5 - 1.5, 6, -6), (3, 3, 8), GRAPH)
-        g.cube((sx * 5 - 0.75, 6.75, -13), (1.5, 1.5, 7), DARK)
-        g.cube((sx * 5 - 1, 6.5, -13.5), (2, 2, 1), ORANGE)
-        g.cube((sx * 5 - 0.5, 9, -5), (1, 1, 6), CYAN)
-    # pernas de pouso
-    legs = m.bone("legs", "body", pivot=(0, 9, 0))
+    root.locators = {"ground": (0, 0, 0), "muzzle": (0, 14, -7), "seat": (0, 38, 0), "eye_l": (3.5, 29, -8), "eye_r": (-3.5, 29, -8)}
+    fl = m.bone("float", "root", pivot=(0, 14, 0))
+    # ---------------- tronco
+    t = m.bone("torso", "float", pivot=(0, 14, 0))
+    t.cube((-6, 8, -5.5), (12, 12, 11), ROCK)
+    t.cube((-5, 20, -4.5), (10, 1, 9), PLATE)                 # tampa
+    t.cube((-5, 7, -4.5), (10, 1, 9), SOCKET)                 # base
     for sx in (-1, 1):
-        legs.cube((sx * 5 - 0.75, 3, -4), (1.5, 6, 1.5), GRAPH)
-        legs.cube((sx * 5 - 0.75, 3, 2.5), (1.5, 6, 1.5), GRAPH)
-        legs.cube((sx * 5 - 1.25, 2, -6), (2.5, 1, 11), WHITE)
+        t.cube((sx * 6.3 - 0.5, 9.5, -4), (1, 9, 8), PLATE)  # placas laterais
+        t.cube((sx * 4.5 - 0.5, 18.4, -6), (1, 1, 0.6), STEEL)  # rebites
+        t.cube((sx * 4.5 - 0.5, 9.2, -6), (1, 1, 0.6), STEEL)
+    t.cube((-3.6, 10.4, -6.1), (7.2, 7.2, 0.7), SOCKET)       # moldura do núcleo
+    t.cube((-7.1, 11, -2.5), (0.8, 5, 5), PLATE)              # escotilha redonda
+    t.cube((-7.5, 12.5, -1), (0.5, 2, 2), SOCKET)
+    t.cube((-2, 20.6, 4.6), (4, 1.6, 1), PLATE)               # lascas e degraus do casco
+    t.cube((5.2, 15, 5.3), (1.4, 3, 0.6), PLATE)
+    t.cube((-6.4, 7.6, 3), (2, 1.4, 2.6), PLATE)
+    core = m.bone("core", "torso", pivot=(0, 14, -6.5))
+    core.cube((-2.6, 11.4, -6.5), (5.2, 5.2, 0.6), CORE)
+    core.cube((-1, 13, -6.8), (2, 2, 0.4), Paint(mat="glow", color=(190, 255, 255), color2=(255, 255, 255), seed=49))
+    # ---------------- cabeça (abóbada em degraus = arredondada)
+    h = m.bone("head", "float", pivot=(0, 28, 0))
+    def disc(y0, hgt, w, d, paint, cut=1.5):
+        """camada com cantos chanfrados (duas caixas em cruz) = parece redonda"""
+        h.cube((-w / 2, y0, -d / 2 + cut), (w, hgt, d - 2 * cut), paint)
+        h.cube((-w / 2 + cut, y0, -d / 2), (w - 2 * cut, hgt, d), paint)
+    h.cube((-6, 23.4, -5.5), (12, 0.6, 11), ROCK)
+    disc(24, 8, 14, 13, ROCK, 1.6)
+    disc(32, 2, 13, 12, ROCK, 2)
+    disc(34, 1.5, 11, 10, ROCK, 2.2)
+    disc(35.5, 1, 8, 7, PLATE, 1.6)
+    for sx in (-1, 1):
+        h.cube((sx * 7.3 - 0.3, 25, -5), (0.6, 7, 10), PLATE)          # bochechas
+        h.cube((sx * 8 - 0.6, 27, -1.5), (1.2, 4, 4), PLATE)           # "orelhas" de disco
+        h.cube((sx * 8.5 - 0.3, 28, -0.5), (0.6, 2, 2), SOCKET)
+        h.cube((sx * 3.5 - 2.5, 27.3, -7), (5, 3, 0.5), SOCKET)         # órbitas redondas dos olhos
+        h.cube((sx * 3.5 - 1.5, 26.3, -7), (3, 5, 0.5), SOCKET)
+    h.cube((-1, 33.6, -6.4), (2, 1, 0.6), STEEL)                       # rebites da testa
+    h.cube((-6, 31.2, -6.8), (3, 1, 0.5), PLATE)
+    h.cube((3, 31.2, -6.8), (3, 1, 0.5), PLATE)
+    h.cube((-5, 24.4, -6.9), (10, 2.2, 0.5), SOCKET)                   # boca
+    for x in (-4, -2, 0, 2):
+        h.cube((x + 0.3, 25.6, -7.2), (1.2, 1, 0.4), STEEL)            # dentes
+    eyes = m.bone("eyes", "head", pivot=(0, 28.8, -7.2))
+    for sx in (-1, 1):
+        eyes.cube((sx * 3.5 - 2, 27.8, -7.4), (4, 2, 0.5), CORE)         # olho redondo (cruz)
+        eyes.cube((sx * 3.5 - 1, 26.8, -7.4), (2, 4, 0.5), CORE)
+        eyes.cube((sx * 3.5 - 0.5, 28.3, -7.6), (1, 1, 0.3), Paint(mat="glow", color=(200, 255, 255), color2=(255, 255, 255), seed=51))
+    mouth = m.bone("mouth", "head", pivot=(0, 25, -7))
+    mouth.cube((-4, 24.5, -6.95), (8, 1.1, 0.4), CORE_DIM)
+    # ---------------- mãos soltas (direita = -x)
+    for side, sx in (("hand_r", -1), ("hand_l", 1)):
+        x = sx * 14
+        hd = m.bone(side, "float", pivot=(x, 18, -1))
+        hd.cube((x - 3.5, 15, -4.5), (7, 6, 7), ROCK)                  # palma/dorso
+        hd.cube((x - 3.5, 20.6, -4.5), (7, 1.4, 7), PLATE)             # placa das juntas
+        hd.cube((x - 3.8, 16, 0.5), (7.6, 4, 2), PLATE)                # punho
+        for k, fx in enumerate((-2.6, -0.6, 1.4)):
+            hd.cube((x + fx - 0.8 + 0.8, 12.6, -4.6), (1.6, 2.6, 1.6), PLATE)   # dedo (falange 1)
+            hd.cube((x + fx - 0.7 + 0.8, 10.2, -5.2), (1.4, 2.6, 1.4), ROCK)    # falange 2 (curvada pra frente)
+            hd.cube((x + fx - 0.6 + 0.8, 9.2, -5.8), (1.2, 1.2, 1.2), STEEL)    # ponta
+        tx = x - sx * 3.6
+        hd.cube((tx - 0.8, 13.6, -1.8), (1.6, 3, 1.6), PLATE)          # polegar
+        hd.cube((tx - 0.7, 11.8, -2.6), (1.4, 2, 1.4), ROCK)
+        g = m.bone("glow_hr" if sx < 0 else "glow_hl", side, pivot=(x, 18, 2.6))
+        g.cube((x - 2, 17, 2.5), (4, 2, 0.5), CORE)                     # anel de energia no punho
+    # ---------------- detritos orbitando
+    deb = m.bone("debris", "float", pivot=(0, 18, 0))
+    for name, (x, y, z), kind in DEBRIS:
+        b = m.bone(name, "debris", pivot=(x, y, z))
+        if kind == "gear":
+            b.cube((x - 1.5, y - 1.5, z - 0.4), (3, 3, 0.8), PLATE)
+            for a in (0, 45):
+                b.cube((x - 2.2, y - 0.5, z - 0.3), (4.4, 1, 0.6), SOCKET, rotation=(0, 0, a), pivot=(x, y, z))
+                b.cube((x - 0.5, y - 2.2, z - 0.3), (1, 4.4, 0.6), SOCKET, rotation=(0, 0, a), pivot=(x, y, z))
+            b.cube((x - 0.5, y - 0.5, z - 0.5), (1, 1, 1), STEEL)
+        elif kind == "bolt":
+            b.cube((x - 0.4, y - 1.5, z - 0.4), (0.8, 3, 0.8), STEEL)
+            b.cube((x - 0.9, y + 1.2, z - 0.9), (1.8, 0.8, 1.8), PLATE)
+        else:
+            b.cube((x - 1, y - 0.8, z - 0.6), (2, 1.6, 1.2), ROCK, rotation=(20, 35, 15), pivot=(x, y, z))
     return m
 
 

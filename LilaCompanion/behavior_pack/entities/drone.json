@@ -21,7 +21,8 @@
             "defeat",
             "summon",
             "celebrate",
-            "scan"
+            "scan",
+            "punch"
           ],
           "default": "idle",
           "client_sync": true
@@ -66,6 +67,11 @@
           ],
           "default": 0,
           "client_sync": true
+        },
+        "lila:off": {
+          "type": "bool",
+          "default": false,
+          "client_sync": true
         }
       }
     },
@@ -78,7 +84,7 @@
       "lila:f_drone": {
         "minecraft:collision_box": {
           "width": 1.4,
-          "height": 1.2
+          "height": 2.2
         },
         "minecraft:physics": {
           "has_gravity": false,
@@ -104,7 +110,7 @@
             {
               "position": [
                 0,
-                1.55,
+                2.35,
                 0
               ]
             }

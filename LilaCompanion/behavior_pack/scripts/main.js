@@ -11,6 +11,7 @@ import { riddenBy, rideTick } from "./lila/drone.js";
 import { fight, markAggro } from "./lila/combat.js";
 import { formOf, formTick, isRideForm, primaryAttack, releaseRiders, riders } from "./lila/forms.js";
 import { shieldOn, swarmTick } from "./lila/swarm.js";
+import { booting, offTick } from "./lila/power.js";
 import { armyActive, armyTick, ROBOT } from "./lila/army.js";
 import { particle, sound } from "./lila/anim.js";
 import { say } from "./lila/talk.js";
@@ -89,6 +90,10 @@ world.afterEvents.worldLoad.subscribe(() => {
           armyTick(c);
           continue;
         }
+        if (c.alive() && (c.rec.off || booting(c))) {
+          offTick(c); // desligado (desmontado no chão) ou se montando
+          continue;
+        }
         if (c.alive() && isRideForm(formOf(c))) {
           formTick(c); // veículos e colosso: você pilota, o cérebro descansa
           continue;
@@ -125,7 +130,7 @@ world.afterEvents.worldLoad.subscribe(() => {
             resetWaypoint(c);
           }
         }
-        if (!c.flags.ridden && !armyActive(c) && !isRideForm(formOf(c))) sense(c);
+        if (!c.flags.ridden && !armyActive(c) && !isRideForm(formOf(c)) && !c.rec.off) sense(c);
         updateHud(c);
         const o = c.owner();
         if (o) owners.set(o.id, o);

@@ -200,7 +200,7 @@ export function shoot(c, target) {
   const e = c.entity;
   if (!e?.isValid || !target?.isValid) return false;
   const dim = c.dim();
-  const from = { x: e.location.x, y: e.location.y + 0.25, z: e.location.z };
+  const from = { x: e.location.x, y: e.location.y + 1.15, z: e.location.z }; // núcleo do peito
   const to = { x: target.location.x, y: target.location.y + 0.9, z: target.location.z };
   const range = c.def?.gun?.range ?? 24;
   const dist = d3(from, to);
@@ -225,12 +225,46 @@ export function shoot(c, target) {
   return true;
 }
 
-/** Combate à distância: flutua numa boa posição e metralha. */
+/** Soco forte (a mão voa no alvo): dano alto e arremesso. Retorna true se socou. */
+export function punch(c, target) {
+  const e = c.entity;
+  if (!e?.isValid || !target?.isValid) return false;
+  const tl = target.location;
+  if (d3(e.location, { x: tl.x, y: tl.y + 0.8, z: tl.z }) > 3.8) return false;
+  face(c, { x: tl.x - 0.5, y: tl.y + 1, z: tl.z - 0.5 });
+  setAction(e, "punch");
+  sound(e, "lila.servo", 0.6, 1.6);
+  system.runTimeout(() => {
+    if (!c.alive() || !target.isValid) return;
+    const a = c.pos(), b = target.location;
+    const dx = b.x - a.x, dz = b.z - a.z, l = Math.hypot(dx, dz) || 1;
+    try {
+      target.applyDamage((c.def?.gun?.damage ?? 7) * 2.6, { cause: EntityDamageCause.entityAttack, damagingEntity: c.entity });
+      target.applyKnockback({ x: (dx / l) * 1.7, z: (dz / l) * 1.7 }, 0.5);
+    } catch (err) {
+      logError("drone.punch", err);
+    }
+    particle(c.dim(), "lila:shock", { x: b.x, y: b.y + 1, z: b.z });
+    particle(c.dim(), "lila:dust", { x: b.x, y: b.y + 1, z: b.z });
+    sound(c.entity, "random.explode", 0.45, 1.7);
+    sound(c.entity, "mob.irongolem.throw", 1, 1.1);
+  }, 4);
+  system.runTimeout(() => {
+    try {
+      if (c.entity?.getProperty("lila:action") === "punch") setAction(c.entity, "idle");
+    } catch {
+      /* ignore */
+    }
+  }, 10);
+  return true;
+}
+
+/** Combate: alterna entre atirar de longe (núcleo do peito) e voar pra perto dar socos fortes. */
 /** @param {{loc?:any}} [box] recebe a última posição do alvo (para recolher os drops) */
 export function* gunFight(c, target, maxTicks = 500, box) {
   const t0 = system.currentTick;
   const every = c.def?.gun?.every ?? 3;
-  let last = 0;
+  let last = 0, lastPunch = 0;
   try {
     while (c.alive() && target.isValid && system.currentTick - t0 < maxTicks) {
       let hp = 1;
@@ -246,10 +280,20 @@ export function* gunFight(c, target, maxTicks = 500, box) {
       const d = d3(p, tl);
       if (d > 48) break;
       const range = (c.def?.gun?.range ?? 24) - 4;
-      const spot = { x: tl.x + (p.x - tl.x) * Math.min(1, 7 / Math.max(d, 0.1)), y: tl.y + 4, z: tl.z + (p.z - tl.z) * Math.min(1, 7 / Math.max(d, 0.1)) };
-      if (d > range || !clearLine(c.dim(), p, { x: tl.x, y: tl.y + 1, z: tl.z }, 1.2)) steer(c, spot, cruise(c));
-      else hover(c);
-      if (system.currentTick - last >= every && shoot(c, target)) last = system.currentTick;
+      const now = system.currentTick;
+      // a cada ~5 s ele mergulha pra socar (se o alvo estiver a menos de 16 blocos); senão atira de longe
+      const melee = (now - t0) % 100 < 45 && d < 16 && c.rec.mode !== "turret";
+      if (melee) {
+        const k = Math.min(1, 1.8 / Math.max(d, 0.1));
+        steer(c, { x: tl.x + (p.x - tl.x) * k, y: tl.y + 0.4, z: tl.z + (p.z - tl.z) * k }, Math.max(cruise(c), 0.9));
+        if (now - lastPunch >= 12 && punch(c, target)) lastPunch = now;
+        else if (d > 5 && now - last >= every * 2 && shoot(c, target)) last = now;
+      } else {
+        const spot = { x: tl.x + (p.x - tl.x) * Math.min(1, 7 / Math.max(d, 0.1)), y: tl.y + 4, z: tl.z + (p.z - tl.z) * Math.min(1, 7 / Math.max(d, 0.1)) };
+        if (d > range || !clearLine(c.dim(), p, { x: tl.x, y: tl.y + 1, z: tl.z }, 1.2)) steer(c, spot, cruise(c));
+        else hover(c);
+        if (now - last >= every && shoot(c, target)) last = now;
+      }
       yield 1;
     }
   } finally {

@@ -78,11 +78,11 @@ footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line)
 
 <div class="wrap">
   <header class="hero">
-    <img class="portrait" src="%%PORTRAIT%%" alt="DR-0N: drone branco e grafite com luzes ciano, quatro hélices e duas metralhadoras">
+    <img class="portrait" src="%%PORTRAIT%%" alt="DR-0N: robô de pedra-metal com peças flutuando, olhos e núcleo ciano e duas mãos soltas">
     <div>
       <div class="eyebrow">Add-on para Minecraft Bedrock · v%%VERSION%%</div>
       <h1>DR-<span>0N</span></h1>
-      <p class="lede">Um drone com itens infinitos que vira helicóptero, carro, escavadeira, tanque, jato e moto, vira torreta gigante, vira o colosso TITÃ com você pilotando da cabeça, explode num exército de robôs e constrói cidades, castelos e montanhas-russas.</p>
+      <p class="lede">Um robô de peças flutuantes (dá pra desligar e ele desmonta no chão; ligando, as peças voam e se montam) com itens infinitos que vira 12 veículos (com visão livre lá dentro), torreta gigante, o robô gigante TITÃ com você em cima da cabeça, um enxame de milhares de nanorrobôs, um exército de robôs, e constrói qualquer coisa de um catálogo de 4851 construções mobiliadas.</p>
       <div class="cta">
         <a class="btn primary" href="%%RAW%%" target="_blank" rel="noopener">Baixar DR-0N_Mega_Drone.mcaddon</a>
         <button class="btn" id="zip" type="button" hidden>Salvar cópia (.zip)</button>
@@ -120,40 +120,94 @@ footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line)
       <img src="%%DRONECTL%%" alt="Controle do DR-0N em 3D">
       <div>
         <h3>Menu</h3>
-        <p class="note">Escrever ordem · <b>Cancelar tudo (volta ao normal)</b> · Veículos · Modo colosso · Torreta gigante · Modo exército · Construções gigantes · Transformar bioma · Itens infinitos · Me fortalecer · Me proteger · Seguir · Ficar · Carona · Escanear · Missões · Memórias · Configurações.</p>
+        <p class="note">Escrever ordem · <b>Cancelar tudo (volta ao normal)</b> · Desligar/Ligar · Veículos · Robô gigante TITÃ · Modo enxame · Torreta gigante · Modo exército · Construções gigantes · Catálogo de construções · Transformar bioma · Aplainar · Itens infinitos · Me fortalecer · Me proteger · Seguir · Ficar · Carona · Escanear · Missões · Memórias · Configurações.</p>
       </div>
     </div>
   </section>
 
   <section style="display:grid;gap:18px">
-    <h2>Formas</h2>
-    <p class="note">É sempre o mesmo DR-0N (mesmo inventário e memórias): ele monta a forma nova girando, com som de transformação. Você já entra no volante. Andar = acelerar · olhar = direção · pular = subir · bater = arma · agachar 2× = sair (aí ele volta a ser drone). Outros jogadores podem pegar carona tocando no veículo, mas só você pilota.</p>
+    <h2>O robô</h2>
+    <div class="turn">
+      <figure><img src="%%DRONE0%%" alt="Robô montado flutuando: cabeça com olhos ciano, tronco com núcleo e mãos soltas"><figcaption>Ligado, peças flutuando</figcaption></figure>
+      <figure><img src="%%R_OFF%%" alt="Robô desligado: peças caídas no chão com os brilhos apagados"><figcaption>Desligado (desmontado)</figcaption></figure>
+      <figure><img src="%%R_BOOT%%" alt="Robô ligando: peças voando e girando até o lugar"><figcaption>Ligando (peças se montam)</figcaption></figure>
+    </div>
+    <p class="note">Cabeça, tronco com núcleo de energia e duas mãos soltas, cada uma flutuando no seu ritmo, com engrenagens orbitando. Ele luta alternando <b>socos fortes</b> (a mão voa no alvo e arremessa) e <b>tiros do núcleo</b>. Botão <b>Desligar</b> (ou "desliga"): desmonta no chão e fica quieto. <b>Ligar</b> (ou "liga"): as peças sobem girando e se encaixam, e os olhos acendem.</p>
+  </section>
+
+  <section style="display:grid;gap:18px">
+    <h2>12 veículos</h2>
+    <p class="note">É sempre o mesmo DR-0N (mesmo inventário e memórias): ele monta a forma nova girando e você já entra. <b>A capota recolhe quando você entra: dá pra ver tudo em volta.</b> Andar = acelerar · olhar = direção (nos voadores, olhar pra cima/baixo sobe e desce) · <b>pular = o veículo pula</b> (voadores sobem, jatos ligam o pós-combustor) · bater = arma · <b>agachar = sair</b> (ele volta a ser drone). Outros jogadores pegam carona, só você pilota.</p>
     <div class="turn">
       <figure><img src="%%F_HELI%%" alt="Helicóptero branco e grafite com rotor de quatro pás"><figcaption>Helicóptero · metralhadora</figcaption></figure>
-      <figure><img src="%%F_CAR%%" alt="Carro esportivo com faróis ciano e aerofólio"><figcaption>Carro esportivo</figcaption></figure>
+      <figure><img src="%%F_CAR%%" alt="Carro esportivo com faróis ciano e aerofólio"><figcaption>Carro esportivo · turbo</figcaption></figure>
+      <figure><img src="%%F_MOTO%%" alt="Moto esportiva com neon"><figcaption>Moto · turbo</figcaption></figure>
+      <figure><img src="%%F_TRUCK%%" alt="Caminhão-monstro verde-limão com rodas gigantes"><figcaption>Caminhão-monstro · pulo alto</figcaption></figure>
       <figure><img src="%%F_EXCAVATOR%%" alt="Escavadeira amarela de esteira com braço articulado"><figcaption>Escavadeira · cava</figcaption></figure>
       <figure><img src="%%F_TANK%%" alt="Tanque verde-oliva com torre giratória"><figcaption>Tanque · canhão</figcaption></figure>
       <figure><img src="%%F_JET%%" alt="Caça a jato com asas enflechadas e turbinas"><figcaption>Caça a jato · mísseis</figcaption></figure>
-      <figure><img src="%%F_MOTO%%" alt="Moto esportiva com neon"><figcaption>Moto</figcaption></figure>
+      <figure><img src="%%F_STEALTH%%" alt="Caça furtivo preto de asa delta com cabine dourada"><figcaption>Caça supersônico furtivo</figcaption></figure>
+      <figure><img src="%%F_SHIP%%" alt="Nave espacial branca com motores laterais ciano"><figcaption>Nave espacial · lasers</figcaption></figure>
+      <figure><img src="%%F_UFO%%" alt="Disco voador redondo com cúpula de vidro e anel de luzes"><figcaption>Disco voador · raio trator</figcaption></figure>
+      <figure><img src="%%F_BOAT%%" alt="Lancha branca com deque de madeira e motor de popa"><figcaption>Lancha</figcaption></figure>
+      <figure><img src="%%F_SUB%%" alt="Submarino azul-marinho com torre, periscópio e escotilhas"><figcaption>Submarino · torpedo</figcaption></figure>
       <figure><img src="%%F_TURRET%%" alt="Torreta gigante com metralhadora rotativa de seis canos e lança-mísseis"><figcaption>Torreta gigante</figcaption></figure>
-      <figure><img src="%%DRONE0%%" alt="DR-0N na forma de drone"><figcaption>Drone</figcaption></figure>
+      <figure><img src="%%DRONE0%%" alt="DR-0N na forma normal: robô de peças flutuantes"><figcaption>Forma normal</figcaption></figure>
+    </div>
+    <p class="note">Carro ~23 blocos/s · moto ~26 · caminhão ~20 · lancha ~25 na água · nave ~36 · caça furtivo ~60. No submarino você respira e enxerga debaixo d'água. Do alto, ao sair, você cai devagar.</p>
+  </section>
+
+  <section style="display:grid;gap:18px">
+    <h2>Robô gigante TITÃ</h2>
+    <div class="recipe">
+      <img src="%%F_COLOSSUS%%" alt="Robô gigante TITÃ: armadura branca e vermelha, visor em T ciano, reator no peito e ombreiras" style="width:100%;max-width:420px">
+      <div class="legend">
+        <p class="note">Robô humanoide de uns 26 blocos. Ele te põe <b>em cima da cabeça</b> (plataforma com corrimão baixo, visão 360°): lá você fica quase imortal. Outros jogadores sobem nas ombreiras e na mochila, mas só você pilota.</p>
+        <div><b>andar</b> passadas que tremem a tela e derrubam o que estiver na frente</div>
+        <div><b>bater perto</b> soco que destrói blocos · <b>mirar longe</b> raio do visor</div>
+        <div><b>pular</b> salto com os propulsores e onda de choque ao cair</div>
+        <div><b>agachar</b> sair · <b>painel</b> pose de poder, pisão, trocar de lugar</div>
+        <p class="note">Se você sai sem cancelar, ele continua TITÃ parado e pisando em monstros. Só volta a ser drone no "Cancelar".</p>
+      </div>
     </div>
   </section>
 
   <section style="display:grid;gap:18px">
-    <h2>Colosso TITÃ</h2>
+    <h2>Enxame de nanorrobôs</h2>
     <div class="recipe">
-      <img src="%%F_COLOSSUS%%" alt="Colosso TITÃ: mecha-kaiju metálico com cauda, nadadeiras dorsais ciano e garras" style="width:100%;max-width:420px">
+      <img src="%%F_SWARM%%" alt="Núcleo do enxame: um ponto ciano rodeado por anéis de nanorrobôs" style="width:100%;max-width:260px">
       <div class="legend">
-        <p class="note">Mecha-kaiju metálico de uns 25 blocos de altura. Ele te pega e te coloca na cabine da cabeça: lá dentro você fica quase imortal. Outros jogadores entram nas cabines do peito e dos ombros, mas só você pilota.</p>
-        <div><b>andar</b> passadas pesadas que tremem a tela e derrubam o que estiver na frente</div>
-        <div><b>bater</b> soco que destrói blocos e arremessa inimigos</div>
-        <div><b>pular</b> pisão com onda de choque</div>
-        <div><b>agachar</b> raio de plasma pela boca, para onde você olha</div>
-        <div><b>painel</b> rugido (enfraquece monstros), trocar de cabine, sair</div>
-        <p class="note">Se você sai sem cancelar, ele continua colosso parado e pisando em monstros. Só volta a ser drone no "Cancelar".</p>
+        <p class="note">O DR-0N se desmancha em milhares de robozinhos e continua fazendo tudo que o drone faz. Ao virar enxame ele liga um <b>escudo em volta de você</b>: você não leva dano, flechas e bolas de fogo somem e os monstros que chegam perto são empurrados e picados.</p>
+        <p class="note">Formas: <b>muralha · ponte · escada · cúpula</b> (somem sozinhas depois) · <b>punho gigante · espada giratória · tornado · asas · elevador</b> · <b>ataca</b> o que você mira · <b>devora tudo</b> em volta. Diga "modo enxame" e depois só "ponte", "tornado"...</p>
       </div>
     </div>
+  </section>
+
+  <section style="display:grid;gap:18px">
+    <h2>Catálogo: 4851 construções mobiliadas</h2>
+    <p class="note">67 tipos × 21 estilos × 3 tamanhos, mais 30 objetos e decorações. Casas, sobrados, mansões, prédios, hotel, padaria, açougue, ferreiro, farmácia, livraria, taverna, restaurante, mercado, banco, shopping, posto, escola, hospital, delegacia, bombeiros, igreja, biblioteca, museu, teatro, cinema, estação, academia, prisão, quartel, celeiro, estábulo, silo, moinho, estufa, farol, coreto, piscina, cais, arena, parquinho... Estilos: medieval, rústico, moderno, futurista, japonês, desértico, nórdico, tropical, gótico, colonial, castelo, infernal, gelo, mansão, rural, praiano, steampunk, élfico, industrial, colorido e savana.</p>
+    <div class="turn">
+      <figure><img src="%%A_CASA%%" alt="Casa medieval de pedra e madeira com jardim"><figcaption>Casa · medieval</figcaption></figure>
+      <figure><img src="%%A_PADARIA%%" alt="Padaria japonesa com telhado de telhas escuras"><figcaption>Padaria · japonês</figcaption></figure>
+      <figure><img src="%%A_ESCOLA%%" alt="Escola moderna branca de dois andares"><figcaption>Escola · moderno</figcaption></figure>
+      <figure><img src="%%A_IGREJA%%" alt="Igreja gótica escura com torre do sino"><figcaption>Igreja · gótico</figcaption></figure>
+      <figure><img src="%%A_MANSAO%%" alt="Mansão de dois andares com telhado de quatro águas"><figcaption>Mansão</figcaption></figure>
+      <figure><img src="%%A_MOINHO%%" alt="Moinho de vento redondo com pás de lã"><figcaption>Moinho · rural</figcaption></figure>
+      <figure><img src="%%A_FAROLZINHO%%" alt="Farol listrado de vermelho e branco"><figcaption>Farol · praiano</figcaption></figure>
+      <figure><img src="%%A_CASTELINHO%%" alt="Castelinho de pedra com torres e ameias"><figcaption>Castelinho · castelo</figcaption></figure>
+      <figure><img src="%%A_TORRE_MAGO%%" alt="Torre de mago com telhado de folhas"><figcaption>Torre de mago · élfico</figcaption></figure>
+      <figure><img src="%%A_HOSPITAL%%" alt="Hospital futurista branco"><figcaption>Hospital · futurista</figcaption></figure>
+      <figure><img src="%%A_CAFETERIA%%" alt="Cafeteria colorida pequena"><figcaption>Cafeteria · colorido</figcaption></figure>
+      <figure><img src="%%A_FONTE%%" alt="Fonte de pedra com água"><figcaption>Fonte · objeto</figcaption></figure>
+    </div>
+    <h3>Por dentro</h3>
+    <div class="turn">
+      <figure><img src="%%A_CASA_IN%%" alt="Corte da casa: sala, cozinha, quarto e banheiro mobiliados"><figcaption>Casa: sala, cozinha, quarto, banheiro</figcaption></figure>
+      <figure><img src="%%A_ESCOLA_IN%%" alt="Corte da escola: carteiras e lousas verdes nas salas"><figcaption>Escola: carteiras e lousa</figcaption></figure>
+      <figure><img src="%%A_HOSPITAL_IN%%" alt="Corte do hospital: leitos, laboratório e recepção"><figcaption>Hospital: leitos e laboratório</figcaption></figure>
+      <figure><img src="%%A_PADARIA_IN%%" alt="Corte da padaria: balcão, forno e prateleiras"><figcaption>Padaria: balcão e prateleiras</figcaption></figure>
+    </div>
+    <p class="note">Por texto: "faz uma padaria pequena estilo japonês", "constrói um hospital futurista", "faz uma fonte". Ou no menu <b>Catálogo</b> (categoria → tipo → estilo → tamanho, ou Surpresa). Construído à mão, com a porta virada para você.</p>
   </section>
 
   <section style="display:grid;gap:18px">

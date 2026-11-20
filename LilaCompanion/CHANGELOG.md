@@ -1,5 +1,61 @@
 # Changelog
 
+## 2.2.0
+- **DR-0N agora é um robô de peças flutuantes** (no lugar do drone de hélices): cabeça arredondada de
+  pedra-metal com olhos ciano e boca brilhando, tronco cúbico com núcleo de energia, duas mãos soltas
+  com dedos e engrenagens/parafusos orbitando. Cada parte flutua com o seu ritmo; voando ele inclina,
+  as mãos ficam pra trás e a cabeça olha para quem está perto. **Soco forte** (a mão voa no alvo,
+  dano alto e arremesso) alternado com **tiro do núcleo do peito**; mãos martelando ao quebrar,
+  alcançando o bloco ao construir, guarda erguida na torreta.
+- **Desligar / ligar:** botão no controle (ou "desliga" / "liga"). Desligado, ele desmonta no chão
+  — a cabeça cai primeiro, depois as mãos e o tronco, as engrenagens rolam e os brilhos apagam — e
+  fica quieto (não segue, não ataca, não obedece até ligar). Ao ligar, o tronco sobe, as mãos e a
+  cabeça voam girando em arco até o lugar e os olhos acendem piscando.
+- **Visão livre nos veículos:** a cabine/capota (vidro e teto) do helicóptero, carro, escavadeira,
+  jato e de todos os veículos novos recolhe quando alguém entra — quem pilota enxerga tudo em volta.
+  Bancos, painel e volante por dentro; turbina e rotor do helicóptero subiram para não tapar a cabeça.
+- **Sair = agachar** (o jeito normal do jogo). O add-on não bloqueia mais o "descer". Saindo no alto
+  (voadores e TITÃ), você ganha queda lenta. **Pular = o veículo pula** (terrestres e lancha), sobe
+  (voadores), pós-combustor (jatos) ou salto com pisão (TITÃ).
+- **Veículos de chão muito mais rápidos — bug corrigido:** a velocidade era lida de volta da entidade
+  depois do atrito do chão, e o carro ficava preso em ~15% do que devia (≈3 blocos/s). Agora a
+  velocidade é comandada (e compensa o atrito do chão): carro ~23 blocos/s, moto ~26, caminhão ~20,
+  tanque ~11, escavadeira ~9,
+  com aceleração, freio, perda de velocidade ao bater e pulinho automático em degraus. Voadores
+  sobem/descem para onde você olha.
+- **TITÃ virou um robô gigante humanoide** (original: armadura branca e vermelha, visor em T, reator
+  no peito, ombreiras, mochila com propulsores). Você vai **em cima da cabeça** (plataforma com
+  corrimão baixo, visão 360°, ~26 blocos de altura); passageiros nas ombreiras e na mochila. Bater
+  perto = soco; mirar longe = raio do visor; pular = salto com propulsores e onda de choque ao cair.
+  Animações novas (passada com joelho, soco com giro do tronco, salto, pose de poder, ajoelhar).
+- **6 veículos novos:** nave espacial (lasers gêmeos, voo 3D), disco voador (raio desintegrador e
+  raio trator que abduz quem estiver embaixo), submarino (mergulha olhando pra baixo, torpedos com
+  rastro de bolhas; quem está dentro respira e enxerga debaixo d'água), lancha (voa na água, boia,
+  salta ondas, turbo), caminhão-monstro (rodas gigantes, pulo alto, passa por cima de monstros) e caça
+  supersônico furtivo (o mais rápido, mísseis). Carro, moto, caminhão e lancha ganharam turbo.
+- **Modo ENXAME de nanorrobôs:** o DR-0N vira milhares de robozinhos (nuvem de partículas orbitando).
+  Continua fazendo tudo que o drone faz e ainda: **escudo em volta de você** (você não leva dano,
+  flechas/bolas de fogo somem, monstros são empurrados e picados), pica sozinho os monstros perto de
+  você, e vira **muralha, ponte, escada, cúpula** (blocos de nanorrobô que se desmancham depois),
+  **punho gigante, espada giratória, tornado, asas, elevador**, ataca o que você olha e **devora tudo**
+  em volta. "Cancelar" desmancha tudo.
+- **Catálogo com 4851 construções diferentes** (65 tipos × 21 estilos × 3 tamanhos + 30 objetos ×
+  21 estilos): casas, sobrados, mansões, prédios, hotel, padaria, açougue, ferreiro, farmácia,
+  livraria, taverna, restaurante, mercado, banco, shopping, posto, escola, hospital, delegacia,
+  bombeiros, igreja, biblioteca, museu, teatro, cinema, estação, academia, prisão, quartel, celeiro,
+  estábulo, silo, moinho, estufa, farol, coreto, piscina, cais, arena, parquinho... e objetos (fonte,
+  estátua, poste, banco de praça, barraca de feira, ponto de ônibus, jardim zen...). Estilos:
+  medieval, rústico, moderno, futurista, japonês, desértico, nórdico, tropical, gótico, colonial,
+  castelo, infernal, gelo, mansão, rural, praiano, steampunk, élfico, industrial, colorido, savana.
+  **Interior arrumado** em todas: quarto com cama e criados-mudos, cozinha com fogão, pia e
+  armários, sala com sofá e TV, banheiro, escritório, loja com balcão e mercadoria do tipo certo,
+  sala de aula com carteiras e lousa, igreja com bancos e altar, celas, baias, estufa com plantação...
+  Escada de mão entre andares, portas com as duas metades, janelas, telhado do estilo, caminho e
+  luzes. A porta fica virada para você. Por texto ("faz uma padaria pequena estilo japonês") ou pelo
+  menu **Catálogo**. Construído à mão como as megaconstruções.
+- Portas antigas das megaconstruções usavam um estado de bloco velho (podiam sair só com a metade de
+  baixo): corrigido.
+
 ## 2.1.0
 - **Constrói à mão, bloco por bloco** (novo padrão): nas megaconstruções e nos biomas o DR-0N voa
   até cada ponto e coloca/quebra bloco por bloco, parte por parte (quadrados de 24×24), de baixo para

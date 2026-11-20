@@ -68,6 +68,7 @@ class Plan {
     this.height = 10;
     this.clear = true;
     this.loot = [];
+    this.occ = new Set(); // células já ocupadas por móveis (tapete/cadeira não cobrem cama)
   }
   f(x0, y0, z0, x1, y1, z1, b, st) {
     this.ops.push(["f", Math.min(x0, x1), Math.min(y0, y1), Math.min(z0, z1), Math.max(x0, x1), Math.max(y0, y1), Math.max(z0, z1), b, st]);
@@ -75,7 +76,12 @@ class Plan {
   }
   s(x, y, z, b, st, pair) {
     this.ops.push(pair ? ["s", x, y, z, b, st, pair] : st ? ["s", x, y, z, b, st] : ["s", x, y, z, b]);
+    this.occ.add(`${x},${y},${z}`);
+    if (pair) this.occ.add(`${x + pair[0]},${y + pair[1]},${z + pair[2]}`);
     return this;
+  }
+  free(x, y, z) {
+    return !this.occ.has(`${x},${y},${z}`);
   }
   walls(x0, y0, z0, x1, y1, z1, b) {
     return this.f(x0, y0, z0, x1, y1, z0, b).f(x0, y0, z1, x1, y1, z1, b).f(x0, y0, z0, x0, y1, z1, b).f(x1, y0, z0, x1, y1, z1, b);
@@ -163,15 +169,16 @@ function light(p, st, room, y, top) {
 function rug(p, st, room, y, reserved) {
   const [cx, cz] = center(room);
   for (let x = cx - 1; x <= cx + 1; x++) for (let z = cz - 1; z <= cz + 1; z++) {
-    if (x > room.x0 && x < room.x1 && z > room.z0 && z < room.z1 && !reserved.has(`${x},${z}`)) p.s(x, y, z, st.carpet);
+    if (x > room.x0 && x < room.x1 && z > room.z0 && z < room.z1 && !reserved.has(`${x},${z}`) && p.free(x, y, z)) p.s(x, y, z, st.carpet);
   }
 }
 
 function table(p, st, x, y, z, chairs, R) {
+  if (!p.free(x, y, z)) return;
   p.s(x, y, z, W(st.wood, "fence")).s(x, y + 1, z, R() < 0.5 ? W(st.wood, "plate") : st.carpet);
   for (const d of chairs) {
     const [dx, dz] = DIR[d];
-    p.s(x + dx, y, z + dz, W(st.wood, "stairs"), stair(d)); // encosto para fora, assento virado pra mesa
+    if (p.free(x + dx, y, z + dz)) p.s(x + dx, y, z + dz, W(st.wood, "stairs"), stair(d)); // encosto para fora, assento virado pra mesa
   }
 }
 
@@ -210,11 +217,11 @@ const FURN = {
       if (top - y >= 4) p.s(x, y + 3, z, M("barrel"), { facing_direction: FACE[OPP[s0.d]] }); // armários em cima
     });
     const [cx, cz] = center(room);
-    if (room.x1 - room.x0 >= 3 && room.z1 - room.z0 >= 3) {
+    if (room.x1 - room.x0 >= 3 && room.z1 - room.z0 >= 3 && p.free(cx, y + 1, cz)) {
       p.s(cx, y + 1, cz, W(st.wood, "fence")).s(cx, y + 2, cz, M("cake"));
       for (const d of ["E", "W"]) {
         const [dx, dz] = DIR[d];
-        if (!res.has(`${cx + dx},${cz + dz}`)) p.s(cx + dx, y + 1, cz + dz, W(st.wood, "stairs"), stair(d));
+        if (!res.has(`${cx + dx},${cz + dz}`) && p.free(cx + dx, y + 1, cz + dz)) p.s(cx + dx, y + 1, cz + dz, W(st.wood, "stairs"), stair(d));
       }
     }
     light(p, st, room, y, top);
@@ -251,7 +258,7 @@ const FURN = {
     if (run[1]) p.s(run[1][0], y + 1, run[1][1], M("cauldron"), { cauldron_liquid: "water", fill_level: 6 }); // pia
     if (run[2]) p.s(run[2][0], y + 1, run[2][1], M("light_blue_stained_glass")).s(run[2][0], y + 2, run[2][1], M("light_blue_stained_glass")); // box
     for (let x = room.x0; x <= room.x1; x++) for (let z = room.z0; z <= room.z1; z++) {
-      if (!res.has(`${x},${z}`) && !run.some((c) => c[0] === x && c[1] === z)) p.s(x, y + 1, z, M("white_carpet"));
+      if (!res.has(`${x},${z}`) && p.free(x, y + 1, z)) p.s(x, y + 1, z, M("white_carpet"));
     }
     light(p, st, room, y, top);
   },
@@ -283,7 +290,7 @@ const FURN = {
     for (let x = room.x0; x <= room.x1; x++) {
       const id = g.back[(x - room.x0) % g.back.length];
       if (id === "chest") p.chest(x, y + 1, room.z1, "N", g.loot);
-      else p.s(x, y + 1, room.z1, id, g.backSt);
+      else p.s(x, y + 1, room.z1, id, faceState(id, "N"));
       if (top - y >= 4) p.s(x, y + 2, room.z1, g.back2 ?? M("barrel"), g.back2 ? undefined : { facing_direction: 2 });
     }
     for (const s of sides({ ...room, z1: zc - 1 }, res)) {
@@ -330,7 +337,8 @@ const FURN = {
     for (const s of sides(room, res).slice(0, 2)) {
       if (s.d !== "E" && s.d !== "W" && s.d !== "N" && s.d !== "S") continue;
       s.cells.forEach(([x, z], i) => {
-        if (i % 2 === 0) p.bed(x, y + 1, z, s.d);
+        const [dx, dz] = DIR[s.d];
+        if (i % 2 === 0 && p.free(x, y + 1, z) && p.free(x - dx, y + 1, z - dz)) p.bed(x, y + 1, z, s.d);
       });
     }
     light(p, st, room, y, top);
@@ -353,7 +361,8 @@ const FURN = {
       for (let z = room.z0 + 1; z <= room.z1 - 1; z++) {
         if (res.has(`${x},${z}`)) continue;
         if ((z - room.z0) % 4 === 0) continue;
-        p.s(x, y + 1, z, R() < 0.5 ? M("barrel") : M("chest"), R() < 0.5 ? { facing_direction: 1 } : { "minecraft:cardinal_direction": "east" });
+        if (R() < 0.5) p.s(x, y + 1, z, M("barrel"), { facing_direction: 1 });
+        else p.s(x, y + 1, z, M("chest"), { "minecraft:cardinal_direction": "east" });
         if (top - y >= 4) p.s(x, y + 2, z, M("barrel"), { facing_direction: 1 });
       }
     }
@@ -387,7 +396,8 @@ const FURN = {
     const [cx, cz] = center(room);
     for (let x = room.x0 + 1; x <= room.x1 - 1; x += 2) for (let z = room.z0 + 1; z <= room.z1 - 1; z += 3) {
       if (res.has(`${x},${z}`)) continue;
-      p.s(x, y + 1, z, R() < 0.5 ? M("iron_block") : M("anvil"), R() < 0.5 ? undefined : { "minecraft:cardinal_direction": "north" });
+      if (R() < 0.5) p.s(x, y + 1, z, M("iron_block"));
+      else p.s(x, y + 1, z, M("anvil"), { "minecraft:cardinal_direction": "north" });
       if (z + 1 <= room.z1) p.s(x, y + 1, z + 1, M("black_carpet"));
     }
     p.s(cx, y + 1, room.z1, M("jukebox"));
@@ -450,24 +460,33 @@ const FURN = {
   },
 };
 
+/** Estado de direção certo para cada bloco (cada um usa um nome diferente no Bedrock). */
+function faceState(id, d) {
+  if (/(smoker|furnace|blast_furnace|anvil|lectern|stonecutter_block|chest|campfire|carved_pumpkin)$/.test(id)) return { "minecraft:cardinal_direction": CARD[d] };
+  if (/(loom|beehive|bee_nest)$/.test(id)) return { direction: BEDD[d] };
+  if (/barrel$/.test(id)) return { facing_direction: FACE[d] };
+  if (/grindstone$/.test(id)) return { attachment: "standing", direction: BEDD[d] };
+  return undefined;
+}
+
 // mercadoria das lojas
 const GOODS = {
   geral: { back: ["chest", M("barrel")], side: [M("barrel"), M("pumpkin"), M("melon_block"), M("hay_block")], loot: [["minecraft:apple", 16], ["minecraft:bread", 16]] },
-  padaria: { back: [M("smoker"), "chest", M("hay_block")], side: [M("hay_block"), M("cake"), M("barrel")], loot: [["minecraft:bread", 32], ["minecraft:cookie", 32], ["minecraft:cake", 2]], backSt: { "minecraft:cardinal_direction": "north" } },
-  acougue: { back: [M("smoker"), "chest"], side: [M("barrel"), M("smoker")], loot: [["minecraft:cooked_beef", 24], ["minecraft:cooked_porkchop", 24], ["minecraft:cooked_chicken", 16]], backSt: { "minecraft:cardinal_direction": "north" } },
-  armas: { back: [M("blast_furnace"), "chest", M("anvil")], side: [M("grindstone"), M("smithing_table")], loot: [["minecraft:iron_sword", 2], ["minecraft:bow", 2], ["minecraft:arrow", 32], ["minecraft:iron_chestplate", 1]], backSt: { "minecraft:cardinal_direction": "north" }, extra: (p, st, room, y) => p.e(room.x0 + 1, y + 1, room.z0 + 1, M("armor_stand")) },
+  padaria: { back: [M("smoker"), "chest", M("hay_block")], side: [M("hay_block"), M("cake"), M("barrel")], loot: [["minecraft:bread", 32], ["minecraft:cookie", 32], ["minecraft:cake", 2]] },
+  acougue: { back: [M("smoker"), "chest"], side: [M("barrel"), M("smoker")], loot: [["minecraft:cooked_beef", 24], ["minecraft:cooked_porkchop", 24], ["minecraft:cooked_chicken", 16]] },
+  armas: { back: [M("blast_furnace"), "chest", M("anvil")], side: [M("grindstone"), M("smithing_table")], loot: [["minecraft:iron_sword", 2], ["minecraft:bow", 2], ["minecraft:arrow", 32], ["minecraft:iron_chestplate", 1]], extra: (p, st, room, y) => p.e(room.x0 + 1, y + 1, room.z0 + 1, M("armor_stand")) },
   farmacia: { back: [M("brewing_stand"), "chest", M("cauldron")], side: [M("brewing_stand"), M("barrel")], loot: [["minecraft:glass_bottle", 16], ["minecraft:golden_apple", 2], ["minecraft:honey_bottle", 8]] },
   livraria: { back: [M("bookshelf")], back2: M("bookshelf"), side: [M("bookshelf"), M("lectern")], loot: [["minecraft:book", 16]] },
   taverna: { back: [M("barrel"), M("barrel"), "chest"], side: [M("barrel")], loot: [["minecraft:honey_bottle", 16], ["minecraft:cooked_salmon", 16]], extra: (p, st, room, y, R) => { const [cx, cz] = center(room); table(p, st, cx, y + 1, cz - 1, ["E", "W", "N"], R); } },
-  restaurante: { back: [M("smoker"), M("furnace"), "chest"], side: [M("barrel")], loot: [["minecraft:cooked_beef", 16], ["minecraft:pumpkin_pie", 8], ["minecraft:mushroom_stew", 4]], backSt: { "minecraft:cardinal_direction": "north" }, extra: (p, st, room, y, R) => { const [cx, cz] = center(room); table(p, st, cx - 2 >= room.x0 + 1 ? cx - 2 : cx, y + 1, cz - 1, ["E", "W"], R); if (cx + 2 < room.x1) table(p, st, cx + 2, y + 1, cz - 1, ["E", "W"], R); } },
+  restaurante: { back: [M("smoker"), M("furnace"), "chest"], side: [M("barrel")], loot: [["minecraft:cooked_beef", 16], ["minecraft:pumpkin_pie", 8], ["minecraft:mushroom_stew", 4]], extra: (p, st, room, y, R) => { const [cx, cz] = center(room); table(p, st, cx - 2 >= room.x0 + 1 ? cx - 2 : cx, y + 1, cz - 1, ["E", "W"], R); if (cx + 2 < room.x1) table(p, st, cx + 2, y + 1, cz - 1, ["E", "W"], R); } },
   cafeteria: { back: [M("cauldron"), "chest", M("smoker")], side: [M("cake"), M("barrel")], loot: [["minecraft:cookie", 32], ["minecraft:pumpkin_pie", 8]], extra: (p, st, room, y, R) => { const [cx, cz] = center(room); table(p, st, cx, y + 1, cz - 1, ["E", "W"], R); } },
   banco: { back: [M("iron_block"), "chest"], counter: M("iron_bars"), side: [M("gold_block")], loot: [["minecraft:gold_ingot", 16], ["minecraft:emerald", 16]] },
   joalheria: { back: ["chest", M("glass")], side: [M("diamond_block"), M("emerald_block"), M("gold_block"), M("amethyst_block")], counter: M("glass"), loot: [["minecraft:diamond", 4], ["minecraft:emerald", 8], ["minecraft:gold_ingot", 8]] },
-  roupas: { back: [M("loom"), "chest"], side: [M("white_wool"), M("red_wool"), M("blue_wool"), M("yellow_wool")], loot: [["minecraft:leather_chestplate", 2], ["minecraft:leather_boots", 2]], backSt: { direction: 0 }, extra: (p, st, room, y) => { p.e(room.x0 + 1, y + 1, room.z0 + 1, M("armor_stand")); p.e(room.x1 - 1, y + 1, room.z0 + 1, M("armor_stand")); } },
+  roupas: { back: [M("loom"), "chest"], side: [M("white_wool"), M("red_wool"), M("blue_wool"), M("yellow_wool")], loot: [["minecraft:leather_chestplate", 2], ["minecraft:leather_boots", 2]], extra: (p, st, room, y) => { p.e(room.x0 + 1, y + 1, room.z0 + 1, M("armor_stand")); p.e(room.x1 - 1, y + 1, room.z0 + 1, M("armor_stand")); } },
   mercado: { back: ["chest", M("barrel"), M("hay_block")], side: [M("pumpkin"), M("melon_block"), M("hay_block"), M("barrel"), M("dried_kelp_block")], loot: [["minecraft:apple", 32], ["minecraft:carrot", 32], ["minecraft:bread", 32]] },
   barbearia: { back: [M("cauldron"), "chest"], side: [M("quartz_stairs")], loot: [["minecraft:shears", 2]] },
   correio: { back: [M("barrel"), "chest", M("lectern")], side: [M("barrel")], loot: [["minecraft:paper", 32], ["minecraft:book", 8]] },
-  ferragem: { back: [M("anvil"), "chest", M("grindstone")], side: [M("iron_block"), M("barrel")], loot: [["minecraft:iron_ingot", 32], ["minecraft:iron_pickaxe", 2]], backSt: { "minecraft:cardinal_direction": "north" } },
+  ferragem: { back: [M("anvil"), "chest", M("grindstone")], side: [M("iron_block"), M("barrel")], loot: [["minecraft:iron_ingot", 32], ["minecraft:iron_pickaxe", 2]] },
   pet: { back: [M("barrel"), "chest"], side: [M("hay_block"), M("composter")], loot: [["minecraft:bone", 16], ["minecraft:wheat", 32]], extra: (p, st, room, y) => p.e(room.x0 + 1, y + 1, room.z0 + 1, M("cat")) },
   flores: { back: [M("decorated_pot"), "chest"], side: [M("flowering_azalea"), M("azalea"), M("decorated_pot")], loot: [["minecraft:poppy", 16], ["minecraft:cornflower", 16]] },
   brinquedos: { back: ["chest", M("jukebox"), M("noteblock")], side: [M("noteblock"), M("target")], loot: [["minecraft:firework_rocket", 16], ["minecraft:snowball", 16]] },
@@ -1150,7 +1169,7 @@ function object(p, key, st, R) {
       break;
     case "laguinho":
       p.cyl(0, 0, 3, -1, 0, M("water"), false).cyl(0, 0, 4, 0, 0, M("stone"), true);
-      p.s(-1, 1, 0, M("waterlily")).s(1, 1, 1, M("waterlily")).s(3, 1, 3, M("sugar_cane"));
+      p.s(-1, 1, 0, M("waterlily")).s(1, 1, 1, M("waterlily")).s(3, 1, 3, M("reeds"));
       p.e(0, -1, 0, M("tropicalfish")).e(1, -1, -1, M("tropicalfish"));
       break;
     case "horta":

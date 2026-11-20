@@ -29,6 +29,8 @@ const FLIERS = new Set(["heli", "jet", "ship", "ufo", "stealth"]);
 /**
  * Velocidades em blocos por tick (×20 = blocos/s). A velocidade é COMANDADA (guardada em
  * c.flags.spd), não lida de volta da entidade: lida depois do atrito, ela travava o carro em ~15%.
+ * No chão o jogo ainda aplica o atrito antes de mover (anda ~55% do comandado, medido no servidor
+ * oficial), por isso os terrestres comandam mais: carro ≈ 23 blocos/s de verdade.
  */
 export const SPEC = {
   heli: { mode: "hover", speed: 1.0, climb: 0.55, follow: 0.8, turn: 0.25, k: 0.12, sound: "lila.heli", every: 19, vol: 1.0, pitch: 1 },
@@ -36,11 +38,11 @@ export const SPEC = {
   ship: { mode: "hover", speed: 1.8, climb: 0.9, follow: 1.0, turn: 0.3, k: 0.1, sound: "lila.jet", every: 23, vol: 1.0, pitch: 1.4 },
   jet: { mode: "jet", speed: 2.2, min: 0.45, sound: "lila.jet", every: 23, vol: 1.2, pitch: 1 },
   stealth: { mode: "jet", speed: 3.0, min: 0.5, sound: "lila.jet", every: 23, vol: 1.3, pitch: 0.8 },
-  car: { mode: "ground", speed: 1.25, accel: 0.06, hop: 0.5, jump: 0.6, sound: "lila.engine", every: 19, vol: 0.8, pitch: 1 },
-  moto: { mode: "ground", speed: 1.45, accel: 0.08, hop: 0.5, jump: 0.6, sound: "lila.engine", every: 19, vol: 0.8, pitch: 1.5 },
-  excavator: { mode: "ground", speed: 0.5, accel: 0.05, hop: 0.55, jump: 0.55, sound: "lila.engine", every: 19, vol: 0.9, pitch: 0.55 },
-  tank: { mode: "ground", speed: 0.6, accel: 0.04, hop: 0.55, jump: 0.55, sound: "lila.engine", every: 19, vol: 1.0, pitch: 0.45 },
-  truck: { mode: "ground", speed: 1.1, accel: 0.06, hop: 0.6, jump: 0.95, crush: true, sound: "lila.engine", every: 19, vol: 1.2, pitch: 0.7 },
+  car: { mode: "ground", speed: 2.1, accel: 0.06, hop: 0.5, jump: 0.6, sound: "lila.engine", every: 19, vol: 0.8, pitch: 1 },
+  moto: { mode: "ground", speed: 2.4, accel: 0.08, hop: 0.5, jump: 0.6, sound: "lila.engine", every: 19, vol: 0.8, pitch: 1.5 },
+  excavator: { mode: "ground", speed: 0.85, accel: 0.05, hop: 0.55, jump: 0.55, sound: "lila.engine", every: 19, vol: 0.9, pitch: 0.55 },
+  tank: { mode: "ground", speed: 1.0, accel: 0.04, hop: 0.55, jump: 0.55, sound: "lila.engine", every: 19, vol: 1.0, pitch: 0.45 },
+  truck: { mode: "ground", speed: 1.8, accel: 0.06, hop: 0.6, jump: 0.95, crush: true, sound: "lila.engine", every: 19, vol: 1.2, pitch: 0.7 },
   boat: { mode: "boat", speed: 1.5, accel: 0.05, jump: 0.55, sound: "lila.engine", every: 19, vol: 0.8, pitch: 1.3 },
   sub: { mode: "sub", speed: 0.8, k: 0.08, sound: "lila.engine", every: 25, vol: 0.6, pitch: 0.4 },
   colossus: { mode: "ground", speed: 0.6, accel: 0.2, colossus: true },
@@ -159,7 +161,7 @@ export function setForm(c, form, o = {}) {
   }
   if (prev !== form && !o.quiet) {
     const msgs = {
-      drone: "Forma de drone. Pronto pra próxima!",
+      drone: "De volta à forma normal. Pronto pra próxima!",
       colossus: "ROBÔ GIGANTE TITÃ! Você está em cima da cabeça: andar = mover · bater perto = soco · mirar longe e bater = raio do visor · pular = salto com pisão · agachar = sair.",
       turret: "Torreta gigante armada e cravada no chão. Ninguém passa!",
       swarm: "ENXAME! Virei milhares de nanorrobôs. Escudo em volta de você ligado. Me peça: muralha, ponte, escada, cúpula, punho, espada, tornado, asas, ataca, devora tudo.",
@@ -549,7 +551,7 @@ function groundDrive(c, e, spec, f, mv, jump, jumpEdge, look, v) {
     const sg = Math.sign(spd);
     if (f === "colossus") colossusStep(c, fwd, sg);
     else if (e.isOnGround && spec.mode === "ground") {
-      const ahead = 0.9 + Math.abs(spd) * 2.2;
+      const ahead = 0.9 + Math.abs(spd) * 1.2;
       const ax = Math.floor(p.x + fwd.x * ahead * sg), az = Math.floor(p.z + fwd.z * ahead * sg);
       const b0 = blockAt(e.dimension, ax, Math.floor(p.y), az);
       const b1 = blockAt(e.dimension, ax, Math.floor(p.y) + 1, az);
@@ -732,9 +734,14 @@ function torpedo(c, owner) {
   return true;
 }
 
-/** Ponto onde o olhar do piloto encosta (bloco ou longe). */
+/** Ponto onde o olhar do piloto encosta (bloco ou longe). Sem piloto: em frente. */
 function aimPoint(c, owner, max = 96) {
   const dim = c.dim();
+  if (!owner?.getHeadLocation) {
+    const f = yawDir(c.entity?.getRotation().y ?? 0);
+    const p = c.pos();
+    return { x: p.x + f.x * 8, y: p.y + 1, z: p.z + f.z * 8 };
+  }
   const head = owner.getHeadLocation();
   const dir = owner.getViewDirection();
   let at = { x: head.x + dir.x * max, y: head.y + dir.y * max, z: head.z + dir.z * max };

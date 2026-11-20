@@ -105,7 +105,7 @@ export const CREATIVE_ITEMS = [
 export const FORM_LIST = ["drone", "heli", "car", "excavator", "tank", "jet", "moto", "colossus", "turret",
   "swarm", "ship", "ufo", "sub", "boat", "truck", "stealth"];
 export const FORM_NAMES = {
-  drone: "drone", heli: "helicóptero", car: "carro esportivo", excavator: "escavadeira", tank: "tanque de guerra",
+  drone: "robô (forma normal)", heli: "helicóptero", car: "carro esportivo", excavator: "escavadeira", tank: "tanque de guerra",
   jet: "caça a jato", moto: "moto", colossus: "robô gigante TITÃ", turret: "torreta gigante", swarm: "enxame de nanorrobôs",
   ship: "nave espacial", ufo: "disco voador", sub: "submarino", boat: "lancha", truck: "caminhão-monstro", stealth: "caça supersônico furtivo",
 };
@@ -126,6 +126,9 @@ export const FORM_WORDS = {
   stealth: ["caca furtivo", "furtivo", "stealth", "supersonico", "jato supersonico", "aviao supersonico", "caca stealth", "caca invisivel",
     "outro jato", "jato preto", "aviao preto", "caca supersonico"],
 };
+/** Desligar / ligar o robô (2.2). */
+export const OFF_WORDS = ["desliga", "desligar", "desligue", "se desliga", "modo desligado", "power off", "desliga ai", "desligado", "shutdown"];
+export const ON_WORDS = ["liga", "ligar", "ligue", "se liga", "religa", "power on", "liga de novo", "liga ai", "religar"];
 /** Enxame de nanorrobôs (modo novo da 2.2). */
 export const SWARM_WORDS = ["enxame", "nanorrobos", "nanorobos", "nano robos", "nanobots", "nanites", "nanitas", "modo enxame", "modo nano",
   "nuvem de robos", "milhares de robos", "abelhas", "vespas", "marimbondos", "enxame de abelhas", "swarm"];

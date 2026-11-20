@@ -10,6 +10,7 @@ import { goalLabel } from "../lila/goals.js";
 import { missions } from "../lila/drone.js";
 import { formOf, isRideForm, isVehicle, beam, roar, stomp, switchSeat, mountOwner, riders, jumpAction, tractor } from "../lila/forms.js";
 import { shieldOn } from "../lila/swarm.js";
+import { powerOff, powerOn } from "../lila/power.js";
 import * as A from "../lib/archgen.js";
 import { armyActive, command as armyCommand, empower, robotsOf } from "../lila/army.js";
 import { findItemType } from "../lila/creative.js";
@@ -70,6 +71,8 @@ const EXAMPLES = [
   "recolhe os itens do chão",
   "constrói devagar",
   "volta ao normal",
+  "desliga",
+  "liga",
 ];
 
 const comp = (player) => loadCompanion(player, "drone");
@@ -89,13 +92,25 @@ export async function openController(player) {
         .title("§l§bControle do DR-0N")
         .body(c.rec.defeat
           ? `§7O DR-0N está se recuperando. Volta em §e${Math.ceil(c.rec.defeat.left / 20)}s§7.`
-          : "§fO §bDR-0N§f é um drone com §eitens infinitos§f: vira §bhelicóptero, carro, escavadeira, tanque, jato e moto§f, vira §ctorreta gigante§f, vira o §6colosso TITÃ§f, se divide num §aexército de robôs§f, constrói §ecidades, castelos, montanhas-russas§f e transforma biomas.")
+          : "§fO §bDR-0N§f é um robô de peças flutuantes com §eitens infinitos§f: vira §b12 veículos§f, §ctorreta gigante§f, o §6robô gigante TITÃ§f, um §denxame de nanorrobôs§f, um §aexército de robôs§f, constrói §emais de 1000 construções§f mobiliadas e pode ser §7desligado§f (desmonta no chão) quando você quiser.")
         .button("§l§bInvocar DR-0N", I.drone)
         .button("Como funciona", I.info);
       const r = await show(player, f);
       if (!r || r.canceled) return;
       if (r.selection === 0) summon(c, player);
       else if (r.selection === 1) await help(player);
+      return;
+    }
+    if (c.rec.off) {
+      // desligado: desmontado no chão
+      const f = new ActionFormData().title("§l§bControle do DR-0N").body("§7O DR-0N está §cdesligado§7 (desmontado no chão, brilhos apagados).");
+      /** @type {[string, string, () => any][]} */
+      const b = [["§a§l⏻ LIGAR o robô", I.drone, () => powerOn(c)], ["Inventário e status", I.info, () => infoMenu(player)],
+        ["Configurações", I.settings, () => settingsMenu(player)], ["§cDispensar DR-0N", I.dismiss, () => dismiss(c)]];
+      for (const [t, icon] of b) f.button(t, icon);
+      const r = await show(player, f);
+      if (!r || r.canceled || r.selection === undefined) return;
+      await b[r.selection][2]();
       return;
     }
     const cur = c.urgent?.desc ?? c.job?.desc ?? c.rec.goals[0];
@@ -107,6 +122,7 @@ export async function openController(player) {
     const buttons = [
       ["§l✎ Escrever ordem", I.write, () => writeOrder(player)],
       ["§c§l✖ Cancelar tudo §r§c(volta ao normal)", I.cancel, () => handleIntents(c, [{ type: "stop" }])],
+      ["§8⏻ Desligar o robô", I.dismiss, () => (army ? handleIntents(c, [{ type: "stop" }]) : powerOff(c))],
       ["§bVeículos…", I.vehicle, () => vehicleMenu(player)],
       [formOf(c) === "colossus" ? "§6Subir no TITÃ (em cima da cabeça)" : "§6§lRobô gigante TITÃ", I.colossus, () => (formOf(c) === "colossus" ? mountOwner(c, player) : handleIntents(c, [{ type: "form", form: "colossus" }]))],
       [formOf(c) === "swarm" ? "§d§lEnxame: formas e poderes…" : "§d§lModo ENXAME (nanorrobôs)", I.swarm, () => (formOf(c) === "swarm" ? swarmMenu(player) : handleIntents(c, [{ type: "swarm" }]))],
@@ -123,7 +139,7 @@ export async function openController(player) {
       ["Me seguir", I.follow, () => handleIntents(c, [{ type: "follow" }])],
       ["Ficar aqui", I.stay, () => handleIntents(c, [{ type: "stay" }])],
       ["Vem aqui", I.come, () => handleIntents(c, [{ type: "come" }])],
-      ["Carona (subir no drone)", I.ride, () => handleIntents(c, [{ type: "ride" }])],
+      ["Carona (subir no robô)", I.ride, () => handleIntents(c, [{ type: "ride" }])],
       ["Modo livre", I.auto, () => handleIntents(c, [{ type: "auto" }])],
       ["Escanear você", I.scan, () => handleIntents(c, [{ type: "scan" }])],
       ["Missões", I.missions, () => missionsMenu(player)],
@@ -165,7 +181,7 @@ async function vehicleMenu(player) {
     ["jet", "textures/items/elytra"], ["stealth", "textures/items/phantom_membrane"], ["ship", "textures/items/nether_star"],
     ["ufo", "textures/items/ender_eye"], ["boat", "textures/items/boat_oak"], ["sub", "textures/items/heart_of_the_sea"]];
   const f = new ActionFormData().title("§l§bVeículos")
-    .body("§fEle vira o veículo e você já entra (a capota recolhe: você enxerga tudo).\n§7Andar = acelerar · olhar = direção (voadores sobem/descem para onde você olha) · pular = pular/subir · bater = arma · §fAGACHAR = sair§7 (ele volta a ser drone). Outros jogadores entram de carona tocando no veículo.");
+    .body("§fEle vira o veículo e você já entra (a capota recolhe: você enxerga tudo).\n§7Andar = acelerar · olhar = direção (voadores sobem/descem para onde você olha) · pular = pular/subir · bater = arma · §fAGACHAR = sair§7 (ele volta à forma normal). Outros jogadores entram de carona tocando no veículo.");
   for (const [k, icon] of list) f.button(`§l${FORM_NAMES[k][0].toUpperCase()}${FORM_NAMES[k].slice(1)}`, icon);
   f.button("Voltar", I.back);
   const r = await show(player, f);
@@ -179,9 +195,9 @@ async function swarmMenu(player) {
   const c = comp(player);
   const keys = Object.keys(SWARM_SHAPES);
   const f = new ActionFormData().title("§l§dEnxame de nanorrobôs")
-    .body(`§fMilhares de nanorrobôs. Eles continuam fazendo tudo que o drone faz e picam sozinhos os monstros perto de você.\n§7Escudo: ${shieldOn(c) ? "§aLIGADO (nada te acerta)" : "§cdesligado"}`);
+    .body(`§fMilhares de nanorrobôs. Eles continuam fazendo tudo que o robô faz e picam sozinhos os monstros perto de você.\n§7Escudo: ${shieldOn(c) ? "§aLIGADO (nada te acerta)" : "§cdesligado"}`);
   for (const k of keys) f.button(k === "escudo" ? `${SWARM_SHAPES[k].name}: ${shieldOn(c) ? "§cdesligar" : "§aligar"}` : SWARM_SHAPES[k].name, I.swarm);
-  f.button("§c✖ Voltar a ser drone", I.cancel);
+  f.button("§c✖ Voltar à forma normal", I.cancel);
   f.button("Voltar", I.back);
   const r = await show(player, f);
   if (!r || r.canceled || r.selection === undefined) return;
@@ -237,10 +253,10 @@ async function pilotPanel(player) {
     ["Ir para a cabeça (pilotar)", I.ride, () => switchSeat(c, player, true)],
     ["Ir para uma ombreira", I.ride, () => switchSeat(c, player, false) || say(c, "Precisa de alguém na cabeça pra você ir pra ombreira.", { force: true })],
     ["Sair (ele fica TITÃ)", I.back, () => exit(c, player)],
-    ["§c✖ Voltar a ser drone", I.cancel, () => handleIntents(c, [{ type: "stop" }])],
+    ["§c✖ Voltar à forma normal", I.cancel, () => handleIntents(c, [{ type: "stop" }])],
   ] : [
     .../** @type {[string, string, () => any][]} */ (f === "ufo" ? [["§dRaio trator (abduzir)", "textures/items/ender_eye", () => tractor(c)]] : []),
-    ["Sair (vira drone de novo)", I.back, () => exit(c, player)],
+    ["Sair (volta à forma normal)", I.back, () => exit(c, player)],
     ["§c✖ Cancelar tudo", I.cancel, () => handleIntents(c, [{ type: "stop" }])],
   ];
   const weapon = ({ heli: "metralhadora", tank: "canhão", jet: "mísseis", stealth: "mísseis", excavator: "cavar", car: "turbo", moto: "turbo",
@@ -276,7 +292,7 @@ async function armyMenu(player) {
     ["Ir até onde estou olhando", I.come, () => armyCommand(c, "goto", player)],
     ["Formação em círculo", I.army, () => armyCommand(c, "circle", player)],
     ["§dMe fortalecer (kit + efeitos)", I.kit, () => empower(c, player)],
-    ["§c✖ Juntar e voltar ao drone", I.cancel, () => handleIntents(c, [{ type: "stop" }])],
+    ["§c✖ Juntar e voltar ao normal", I.cancel, () => handleIntents(c, [{ type: "stop" }])],
   ];
   const f = new ActionFormData().title("§l§aExército DR-0N").body(`§f${n} robôs ativos.\n§7Eles caçam monstros, revidam em quem te atacar (jogador também), atiram laser e trazem o que você precisar: cura, comida, armadura, visão noturna, respiração na água, resistência a fogo e queda lenta.`);
   for (const [t, icon] of b) f.button(t, icon);
@@ -405,10 +421,11 @@ async function help(player) {
   const f = new ActionFormData()
     .title("§lComo funciona")
     .body([
-      "§bControle:§f use para abrir o menu. Toque no drone segurando o controle para falar com ele; de mão vazia você sobe nele.",
+      "§bControle:§f use para abrir o menu. Toque no robô segurando o controle para falar com ele; de mão vazia você sobe nele.",
       "§bOrdens em texto:§f \"vira helicóptero\", \"modo colosso\", \"modo exército\", \"constrói um castelo\", \"faz uma cidade\", \"transforma aqui em neve\", \"me dá um élitro\", \"me fortalece\", \"me protege\", \"volta ao normal\".",
       "§bPelo chat:§f /drone vira tanque",
-      "§bCancelar tudo:§f larga o que estiver fazendo e volta a ser o drone normal (junta o exército, desfaz veículo/colosso/torreta).",
+      "§bDesligar:§f botão Desligar (ou \"desliga\"): ele desmonta no chão e fica quieto. Ligar: botão Ligar (ou \"liga\").",
+      "§bCancelar tudo:§f larga o que estiver fazendo e volta a ser o robô normal (junta o exército, desfaz veículo/colosso/torreta).",
       "§bProteção:§f no modo proteger ele ataca primeiro. Quem bater em você ou nele vira alvo, até outro jogador.",
       "§bDerrota:§f se cair, volta em 20 segundos.",
     ].join("\n\n"))

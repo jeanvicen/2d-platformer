@@ -4,7 +4,7 @@
 import { normalize, parseAmount, similar, tokens } from "./text.js";
 import { findArch } from "./archgen.js";
 import { ARMOR_WORDS, BLUEPRINT_WORDS, ITEMS, TIER_WORDS, TOOL_WORDS } from "./lexicon.js";
-import { ARMY_WORDS, BIOMES, CREATIVE_ITEMS, DESTROY_WORDS, FLATTEN_WORDS, FORM_WORDS, KIT_WORDS, MEGA, NORMAL_WORDS, SPEED_WORDS, SWARM_SHAPES, SWARM_WORDS, VACUUM_WORDS } from "./catalog.js";
+import { ARMY_WORDS, BIOMES, CREATIVE_ITEMS, DESTROY_WORDS, FLATTEN_WORDS, FORM_WORDS, KIT_WORDS, MEGA, NORMAL_WORDS, OFF_WORDS, ON_WORDS, SPEED_WORDS, SWARM_SHAPES, SWARM_WORDS, VACUUM_WORDS } from "./catalog.js";
 
 /**
  * @typedef {{type:string, [k:string]:any}} Intent
@@ -199,6 +199,9 @@ export function parseOne(s) {
   if (has(tok, KIT_WORDS)) return { type: "kit" };
   // enxame de nanorrobôs (antes de "destrói tudo": "enxame, devora tudo" é do enxame)
   if (has(tok, SWARM_WORDS) && !has(tok, V.give)) return { type: "swarm", shape: findKey(tok, SWARM_SHAPES) ?? undefined };
+  // ligar / desligar o robô
+  if (has(tok, OFF_WORDS)) return { type: "power", on: false };
+  if (has(tok, ON_WORDS) && tok.length <= 4) return { type: "power", on: true };
   if (has(tok, VACUUM_WORDS)) return { type: "vacuum", radius: amount ?? 32 };
   if (has(tok, FLATTEN_WORDS) || has(tok, DESTROY_WORDS)) {
     const all = has(tok, DESTROY_WORDS) || has(tok, ["construcoes", "construcao", "casas", "inclusive", "ate as"]);
@@ -341,6 +344,7 @@ export function describe(it) {
     case "vacuum": return "recolher os itens do chão";
     case "arch": return `construir: ${it.kind.replace(/_/g, " ")}${it.size ? ` ${it.size}` : ""}${it.style ? ` (${it.style})` : ""}`;
     case "swarm": return "enxame de nanorrobôs";
+    case "power": return it.on ? "ligar" : "desligar";
     case "explore": return "explorar";
     case "hunt": return "caçar";
     case "torches": return "iluminar a área";

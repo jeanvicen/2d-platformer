@@ -26,7 +26,7 @@ sys.path.insert(0, HERE)
 from forge.anim import controllers_file  # noqa: E402
 from forge.paint import bake  # noqa: E402
 from forge import drone_art  # noqa: E402
-from forge.drone_anims import DRONE_ACTIONS, drone_anims, drone_controllers  # noqa: E402
+from forge.drone_anims import DRONE_ACTIONS, drone_anims, drone_controllers, power_pose  # noqa: E402
 from forge.forms_art import FORMS as FORM_MODELS  # noqa: E402
 from forge.forms_art2 import FORMS2  # noqa: E402
 from forge.colossus_art import colossus_model, robot_model  # noqa: E402
@@ -170,7 +170,7 @@ assert [FORM_IDS[k] for k in FORM_ORDER] == list(range(len(FORM_ORDER)))
 # assentos (blocos, espaço da entidade). O colosso tem escala 3.4: os assentos são em blocos reais.
 COL_SCALE = 3.4
 SEATS = {
-    "drone": [[0, 1.55, 0]],
+    "drone": [[0, 2.35, 0]],
     "heli": [[-0.4, 0.98, -1.06], [0.4, 0.98, -1.06], [-0.4, 0.98, 0.25], [0.4, 0.98, 0.25]],
     "car": [[-0.45, 0.72, -0.06], [0.45, 0.72, -0.06], [-0.45, 0.72, 0.94], [0.45, 0.72, 0.94]],
     "excavator": [[-0.5, 1.05, -0.25], [0.5, 1.6, 0.6]],
@@ -188,7 +188,7 @@ SEATS = {
 }
 FORM_PHYS = {
     # (largura, altura, gravidade, escala, vida). Submarino e lancha: gravidade feita pelo script (boiam).
-    "drone": (1.4, 1.2, False, 1.0, 300),
+    "drone": (1.4, 2.2, False, 1.0, 300),
     "heli": (2.6, 2.4, False, 1.0, 400),
     "car": (2.2, 1.4, True, 1.0, 400),
     "excavator": (2.6, 3.0, True, 1.0, 500),
@@ -243,7 +243,8 @@ def drone_bp_entity():
                 "lila:move": {"type": "enum", "values": MOVES, "default": "none", "client_sync": True},
                 "lila:form": {"type": "int", "range": [0, len(FORM_ORDER) - 1], "default": 0, "client_sync": True},
                 "lila:aim": {"type": "int", "range": [-180, 180], "default": 0, "client_sync": True},
-                "lila:pitch": {"type": "int", "range": [-60, 60], "default": 0, "client_sync": True}}},
+                "lila:pitch": {"type": "int", "range": [-60, 60], "default": 0, "client_sync": True},
+                "lila:off": {"type": "bool", "default": False, "client_sync": True}}},
             "component_groups": groups,
             "components": {
                 "minecraft:type_family": {"family": ["lila_drone", "lila_companion", "npc", "mob"]},
@@ -302,7 +303,8 @@ def build_drone(previews):
     amap["ctrl_move"] = "controller.animation.lila.drone.move"
     amap["ctrl_act"] = "controller.animation.lila.drone.action"
     amap["ctrl_form"] = "controller.animation.lila.form.action"
-    animate = [{"base": "v.form == 0"}, {"look": "v.form == 0"}, {"ctrl_move": "v.form == 0"}, {"ctrl_act": "v.form == 0"},
+    animate = [{"base": "v.form == 0"}, {"power": "v.form == 0"}, {"look": "v.form == 0"},
+               {"ctrl_move": "v.form == 0 && v.offp < 0.5"}, {"ctrl_act": "v.form == 0 && v.offp < 0.5"},
                {"intro": "v.form != 7"}, {"intro_colossus": "v.form == 7"},
                {"heli": "v.form == 1"}, {"car": "v.form == 2"}, {"excavator": "v.form == 3"}, {"tank": "v.form == 4"},
                {"jet": "v.form == 5"}, {"moto": "v.form == 6"}, {"col_idle": "v.form == 7"}, {"col_walk": "v.form == 7"},
@@ -368,7 +370,9 @@ def build_drone(previews):
     if previews:
         os.makedirs(PREVIEW_DIR, exist_ok=True)
         for i, (y, p) in enumerate(((-30, 18), (150, 22))):
-            wpng(os.path.join(PREVIEW_DIR, f"drone_view_{i}.png"), render(m, tex, size=520, yaw=y, pitch=p, outline=True))
+            wpng(os.path.join(PREVIEW_DIR, f"drone_view_{i}.png"), render(m, tex, size=520, yaw=y, pitch=p, outline=True, pose=power_pose(0)))
+        wpng(os.path.join(PREVIEW_DIR, "robot_off.png"), render(m, tex, size=520, yaw=-30, pitch=24, outline=True, pose=power_pose(1)))
+        wpng(os.path.join(PREVIEW_DIR, "robot_boot.png"), render(m, tex, size=520, yaw=-30, pitch=18, outline=True, pose=power_pose(0.45, off=False)))
         for key, (fm, ftex) in models.items():
             if key == "drone":
                 continue

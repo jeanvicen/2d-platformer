@@ -45,8 +45,11 @@ def main():
     rep = {
         "%%PORTRAIT%%": img("portrait", 440),
         "%%DRONE0%%": img("drone_view_0", 300), "%%DRONECTL%%": img("drone_controller", 220),
-        **{f"%%F_{k.upper()}%%": img(f"form_{k}", 420 if k == "colossus" else 300) for k in ("heli", "car", "excavator", "tank", "jet", "moto", "colossus")},
-        "%%F_TURRET%%": img("form_turret_g", 300), "%%ROBOT%%": img("robot", 260),
+        **{f"%%F_{k.upper()}%%": img(f"form_{k}", 420 if k == "colossus" else 300) for k in ("heli", "car", "excavator", "tank", "jet", "moto", "colossus",
+                                                                                                 "ship", "ufo", "sub", "boat", "truck", "stealth", "swarm")},
+        **{f"%%A_{k.upper()}%%": img(f"arch_{k}", 300) for k in ("casa", "padaria", "escola", "igreja", "mansao", "moinho", "farolzinho", "castelinho",
+                                                                  "torre_mago", "hospital", "cafeteria", "fonte", "casa_in", "escola_in", "hospital_in", "padaria_in")},
+        "%%F_TURRET%%": img("form_turret_g", 300), "%%R_OFF%%": img("robot_off", 300), "%%R_BOOT%%": img("robot_boot", 300), "%%ROBOT%%": img("robot", 260),
         "%%TESTS%%": tests_rows(), "%%B64%%": base64.b64encode(addon).decode(),
         "%%SIZE%%": f"{len(addon) / 1024:.0f}", "%%SHA%%": hashlib.sha256(addon).hexdigest()[:16],
         "%%RAW%%": RAW, "%%VERSION%%": ver,

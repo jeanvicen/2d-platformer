@@ -1,9 +1,13 @@
 # DR-0N Mega Drone — Minecraft Bedrock
 
-**DR-0N** é um drone-robô para Minecraft Bedrock (celular, PC e console) com **itens infinitos**.
-Ele vira **helicóptero, carro, escavadeira, tanque, jato e moto**, vira uma **torreta gigante**,
-vira o **colosso TITÃ** (você pilota da cabeça, quase imortal), **explode num exército de robôs**,
-**constrói cidades, castelos, vilas e montanhas-russas** e **transforma biomas**.
+**DR-0N** é um robô de peças flutuantes para Minecraft Bedrock (celular, PC e console) com **itens infinitos**
+(cabeça, tronco com núcleo de energia e duas mãos soltas que voam; dá pra **desligar** — ele desmonta
+no chão — e **ligar** de novo, com as peças voando e se montando).
+Ele vira **12 veículos** (helicóptero, carro, moto, caminhão-monstro, escavadeira, tanque, jato, caça
+furtivo, nave espacial, disco voador, lancha e submarino), vira uma **torreta gigante**, o **robô
+gigante TITÃ** (você vai em cima da cabeça, quase imortal), um **enxame de milhares de nanorrobôs**,
+**explode num exército de robôs**, constrói **cidades, castelos e montanhas-russas**, tem um
+**catálogo de 4851 construções mobiliadas** e **transforma biomas**.
 
 > Criado por **0neajx**. Modelos, texturas, animações, sons e código são originais deste projeto
 > (veja `LICENSES_AND_ASSETS.md`). A versão 2.0 removeu a Lila: o add-on agora é só o DR-0N.
@@ -32,38 +36,61 @@ F _ F
 Use o controle → **Invocar DR-0N**. Pelo chat: `/drone <ordem>` (ou `/drone` sozinho = menu).
 
 **Cancelar tudo** (primeiro botão vermelho, ou "cancela" / "volta ao normal") larga qualquer tarefa
-e volta ao drone normal: junta o exército, desfaz veículo, colosso e torreta.
+e volta à forma normal: junta o exército, desfaz veículo, TITÃ, enxame e torreta.
 
-## 3. Formas (veículos)
+**Desligar / ligar** (botão no controle, ou "desliga" / "liga"): desligado, ele desmonta no chão com os
+brilhos apagados e fica quieto (não segue, não ataca). Ligando, as peças sobem girando e se montam.
 
-"vira helicóptero / carro / escavadeira / tanque / jato / moto" (ou menu **Veículos**). Ele se
-transforma do seu lado e você já entra no volante.
+**Luta:** ele alterna **socos fortes** (a mão voa no alvo e arremessa) com **tiros do núcleo** do
+peito, e protege você atacando primeiro.
+
+## 3. Veículos
+
+"vira helicóptero / carro / moto / caminhão-monstro / escavadeira / tanque / jato / caça furtivo /
+nave / disco voador / lancha / submarino" (ou menu **Veículos**). Ele se transforma do seu lado e você
+já entra. **A capota recolhe quando você entra: dá pra ver tudo em volta.**
 
 | Botão do jogo | O que faz |
 |---|---|
 | andar | acelera / ré |
-| olhar | direção |
-| pular | sobe (helicóptero), turbo (jato), pulo (terrestres) |
-| bater | arma: metralhadora (helicóptero), canhão (tanque), mísseis (jato), cavar (escavadeira), buzina |
-| agachar segurado | desce (helicóptero), freio |
-| agachar 2× rápido | sai — e ele volta a ser drone |
+| olhar | direção — nos voadores, olhar pra cima/baixo e acelerar sobe/desce |
+| pular | o veículo **pula** (terrestres, lancha) · sobe (helicóptero, nave, disco, submarino) · pós-combustor (jatos) |
+| bater | arma: metralhadora (helicóptero), canhão (tanque), mísseis (jatos), cavar (escavadeira), lasers (nave), raio desintegrador / **raio trator** olhando pra baixo (disco), torpedo (submarino), **turbo** (carro, moto, caminhão, lancha) |
+| **agachar** | **sai** — e ele volta a ser drone (do alto você cai devagar) |
 
-Outros jogadores podem pegar carona tocando no veículo. **Só o dono pilota.**
+Velocidades: carro ~23 blocos/s, moto ~26, caminhão ~20, tanque ~11, escavadeira ~9, lancha ~25 na
+água, helicóptero ~20, disco ~28, nave ~36, jato ~44, caça furtivo ~60. Submarino: quem está dentro
+respira e enxerga debaixo d'água. Outros jogadores podem pegar carona tocando no veículo. **Só o dono
+pilota.**
 
-## 4. Colosso TITÃ
+## 4. Robô gigante TITÃ
 
-"modo colosso" (ou "vira o godzila", "robozão", "titã"). Mecha-kaiju metálico original de ~25
-blocos: pernas digitígradas, cauda em 4 segmentos, nadadeiras dorsais que acendem, mandíbula,
-reator no peito. Ele te põe na **cabine da cabeça**, onde você fica **quase imortal**.
+"modo colosso" (ou "robô gigante", "titã", "robozão"). Robô humanoide original de ~26 blocos (armadura
+branca e vermelha, visor em T, reator no peito, propulsores nas costas). Ele te põe **em cima da
+cabeça** (plataforma com corrimão baixo: visão 360°), onde você fica **quase imortal**.
 
 - **andar**: passadas pesadas (tremor de tela, poeira), derruba árvores/paredes na frente, sobe morros;
-- **bater**: soco que destrói blocos e arremessa inimigos;
-- **pular**: pisão com onda de choque;
-- **agachar**: raio de plasma pela boca, para onde você olha;
-- **painel** (use o controle lá dentro): rugido (monstros ficam lentos e fracos), trocar de cabine, sair.
+- **bater perto**: soco que destrói blocos e arremessa inimigos · **mirar longe e bater**: raio do visor;
+- **pular**: salto com os propulsores e onda de choque ao cair;
+- **agachar**: sai (cai devagar);
+- **painel** (use o controle lá em cima): pose de poder (monstros ficam fracos), pisão, trocar de lugar.
 
-Mais pessoas entram nas cabines do peito/ombros. Se você sair sem cancelar, ele **continua colosso**
+Mais pessoas sobem nas ombreiras e na mochila. Se você sair sem cancelar, ele **continua TITÃ**
 (parado, pisando em monstros) até você mandar "Cancelar".
+
+## 4b. Enxame de nanorrobôs
+
+"modo enxame" (ou menu **Modo ENXAME**). O DR-0N vira milhares de robozinhos. Ele continua fazendo tudo
+que o drone faz (seguir, construir, aplainar, itens infinitos...) e mais:
+
+- **Escudo em volta de você** (ligado ao virar enxame): você não leva dano, flechas e bolas de fogo
+  somem, monstros que chegam perto são empurrados e picados;
+- pica sozinho os monstros perto de você (e quem estiver marcado como inimigo);
+- formas: **muralha**, **ponte** (40 blocos para onde você olha), **escada**, **cúpula** (abrigo com
+  porta) — blocos de nanorrobô que se desmancham sozinhos depois —, **punho gigante**, **espada
+  giratória**, **tornado**, **asas** (pular alto e planar), **elevador**, **ataca** (o que você mira) e
+  **devora tudo** (destrói tudo em volta, rápido);
+- já em enxame, basta escrever "ponte", "escudo", "tornado"... "Cancelar" desmancha tudo.
 
 ## 5. Torreta gigante
 
@@ -131,14 +158,42 @@ construções — menos baús, camas e blocos que guardam itens. No fim ele reco
 pântano. *Limite do jogo:* script não troca o ID do bioma (o Bedrock não tem `/fillbiome`), então a
 cor da grama e o clima continuam os de antes; chão, árvores, plantas, gelo e água mudam.
 
+## 9b. Catálogo: 4851 construções mobiliadas
+
+Menu **Catálogo: 1000+ construções** (escolha categoria → tipo → estilo → tamanho, ou "Surpresa") ou
+por texto: "faz uma padaria pequena estilo japonês", "constrói um hospital futurista", "faz uma
+igreja gótica grande", "faz uma fonte", "constrói uma torre de mago".
+
+- **67 tipos** — casas (casa, cabana, sobrado, bangalô, mansão, prédio, hotel, castelinho, torre de
+  mago, casa na árvore, iglu, palácio), comércio (padaria, açougue, ferreiro, farmácia, livraria,
+  taverna, restaurante, cafeteria, mercado, banco, joalheria, roupas, barbearia, correio, ferragens,
+  pet shop, floricultura, brinquedos, shopping, posto), públicos (escola, hospital, delegacia,
+  bombeiros, prefeitura, igreja, biblioteca, museu, teatro, cinema, estação, academia, prisão,
+  quartel, observatório, laboratório, fábrica, oficina), fazenda (celeiro, estábulo, galinheiro, silo,
+  moinho, estufa, casa de fazenda, armazém, apiário) e lazer (torre de vigia, farolzinho, quiosque,
+  coreto, piscina, cais, arena, parquinho);
+- **21 estilos** — medieval, rústico, moderno, futurista, japonês, desértico, nórdico, tropical,
+  gótico, colonial, castelo, infernal, gelo, mansão, rural, praiano, steampunk, élfico, industrial,
+  colorido, savana · **3 tamanhos** · mais **30 objetos** (fonte, estátua, poste, banco de praça,
+  árvore, canteiro, barraca de feira, carroça, fogueira, ponto de ônibus, jardim zen, laguinho...).
+- **Interior arrumado**: quarto (cama, criados-mudos com lanterna, baú, estante), cozinha (fogão,
+  forno, pia, bancada, armários em cima, mesa com bolo), sala (sofá, TV, estante, tapete), banheiro,
+  escritório, loja com balcão, sino e a mercadoria certa (pão na padaria, armas no ferreiro, poções na
+  farmácia...), sala de aula com carteiras e lousa, igreja com bancos, altar e velas, hospital com
+  leitos, celas, baias com feno e bebedouro, estufa com plantação. Escada de mão entre andares,
+  portas com as duas metades, luzes, janelas, telhado do estilo e caminho até a porta, **virada para
+  você**.
+
 ## 10. Sons e animações
 
 13 sons **originais sintetizados** (rotor, motor, turbina, canhão, metralhadora rotativa, pisão,
 rugido mecânico, raio de plasma, servo, míssil, transformação, explosão do exército, laser), tocados
 junto com sons do próprio Minecraft para dar peso. Animações em Molang contínuo (suaves em qualquer
 FPS): rotores, rodas que giram com a velocidade e esterçam, moto que inclina nas curvas, recuo do
-canhão, trem de pouso que recolhe, metralhadora que gira, transformação que monta girando, colosso
-com passada, cauda, soco, pisão, raio e rugido; robôs com andar, voo de propulsor, tiro e entrega.
+canhão, trem de pouso que recolhe, metralhadora que gira, transformação que monta girando, capotas
+que recolhem quando alguém entra, hélice do submarino e da lancha, anel de luzes do disco voador,
+TITÃ com passada de joelho, soco com giro do tronco, salto com propulsores, raio do visor e pose de
+poder; enxame com anéis de nanorrobôs; robôs com andar, voo de propulsor, tiro e entrega.
 
 ## 11. Testes
 

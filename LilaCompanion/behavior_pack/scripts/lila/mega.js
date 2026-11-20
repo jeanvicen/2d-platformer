@@ -59,9 +59,9 @@ function perm(id, st) {
 function* fillBox(dim, a, b, p, filter) {
   for (let x = a.x; x <= b.x; x += 16) {
     for (let z = a.z; z <= b.z; z += 16) {
-      for (let y = a.y; y <= b.y; y += 16) {
+      for (let y = a.y; y <= b.y; y += 8) {
         const lo = { x, y: Math.max(y, dim.heightRange.min), z };
-        const hi = { x: Math.min(b.x, x + 15), y: Math.min(b.y, y + 15, dim.heightRange.max - 1), z: Math.min(b.z, z + 15) };
+        const hi = { x: Math.min(b.x, x + 15), y: Math.min(b.y, y + 7, dim.heightRange.max - 1), z: Math.min(b.z, z + 15) };
         if (hi.y < lo.y) continue;
         try {
           dim.fillBlocks(new BlockVolume(lo, hi), p, filter ? { blockFilter: filter } : undefined);
@@ -309,6 +309,10 @@ function* planTile(plan, cx, cz, y0, x0, z0, x1, z1) {
   const ops = plan.ops.filter((op) => (op[0] === "f" ? !(op[4] < x0 || op[1] > x1 || op[6] < z0 || op[3] > z1)
     : op[0] === "s" ? op[1] >= x0 && op[1] <= x1 && op[3] >= z0 && op[3] <= z1 : false));
   if (!ops.length) return;
+  // células que recebem a "segunda metade" de outro bloco (porta de cima, cabeceira da cama): nada
+  // de camada posterior pode cobrir (senão a parede apaga a metade de cima da porta)
+  const pairAt = new Set();
+  for (const op of ops) if (op[0] === "s" && op[6]) pairAt.add(`${op[1] + op[6][0]},${op[2] + op[6][1]},${op[3] + op[6][2]}`);
   let ymin = Infinity, ymax = -Infinity;
   for (const op of ops) {
     ymin = Math.min(ymin, op[2]);
@@ -323,7 +327,7 @@ function* planTile(plan, cx, cz, y0, x0, z0, x1, z1) {
         for (let x = ax; x <= bx; x++) for (let z = az; z <= bz; z++) layer.set((x + 4096) * 8192 + (z + 4096), [op[7], op[8], x, z]);
       } else if (op[2] === y) layer.set((op[1] + 4096) * 8192 + (op[3] + 4096), [op[4], op[5], op[1], op[3], op[6]]);
     }
-    const cells = [...layer.values()].map(([id, st, x, z, pair]) => ({ x, z, id, st, pair }));
+    const cells = [...layer.values()].filter(([, , x, z]) => !pairAt.has(`${x},${y},${z}`)).map(([id, st, x, z, pair]) => ({ x, z, id, st, pair }));
     for (const w of serpentine(cells)) {
       yield { x: cx + w.x, y: y0 + y, z: cz + w.z, id: w.id, st: w.st, pair: w.pair };
     }

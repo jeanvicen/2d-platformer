@@ -86,6 +86,9 @@
             },
             {
               "scan": "q.property('lila:action') == 'scan'"
+            },
+            {
+              "punch": "q.property('lila:action') == 'punch'"
             }
           ]
         },
@@ -93,7 +96,7 @@
           "animations": [
             "work"
           ],
-          "blend_transition": 0.15,
+          "blend_transition": 0.12,
           "transitions": [
             {
               "default": "q.property('lila:action') != 'work'"
@@ -104,7 +107,7 @@
           "animations": [
             "place"
           ],
-          "blend_transition": 0.15,
+          "blend_transition": 0.12,
           "transitions": [
             {
               "default": "q.property('lila:action') != 'place'"
@@ -115,7 +118,7 @@
           "animations": [
             "shoot"
           ],
-          "blend_transition": 0.15,
+          "blend_transition": 0.12,
           "transitions": [
             {
               "default": "q.property('lila:action') != 'shoot'"
@@ -126,7 +129,7 @@
           "animations": [
             "charge"
           ],
-          "blend_transition": 0.15,
+          "blend_transition": 0.12,
           "transitions": [
             {
               "default": "q.property('lila:action') != 'charge'"
@@ -137,7 +140,7 @@
           "animations": [
             "turret"
           ],
-          "blend_transition": 0.15,
+          "blend_transition": 0.12,
           "transitions": [
             {
               "default": "q.property('lila:action') != 'turret'"
@@ -148,7 +151,7 @@
           "animations": [
             "craft"
           ],
-          "blend_transition": 0.15,
+          "blend_transition": 0.12,
           "transitions": [
             {
               "default": "q.property('lila:action') != 'craft'"
@@ -159,7 +162,7 @@
           "animations": [
             "wave"
           ],
-          "blend_transition": 0.15,
+          "blend_transition": 0.12,
           "transitions": [
             {
               "default": "q.property('lila:action') != 'wave'"
@@ -170,7 +173,7 @@
           "animations": [
             "sleep"
           ],
-          "blend_transition": 0.15,
+          "blend_transition": 0.12,
           "transitions": [
             {
               "default": "q.property('lila:action') != 'sleep'"
@@ -181,7 +184,7 @@
           "animations": [
             "defeat"
           ],
-          "blend_transition": 0.15,
+          "blend_transition": 0.12,
           "transitions": [
             {
               "default": "q.property('lila:action') != 'defeat'"
@@ -192,7 +195,7 @@
           "animations": [
             "summon"
           ],
-          "blend_transition": 0.15,
+          "blend_transition": 0.12,
           "transitions": [
             {
               "default": "q.property('lila:action') != 'summon'"
@@ -203,7 +206,7 @@
           "animations": [
             "celebrate"
           ],
-          "blend_transition": 0.15,
+          "blend_transition": 0.12,
           "transitions": [
             {
               "default": "q.property('lila:action') != 'celebrate'"
@@ -214,10 +217,21 @@
           "animations": [
             "scan"
           ],
-          "blend_transition": 0.15,
+          "blend_transition": 0.12,
           "transitions": [
             {
               "default": "q.property('lila:action') != 'scan'"
+            }
+          ]
+        },
+        "punch": {
+          "animations": [
+            "punch"
+          ],
+          "blend_transition": 0.12,
+          "transitions": [
+            {
+              "default": "q.property('lila:action') != 'punch'"
             }
           ]
         }

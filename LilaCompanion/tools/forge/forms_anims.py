@@ -23,10 +23,22 @@ FORM_IDS = {"drone": 0, "heli": 1, "car": 2, "excavator": 3, "tank": 4, "jet": 5
 # capota (vidro/teto) recolhe quando alguém está dentro: quem pilota vê tudo
 CANOPY = "1 - v.ride * 0.98"
 
-INITIALIZE = ["v.ride = 0; v.dtilt = 0; v.htilt = 0; v.jpitch = 0; v.aims = 0; v.pits = 0; v.cwd = 0; v.cws = 0; v.wheel = 0; v.pby = q.body_y_rotation; v.lean = 0; v.tf = 9; v.pf = q.property('lila:form'); v.gspin = 0; v.gear = 1;"]
+INITIALIZE = ["v.po = q.property('lila:off') ? 1 : 0; v.ot = 9; v.bt = 9; v.dsp = 0; v.ride = 0; v.dtilt = 0; v.htilt = 0; v.jpitch = 0; v.aims = 0; v.pits = 0; v.cwd = 0; v.cws = 0; v.wheel = 0; v.pby = q.body_y_rotation; v.lean = 0; v.tf = 9; v.pf = q.property('lila:form'); v.gspin = 0; v.gear = 1;"]
 PRE_ANIMATION = [
     "v.form = q.property('lila:form');",
     "v.ride = math.lerp(v.ride, q.has_rider ? 1 : 0, 0.15);",
+    # robô desligado/ligado: tempo desde que desligou (v.ot) / ligou (v.bt) e quanto cada parte está "no chão"
+    "v.offp = q.property('lila:off') ? 1 : 0;",
+    "v.ot = (v.offp > 0.5) ? ((v.po > 0.5) ? v.ot + q.delta_time : 0) : v.ot;",
+    "v.bt = (v.offp < 0.5) ? ((v.po < 0.5) ? v.bt + q.delta_time : 0) : v.bt;",
+    "v.po = v.offp;",
+    "v.kh = (v.offp > 0.5) ? math.clamp(v.ot * 2.6, 0, 1) : 1 - math.clamp((v.bt - 0.95) * 1.7, 0, 1);",
+    "v.kr = (v.offp > 0.5) ? math.clamp((v.ot - 0.15) * 2.6, 0, 1) : 1 - math.clamp((v.bt - 0.45) * 1.8, 0, 1);",
+    "v.kl = (v.offp > 0.5) ? math.clamp((v.ot - 0.25) * 2.6, 0, 1) : 1 - math.clamp((v.bt - 0.65) * 1.8, 0, 1);",
+    "v.kt = (v.offp > 0.5) ? math.clamp((v.ot - 0.35) * 2.6, 0, 1) : 1 - math.clamp((v.bt - 0.05) * 1.6, 0, 1);",
+    "v.kd = (v.offp > 0.5) ? math.clamp((v.ot - 0.1) * 2.0, 0, 1) : 1 - math.clamp((v.bt - 0.2) * 1.1, 0, 1);",
+    "v.kg = (v.offp > 0.5) ? math.clamp(v.ot * 6, 0, 1) : 1 - math.clamp((v.bt - 1.45) * 3, 0, 1);",
+    "v.dsp = v.dsp + math.min(q.delta_time, 0.1) * 45 * (1 - v.kd);",
     "v.tf = (v.form != v.pf) ? 0 : v.tf + q.delta_time; v.pf = v.form;",
     "v.dir = (q.property('lila:move') == 'sneak') ? -1 : 1;",
     "v.wheel = v.wheel + q.ground_speed * math.min(q.delta_time, 0.1) * 160 * v.dir;",

@@ -87,7 +87,8 @@ async function area(dim, name, x0, z0, x1, z1) {
   try {
     const mgr = world.tickingAreaManager;
     if (mgr.hasTickingArea(name)) mgr.removeTickingArea(name);
-    await mgr.createTickingArea(name, { dimension: dim, from: { x: x0, y: Y - 8, z: z0 }, to: { x: x1, y: Y + 30, z: z1 } });
+    // nunca espera para sempre (se o jogo recusar a área, segue com o que carregar)
+    await Promise.race([mgr.createTickingArea(name, { dimension: dim, from: { x: x0, y: Y - 8, z: z0 }, to: { x: x1, y: Y + 30, z: z1 } }), system.waitTicks(200)]);
   } catch {
     cmd(dim, `tickingarea add ${x0} ${Y - 8} ${z0} ${x1} ${Y + 30} ${z1} ${name} true`);
   }
@@ -220,6 +221,38 @@ async function soloTests(dim, check) {
   c.entity?.teleport({ x: 0.5, y: Y + 2, z: 0.5 });
   await system.waitTicks(4);
 
+  // ---------------- 2.2: robô de peças flutuantes — desligar (desmonta no chão) e ligar (monta)
+  {
+    const { powerOff, powerOn, BOOT_TICKS } = await import("../lila/power.js");
+    c.entity?.teleport({ x: 0.5, y: Y + 3, z: 0.5 }, { keepVelocity: false });
+    await system.waitTicks(4);
+    powerOff(c, true);
+    await system.waitTicks(30);
+    const offY = c.pos().y;
+    const offProp = c.entity?.getProperty("lila:off") === true;
+    check("power off: robot drops to the ground and stays off", offProp && !!c.rec.off && Math.abs(offY - (Y + 1)) < 0.6, `y=${(offY - Y).toFixed(2)} prop=${offProp}`);
+    command(c, "vira tanque");
+    await system.waitTicks(4);
+    check("while off it ignores orders (until 'liga')", formOf(c) === "drone" && !!c.rec.off);
+    command(c, "liga");
+    await system.waitTicks(BOOT_TICKS + 6);
+    check("power on: assembles and is back online", !c.rec.off && c.entity?.getProperty("lila:off") === false);
+    // soco forte quando o alvo está perto
+    c.entity?.teleport({ x: 0.5, y: Y + 1.2, z: 0.5 }, { keepVelocity: false });
+    const pz = dim.spawnEntity("minecraft:zombie", { x: 0.5, y: Y + 1, z: 2.5 });
+    await system.waitTicks(3);
+    const { punch } = await import("../lila/drone.js");
+    const h0 = hp(pz);
+    const ok = punch(c, pz);
+    await system.waitTicks(8);
+    check("strong punch: big damage + knockback", ok && (dead(pz) || hp(pz) <= h0 - 15), `hp ${h0}->${dead(pz) ? "down" : hp(pz)}`);
+    try {
+      pz.remove();
+    } catch {
+      /* ignore */
+    }
+  }
+
   // torreta gigante: pousa, vira arma e derruba 3 zumbis
   const zs = [0, 1, 2].map((k) => dim.spawnEntity("minecraft:zombie", { x: 8 + k * 3, y: Y + 1, z: 16 }));
   c.rec.mode = "turret";
@@ -249,9 +282,10 @@ async function soloTests(dim, check) {
     const b0 = c.rec.stats.built;
     const rh = await runGen(megaBuild(c, "poco", { here: false }), 3000);
     system.clearRun(watch);
-    const water = countBlocks(dim, "minecraft:water", hx - 1, Y - 4, 12, hx + 1, Y, 14);
+    const wb = c.flags.lastBuild ?? { cx: hx, cz: 13, y0: Y };
+    const water = countBlocks(dim, "minecraft:water", wb.cx - 1, wb.y0 - 4, wb.cz - 1, wb.cx + 1, wb.y0, wb.cz + 1);
     check("hand-built (human mode): well done block by block", rh.ok && c.rec.stats.built === b0 + 1 && rh.ticks > 150 && water >= 9,
-      `ticks=${rh.ticks} water=${water} drone positions=${spots.size} maxStep=${stats.maxStepMs}ms ${rh.err ?? ""}`);
+      `ticks=${rh.ticks} water=${water} at=${wb.cx},${wb.y0},${wb.cz} drone positions=${spots.size} maxStep=${stats.maxStepMs}ms ${rh.err ?? ""}`);
     check("hand-built: the drone flies around the work", spots.size >= 4, `positions=${spots.size}`);
     c.entity?.teleport({ x: 0.5, y: Y + 2, z: 0.5 });
     await system.waitTicks(2);
@@ -390,14 +424,14 @@ async function driveRun(c, form, ticks, input, at) {
 }
 
 async function vehicleTests(c, dim, check) {
-  const TX = 5000, WX = 5100;
-  await area(dim, "lila_test_track", TX - 12, -12, WX + 12, 200);
+  const TX = 5000, WX = 5030;
+  await area(dim, "lila_test_track", TX - 10, -10, WX + 10, 150);
   // pista de pedra reta e um canal de água fundo
-  cmd(dim, `fill ${TX - 6} ${Y - 1} -6 ${TX + 6} ${Y - 1} 190 stone`);
-  cmd(dim, `fill ${TX - 6} ${Y} -6 ${TX + 6} ${Y + 10} 190 air`);
-  cmd(dim, `fill ${WX - 7} ${Y - 9} -7 ${WX + 7} ${Y - 8} 190 stone`);
-  cmd(dim, `fill ${WX - 6} ${Y - 7} -6 ${WX + 6} ${Y - 1} 190 water`);
-  cmd(dim, `fill ${WX - 6} ${Y} -6 ${WX + 6} ${Y + 8} 190 air`);
+  cmd(dim, `fill ${TX - 6} ${Y - 1} -6 ${TX + 6} ${Y - 1} 150 stone`);
+  cmd(dim, `fill ${TX - 6} ${Y} -6 ${TX + 6} ${Y + 10} 150 air`);
+  cmd(dim, `fill ${WX - 7} ${Y - 9} -7 ${WX + 7} ${Y - 8} 150 stone`);
+  cmd(dim, `fill ${WX - 6} ${Y - 7} -6 ${WX + 6} ${Y - 1} 150 water`);
+  cmd(dim, `fill ${WX - 6} ${Y} -6 ${WX + 6} ${Y + 8} 150 air`);
   await system.waitTicks(10);
   const fwd = { mv: { x: 0, y: 1 }, yaw: 0 };
   const start = { x: TX + 0.5, y: Y + 0.1, z: 0.5 };
@@ -405,7 +439,7 @@ async function vehicleTests(c, dim, check) {
   const out = [];
   let groundOk = true;
   /** @type {[string, number][]} */
-  const GROUND = [["car", 30], ["moto", 32], ["truck", 26], ["tank", 14], ["excavator", 12]];
+  const GROUND = [["car", 45], ["moto", 50], ["truck", 40], ["tank", 22], ["excavator", 18]];
   for (const [f, min] of GROUND) {
     const r = await driveRun(c, f, 60, fwd, start);
     out.push(`${f}=${(r.dist / 3).toFixed(1)}b/s`);
@@ -426,6 +460,7 @@ async function vehicleTests(c, dim, check) {
   check("spaceship and UFO fly", rs.dist >= 25 && ru.dist >= 20, `ship=${rs.dist.toFixed(1)} ufo=${ru.dist.toFixed(1)}`);
   const rst = await driveRun(c, "stealth", 40, { mv: { x: 0, y: 1 }, yaw: 0, view: { x: 0, y: 0.05, z: 1 } }, { x: TX + 0.5, y: Y + 4, z: 0.5 });
   check("stealth fighter is the fastest", rst.dist >= 40, `dist=${rst.dist.toFixed(1)} in 2 s`);
+  c.entity?.teleport({ x: TX + 0.5, y: Y + 2, z: 0.5 }, { keepVelocity: false });
   // lancha: anda rápido na água e boia
   const rb = await driveRun(c, "boat", 60, fwd, { x: WX + 0.5, y: Y - 0.3, z: 0.5 });
   check("speedboat: fast on water and floats", rb.dist >= 25 && rb.end.y > Y - 1.5 && rb.end.y < Y + 1.2, `dist=${rb.dist.toFixed(1)} y=${(rb.end.y - Y).toFixed(2)}`);

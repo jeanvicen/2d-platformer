@@ -77,6 +77,15 @@ export function storeBody(c, structureId) {
  * @param {import("@minecraft/server").Player} player
  */
 export function summon(c, player) {
+  if (c.rec.off) {
+    // invocar de novo = religar
+    c.rec.off = false;
+    try {
+      c.entity?.setProperty("lila:off", false);
+    } catch {
+      /* ignore */
+    }
+  }
   if (c.rec.defeat) {
     say(c, `Ainda estou me recuperando... volto em ${Math.ceil(c.rec.defeat.left / 20)}s.`, { force: true });
     return false;

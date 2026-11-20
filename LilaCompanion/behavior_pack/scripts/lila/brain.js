@@ -17,6 +17,7 @@ import { logError } from "../core/log.js";
 import { missions, mount } from "./drone.js";
 import { formOf, setForm, releaseRiders } from "./forms.js";
 import { clearSwarm, doShape } from "./swarm.js";
+import { powerOff, powerOn } from "./power.js";
 import { armyActive, merge, command as armyCommand } from "./army.js";
 import { FORM_NAMES } from "../lib/catalog.js";
 import { overBudget } from "../core/budget.js";
@@ -393,6 +394,11 @@ export function backToNormal(c, quiet = false) {
 
 export function handleIntents(c, intents, raw = "") {
   const newGoals = [];
+  // desligado: só aceita ligar (ou dispensar / status)
+  if (c.rec.off && !intents.some((i) => ["power", "dismiss", "status", "inventory"].includes(i.type))) {
+    say(c, "Estou desligado. Diga \"liga\" ou use o controle (Ligar o robô).", { force: true });
+    return;
+  }
   for (const it of intents) {
     switch (it.type) {
       case "stop":
@@ -424,6 +430,13 @@ export function handleIntents(c, intents, raw = "") {
         setForm(c, it.form);
         break;
       }
+      case "power":
+        if (it.on) {
+          if (!c.rec.off) say(c, "Já estou ligado!", { force: true });
+          else powerOn(c);
+        } else if (c.rec.off) say(c, "Já estou desligado.", { force: true });
+        else powerOff(c);
+        break;
       case "swarm": {
         const o = c.owner();
         if (!c.alive() || !o) {
