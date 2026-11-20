@@ -583,7 +583,14 @@ export function* flatten(c, radius = 24, all = false) {
   const dim = c.dim();
   const ref = owner && owner.dimension.id === dim.id ? owner.location : c.pos();
   const R = Math.max(6, Math.min(64, Math.round(radius)));
-  const cx = Math.floor(ref.x), cz = Math.floor(ref.z), y0 = Math.floor(ref.y) - 1;
+  const cx = Math.floor(ref.x), cz = Math.floor(ref.z);
+  // chão = primeiro bloco firme abaixo de você (mesmo se estiver voando/pulando)
+  let y0 = Math.floor(ref.y) - 1;
+  for (let k = 0; k < 64; k++) {
+    const b = dim.getBlock({ x: cx, y: y0, z: cz });
+    if (!b || (!b.isAir && !b.isLiquid && !PLANTS.includes(b.typeId))) break;
+    y0--;
+  }
   const speed = speedOf(c);
   say(c, all
     ? `Destruindo TUDO num raio de ${R} blocos e deixando plano (menos baús e camas)...`
