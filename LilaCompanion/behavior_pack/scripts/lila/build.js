@@ -258,7 +258,8 @@ function* placePass(c, order, site, wood, st) {
     const ok = yield* placeOne(c, { ...b, m }, w, wood, site);
     if (ok) st.placed++;
     else if (SOLID_M.has(m)) short++;
-    if (st.placed % 40 === 39) say(c, `Obra em andamento: ${Math.min(99, Math.round((st.placed / st.total) * 100))}%`, { chatter: true });
+    c.flags.buildProgress = `${st.placed}/${st.total}`;
+    if (ok && st.placed % 40 === 39) say(c, `Obra em andamento: ${Math.min(99, Math.round((st.placed / st.total) * 100))}%`, { chatter: true });
   }
   return short;
 }

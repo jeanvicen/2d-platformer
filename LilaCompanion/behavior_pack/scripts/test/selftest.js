@@ -68,9 +68,16 @@ function runGen(gen, timeout) {
   });
 }
 
-async function waitUntil(pred, timeout) {
+/** Progresso legível de um companheiro (diagnóstico dos testes longos). */
+function trace(c) {
+  const p = c.pos();
+  return `job=${c.job?.desc?.type ?? "-"} pos=${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)} obra=${c.flags.buildProgress ?? "-"} solido=${Object.entries(inv.summary(c)).filter(([id]) => /_planks$|_log$|cobble/.test(id)).map(([id, n]) => `${id.replace("minecraft:", "")}:${n}`).join(",")}`;
+}
+
+async function waitUntil(pred, timeout, c) {
   const t0 = system.currentTick;
   while (system.currentTick - t0 < timeout) {
+    if (c && (system.currentTick - t0) % 200 < 5) console.info(`[Lila:trace] t=${system.currentTick - t0} ${trace(c)}`);
     try {
       if (pred()) return true;
     } catch {
@@ -213,7 +220,8 @@ async function ownerTests(dim, check) {
   inv.addId(c, "minecraft:oak_log", 48);
   const tb = system.currentTick;
   command(c, "constroi uma cabana aqui");
-  await waitUntil(() => c.rec.stats.built > built0 || (c.rec.goals.length === 0 && system.currentTick - tb > 60), 4800);
+  c.flags.trace = true;
+  await waitUntil(() => c.rec.stats.built > built0 || (c.rec.goals.length === 0 && system.currentTick - tb > 60), 4800, c);
   check("'constrói uma cabana' (só troncos) termina em até 4 min", c.rec.stats.built > built0, `ticks=${system.currentTick - tb} job=${c.job?.desc?.type ?? "-"} err=${c.lastError ?? "-"}`);
   // plantação rápida: poucas sementes e sem balde → planta o que tem e usa terra molhada
   owner.teleport({ x: -24.5, y: Y + 1, z: 24.5 }, { rotation: { x: 0, y: 180 } });
@@ -223,7 +231,8 @@ async function ownerTests(dim, check) {
   const tz = system.currentTick;
   const built1 = c.rec.stats.built;
   command(c, "faz uma plantação aqui");
-  await waitUntil(() => c.rec.stats.built > built1 || (c.rec.goals.length === 0 && system.currentTick - tz > 60), 3600);
+  await waitUntil(() => c.rec.stats.built > built1 || (c.rec.goals.length === 0 && system.currentTick - tz > 60), 3600, c);
+  c.flags.trace = false;
   check("'faz uma plantação' (6 sementes, sem balde) termina em até 3 min", c.rec.stats.built > built1 && !!c.rec.farm, `ticks=${system.currentTick - tz} job=${c.job?.desc?.type ?? "-"} err=${c.lastError ?? "-"}`);
   // me dá tudo: fica só com as ferramentas
   command(c, "me dá tudo");

@@ -13,8 +13,8 @@ const TAG = LILA.chatTag;
  */
 export function say(c, msg, o = {}) {
   const p = c.owner();
+  if (c.flags.test || c.flags.trace) console.info(`[Lila:say] ${msg}`);
   if (!p) {
-    if (c.flags.test) console.info(`[Lila:say] ${msg}`);
     return;
   }
   const now = system.currentTick;
