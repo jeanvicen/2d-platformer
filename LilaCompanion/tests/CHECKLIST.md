@@ -4,7 +4,7 @@ Legenda: **PASS** = verificado de verdade · **FAIL** = falhou · **NOT TESTED**
 neste ambiente (sem cliente gráfico/celular).
 
 Ambiente: Bedrock Dedicated Server **1.26.65.1** oficial (Linux, sem jogadores), autoteste dentro do
-mundo `/scriptevent lila:selftest` — log completo em `tests/last_bds_run.log` (30/30 PASS) e `tests/last_bds_owner_run.log` com jogador simulado (24/24 PASS, Lila + DR-0N), versão 1.4.0.
+mundo `/scriptevent lila:selftest` — log completo em `tests/last_bds_run.log` (30/30 PASS) e `tests/last_bds_owner_run.log` com jogador simulado (28/28 PASS, Lila + DR-0N: cabana só com troncos em 2 min 50 s, plantação sem balde em 75 s, comida entregue, torreta pousada e transformada), versão 1.5.0.
 
 ## Carregamento e qualidade
 | Item | Resultado |
