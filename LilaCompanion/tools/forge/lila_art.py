@@ -323,12 +323,18 @@ def lila_model():
     hair_back.cube((-2.8, 13.0, 3.8), (5.6, 2.0, 1.2), P("hair_tips2"))
     lids = m.bone("eyelids", "head", pivot=(0, 28.6, -4.0))
     for x0 in (-2.5, 0.5):
-        lids.cube((x0, 26.6, -4.06), (2.0, 2.0, 0.05), P("eyelid"))
+        # escondida dentro da cabeça; a animação de piscar traz para frente por instantes
+        lids.cube((x0, 26.5, -3.9), (2.0, 2.0, 0.05), P("eyelid"))
     for side, sx in (("right", -1), ("left", 1)):
         arm = m.bone(f"{side}Arm", "body", pivot=(sx * 5, 22, 0))
         arm.cube((4 if sx > 0 else -7, 12, -2), (3, 12, 4), P("sleeve"))
         leg = m.bone(f"{side}Leg", "waist", pivot=(sx * 1.9, 12, 0))
         leg.cube((-0.1 if sx > 0 else -3.9, 0, -2), (4, 12, 4), P("leg"))
+    # tamanhos múltiplos de 0,5 = pixels inteiros na textura 2× (sem sangrar cor de outra peça)
+    for c in m.cubes():
+        if c.paint.params.get("part") == "eyelid":
+            continue
+        c.size = tuple(max(0.5, round(v * 2) / 2) for v in c.size)
     m.bone("rightItem", "rightArm", pivot=(-6, 15, 1))
     m.bone("leftItem", "leftArm", pivot=(6, 15, 1))
     return m

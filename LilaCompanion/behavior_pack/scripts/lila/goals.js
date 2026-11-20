@@ -328,13 +328,20 @@ export function runGoal(c, g) {
     })();
     case "tend": return tendFarm(c);
     case "food": return (function* () {
+      if (a.forOwner) {
+        // já tem comida? entrega na hora; senão busca do jeito mais rápido e entrega o que conseguir
+        if (inv.count(c, { group: "food" }) === 0) {
+          say(c, "Deixa comigo, vou arranjar comida!", { force: true });
+          yield* obtainFood(c, Math.min(a.count ?? 8, 6), { cmd, quick: true });
+        }
+        const stacks = inv.takeStacks(c, { group: "food" }, a.count ?? 8);
+        yield* deliver(c, stacks, "de comida");
+        return;
+      }
       const want = (a.base ?? inv.count(c, { group: "food" })) + (a.count ?? 8);
       a.base ??= inv.count(c, { group: "food" });
       yield* obtainFood(c, want, { cmd });
-      if (a.forOwner) {
-        const stacks = inv.takeStacks(c, { group: "food" }, a.count ?? 8);
-        yield* deliver(c, stacks, "de comida");
-      } else say(c, "Comida garantida!", { force: cmd });
+      say(c, "Comida garantida!", { force: cmd });
     })();
     case "give": return a.all ? giveAll(c) : giveTarget(c, a.item, a.count);
     case "explore": return explore(c, a.legs ?? 5);

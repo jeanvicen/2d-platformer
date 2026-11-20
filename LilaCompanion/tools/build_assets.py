@@ -30,7 +30,7 @@ from forge.lila_art import bake_lila, lila_model  # noqa: E402
 from forge.paint import bake  # noqa: E402
 from forge.render import render  # noqa: E402
 
-VERSION = [1, 1, 0]
+VERSION = [1, 2, 0]
 MIN_ENGINE = [1, 26, 30]
 SERVER_VERSION = "2.8.0"
 SERVER_UI_VERSION = "2.1.0"

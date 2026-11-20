@@ -37,10 +37,10 @@
           ]
         },
         "eyelids": {
-          "scale": [
-            1.0,
-            "(math.mod(q.life_time, 4.3) < 0.13 || q.property('lila:action') == 'sleep' || q.property('lila:action') == 'defeat') ? 1 : 0",
-            1.0
+          "position": [
+            0.0,
+            0.0,
+            "(math.mod(q.life_time, 4.3) < 0.13 || q.property('lila:action') == 'sleep' || q.property('lila:action') == 'defeat') ? -0.2 : 0"
           ]
         },
         "hair_back": {
@@ -1452,12 +1452,12 @@
       },
       "loop": "hold_on_last_frame",
       "animation_length": 1.0,
-      "particle_effects": [
-        {
+      "particle_effects": {
+        "0.0": {
           "effect": "sparkle",
           "locator": "ground"
         }
-      ]
+      }
     }
   }
 }

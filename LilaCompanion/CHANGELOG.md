@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.2.0
+- **Animações voltaram**: o efeito de partícula da animação de invocar estava em formato de lista;
+  o jogo exige linha do tempo (`{"0.0": ...}`) e por causa disso rejeitava o arquivo de animações
+  inteiro — ela ficava dura e a pálpebra do piscar cobria os olhos (rosto "bugado").
+  O validador agora confere o formato de cada campo de animação/controlador.
+- **Rosto**: a pálpebra fica escondida dentro da cabeça e só aparece quando pisca; tamanhos das
+  peças em pixels inteiros (sem sangrar cor de outra parte da textura).
+- **Comida muito mais rápida**: entrega o que já tem na hora; senão colhe maduro, caça os animais
+  que estão perto e entrega (35 s no teste, antes 3 min); avisa no chat o que está fazendo.
+- **Testes com jogador de verdade** (jogador simulado do GameTest, só no servidor de teste):
+  seguir, "vem aqui", "pega madeira", "arranja comida", "faz uma picareta", "me dá tudo".
+
 ## 1.1.0
 - **Corrigido o crash "exceção de vigia de script"**: a mineração profunda podia entrar num laço
   infinito quando a escadaria ficava cercada (blocos que ela não pode quebrar, lava, chunk não

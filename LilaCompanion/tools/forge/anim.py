@@ -39,10 +39,11 @@ def anim(name, bones, loop=True, length=None, blend=None, override=False, partic
         a["animation_length"] = length
     if override:
         a["override_previous_animation"] = True
+    # efeitos são linhas do tempo {"tempo": efeito} — lista aqui invalida o arquivo inteiro no jogo
     if particles:
-        a["particle_effects"] = particles
+        a["particle_effects"] = particles if isinstance(particles, dict) else {"0.0": particles[0] if len(particles) == 1 else particles}
     if sounds:
-        a["sound_effects"] = sounds
+        a["sound_effects"] = sounds if isinstance(sounds, dict) else {"0.0": sounds[0] if len(sounds) == 1 else sounds}
     if anim_time_update:
         a["anim_time_update"] = anim_time_update
     return name, a

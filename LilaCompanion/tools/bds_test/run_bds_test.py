@@ -58,13 +58,58 @@ def setup(server):
     open(props, "w", encoding="utf-8").write(text)
 
 
+HARNESS = os.path.join(ROOT, "tests", "harness_bp")
+
+
+def enable_experiments(server):
+    """Liga 'Beta APIs' (GameTest) só no mundo de teste, para o jogador simulado."""
+    import io
+    import struct
+    import nbtlib
+    path = os.path.join(server, "worlds", WORLD, "level.dat")
+    raw = open(path, "rb").read()
+    ver = struct.unpack("<i", raw[:4])[0]
+    nbt = nbtlib.File.parse(io.BytesIO(raw[8:]), byteorder="little")
+    exp = nbt.get("experiments") or nbtlib.Compound()
+    for k in ("gametest", "experiments_ever_used", "saved_with_toggled_experiments"):
+        exp[k] = nbtlib.Byte(1)
+    nbt["experiments"] = exp
+    buf = io.BytesIO()
+    nbt.write(buf, byteorder="little")
+    body = buf.getvalue()
+    open(path, "wb").write(struct.pack("<ii", ver, len(body)) + body)
+
+
+def boot_and_stop(server, env):
+    p = subprocess.Popen(["./bedrock_server"], cwd=server, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT, text=True, bufsize=1, env=env)
+    for line in p.stdout:
+        if "Server started" in line:
+            p.stdin.write("stop\n")
+            p.stdin.flush()
+    p.wait(timeout=120)
+
+
 def main():
     server = sys.argv[1]
     mode = "quick" if "quick" in sys.argv else ""
+    if "owner" in sys.argv:
+        mode = "owner"
     setup(server)
     env = dict(os.environ, LD_LIBRARY_PATH=".")
     if os.environ.get("LILA_BDS_PRELOAD"):
         env["LD_PRELOAD"] = os.environ["LILA_BDS_PRELOAD"]
+    if mode == "owner":
+        dst = os.path.join(server, "behavior_packs", "LilaTestHarness")
+        shutil.rmtree(dst, ignore_errors=True)
+        shutil.copytree(HARNESS, dst)
+        boot_and_stop(server, env)
+        enable_experiments(server)
+        hu, hv = manifest(HARNESS)
+        wbp = os.path.join(server, "worlds", WORLD, "world_behavior_packs.json")
+        packs = json.load(open(wbp))
+        packs.append({"pack_id": hu, "version": hv})
+        json.dump(packs, open(wbp, "w"))
     proc = subprocess.Popen(["./bedrock_server"], cwd=server, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT, text=True, bufsize=1, env=env)
     q = queue.Queue()
@@ -74,7 +119,7 @@ def main():
         for line in proc.stdout:
             log.append(line.rstrip("\n"))
             q.put(line)
-            if "LILA-TEST" in line:
+            if "LILA-TEST" in line or "LILA-HARNESS" in line or "[Lila:" in line:
                 print(line.rstrip("\n"), flush=True)
 
     threading.Thread(target=reader, daemon=True).start()

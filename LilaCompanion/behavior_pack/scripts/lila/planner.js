@@ -7,8 +7,8 @@ import { recipesFor, representative } from "../lib/recipes.js";
 import { GoalError, NeedTool } from "./companion.js";
 import * as inv from "./inventory.js";
 import { craft, fuelUnits, needTarget, planksFor, smelt } from "./crafting.js";
-import { applesFromLeaves, chopTrees, digFor, fillBucket, harvestNearby, mineFor, seedsFromGrass } from "./resource.js";
-import { huntFor, shearSheep } from "./combat.js";
+import { applesFromLeaves, chopTrees, digFor, exploreStep, fillBucket, harvestNearby, mineFor, seedsFromGrass } from "./resource.js";
+import { canAttack, fight, huntFor, shearSheep } from "./combat.js";
 import { findBlocks } from "./world.js";
 import { say } from "./talk.js";
 
@@ -235,52 +235,82 @@ export function* viaSmelt(c, id, count, o) {
   yield* smelt(c, id, input, missing);
 }
 
+/** Animais de comida por perto (para caçar rápido, sem sair explorando à toa). */
+function nearbyFoodAnimals(c, r = 36) {
+  try {
+    return c.dim().getEntities({ location: c.pos(), maxDistance: r })
+      .filter((e) => FOOD_MOBS[e.typeId] && canAttack(c, e, true))
+      .sort((a, b) => dist2(a.location, c.pos()) - dist2(b.location, c.pos()));
+  } catch {
+    return [];
+  }
+}
+const FOOD_MOBS = { "minecraft:cow": "minecraft:beef", "minecraft:pig": "minecraft:porkchop", "minecraft:sheep": "minecraft:mutton",
+  "minecraft:chicken": "minecraft:chicken", "minecraft:rabbit": "minecraft:rabbit" };
+const MOB_PT = { "minecraft:cow": "uma vaca", "minecraft:pig": "um porco", "minecraft:sheep": "uma ovelha", "minecraft:chicken": "uma galinha", "minecraft:rabbit": "um coelho" };
+const dist2 = (a, b) => (a.x - b.x) ** 2 + (a.z - b.z) ** 2;
+
 /**
- * Comida: colher maduro → pão com o trigo → assar o cru → maçãs → caçar (se permitido).
- * @param {number} count número de itens de comida desejado
+ * Comida, do jeito mais rápido e visível: maduro/frutas perto → pão com o trigo → caçar os
+ * animais que estão perto (pedido direto ou caça ligada) → assar se der → maçãs só em folhas
+ * bem perto → explorar procurando animais/plantas. Para quando tiver `count` itens.
+ * @param {number} count número total de itens de comida desejado
+ * @param {{cmd?:boolean, quick?:boolean}} o quick: aceita o que conseguir rápido (entrega parcial)
  */
 export function* obtainFood(c, count, o = {}) {
   const food = { group: "food" };
   const have = () => inv.count(c, food);
-  if (have() >= count) return;
-  // 1) plantas maduras e frutas
-  yield* harvestNearby(c, food, count, 32);
-  // 2) pão
-  const wheat = inv.count(c, "minecraft:wheat");
-  if (have() < count && wheat >= 3) yield* craft(c, "minecraft:bread", inv.count(c, "minecraft:bread") + Math.floor(wheat / 3));
-  // 3) assar o que estiver cru
-  for (const raw of ["minecraft:beef", "minecraft:porkchop", "minecraft:mutton", "minecraft:chicken", "minecraft:rabbit", "minecraft:potato", "minecraft:cod", "minecraft:salmon"]) {
-    const n = inv.count(c, raw);
-    if (n >= 2) {
-      const out = { "minecraft:potato": "minecraft:baked_potato" }[raw] ?? raw.replace("minecraft:", "minecraft:cooked_");
-      try {
-        yield* viaSmelt(c, out, inv.count(c, out) + n, o);
-      } catch {
-        /* sem fornalha agora: come cru mesmo */
-      }
-    }
-  }
-  if (have() >= count) return;
-  // 4) maçãs
-  yield* applesFromLeaves(c, Math.min(count, inv.count(c, "minecraft:apple") + 2), 40);
-  if (have() >= count) return;
-  // 5) caça (só com permissão: pedido direto ou configuração ligada)
+  const enough = () => have() >= count;
+  if (enough()) return;
   const allowHunt = !!o.cmd || c.rec.settings.hunt;
-  if (allowHunt) {
-    for (const [item, mobs] of /** @type {[string, string[]][]} */ ([["minecraft:beef", ["minecraft:cow"]], ["minecraft:porkchop", ["minecraft:pig"]], ["minecraft:mutton", ["minecraft:sheep"]], ["minecraft:chicken", ["minecraft:chicken"]]])) {
-      if (have() >= count) break;
-      try {
-        yield* huntFor(c, item, mobs, inv.count(c, item) + Math.min(4, count), true);
-        yield* viaSmelt(c, item.replace("minecraft:", "minecraft:cooked_"), inv.count(c, item.replace("minecraft:", "minecraft:cooked_")) + inv.count(c, item), o);
-      } catch {
-        /* tenta o próximo animal */
-      }
+  const talk = (m) => say(c, m, { force: !!o.cmd });
+  for (let round = 0; round < 4 && !enough(); round++) {
+    yield 1;
+    // 1) plantas maduras e frutinhas por perto
+    const before = have();
+    yield* harvestNearby(c, food, count, 24);
+    if (have() > before) talk("Colhi umas coisas maduras aqui perto.");
+    if (enough()) return;
+    // 2) pão com o trigo que ela tiver
+    const wheat = inv.count(c, "minecraft:wheat");
+    if (wheat >= 3) {
+      yield* craft(c, "minecraft:bread", inv.count(c, "minecraft:bread") + Math.floor(wheat / 3));
+      if (enough()) return;
     }
+    // 3) caça os animais que estão perto (sem sair explorando ainda)
+    if (allowHunt) {
+      let hunted = 0;
+      for (let k = 0; k < 6 && !enough(); k++) {
+        const target = nearbyFoodAnimals(c)[0];
+        if (!target) break;
+        if (hunted === 0) talk(`Vi ${MOB_PT[target.typeId] ?? "um bicho"} ali, vou caçar pra gente.`);
+        if (yield* fight(c, target, 300)) hunted++;
+      }
+      // 4) assa o que for cru se já tiver fornalha/pedra (senão entrega cru mesmo, rápido)
+      if (hunted && (inv.count(c, "minecraft:furnace") > 0 || inv.count(c, { group: "stone_material" }) >= 8 || c.mem.nearest("furnace", c.pos(), c.dim().id, 24))) {
+        for (const raw of Object.values(FOOD_MOBS)) {
+          const n = inv.count(c, raw);
+          if (!n) continue;
+          try {
+            talk("Vou assar a carne rapidinho.");
+            yield* viaSmelt(c, raw.replace("minecraft:", "minecraft:cooked_"), inv.count(c, raw.replace("minecraft:", "minecraft:cooked_")) + n, o);
+          } catch {
+            /* sem combustível agora: vai crua mesmo */
+          }
+        }
+      }
+      if (enough() || (o.quick && have() > 0)) return;
+    }
+    if (o.quick && have() > 0) return;
+    // 5) maçãs só em folhas bem pertinho
+    yield* applesFromLeaves(c, Math.min(count, inv.count(c, "minecraft:apple") + 1), 10);
+    if (enough() || (o.quick && have() > 0)) return;
+    // 6) nada por perto: explora procurando animais e plantações
+    talk(allowHunt ? "Não tem comida aqui perto, vou procurar animais mais longe." : "Não achei nada maduro aqui. Vou procurar mais longe.");
+    yield* exploreStep(c, "comida");
   }
   if (have() > 0) return;
-  // 6) sem nada: sementes para plantar depois e explora atrás de comida
-  yield* seedsFromGrass(c, 6);
-  if (have() === 0) throw new GoalError(allowHunt ? "não achei comida por perto" : "não achei comida madura. Posso caçar se você ligar \"caça\" nas configurações, ou fazer uma plantação", "food");
+  throw new GoalError(allowHunt ? "procurei bastante e não achei comida nem animais por perto" : "não achei comida madura. Posso caçar se você ligar \"caça\" nas configurações, ou fazer uma plantação", "food");
 }
 
 function nearbyBlock(c, id, r) {

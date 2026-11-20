@@ -9,7 +9,10 @@ import { goTo } from "../lila/motor.js";
 import { buildBlueprint } from "../lila/build.js";
 import { BLUEPRINTS } from "../lib/blueprints.js";
 import { blueprintBlock } from "../lib/recipes.js";
-import { command, handleIntents, stats } from "../lila/brain.js";
+import { command, handleIntents, stats, statusText } from "../lila/brain.js";
+import { loadCompanion } from "../lila/companion.js";
+import { summon } from "../lila/lifecycle.js";
+import { isFood } from "../lib/items.js";
 import { mineFor } from "../lila/resource.js";
 import { defend } from "../lila/combat.js";
 import { dismiss, restoreBodyForTest, RESPAWN_TICKS } from "../lila/lifecycle.js";
@@ -126,6 +129,72 @@ function spawnTestLila(dim) {
   return c;
 }
 
+/** Testes com um jogador de verdade (simulado pelo GameTest no servidor de teste). */
+async function ownerTests(dim, check) {
+  cmd(dim, "scriptevent lilatest:spawn_owner");
+  /** @type {import("@minecraft/server").Player | undefined} */
+  let player = undefined;
+  await waitUntil(() => !!(player = world.getAllPlayers().find((p) => p.name === "Dono")), 200);
+  check("simulated owner joined", !!player);
+  if (!player) return;
+  const owner = /** @type {import("@minecraft/server").Player} */ (/** @type {unknown} */ (player));
+  const c = loadCompanion(owner);
+  check("summon in front of owner", summon(c, owner) && c.alive());
+  const pinv = () => owner.getComponent("minecraft:inventory")?.container;
+  const pcount = (pred) => {
+    const ct = pinv();
+    let n = 0;
+    for (let i = 0; ct && i < ct.size; i++) {
+      const it = ct.getItem(i);
+      if (it && pred(it.typeId)) n += it.amount;
+    }
+    return n;
+  };
+  // seguir: o dono anda 18 blocos; ela tem que ir junto
+  handleIntents(c, [{ type: "follow" }]);
+  for (let k = 0; k < 18; k++) {
+    owner.teleport({ x: 0.5 + k, y: Y + 1, z: 6.5 });
+    await system.waitTicks(6);
+  }
+  await system.waitTicks(120);
+  const d = Math.hypot(c.pos().x - owner.location.x, c.pos().z - owner.location.z);
+  check("follows the owner while walking", d < 6, `dist=${d.toFixed(1)}`);
+  let walkSeen = false;
+  // vem aqui: muda de lugar e chama
+  owner.teleport({ x: -6.5, y: Y + 1, z: 2.5 });
+  command(c, "vem aqui");
+  const t0 = system.currentTick;
+  await waitUntil(() => {
+    if (c.entity?.getProperty("lila:move") !== "none") walkSeen = true;
+    return Math.hypot(c.pos().x - owner.location.x, c.pos().z - owner.location.z) < 3.5;
+  }, 400);
+  check("'vem aqui' brings her to the owner", Math.hypot(c.pos().x - owner.location.x, c.pos().z - owner.location.z) < 3.5, `ticks=${system.currentTick - t0}`);
+  check("walk animation property set while moving", walkSeen);
+  // madeira entregue no inventário do dono
+  const logs0 = pcount((id) => /_log$/.test(id));
+  command(c, "pega 4 madeira");
+  await waitUntil(() => pcount((id) => /_log$/.test(id)) >= logs0 + 4, 3000);
+  check("'pega 4 madeira' delivers logs to the owner", pcount((id) => /_log$/.test(id)) >= logs0 + 4, `logs=${pcount((id) => /_log$/.test(id))} goal=${c.rec.goals[0]?.type ?? "-"}`);
+  // comida com vacas por perto
+  for (let k = 0; k < 4; k++) dim.spawnEntity("minecraft:cow", { x: 18 + k, y: Y + 1, z: -18 });
+  const food0 = pcount(isFood);
+  const tf = system.currentTick;
+  command(c, "arranja comida pra mim");
+  await waitUntil(() => pcount(isFood) > food0, 1800);
+  check("'arranja comida pra mim' brings food within 90 s", pcount(isFood) > food0, `food=${pcount(isFood)} ticks=${system.currentTick - tf} job=${c.job?.desc?.type ?? "-"}`);
+  // ferramenta pedida é fabricada e entregue
+  const tp = system.currentTick;
+  command(c, "faz uma picareta de pedra");
+  await waitUntil(() => pcount((id) => id === "minecraft:stone_pickaxe") > 0, 3600);
+  check("'faz uma picareta de pedra' crafts and delivers", pcount((id) => id === "minecraft:stone_pickaxe") > 0, `ticks=${system.currentTick - tp} job=${c.job?.desc?.type ?? "-"}`);
+  // me dá tudo: fica só com as ferramentas
+  command(c, "me dá tudo");
+  await waitUntil(() => c.rec.goals.length === 0, 600);
+  const left = Object.keys(inv.summary(c)).filter((id) => !/_(pickaxe|axe|shovel|sword|hoe)$/.test(id));
+  check("'me dá tudo' keeps only her tools", left.length === 0, `left=${left.join(",")}`);
+  check("status answers", statusText(c).includes("Vida"));
+}
+
 /** @param {string} mode */
 export async function runSelfTest(mode = "") {
   if (running) return;
@@ -151,6 +220,10 @@ export async function runSelfTest(mode = "") {
     check("arena chunks loaded", loaded);
     await buildArena(dim);
     await system.waitTicks(10);
+    if (mode.includes("owner")) {
+      await ownerTests(dim, check);
+      return;
+    }
     const c = spawnTestLila(dim);
     await system.waitTicks(5);
     check("spawn + adopt", c.alive() && c.entity?.getDynamicProperty(OWNER_PROP) === OWNER);

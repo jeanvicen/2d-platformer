@@ -51,7 +51,7 @@ def lila_anims():
         "body": bone(scale=[1, "1 + math.sin(q.life_time * 140) * 0.006", 1]),
         "rightArm": bone(rot=["q.is_item_equipped(0) ? -16 : 0", 0, "math.sin(q.life_time * 70) * 1.5 + 2"]),
         "leftArm": bone(rot=[0, 0, "-math.sin(q.life_time * 70) * 1.5 - 2"]),
-        "eyelids": bone(scale=[1, f"(math.mod(q.life_time, 4.3) < 0.13 || {ACT} == 'sleep' || {ACT} == 'defeat') ? 1 : 0", 1]),
+        "eyelids": bone(pos=[0, 0, f"(math.mod(q.life_time, 4.3) < 0.13 || {ACT} == 'sleep' || {ACT} == 'defeat') ? -0.2 : 0"]),
         "hair_back": bone(rot=["math.sin(q.life_time * 50) * 1.5", 0, "math.sin(q.life_time * 37) * 1.2"]),
         "hairpin": bone(rot=[0, 0, "math.sin(q.life_time * 90) * 2"]),
     })

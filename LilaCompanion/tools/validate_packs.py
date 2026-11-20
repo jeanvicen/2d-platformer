@@ -128,6 +128,75 @@ for p, j in jsons.items():
         if not tex_exists(t):
             errors.append(f"partícula: textura {t} não existe")
 
+# formato estrito das animações/controladores (o celular rejeita o ARQUIVO inteiro se um campo estiver errado)
+ANIM_KEYS = {"loop", "animation_length", "bones", "particle_effects", "sound_effects", "timeline", "override_previous_animation",
+             "anim_time_update", "blend_weight", "start_delay", "loop_delay"}
+BONE_KEYS = {"rotation", "position", "scale", "relative_to"}
+
+
+def check_value(where, v, vec=True):
+    if isinstance(v, (int, float, str)):
+        return
+    if isinstance(v, list):
+        if vec and len(v) != 3:
+            errors.append(f"{where}: vetor com {len(v)} valores")
+        for x in v:
+            if not isinstance(x, (int, float, str)):
+                errors.append(f"{where}: valor inválido {x!r}")
+        return
+    if isinstance(v, dict):
+        for t, kf in v.items():
+            try:
+                float(t)
+            except ValueError:
+                errors.append(f"{where}: chave de tempo inválida {t!r}")
+            if isinstance(kf, dict):
+                for kk in kf:
+                    if kk not in ("pre", "post", "lerp_mode"):
+                        errors.append(f"{where}@{t}: campo {kk!r} inválido")
+                for kk in ("pre", "post"):
+                    if kk in kf:
+                        check_value(f"{where}@{t}.{kk}", kf[kk])
+            else:
+                check_value(f"{where}@{t}", kf)
+        return
+    errors.append(f"{where}: tipo inválido {type(v).__name__}")
+
+
+for name, a in anims.items():
+    for k in a:
+        if k not in ANIM_KEYS:
+            errors.append(f"animação {name}: campo desconhecido {k!r}")
+    if a.get("loop") not in (None, True, False, "hold_on_last_frame"):
+        errors.append(f"animação {name}: loop inválido")
+    for k in ("particle_effects", "sound_effects", "timeline"):
+        if k in a:
+            if not isinstance(a[k], dict):
+                errors.append(f"animação {name}: {k} precisa ser linha do tempo {{tempo: efeito}}")
+            else:
+                for t in a[k]:
+                    try:
+                        float(t)
+                    except ValueError:
+                        errors.append(f"animação {name}: {k} com tempo inválido {t!r}")
+    for b, tr in a.get("bones", {}).items():
+        for k, v in tr.items():
+            if k not in BONE_KEYS:
+                errors.append(f"animação {name}/{b}: campo {k!r} inválido")
+            elif k != "relative_to":
+                check_value(f"{name}/{b}.{k}", v, vec=not (k == "scale" and isinstance(v, (int, float, str))))
+STATE_KEYS = {"animations", "transitions", "blend_transition", "blend_via_shortest_path", "on_entry", "on_exit", "particle_effects", "sound_effects"}
+for cname, cdef in ctrls.items():
+    if cdef.get("initial_state", "default") not in cdef["states"]:
+        errors.append(f"{cname}: initial_state inexistente")
+    for sn, st in cdef["states"].items():
+        for k in st:
+            if k not in STATE_KEYS:
+                errors.append(f"{cname}/{sn}: campo {k!r} inválido")
+        for tr in st.get("transitions", []):
+            if not isinstance(tr, dict) or len(tr) != 1:
+                errors.append(f"{cname}/{sn}: transição mal formada")
+
 # BP entity <-> RP client entity
 bp_ents = {j["minecraft:entity"]["description"]["identifier"]: j for j in jsons.values() if j and "minecraft:entity" in j}
 rp_ents = {j["minecraft:client_entity"]["description"]["identifier"] for j in jsons.values() if j and "minecraft:client_entity" in j}

@@ -1,0 +1,9 @@
+{
+  "format_version": 2,
+  "header": { "name": "Lila Test Harness (somente testes)", "description": "Cria um jogador simulado para testar a Lila no servidor. Não faz parte do add-on.", "uuid": "3622d7a5-68c8-4403-8bd4-af06c807551a", "version": [1, 0, 0], "min_engine_version": [1, 26, 30] },
+  "modules": [{ "type": "script", "language": "javascript", "uuid": "20e4f10a-cd8e-4817-891a-527887b9091b", "version": [1, 0, 0], "entry": "scripts/harness.js" }],
+  "dependencies": [
+    { "module_name": "@minecraft/server", "version": "2.8.0" },
+    { "module_name": "@minecraft/server-gametest", "version": "1.0.0-beta" }
+  ]
+}

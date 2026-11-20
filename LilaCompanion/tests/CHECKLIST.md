@@ -4,7 +4,7 @@ Legenda: **PASS** = verificado de verdade · **FAIL** = falhou · **NOT TESTED**
 neste ambiente (sem cliente gráfico/celular).
 
 Ambiente: Bedrock Dedicated Server **1.26.65.1** oficial (Linux, sem jogadores), autoteste dentro do
-mundo `/scriptevent lila:selftest` — log completo em `tests/last_bds_run.log` (29/29 PASS, versão 1.1.0).
+mundo `/scriptevent lila:selftest` — log completo em `tests/last_bds_run.log` (29/29 PASS) e `tests/last_bds_owner_run.log` com jogador simulado (11/11 PASS), versão 1.2.0.
 
 ## Carregamento e qualidade
 | Item | Resultado |
@@ -42,6 +42,18 @@ mundo `/scriptevent lila:selftest` — log completo em `tests/last_bds_run.log` 
 | Andar com física (sem teleporte) chega ao destino | PASS |
 | Passo de script mais lento durante a autonomia < 60 ms (medido 12 ms) | PASS |
 
+## Com jogador (jogador simulado do GameTest no servidor oficial)
+| Item | Resultado |
+|---|---|
+| Invocar na frente do dono | PASS |
+| Seguir o dono andando 18 blocos (distância final 1,0) | PASS |
+| "vem aqui" (105 ticks) e propriedade de animação de andar ligada | PASS |
+| "pega 4 madeira" entregue no inventário do dono | PASS |
+| "arranja comida pra mim" em até 90 s (35 s, 8 itens) | PASS |
+| "faz uma picareta de pedra" fabricada e entregue | PASS |
+| "me dá tudo" (ela fica só com as ferramentas) | PASS |
+| Formato estrito dos arquivos de animação/controlador (o que o celular rejeitava) | PASS |
+
 ## Não testado (precisa de cliente/celular)
 | Item | Resultado |
 |---|---|
@@ -49,5 +61,4 @@ mundo `/scriptevent lila:selftest` — log completo em `tests/last_bds_run.log` 
 | Item 3D do controle na mão (1ª e 3ª pessoa) | NOT TESTED |
 | Menu do controle no toque (itemUse no Android) | NOT TESTED |
 | HUD na barra de ação e ponto na barra de localização | NOT TESTED |
-| Seguir/proteger um jogador real, entregar itens no inventário do jogador | NOT TESTED (sem jogador no servidor) |
 | Plantação completa, mansão e exploração muito longa | NOT TESTED (tempo de teste) |
