@@ -725,13 +725,16 @@ async function ownerTests(dim, check) {
   await system.waitTicks(20);
   const wallN = countBlocks(dim, NANO_BLOCK, -8, Y + 1, -9, 8, Y + 6, -4);
   check("swarm shape: wall of nanobots", wallN >= 30, `blocks=${wallN}`);
+  // a ponte preenche vãos: na beirada da arena, olhando para o vazio
+  owner.teleport({ x: 0.5, y: Y + 1, z: 29.5 }, { rotation: { x: 0, y: 0 } });
+  await system.waitTicks(6);
   command(c, "ponte");
   await system.waitTicks(30);
-  const bridgeN = countBlocks(dim, NANO_BLOCK, -3, Y - 1, -9, 3, Y, 30);
-  check("swarm shape: bridge where you look", bridgeN >= 30, `blocks=${bridgeN}`);
+  const bridgeN = countBlocks(dim, NANO_BLOCK, -3, Y - 1, 32, 3, Y, 40);
+  check("swarm shape: bridge over the void where you look", bridgeN >= 18, `blocks=${bridgeN}`);
   handleIntents(c, [{ type: "stop" }]);
   await system.waitTicks(10);
-  const leftN = countBlocks(dim, NANO_BLOCK, -8, Y - 1, -9, 8, Y + 6, 30);
+  const leftN = countBlocks(dim, NANO_BLOCK, -8, Y - 1, -9, 8, Y + 6, 40);
   check("cancel dissolves the swarm shapes and returns to drone", formOf(c) === "drone" && leftN === 0, `left=${leftN}`);
   owner.teleport({ x: 0.5, y: Y + 1, z: 6.5 });
   await system.waitTicks(4);
@@ -748,8 +751,17 @@ async function ownerTests(dim, check) {
     await system.waitTicks(5);
     const ih0 = hp(intr);
     cmd(dim, `scriptevent lilatest:act Intruso hit ${owner.id}`);
+    const trace = system.runInterval(() => {
+      try {
+        log(`trace fight: urgent=${c.urgent?.desc?.type ?? "-"} act=${c.entity?.getProperty("lila:action")} pos=${c.pos().x.toFixed(1)},${(c.pos().y - Y).toFixed(1)},${c.pos().z.toFixed(1)} intr=${intr.location.x.toFixed(1)},${(intr.location.y - Y).toFixed(1)},${intr.location.z.toFixed(1)} hp=${hp(intr)}`);
+      } catch {
+        /* ignore */
+      }
+    }, 40);
     await waitUntil(() => hp(intr) < ih0 - 2, 300);
-    check("a player who hits you gets attacked by the drone", hp(intr) < ih0 - 2, `intruder hp ${ih0}->${hp(intr)} aggro=${c.flags.aggro?.has(intr.id)}`);
+    system.clearRun(trace);
+    const dbg = () => `urgent=${c.urgent?.desc?.type ?? "-"} job=${c.job?.desc?.type ?? "-"} paused=${c.rec.paused} mode=${c.rec.mode} form=${formOf(c)} ridden=${!!c.flags.ridden} alive=${c.alive()} off=${!!c.rec.off} act=${c.entity?.getProperty("lila:action")} d=${c.alive() && intr?.isValid ? Math.hypot(c.pos().x - intr.location.x, c.pos().z - intr.location.z).toFixed(1) : "?"} dy=${c.alive() && intr?.isValid ? (c.pos().y - intr.location.y).toFixed(1) : "?"}`;
+    check("a player who hits you gets attacked by the drone", hp(intr) < ih0 - 2, `intruder hp ${ih0}->${hp(intr)} aggro=${c.flags.aggro?.has(intr.id)} ${dbg()}`);
     cmd(dim, "scriptevent lilatest:act Intruso remove");
     c.flags.aggro?.clear();
   } else check("intruder joined", false);
@@ -771,7 +783,7 @@ async function ownerTests(dim, check) {
   const tz = system.currentTick;
   const ohp = hp(owner);
   await waitUntil(() => dead(far), 400);
-  check("protect mode attacks first (zombie 20 blocks away, before it reaches you)", dead(far) && hp(owner) >= ohp, `ticks=${system.currentTick - tz} owner hp ${ohp}->${hp(owner)}`);
+  check("protect mode attacks first (zombie 20 blocks away, before it reaches you)", dead(far) && hp(owner) >= ohp, `ticks=${system.currentTick - tz} owner hp ${ohp}->${hp(owner)} urgent=${c.urgent?.desc?.type ?? "-"} paused=${c.rec.paused} mode=${c.rec.mode}`);
 
   // exército
   command(c, "modo exército");

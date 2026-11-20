@@ -135,7 +135,7 @@ def backdrop(size, top=(18, 64, 48), bottom=(6, 14, 16)):
 
 
 def portrait(model, tex, size=256):
-    img = render(model, tex, size=size, yaw=-32, pitch=16, alphatest=True, outline=True, zoom=1.0)
+    img = render(model, tex, size=size, yaw=-32, pitch=16, alphatest=False, outline=True, zoom=1.0, pose=power_pose(0))
     bg = backdrop(size, top=(14, 40, 66), bottom=(4, 10, 18))
     glow = img.split()[3].filter(ImageFilter.GaussianBlur(size / 40))
     halo = Image.new("RGBA", (size, size), (60, 200, 255, 0))

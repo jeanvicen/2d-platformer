@@ -292,6 +292,31 @@ export function formTick(c) {
   if (piloting && owner) {
     c.flags.hadDriver = true;
     c.flags.piloting = true;
+    // agachar = sair (o jogo já faz; isto garante em qualquer versão/controle)
+    let sneaking = false;
+    try {
+      sneaking = owner.isSneaking;
+    } catch {
+      /* ignore */
+    }
+    c.flags.sneakT = sneaking ? (c.flags.sneakT ?? 0) + 1 : 0;
+    if (c.flags.sneakT >= 2) {
+      c.flags.sneakT = 0;
+      try {
+        e.getComponent("minecraft:rideable")?.ejectRider(owner);
+      } catch {
+        /* ignore */
+      }
+      c.flags.piloting = false;
+      onExit(c, owner, f);
+      if (f === "colossus") {
+        idleTick(c, f);
+        return true;
+      }
+      setForm(c, "drone", { mount: false });
+      c.abortMove = true;
+      return true;
+    }
     if (f === "colossus" && rs[0]?.id !== owner.id) {
       // dono numa ombreira/mochila: o robô fica parado (só quem está na cabeça pilota)
       idleTick(c, f);
