@@ -1,12 +1,18 @@
 // InventoryService: o inventário privado da Lila (36 espaços reais da entidade).
 // Itens reais: o que ela coleta, fabrica, gasta, entrega ou guarda passa sempre por aqui.
-import { ItemStack } from "@minecraft/server";
+import { ItemStack, system } from "@minecraft/server";
 import { FOOD, TIER_RANK, isFood, toolInfo } from "../lib/items.js";
 import { matchesNeed } from "../lib/recipes.js";
 import { logError } from "../core/log.js";
 
 /** @param {import("./companion.js").Companion} c */
 export function container(c) {
+  // quem pega o container pode mexer nele: a foto do tick deixa de valer
+  SNAP.delete(c);
+  return rawContainer(c);
+}
+
+function rawContainer(c) {
   try {
     return c.entity?.getComponent("minecraft:inventory")?.container;
   } catch {
@@ -23,28 +29,46 @@ export function matcher(t) {
   return (id) => id === t.id;
 }
 
+// Foto do inventário por tick: contar itens várias vezes no mesmo tick não relê os 36 espaços
+// (ler o container é caro e a obra conta material a cada bloco). Qualquer mudança invalida.
+/** @type {WeakMap<object, {tick:number, eid:string|undefined, slots:[string, number][]}>} */
+const SNAP = new WeakMap();
+
+function snap(c) {
+  const t = system.currentTick;
+  const s = SNAP.get(c);
+  const eid = c.entity?.id;
+  if (s && s.tick === t && s.eid === eid) return s.slots;
+  const inv = rawContainer(c);
+  /** @type {[string, number][]} */
+  const slots = [];
+  if (inv) {
+    for (let i = 0; i < inv.size; i++) {
+      const it = inv.getItem(i);
+      if (it) slots.push([it.typeId, it.amount]);
+    }
+  }
+  SNAP.set(c, { tick: t, eid, slots });
+  return slots;
+}
+
+/** Esquece a foto (chame depois de mexer no container por fora deste módulo). */
+export function invalidate(c) {
+  SNAP.delete(c);
+}
+
 /** Quantidade de itens que satisfazem o alvo. */
 export function count(c, t) {
-  const inv = container(c);
-  if (!inv) return 0;
   const m = matcher(t);
   let n = 0;
-  for (let i = 0; i < inv.size; i++) {
-    const it = inv.getItem(i);
-    if (it && m(it.typeId)) n += it.amount;
-  }
+  for (const [id, k] of snap(c)) if (m(id)) n += k;
   return n;
 }
 
 /** Resumo {typeId: quantidade}. */
 export function summary(c) {
-  const inv = container(c);
   const out = {};
-  if (!inv) return out;
-  for (let i = 0; i < inv.size; i++) {
-    const it = inv.getItem(i);
-    if (it) out[it.typeId] = (out[it.typeId] ?? 0) + it.amount;
-  }
+  for (const [id, k] of snap(c)) out[id] = (out[id] ?? 0) + k;
   return out;
 }
 
@@ -59,6 +83,7 @@ export function freeSlots(c) {
  * @param {ItemStack} stack
  */
 export function add(c, stack) {
+  invalidate(c);
   const inv = container(c);
   if (!inv || !stack) return stack;
   let left = inv.addItem(stack);
@@ -96,6 +121,7 @@ const JUNK = ["minecraft:dirt", "minecraft:gravel", "minecraft:granite", "minecr
 
 /** Libera um espaço jogando fora o lixo menos útil (como uma jogadora faria). */
 function makeRoom(c, incomingId) {
+  invalidate(c);
   const inv = container(c);
   if (!inv) return false;
   for (const junk of JUNK) {
@@ -119,6 +145,7 @@ function makeRoom(c, incomingId) {
  * Remove até n itens que satisfazem o alvo. Retorna quantos removeu.
  */
 export function take(c, t, n) {
+  invalidate(c);
   const inv = container(c);
   if (!inv || n <= 0) return 0;
   const m = matcher(t);

@@ -105,10 +105,11 @@ function* replant(c, base) {
 }
 
 /** Recolhe itens caídos numa área (anda até eles). */
-export function* sweepItems(c, center, r = 6) {
+export function* sweepItems(c, center, r = 6, waitTicks = 0) {
   const dim = c.dim();
   const grab = c.def?.flying ? 3.6 : 2.4;
   const tried = new Set();
+  let waited = 0;
   for (let k = 0; k < 10; k++) {
     let items = [];
     try {
@@ -116,7 +117,16 @@ export function* sweepItems(c, center, r = 6) {
     } catch {
       return;
     }
-    if (!items.length) return;
+    if (!items.length) {
+      // o bicho ainda está na animação de morte: os drops aparecem um pouco depois
+      if (k === 0 && waited < waitTicks) {
+        waited += 4;
+        k--;
+        yield 4;
+        continue;
+      }
+      return;
+    }
     const p = c.pos();
     items.sort((a, b) => (a.location.x - p.x) ** 2 + (a.location.z - p.z) ** 2 - ((b.location.x - p.x) ** 2 + (b.location.z - p.z) ** 2));
     const it = items[0];

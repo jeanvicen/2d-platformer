@@ -206,7 +206,9 @@ async function ownerTests(dim, check) {
   const food0 = pcount(isFood);
   const tf = system.currentTick;
   command(c, "arranja comida pra mim");
-  await waitUntil(() => pcount(isFood) > food0, 1800);
+  c.flags.trace = true;
+  await waitUntil(() => pcount(isFood) > food0, 1800, c);
+  c.flags.trace = false;
   check("'arranja comida pra mim' brings food within 90 s", pcount(isFood) > food0, `food=${pcount(isFood)} ticks=${system.currentTick - tf} job=${c.job?.desc?.type ?? "-"}`);
   const built0 = c.rec.stats.built;
   // ferramenta pedida é fabricada e entregue
@@ -217,7 +219,7 @@ async function ownerTests(dim, check) {
   // construção rápida: cabana só com troncos (sem vidro/tocha/pedra: ela adapta e não trava)
   owner.teleport({ x: 24.5, y: Y + 1, z: 22.5 }, { rotation: { x: 0, y: 180 } });
   await system.waitTicks(10);
-  inv.addId(c, "minecraft:oak_log", 48);
+  inv.addId(c, "minecraft:oak_log", 60); // as árvores da arena já foram cortadas nos testes anteriores
   const tb = system.currentTick;
   command(c, "constroi uma cabana aqui");
   c.flags.trace = true;

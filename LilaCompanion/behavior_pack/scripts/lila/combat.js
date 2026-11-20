@@ -103,8 +103,8 @@ export function* fight(c, target, maxTicks = 600) {
     const box = { loc: target.location };
     const dead = yield* gunFight(c, target, maxTicks, box);
     if (dead && c.alive()) {
-      yield 10;
-      yield* sweepItems(c, box.loc, 6);
+      yield 6;
+      yield* sweepItems(c, box.loc, 6, 36);
     }
     return dead;
   }
@@ -161,8 +161,8 @@ export function* fight(c, target, maxTicks = 600) {
   }
   if (dead) {
     c.rec.stats.kills++;
-    yield 12;
-    yield* sweepItems(c, lastLoc, 5);
+    yield 6;
+    yield* sweepItems(c, lastLoc, 5, 36);
   }
   return dead;
 }

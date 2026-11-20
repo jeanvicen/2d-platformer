@@ -145,7 +145,13 @@ export function planMaterials(c, blocks, wood, wantCrop) {
   const list = {};
   let solidNeed = 0;
   const skipped = [];
-  for (const b of blocks) if (SOLID_M.has(b.m)) solidNeed++;
+  let logSlots = 0;
+  for (const b of blocks) {
+    if (!SOLID_M.has(b.m)) continue;
+    solidNeed++;
+    if (b.m === "log") logSlots++;
+  }
+  solidNeed += logSlots * 3; // tronco inteiro no pilar = 4 tábuas a menos
   for (const [id, n] of Object.entries(raw)) {
     if (/_planks$|_log$|^minecraft:cobblestone$|^minecraft:stone_bricks$|_slab$/.test(id)) continue; // já no solidNeed
     if (id === "minecraft:glass") {
@@ -169,12 +175,47 @@ export function planMaterials(c, blocks, wood, wantCrop) {
   let crop = wantCrop;
   if (raw["minecraft:wheat_seeds"]) {
     if (inv.count(c, crop) < 1 && crop !== "minecraft:wheat_seeds") crop = SEEDS.find((sd) => inv.count(c, sd) > 0) ?? "minecraft:wheat_seeds";
+    // planta o que tiver; só busca sementes se não tiver nenhuma (depois ela mesma multiplica colhendo)
     const have = SEEDS.reduce((a, sd) => a + inv.count(c, sd), 0);
-    const target = Math.min(raw["minecraft:wheat_seeds"], 8);
-    if (have < target) list[crop] = inv.count(c, crop) + (target - have);
+    if (have < 1) list[crop] = Math.min(raw["minecraft:wheat_seeds"], 4);
   }
   if (blocks.some((b) => b.m === "farmland")) list["minecraft:wooden_hoe"] = 1;
-  return { list, solidNeed, crop, noWater, skipped };
+  return { list, solidNeed, logSlots, crop, noWater, skipped };
+}
+
+/** Tábuas gastas para fabricar cada item estrutural (para reservar madeira). */
+const PLANK_COST = { "minecraft:wooden_door": 2, "minecraft:chest": 8, "minecraft:crafting_table": 4, "minecraft:wooden_hoe": 3 };
+for (const w of WOODS) {
+  PLANK_COST[`minecraft:${w}_fence`] = 2;
+  PLANK_COST[`minecraft:${w}_door`] = 2;
+}
+
+/** Converte troncos em tábuas de uma vez, guardando `keepLogs` troncos para os pilares. */
+function* convertLogs(c, planksWanted, keepLogs) {
+  const have = () => Object.entries(inv.summary(c)).reduce((a, [id, n]) => a + (id.endsWith("_planks") || STONEISH.includes(id) ? n : 0), 0);
+  let need = planksWanted - have();
+  if (need <= 0) return;
+  const logs = Object.entries(inv.summary(c)).filter(([id]) => LOG_RE.test(id));
+  let spare = logs.reduce((a, [, n]) => a + n, 0) - keepLogs;
+  if (spare <= 0) return;
+  setAction(c.entity, "craft");
+  hold(c.entity, undefined);
+  let made = 0;
+  for (const [id, n] of logs) {
+    if (need <= 0 || spare <= 0) break;
+    const k = Math.min(n, spare, Math.ceil(need / 4));
+    const m = /^minecraft:([a-z_]+?)_(log|stem)$/.exec(id);
+    const plank = m ? `minecraft:${m[1]}_planks` : "minecraft:oak_planks";
+    const took = inv.take(c, id, k);
+    inv.addId(c, plank, took * 4);
+    made += took;
+    need -= took * 4;
+    spare -= took;
+  }
+  c.rec.stats.crafted += made;
+  sound(c.entity, "random.pop", 0.5, 1.2);
+  yield Math.min(30, 6 + made);
+  setAction(c.entity, "idle");
 }
 
 /** Garante mais `n` blocos sólidos (troncos: 1 árvore ≈ 20 tábuas). */
@@ -297,7 +338,8 @@ export function* buildBlueprint(c, key, o = {}) {
   const fill = estimateFill(c, blocks, site);
   const scaffold = scaffoldUnits(c);
   if (fill > scaffold) list["minecraft:dirt"] = inv.count(c, "minecraft:dirt") + (fill - scaffold);
-  const solidShort = Math.max(0, solidNeed - solidUnits(c));
+  const reserved = Object.entries(list).reduce((a, [id, n]) => a + Math.max(0, n - inv.count(c, id)) * (PLANK_COST[id] ?? 0), 0);
+  const solidShort = Math.max(0, solidNeed + reserved - solidUnits(c));
   const missing = Object.entries(list).filter(([id, n]) => inv.count(c, id) < n).map(([id, n]) => `${n - inv.count(c, id)} ${ptName(id)}`);
   if (solidShort > 0) missing.unshift(`${solidShort} blocos (tábuas ou pedra)`);
   if (missing.length) {
@@ -308,9 +350,11 @@ export function* buildBlueprint(c, key, o = {}) {
     delete list["minecraft:wooden_hoe"];
     if (inv.toolTier(c, "hoe") === "none") yield* obtain(c, { toolKind: "hoe", tier: "wooden" }, 1, o);
   }
-  yield* obtainAll(c, list, o);
-  // material de parede/chão: madeira rende 4 tábuas por tronco, então é o jeito mais rápido
+  // material de parede/chão primeiro (porta/baú/cerca saem da mesma madeira)
   if (solidShort > 0) yield* obtainSolid(c, solidShort, o);
+  yield* obtainAll(c, list, o);
+  // troncos que não vão virar pilar viram tábuas de uma vez (bancada 2×2, sem parar a obra depois)
+  yield* convertLogs(c, solidNeed - plan.logSlots * 4, plan.logSlots);
   say(c, `Materiais prontos! Começando ${bp.name.toLowerCase()}.`, { force: !!o.cmd });
   // limpeza do interior (só natural) e fundação
   yield* clearInterior(c, blocks, site);

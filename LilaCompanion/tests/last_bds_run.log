@@ -1,108 +1,231 @@
 NO LOG FILE! - Failed to up file descriptor limit Operation not permitted
 NO LOG FILE! - setting up server logging...
-[2026-11-20 04:54:05:008 INFO] Starting Server
-[2026-11-20 04:54:05:008 INFO] Version: 1.26.65.1
-[2026-11-20 04:54:05:008 INFO] Session ID: dd9da04b-cf82-4ad8-82a8-5a6df1aeaef3
-[2026-11-20 04:54:05:008 INFO] Build ID: 53624744
-[2026-11-20 04:54:05:008 INFO] Branch: r/26_u6
-[2026-11-20 04:54:05:008 INFO] Commit ID: cdafb75c90a160d7dd40adc9769f2485a4a76a05
-[2026-11-20 04:54:05:008 INFO] Configuration: Publish
-[2026-11-20 04:54:05:008 INFO] Contents of server.properties: {"allow-cheats":"true","allow-inbound-script-debugging":"false","allow-list":"false","allow-outbound-script-debugging":"false","block-network-ids-are-hashes":"true","chat-restriction":"None","client-side-chunk-generation-enabled":"true","compression-algorithm":"zlib","compression-threshold":"1","content-log-console-output-enabled":"true","content-log-file-enabled":"true","content-log-level":"info","default-player-permission-level":"member","difficulty":"easy","disable-custom-skins":"false","disable-persona":"false","disable-player-interaction":"false","enable-lan-visibility":"false","force-gamemode":"false","gamemode":"survival","level-name":"lila_test","max-players":"10","max-threads":"8","online-mode":"false","persistent-ticking-area-max-chunks":"100","persistent-ticking-area-max-count":"10","player-idle-timeout":"30","player-movement-action-direction-threshold":"0.85","player-position-acceptance-threshold":"0.5","script-debugger-auto-attach":"disabled","server-authoritative-block-breaking-pick-range-scalar":"1.5","server-authoritative-dismount-strict":"false","server-authoritative-entity-attack-range-tolerance":"0.5","server-authoritative-entity-attack-range-validation":"disabled","server-authoritative-entity-attack-request-validation":"disabled","server-authoritative-entity-interactions-strict":"false","server-authoritative-movement-strict":"false","server-build-radius-ratio":"Disabled","server-name":"Dedicated Server","server-port":"41234","server-portv6":"41235","server-udp-ports":"19132","texturepack-required":"false","tick-distance":"4","transient-ticking-area-max-chunks":"300","transport":"nethernet","view-distance":"32"}
-[2026-11-20 04:54:05:008 INFO] Level Name: lila_test
-[2026-11-20 04:54:05:008 INFO] Profiler config ('bootstrap.json') load result: success=1, errorMessage=(null)
-[2026-11-20 04:54:05:037 INFO] No CDN config file found at: cdn_config.json for dedicated server
-[2026-11-20 04:54:05:037 INFO] Game mode: 0 Survival
-[2026-11-20 04:54:05:037 INFO] Difficulty: 1 EASY
-[2026-11-20 04:54:05:039 INFO] Content logging to console is enabled.
-[2026-11-20 04:54:05:041 INFO] 
+[2026-11-20 05:04:00:860 INFO] Starting Server
+[2026-11-20 05:04:00:860 INFO] Version: 1.26.65.1
+[2026-11-20 05:04:00:860 INFO] Session ID: 82793153-f974-4a2c-bdd9-46647e5a27ed
+[2026-11-20 05:04:00:860 INFO] Build ID: 53624744
+[2026-11-20 05:04:00:860 INFO] Branch: r/26_u6
+[2026-11-20 05:04:00:860 INFO] Commit ID: cdafb75c90a160d7dd40adc9769f2485a4a76a05
+[2026-11-20 05:04:00:860 INFO] Configuration: Publish
+[2026-11-20 05:04:00:860 INFO] Contents of server.properties: {"allow-cheats":"true","allow-inbound-script-debugging":"false","allow-list":"false","allow-outbound-script-debugging":"false","block-network-ids-are-hashes":"true","chat-restriction":"None","client-side-chunk-generation-enabled":"true","compression-algorithm":"zlib","compression-threshold":"1","content-log-console-output-enabled":"true","content-log-file-enabled":"true","content-log-level":"info","default-player-permission-level":"member","difficulty":"easy","disable-custom-skins":"false","disable-persona":"false","disable-player-interaction":"false","enable-lan-visibility":"false","force-gamemode":"false","gamemode":"survival","level-name":"lila_test","max-players":"10","max-threads":"8","online-mode":"false","persistent-ticking-area-max-chunks":"100","persistent-ticking-area-max-count":"10","player-idle-timeout":"30","player-movement-action-direction-threshold":"0.85","player-position-acceptance-threshold":"0.5","script-debugger-auto-attach":"disabled","server-authoritative-block-breaking-pick-range-scalar":"1.5","server-authoritative-dismount-strict":"false","server-authoritative-entity-attack-range-tolerance":"0.5","server-authoritative-entity-attack-range-validation":"disabled","server-authoritative-entity-attack-request-validation":"disabled","server-authoritative-entity-interactions-strict":"false","server-authoritative-movement-strict":"false","server-build-radius-ratio":"Disabled","server-name":"Dedicated Server","server-port":"41234","server-portv6":"41235","server-udp-ports":"19132","texturepack-required":"false","tick-distance":"4","transient-ticking-area-max-chunks":"300","transport":"nethernet","view-distance":"32"}
+[2026-11-20 05:04:00:860 INFO] Level Name: lila_test
+[2026-11-20 05:04:00:860 INFO] Profiler config ('bootstrap.json') load result: success=1, errorMessage=(null)
+[2026-11-20 05:04:00:880 INFO] No CDN config file found at: cdn_config.json for dedicated server
+[2026-11-20 05:04:00:880 INFO] Game mode: 0 Survival
+[2026-11-20 05:04:00:880 INFO] Difficulty: 1 EASY
+[2026-11-20 05:04:00:882 INFO] Content logging to console is enabled.
+[2026-11-20 05:04:00:886 INFO] 
 
 #####################################################
 #                                                   #
 #               LOADING VANILLA WORLD               #
 #                                                   #
 #####################################################
-[2026-11-20 04:54:05:437 INFO] Content logging to disk is enabled. Writing log to: ./ContentLog2026-11-20_04-54-05.txt
-[2026-11-20 04:54:05:438 INFO] Experiment(s) active: gtst
-[2026-11-20 04:54:05:438 INFO] Opening level 'worlds/lila_test/db'
-[2026-11-20 04:54:05:439 INFO] Accepting clients on 0.0.0.0:41234
-[2026-11-20 04:54:05:474 INFO] Pack Stack - [00] Lila Companion (BP) (id: b461d112-57c7-4e8f-b4dc-395753b1764f, version: 1.5.0) @ behavior_packs/LilaCompanion_BP
-[2026-11-20 04:54:05:474 INFO] Pack Stack - [01] Lila Test Harness (somente testes) (id: 3622d7a5-68c8-4403-8bd4-af06c807551a, version: 1.0.0) @ behavior_packs/LilaTestHarness
-[2026-11-20 04:54:05:744 INFO] Signed in to signaling service successfully
-[2026-11-20 04:54:06:436 INFO] Server started.
-[2026-11-20 04:54:06:436 INFO] ================ TELEMETRY MESSAGE ===================
-[2026-11-20 04:54:06:436 INFO] Server Telemetry is currently not enabled. 
-[2026-11-20 04:54:06:436 INFO] Enabling this telemetry helps us improve the game.
-[2026-11-20 04:54:06:436 INFO] 
-[2026-11-20 04:54:06:436 INFO] To enable this feature, add the line 'emit-server-telemetry=true'
-[2026-11-20 04:54:06:436 INFO] to the server.properties file in the handheld/src-server directory
-[2026-11-20 04:54:06:436 INFO] ======================================================
-[2026-11-20 04:54:06:450 INFO] [Scripting] [Lila:boot] Lila Companion carregado
+[2026-11-20 05:04:01:268 INFO] Content logging to disk is enabled. Writing log to: ./ContentLog2026-11-20_05-04-01.txt
+[2026-11-20 05:04:01:269 INFO] Experiment(s) active: gtst
+[2026-11-20 05:04:01:269 INFO] Opening level 'worlds/lila_test/db'
+[2026-11-20 05:04:01:270 INFO] Accepting clients on 0.0.0.0:41234
+[2026-11-20 05:04:01:306 INFO] Pack Stack - [00] Lila Companion (BP) (id: b461d112-57c7-4e8f-b4dc-395753b1764f, version: 1.5.0) @ behavior_packs/LilaCompanion_BP
+[2026-11-20 05:04:01:306 INFO] Pack Stack - [01] Lila Test Harness (somente testes) (id: 3622d7a5-68c8-4403-8bd4-af06c807551a, version: 1.0.0) @ behavior_packs/LilaTestHarness
+[2026-11-20 05:04:01:587 INFO] Signed in to signaling service successfully
+[2026-11-20 05:04:02:317 INFO] Server started.
+[2026-11-20 05:04:02:317 INFO] ================ TELEMETRY MESSAGE ===================
+[2026-11-20 05:04:02:317 INFO] Server Telemetry is currently not enabled. 
+[2026-11-20 05:04:02:317 INFO] Enabling this telemetry helps us improve the game.
+[2026-11-20 05:04:02:317 INFO] 
+[2026-11-20 05:04:02:317 INFO] To enable this feature, add the line 'emit-server-telemetry=true'
+[2026-11-20 05:04:02:317 INFO] to the server.properties file in the handheld/src-server directory
+[2026-11-20 05:04:02:317 INFO] ======================================================
+[2026-11-20 05:04:02:328 INFO] [Scripting] [Lila:boot] Lila Companion carregado
 
-[2026-11-20 04:54:11:565 INFO] Script event lila:selftest has been sent
-[2026-11-20 04:54:11:566 INFO] [Scripting] LILA-TEST START
+[2026-11-20 05:04:07:476 INFO] Script event lila:selftest has been sent
+[2026-11-20 05:04:07:477 INFO] [Scripting] LILA-TEST START
 
-[2026-11-20 04:54:13:064 INFO] [Scripting] LILA-TEST PASS arena chunks loaded
+[2026-11-20 05:04:09:170 INFO] [Scripting] LILA-TEST PASS arena chunks loaded
 
-[2026-11-20 04:54:13:667 INFO] Player Spawned: Dono xuid: , pfid: 
-[2026-11-20 04:54:13:667 INFO] [Scripting] LILA-HARNESS owner spawned -8589934591
+[2026-11-20 05:04:09:738 INFO] Player Spawned: Dono xuid: , pfid: 
+[2026-11-20 05:04:09:739 INFO] [Scripting] LILA-HARNESS owner spawned -8589934591
 
-[2026-11-20 04:54:13:916 INFO] [Scripting] LILA-TEST PASS simulated owner joined
+[2026-11-20 05:04:09:987 INFO] [Scripting] LILA-TEST PASS simulated owner joined
 
-[2026-11-20 04:54:13:918 INFO] [Scripting] LILA-TEST PASS summon in front of owner
+[2026-11-20 05:04:09:989 INFO] [Scripting] LILA-TEST PASS summon in front of owner
 
-[2026-11-20 04:54:25:311 INFO] [Scripting] LILA-TEST PASS follows the owner while walking :: dist=3.2
+[2026-11-20 05:04:21:387 INFO] [Scripting] LILA-TEST PASS follows the owner while walking :: dist=3.2
 
-[2026-11-20 04:54:31:066 INFO] [Scripting] LILA-TEST PASS climbs a 1-block-step hill after the owner :: ticks=15 dy=1.8 native=true
+[2026-11-20 05:04:27:137 INFO] [Scripting] LILA-TEST PASS climbs a 1-block-step hill after the owner :: ticks=15 dy=1.8 native=true
 
-[2026-11-20 04:54:31:066 INFO] [Scripting] LILA-TEST PASS tamed to the owner (native follow)
+[2026-11-20 05:04:27:137 INFO] [Scripting] LILA-TEST PASS tamed to the owner (native follow)
 
-[2026-11-20 04:54:33:811 INFO] [Scripting] LILA-TEST PASS 'vem aqui' brings her to the owner :: ticks=15
+[2026-11-20 05:04:30:137 INFO] [Scripting] LILA-TEST PASS 'vem aqui' brings her to the owner :: ticks=20
 
-[2026-11-20 04:54:33:811 INFO] [Scripting] LILA-TEST PASS walk animation property set while moving
+[2026-11-20 05:04:30:137 INFO] [Scripting] LILA-TEST PASS walk animation property set while moving
 
-[2026-11-20 04:54:46:316 INFO] [Scripting] LILA-TEST PASS 'pega 4 madeira' delivers logs to the owner :: logs=4 goal=-
+[2026-11-20 05:04:42:638 INFO] [Scripting] LILA-TEST PASS 'pega 4 madeira' delivers logs to the owner :: logs=4 goal=-
 
-[2026-11-20 04:55:06:066 INFO] [Scripting] LILA-TEST PASS 'arranja comida pra mim' brings food within 90 s :: food=6 ticks=395 job=-
+[2026-11-20 05:06:12:642 INFO] [Scripting] LILA-TEST FAIL 'arranja comida pra mim' brings food within 90 s :: food=0 ticks=1800 job=food
 
-[2026-11-20 04:55:33:817 INFO] [Scripting] LILA-TEST PASS 'faz uma picareta de pedra' crafts and delivers :: ticks=555 job=follow
+[2026-11-20 05:06:35:641 INFO] [Scripting] LILA-TEST PASS 'faz uma picareta de pedra' crafts and delivers :: ticks=460 job=follow
 
-[2026-11-20 04:59:34:319 INFO] [Scripting] LILA-TEST FAIL 'constrói uma cabana' (só troncos) termina em até 4 min :: ticks=4800 job=build err=-
+[2026-11-20 05:06:36:143 INFO] [Scripting] [Lila:trace] t=0 job=- pos=24,151,24 obra=- solido=cobblestone:5,oak_log:52,oak_planks:2
 
-[2026-11-20 05:02:30:566 INFO] Running AutoCompaction...
-[2026-11-20 05:02:34:816 INFO] [Scripting] LILA-TEST FAIL 'faz uma plantação' (6 sementes, sem balde) termina em até 3 min :: ticks=3600 job=farm err=-
+[2026-11-20 05:06:36:252 INFO] [Scripting] [Lila:say] Pra cabana falta: 1 wooden door, 1 baú. Já vou buscar!
 
-[2026-11-20 05:02:40:817 INFO] [Scripting] LILA-TEST PASS 'me dá tudo' keeps only her tools :: left=
+[2026-11-20 05:06:36:252 INFO] [Scripting] [Lila:say] Sem vidro (janela aberta), tochas por enquanto: vou fazer sem e coloco depois.
 
-[2026-11-20 05:02:40:817 INFO] [Scripting] LILA-TEST PASS status answers
+[2026-11-20 05:06:41:188 INFO] [Scripting] [Lila:say] Materiais prontos! Começando cabana.
 
-[2026-11-20 05:02:41:317 INFO] [Scripting] LILA-TEST PASS drone: summon
+[2026-11-20 05:06:46:138 INFO] [Scripting] [Lila:trace] t=200 job=build pos=25,151,19 obra=- solido=oak_log:49
 
-[2026-11-20 05:02:50:316 INFO] [Scripting] LILA-TEST PASS drone: flies around the owner :: dist=3.2 h=2.6
+[2026-11-20 05:06:56:138 INFO] [Scripting] [Lila:trace] t=400 job=build pos=25,151,19 obra=15/206 solido=oak_log:45,oak_planks:1
 
-[2026-11-20 05:02:51:466 INFO] [Scripting] LILA-TEST PASS drone: flies over a 9-block wall to the owner :: ticks=15
+[2026-11-20 05:07:06:139 INFO] [Scripting] [Lila:trace] t=600 job=build pos=25,151,19 obra=29/206 solido=oak_log:41,oak_planks:2
 
-[2026-11-20 05:02:51:466 INFO] [Scripting] LILA-TEST PASS drone: player wall intact
+[2026-11-20 05:07:13:587 INFO] [Scripting] [Lila:say] Obra em andamento: 19%
 
-[2026-11-20 05:02:59:711 INFO] [Scripting] LILA-TEST PASS drone: turret lands on the ground and transforms :: h=0.00 act=turret
+[2026-11-20 05:07:16:139 INFO] [Scripting] [Lila:trace] t=800 job=build pos=24,151,16 obra=42/206 solido=oak_log:38,oak_planks:2
 
-[2026-11-20 05:02:59:711 INFO] [Scripting] LILA-TEST PASS drone: turret mode kills 3 zombies :: ticks=155
+[2026-11-20 05:07:26:142 INFO] [Scripting] [Lila:trace] t=1000 job=build pos=25,151,18 obra=58/206 solido=oak_log:32
 
-[2026-11-20 05:03:01:216 INFO] [Scripting] LILA-TEST PASS drone: owner can ride it
+[2026-11-20 05:07:34:288 INFO] [Scripting] [Lila:say] Obra em andamento: 38%
 
-[2026-11-20 05:03:02:216 INFO] [Scripting] LILA-TEST PASS drone: resumes work after the ride
+[2026-11-20 05:07:36:138 INFO] [Scripting] [Lila:trace] t=1200 job=build pos=24,151,15 obra=82/206 solido=oak_log:23
 
-[2026-11-20 05:03:08:462 INFO] [Scripting] LILA-TEST PASS drone: 'pega 4 madeira' (flying) delivers :: ticks=125
+[2026-11-20 05:07:46:138 INFO] [Scripting] [Lila:trace] t=1400 job=build pos=24,151,17 obra=114/206 solido=oak_log:11,oak_planks:2
 
-[2026-11-20 05:03:15:467 INFO] [Scripting] LILA-TEST PASS drone: 'quero comida' hunts, picks up and delivers food :: food=12 ticks=140 job=follow
+[2026-11-20 05:07:49:537 INFO] [Scripting] [Lila:say] Obra em andamento: 58%
 
-[2026-11-20 05:03:15:467 INFO] [Scripting] LILA-TEST PASS drone: scan reports owner
+[2026-11-20 05:07:56:138 INFO] [Scripting] [Lila:trace] t=1600 job=build pos=25,151,20 obra=128/206 solido=oak_log:8
 
-[2026-11-20 05:03:15:467 INFO] [Scripting] LILA-TEST PASS drone: missions list
+[2026-11-20 05:08:06:137 INFO] [Scripting] [Lila:trace] t=1800 job=build pos=23,151,15 obra=140/206 solido=oak_log:4
 
-[2026-11-20 05:03:15:467 INFO] [Scripting] LILA-TEST PASS drone: lila still alive alongside
+[2026-11-20 05:08:16:141 INFO] [Scripting] [Lila:trace] t=2000 job=build pos=29,151,15 obra=148/206 solido=oak_log:3
 
-[2026-11-20 05:03:15:467 INFO] [Scripting] LILA-TEST DONE pass=26 fail=2
+[2026-11-20 05:08:26:139 INFO] [Scripting] [Lila:trace] t=2200 job=build pos=26,153,20 obra=151/206 solido=oak_log:2,oak_planks:2
 
-[2026-11-20 05:03:17:474 INFO] Server stop requested.
-[2026-11-20 05:03:17:522 INFO] Stopping server...
+[2026-11-20 05:08:27:937 INFO] [Scripting] [Lila:say] Obra em andamento: 77%
+
+[2026-11-20 05:08:36:138 INFO] [Scripting] [Lila:trace] t=2400 job=build pos=23,151,16 obra=160/206 solido=oak_planks:2
+
+[2026-11-20 05:08:46:138 INFO] [Scripting] [Lila:trace] t=2600 job=build pos=24,151,15 obra=162/206 solido=oak_planks:2
+
+[2026-11-20 05:08:52:788 INFO] [Scripting] [Lila:say] Faltaram 30 blocos, vou buscar mais e terminar.
+
+[2026-11-20 05:08:52:909 INFO] [Scripting] [Lila:say] Vou explorar ali pra frente procurando árvores.
+
+[2026-11-20 05:08:56:141 INFO] [Scripting] [Lila:trace] t=2800 job=build pos=25,151,17 obra=169/206 solido=
+
+[2026-11-20 05:09:06:142 INFO] [Scripting] [Lila:trace] t=3000 job=build pos=31,151,18 obra=169/206 solido=
+
+[2026-11-20 05:09:16:139 INFO] [Scripting] [Lila:trace] t=3200 job=build pos=32,151,11 obra=169/206 solido=
+
+[2026-11-20 05:09:26:141 INFO] [Scripting] [Lila:trace] t=3400 job=build pos=32,151,5 obra=169/206 solido=
+
+[2026-11-20 05:09:36:141 INFO] [Scripting] [Lila:trace] t=3600 job=build pos=35,151,2 obra=169/206 solido=
+
+[2026-11-20 05:09:43:098 INFO] [Scripting] [Lila:say] Vou explorar ali pra frente procurando árvores.
+
+[2026-11-20 05:09:46:142 INFO] [Scripting] [Lila:trace] t=3800 job=build pos=35,151,2 obra=169/206 solido=
+
+[2026-11-20 05:09:56:142 INFO] [Scripting] [Lila:trace] t=4000 job=build pos=32,151,2 obra=169/206 solido=
+
+[2026-11-20 05:10:06:141 INFO] [Scripting] [Lila:trace] t=4200 job=build pos=38,151,1 obra=169/206 solido=
+
+[2026-11-20 05:10:16:141 INFO] [Scripting] [Lila:trace] t=4400 job=build pos=48,151,1 obra=169/206 solido=
+
+[2026-11-20 05:10:26:140 INFO] [Scripting] [Lila:trace] t=4600 job=build pos=48,151,1 obra=169/206 solido=
+
+[2026-11-20 05:10:30:994 INFO] [Scripting] [Lila:say] Vou explorar ali pra frente procurando árvores.
+
+[2026-11-20 05:10:36:138 INFO] [Scripting] LILA-TEST FAIL 'constrói uma cabana' (só troncos) termina em até 4 min :: ticks=4800 job=build err=-
+
+[2026-11-20 05:10:36:641 INFO] [Scripting] [Lila:say] Ok, considera feito. (fazer uma plantação)
+
+[2026-11-20 05:10:36:641 INFO] [Scripting] [Lila:trace] t=0 job=- pos=47,151,6 obra=169/206 solido=oak_log:16
+
+[2026-11-20 05:10:36:747 INFO] [Scripting] [Lila:say] Pra fazenda falta: 31 oak fence, 2 sementes, 1 enxada de madeira. Já vou buscar!
+
+[2026-11-20 05:10:36:747 INFO] [Scripting] [Lila:say] Sem tochas por enquanto: vou fazer sem e coloco depois.
+
+[2026-11-20 05:10:46:637 INFO] [Scripting] [Lila:trace] t=200 job=farm pos=47,151,6 obra=169/206 solido=oak_planks:38
+
+[2026-11-20 05:10:52:889 INFO] [Scripting] [Lila:say] Vou explorar ali pra frente procurando grama para sementes.
+
+[2026-11-20 05:10:56:638 INFO] [Scripting] [Lila:trace] t=400 job=farm pos=37,151,1 obra=169/206 solido=oak_planks:2
+
+[2026-11-20 05:11:06:638 INFO] [Scripting] [Lila:trace] t=600 job=farm pos=-1,151,10 obra=169/206 solido=oak_planks:2
+
+[2026-11-20 05:11:16:638 INFO] [Scripting] [Lila:trace] t=800 job=farm pos=6,151,14 obra=169/206 solido=oak_planks:2
+
+[2026-11-20 05:11:18:238 INFO] [Scripting] [Lila:say] Vou explorar ali pra frente procurando grama para sementes.
+
+[2026-11-20 05:11:26:641 INFO] [Scripting] [Lila:trace] t=1000 job=farm pos=8,151,28 obra=169/206 solido=oak_planks:2
+
+[2026-11-20 05:11:36:642 INFO] [Scripting] [Lila:trace] t=1200 job=farm pos=0,151,31 obra=169/206 solido=oak_planks:2
+
+[2026-11-20 05:11:46:637 INFO] [Scripting] [Lila:trace] t=1400 job=farm pos=-1,151,38 obra=169/206 solido=oak_planks:2
+
+[2026-11-20 05:11:56:638 INFO] [Scripting] [Lila:trace] t=1600 job=farm pos=-2,151,37 obra=169/206 solido=oak_planks:2
+
+[2026-11-20 05:12:06:638 INFO] [Scripting] [Lila:trace] t=1800 job=farm pos=-2,151,35 obra=169/206 solido=oak_planks:2
+
+[2026-11-20 05:12:08:839 INFO] [Scripting] [Lila:say] Vou explorar ali pra frente procurando grama para sementes.
+
+[2026-11-20 05:12:16:645 INFO] [Scripting] [Lila:trace] t=2000 job=farm pos=-1,151,32 obra=169/206 solido=oak_planks:2
+
+[2026-11-20 05:12:26:639 INFO] [Scripting] [Lila:trace] t=2200 job=farm pos=-27,151,32 obra=169/206 solido=oak_planks:2
+
+[2026-11-20 05:12:36:641 INFO] [Scripting] [Lila:trace] t=2400 job=farm pos=-31,151,32 obra=169/206 solido=oak_planks:2
+
+[2026-11-20 05:12:42:589 INFO] [Scripting] [Lila:say] Vou explorar ali pra frente procurando grama para sementes.
+
+[2026-11-20 05:12:46:638 INFO] [Scripting] [Lila:trace] t=2600 job=farm pos=-32,151,15 obra=169/206 solido=oak_planks:2
+
+[2026-11-20 05:12:52:339 INFO] [Scripting] [Lila:say] Vou explorar ali pra frente procurando grama para sementes.
+
+[2026-11-20 05:12:56:638 INFO] [Scripting] [Lila:trace] t=2800 job=farm pos=-25,151,1 obra=169/206 solido=oak_planks:2
+
+[2026-11-20 05:13:02:540 INFO] [Scripting] [Lila:say] Vou explorar ali pra frente procurando grama para sementes.
+
+[2026-11-20 05:13:06:638 INFO] [Scripting] [Lila:trace] t=3000 job=farm pos=-19,151,25 obra=169/206 solido=oak_planks:2
+
+[2026-11-20 05:13:16:641 INFO] [Scripting] [Lila:trace] t=3200 job=farm pos=-22,151,28 obra=169/206 solido=oak_planks:2
+
+[2026-11-20 05:13:26:639 INFO] [Scripting] [Lila:trace] t=3400 job=farm pos=-30,151,31 obra=169/206 solido=oak_planks:2
+
+[2026-11-20 05:13:36:640 INFO] [Scripting] LILA-TEST FAIL 'faz uma plantação' (6 sementes, sem balde) termina em até 3 min :: ticks=3600 job=farm err=-
+
+[2026-11-20 05:13:39:639 INFO] [Scripting] LILA-TEST PASS 'me dá tudo' keeps only her tools :: left=
+
+[2026-11-20 05:13:39:639 INFO] [Scripting] LILA-TEST PASS status answers
+
+[2026-11-20 05:13:40:140 INFO] [Scripting] LILA-TEST PASS drone: summon
+
+[2026-11-20 05:13:49:137 INFO] [Scripting] LILA-TEST PASS drone: flies around the owner :: dist=3.2 h=2.5
+
+[2026-11-20 05:13:50:537 INFO] [Scripting] LILA-TEST PASS drone: flies over a 9-block wall to the owner :: ticks=20
+
+[2026-11-20 05:13:50:537 INFO] [Scripting] LILA-TEST PASS drone: player wall intact
+
+[2026-11-20 05:13:58:038 INFO] [Scripting] LILA-TEST FAIL drone: turret lands on the ground and transforms :: h=0.00 act=shoot
+
+[2026-11-20 05:13:58:038 INFO] [Scripting] LILA-TEST PASS drone: turret mode kills 3 zombies :: ticks=140
+
+[2026-11-20 05:13:59:538 INFO] [Scripting] LILA-TEST PASS drone: owner can ride it
+
+[2026-11-20 05:14:00:538 INFO] [Scripting] LILA-TEST PASS drone: resumes work after the ride
+
+[2026-11-20 05:14:07:038 INFO] [Scripting] LILA-TEST PASS drone: 'pega 4 madeira' (flying) delivers :: ticks=130
+
+[2026-11-20 05:14:19:539 INFO] [Scripting] LILA-TEST PASS drone: 'quero comida' hunts, picks up and delivers food :: food=10 ticks=250 job=follow
+
+[2026-11-20 05:14:19:540 INFO] [Scripting] LILA-TEST PASS drone: scan reports owner
+
+[2026-11-20 05:14:19:540 INFO] [Scripting] LILA-TEST PASS drone: missions list
+
+[2026-11-20 05:14:19:540 INFO] [Scripting] LILA-TEST PASS drone: lila still alive alongside
+
+[2026-11-20 05:14:19:540 INFO] [Scripting] LILA-TEST DONE pass=24 fail=4
+
+[2026-11-20 05:14:21:580 INFO] Server stop requested.
+[2026-11-20 05:14:21:629 INFO] Stopping server...
 Quit correctly

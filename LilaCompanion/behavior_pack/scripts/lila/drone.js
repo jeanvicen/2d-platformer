@@ -206,7 +206,8 @@ export function shoot(c, target) {
   const dist = d3(from, to);
   if (dist > range || !clearLine(dim, from, to, 1.2)) return false;
   face(c, { x: to.x - 0.5, y: to.y, z: to.z - 0.5 });
-  setAction(e, "attack");
+  // na torreta continua montado (tripé/canhão); só em voo troca para a pose de tiro
+  if (c.rec.mode !== "turret") setAction(e, "attack");
   // rastro da bala
   const n = Math.min(14, Math.ceil(dist / 1.4));
   for (let i = 1; i <= n; i++) {
