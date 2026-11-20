@@ -51,7 +51,7 @@ com jogadores simulados "Dono" e "Intruso" → `tests/last_bds_owner_run.log`.
 | Colosso continua colosso quando você sai; "Cancelar" volta ao drone | PASS |
 | Outro jogador bate em você → o DR-0N ataca ele | PASS |
 | Você bate no DR-0N → lição de leve (não mata) | PASS |
-| Modo proteger: ataca primeiro um zumbi a 20 blocos | PASS |
+| Modo proteger: ataca primeiro um zumbi a 20 blocos, antes de ele chegar em você (você não leva dano) | PASS |
 | Exército: vira 10 robôs, derrubam monstros, levam maçã dourada com vida baixa | PASS |
 | "Cancelar" junta o exército de volta no drone | PASS |
 | "recolhe os itens do chão" por texto; "constrói na hora / devagar" muda a velocidade | PASS |

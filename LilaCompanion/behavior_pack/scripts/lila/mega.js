@@ -170,6 +170,7 @@ export function* megaBuild(c, key, o = {}) {
       }
       if (shift === 2) throw new GoalError("tem construção sua em todo lugar aqui na frente. Vai pra um lugar mais aberto e me pede de novo");
     }
+    c.flags.lastBuild = { cx, cz, y0, half: plan.half };
     const speed = speedOf(c);
     if (speed === "instantaneo") {
       setAction(c.entity, "craft");

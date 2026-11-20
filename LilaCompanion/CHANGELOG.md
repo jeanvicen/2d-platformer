@@ -12,6 +12,12 @@
   TUDO, inclusive construções — menos baús, camas e blocos que guardam itens.
 - **Recolher os itens do chão**: "recolhe os itens do chão" — ele voa até os itens e aspira tudo
   (ficam com ele; peça "me dá tudo"). Também roda no fim do aplainar.
+- **Correção importante (vinha de versões antigas):** a rotina que "sente" perigo rodava num tick
+  deslocado e a checagem interna nunca disparava — ele só reagia depois que você apanhava. Agora o
+  modo proteger caça de verdade antes do monstro chegar. O mesmo bug travava "ficar de olho em você",
+  pegar itens ao passar e a regeneração de vida.
+- Construindo, se ele bater numa árvore/parede que ele mesmo colocou, passa por cima em vez de ficar
+  batendo.
 - **Animações revisadas**: drone inclina suave conforme a velocidade e deita nas curvas; animação
   própria de construção (inclina para o bloco, "bicos" mirando para baixo, olho pulsando) e de
   quebrar; torres do tanque/escavadeira/torreta giram macio; helicóptero e jato inclinam suave;

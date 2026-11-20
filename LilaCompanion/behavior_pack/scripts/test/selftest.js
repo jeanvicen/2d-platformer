@@ -295,15 +295,17 @@ async function soloTests(dim, check) {
     const b0 = c.rec.stats.built;
     const res = await runGen(megaBuild(c, key, { here: false }), key === "cidade" ? 9000 : 5000);
     check(`mega: ${key}`, res.ok && c.rec.stats.built === b0 + 1, `ticks=${res.ticks} ${res.err ?? ""}`);
+    const lb = c.flags.lastBuild ?? { cx: x, cz: 60, y0: Y, half: 60 };
     if (key === "cidade" || key === "castelo" || key === "arranha_ceu") {
       const id = { cidade: "minecraft:black_concrete", castelo: "minecraft:stone_bricks", arranha_ceu: "minecraft:light_blue_stained_glass" }[key];
-      const top = key === "arranha_ceu" ? Y + 125 : Y + 40;
-      const n = countBlocks(dim, id, x - 70, Y - 3, 0, x + 70, top, 150, 3);
+      const top = key === "arranha_ceu" ? lb.y0 + 125 : lb.y0 + 40;
+      const n = countBlocks(dim, id, lb.cx - lb.half, lb.y0 - 3, lb.cz - lb.half, lb.cx + lb.half, top, lb.cz + lb.half, 3);
       check(`mega: ${key} really placed its blocks`, n > 200, `${id.replace("minecraft:", "")} (amostra 1/27)=${n}`);
     }
     if (key === "montanha_russa") {
-      const rails = countBlocks(dim, "minecraft:rail", x - 30, Y - 2, 0, x + 30, Y + 16, 60, 1) + countBlocks(dim, "minecraft:golden_rail", x - 30, Y - 2, 0, x + 30, Y + 16, 60, 1);
-      const carts = dim.getEntities({ type: "minecraft:minecart", location: { x, y: Y, z: 30 }, maxDistance: 60 }).length;
+      const rails = countBlocks(dim, "minecraft:rail", lb.cx - 30, lb.y0, lb.cz - 30, lb.cx + 30, lb.y0 + 16, lb.cz + 30, 1)
+        + countBlocks(dim, "minecraft:golden_rail", lb.cx - 30, lb.y0, lb.cz - 30, lb.cx + 30, lb.y0 + 16, lb.cz + 30, 1);
+      const carts = dim.getEntities({ type: "minecraft:minecart", location: { x: lb.cx, y: lb.y0, z: lb.cz }, maxDistance: 60 }).length;
       check("roller coaster has a full closed track + cart", rails >= 100 && carts >= 1, `rails=${rails} carts=${carts}`);
     }
     c.entity?.teleport({ x: 0.5, y: Y + 2, z: 0.5 }); // volta pra arena antes de descarregar a área da obra
@@ -461,8 +463,9 @@ async function ownerTests(dim, check) {
   // proteger: ataca primeiro um zumbi que ainda nem chegou
   const far = dim.spawnEntity("minecraft:zombie", { x: 0.5, y: Y + 1, z: 26.5 });
   const tz = system.currentTick;
+  const ohp = hp(owner);
   await waitUntil(() => dead(far), 400);
-  check("protect mode attacks first (zombie 20 blocks away)", dead(far), `ticks=${system.currentTick - tz}`);
+  check("protect mode attacks first (zombie 20 blocks away, before it reaches you)", dead(far) && hp(owner) >= ohp, `ticks=${system.currentTick - tz} owner hp ${ohp}->${hp(owner)}`);
 
   // exército
   command(c, "modo exército");

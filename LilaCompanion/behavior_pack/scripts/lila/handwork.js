@@ -69,6 +69,7 @@ export class Placer {
   /** Voa até ficar ao alcance do bloco (paira acima dele, como quem constrói voando). */
   *reach(x, y, z) {
     const c = this.c;
+    let best = Infinity, still = 0;
     for (let t = 0; t < 200; t++) {
       const e = c.entity;
       if (!e?.isValid) return false;
@@ -78,12 +79,18 @@ export class Placer {
         if (t) hover(c);
         return true;
       }
-      steer(c, { x: x + 0.5, y: y + 3.2, z: z + 0.5 }, Math.min(this.sp.glide, 0.12 + d * 0.08));
+      // preso em árvore/parede que ele mesmo pôs: em vez de ficar batendo, "salta" por cima até o ponto
+      if (d < best - 0.05) {
+        best = d;
+        still = 0;
+      } else if (++still > 8) break;
+      steer(c, { x: x + 0.5, y: y + 4, z: z + 0.5 }, Math.min(this.sp.glide, 0.12 + d * 0.08));
       yield 1;
     }
-    // não conseguiu chegar voando (preso): reaparece em cima do ponto
+    // não conseguiu chegar voando (preso): reaparece em cima do ponto, com brilho
     try {
-      c.entity?.teleport({ x: x + 0.5, y: y + 3.2, z: z + 0.5 }, { keepVelocity: false });
+      particle(c.dim(), "lila:sparkle", c.pos());
+      c.entity?.teleport({ x: x + 0.5, y: y + 4, z: z + 0.5 }, { keepVelocity: false });
     } catch {
       /* ignore */
     }

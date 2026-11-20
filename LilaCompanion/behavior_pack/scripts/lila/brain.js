@@ -239,8 +239,10 @@ export function chooseAuto(c) {
 export function sense(c) {
   if (!c.alive() || c.rec.defeat || c.rec.paused) return;
   const now = system.currentTick;
-  // perigo: interrompe qualquer coisa (exceto se já está lutando)
-  if (!c.urgent && now % 10 === 0) {
+  // sense() roda a cada 10 ticks (com deslocamento): conta as próprias passadas em vez de usar o tick
+  const pass = (c.flags.sensePass = (c.flags.sensePass ?? 0) + 1);
+  // perigo: interrompe qualquer coisa (exceto se já está lutando) — no modo proteger ele vai atrás primeiro
+  if (!c.urgent) {
     const t = findThreat(c);
     if (t) {
       if (c.sleeping) c.flags.wake = true;
@@ -255,7 +257,7 @@ export function sense(c) {
   }
   // no modo autônomo, se o dono foi longe demais, larga a tarefa e volta
   const o = c.owner();
-  if (o && now % 20 === 0) watchOwner(c, o);
+  if (o && pass % 2 === 0) watchOwner(c, o);
   if (o) {
     if (o.dimension.id !== c.dim().id) {
       c.flags.otherDim = (c.flags.otherDim ?? 0) + 10;
@@ -277,7 +279,7 @@ export function sense(c) {
   }
   keepLoaded(c);
   // pega itens do chão quando passa por cima (como jogadora)
-  if (now % 20 === 0) collectDrops(c, c.pos(), c.def?.flying ? 3 : 2);
+  if (pass % 2 === 1) collectDrops(c, c.pos(), c.def?.flying ? 3 : 2);
 }
 
 /** Observa o dono: está viajando? está no escuro? está machucado? */
@@ -340,7 +342,9 @@ export function metabolism(c) {
   if (c.def?.creative) c.rec.hunger = 20; // energia infinita
   const working = !!c.job && !["hangout", "stay", "follow", "sleep"].includes(c.job.desc.type);
   c.rec.hunger = Math.max(0, c.rec.hunger - (working ? 0.025 : 0.01));
-  if (c.rec.hunger >= 12 && system.currentTick % 40 === 0) {
+  // roda a cada 20 ticks com deslocamento: alterna pelas próprias passadas (o tick nunca seria múltiplo de 40 aqui)
+  c.flags.metaPass = (c.flags.metaPass ?? 0) + 1;
+  if (c.rec.hunger >= 12 && c.flags.metaPass % 2 === 0) {
     try {
       const hp = c.entity?.getComponent("minecraft:health");
       if (hp && hp.currentValue < hp.effectiveMax) hp.setCurrentValue(Math.min(hp.effectiveMax, hp.currentValue + 1));
