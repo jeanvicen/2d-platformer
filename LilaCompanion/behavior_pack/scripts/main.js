@@ -337,7 +337,7 @@ world.afterEvents.entityHitEntity.subscribe((ev) => {
       for (let i = 1; i <= 6; i++) particle(c.dim(), "lila:tracer", { x: a.x + (b.x - a.x) * (i / 7), y: a.y + 0.3 + (b.y + 1 - a.y) * (i / 7), z: a.z + (b.z - a.z) * (i / 7) });
       sound(c.entity, "random.click", 0.7, 1.9);
       try {
-        p.applyDamage(2, { cause: EntityDamageCause.entityAttack, damagingEntity: c.entity });
+        p.applyDamage(2, { cause: EntityDamageCause.magic, damagingEntity: c.entity }); // 1 coração (ignora armadura)
         p.applyKnockback({ x: (b.x - a.x) * 0.15, z: (b.z - a.z) * 0.15 }, 0.25);
       } catch {
         /* ignore */

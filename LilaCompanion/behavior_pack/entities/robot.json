@@ -51,7 +51,7 @@
           "must_see": false,
           "reselect_targets": true,
           "within_radius": 28,
-          "scan_interval": 5,
+          "scan_interval": 10,
           "entity_types": [
             {
               "filters": {

@@ -1,80 +1,62 @@
-# Checklist de aceitação
+# Checklist de aceitação — DR-0N Mega Drone 2.0
 
-Legenda: **PASS** = verificado de verdade · **FAIL** = falhou · **NOT TESTED** = não foi possível testar
-neste ambiente (sem cliente gráfico/celular).
+Legenda: **PASS** = verificado de verdade · **NOT TESTED** = não dá para testar neste ambiente
+(servidor sem tela, sem celular, sem som).
 
-Ambiente: Bedrock Dedicated Server **1.26.65.1** oficial (Linux, sem jogadores), autoteste dentro do
-mundo `/scriptevent lila:selftest` — log completo em `tests/last_bds_run.log` (30/30 PASS) e `tests/last_bds_owner_run.log` com jogador simulado (28/28 PASS, Lila + DR-0N: cabana só com troncos em 2 min 50 s, plantação sem balde em 75 s, comida entregue, torreta pousada e transformada), versão 1.5.0.
+Ambiente: Bedrock Dedicated Server **1.26.65.1** oficial (Linux). Autoteste dentro do mundo:
+`/scriptevent lila:selftest` (sem jogador) → `tests/last_bds_run.log`, e `/scriptevent lila:selftest owner`
+com jogadores simulados "Dono" e "Intruso" → `tests/last_bds_owner_run.log`.
 
-## Carregamento e qualidade
+## Qualidade estática
 | Item | Resultado |
 |---|---|
-| Pacotes carregam no servidor oficial sem erros de conteúdo (entidade, item, receitas, scripts) | PASS |
+| Pacotes carregam no servidor oficial sem erro de conteúdo/script | PASS |
 | Typecheck contra `@minecraft/server` 2.8.0 / `server-ui` 2.1.0 | PASS |
-| Todos os `minecraft:*` usados existem no jogo (vanilla-data) | PASS |
-| Referências cruzadas RP/BP (geometria, ossos, animações, controladores, texturas, ícone, partículas) | PASS |
-| Testes unitários (A*, frases pt-BR, receitas, regras de blocos, plantas) — 14 | PASS |
-| Comando `/lila` registra sem cheats (limite de 8 parâmetros respeitado) | PASS |
+| Todo `minecraft:*` usado existe no jogo (vanilla-data), inclusive blocos das megaconstruções | PASS |
+| Referências cruzadas (9 geometrias de forma + robô, render controller por forma, sons, animações) | PASS |
+| Testes unitários (frases pt-BR antigas e novas, receitas, A*) | PASS |
+| 12 plantas de megaconstrução geram sem erro; montanha-russa com circuito fechado e contínuo | PASS (Node) |
 
-## Comportamento no mundo (servidor oficial)
+## Sem jogador (servidor oficial)
 | Item | Resultado |
 |---|---|
-| Invocação e vínculo ao dono (1 por dono) | PASS |
-| Inventário real (adicionar/contar/retirar) | PASS |
-| Pathfinding contornando muro que ela não pode quebrar | PASS |
-| Cortar árvores de verdade (8+ troncos) | PASS |
-| Picareta de madeira: tábuas → gravetos → bancada (sem disputa de ingredientes) | PASS |
-| Picareta de pedra minerando pedra real | PASS |
-| Bancada temporária recolhida depois | PASS |
-| Ferro: minerar minério + fornalha + combustível + fundição real | PASS |
-| Ordem em texto pela fila (“pega 3 areia”) | PASS |
-| Construção por planta (“abrigo”, 97/98 blocos; 1 tocha decorativa sem apoio) | PASS |
-| Combate: mata zumbi | PASS |
-| Dispensar guarda o corpo; invocar devolve o inventário completo | PASS |
-| Golpe letal → derrota sem morrer | PASS |
-| Retorno em 400 ticks (medido 402, polling de 5 ticks) | PASS |
-| Inventário e plano preservados após derrota | PASS |
-| Persistência do registro | PASS |
-| Construção do jogador intacta no fim de tudo | PASS |
-| Autonomia: sem ordens, escolhe e executa atividades úteis (ferramentas, comida) | PASS |
-| Regressão do crash: cercada e mandada minerar fundo termina sem travar (522 ticks) | PASS |
-| Blocos do jogador intactos nesse cenário | PASS |
-| Andar com física (sem teleporte) chega ao destino | PASS |
-| Recurso mais perto primeiro (ignora árvore lembrada longe) | PASS |
-| Passo de script mais lento durante a autonomia < 60 ms (medido 12 ms) | PASS |
+| Itens infinitos: ferramenta e 64 troncos aparecem na hora | PASS |
+| As 9 formas trocam (propriedade da forma + número de assentos certo) | PASS |
+| Colosso: escala 3,4 e hitbox gigante (acerta raios de 4 a 24 blocos de altura) | PASS |
+| Soco do colosso quebra a parede e derruba o zumbi | PASS |
+| Torreta gigante derruba 3 zumbis e volta a ser drone | PASS |
+| 12 megaconstruções completas (poço, labirinto, montanha-russa, casa inteligente, castelo, vila, pirâmide, farol, arranha-céu, estádio, montanha, cidade) | PASS |
+| Blocos reais conferidos (cidade, castelo, arranha-céu) e montanha-russa com trilhos + carrinho | PASS |
+| Nenhum passo de script acima de 60 ms durante as obras (sem travar o jogo) | PASS |
+| Bioma de neve (camadas de neve no chão, árvores) | PASS |
+| Derrota no meio de uma forma: desmonta e volta como drone em 20 s com o inventário | PASS |
+| Dispensar e invocar de novo mantém tudo | PASS |
 
-## Com jogador (jogador simulado do GameTest no servidor oficial)
+## Com jogadores simulados (servidor oficial)
 | Item | Resultado |
 |---|---|
-| Invocar na frente do dono | PASS |
-| Seguir o dono andando 18 blocos | PASS |
-| Subir ladeira de degraus de 1 bloco atrás do dono (15 ticks) | PASS |
-| Ligada ao dono para a IA nativa de seguir (tame) | PASS |
-| "vem aqui" (105 ticks) e propriedade de animação de andar ligada | PASS |
-| "pega 4 madeira" entregue no inventário do dono | PASS |
-| "arranja comida pra mim" em até 90 s (35 s, 8 itens) | PASS |
-| "faz uma picareta de pedra" fabricada e entregue | PASS |
-| "me dá tudo" (ela fica só com as ferramentas) | PASS |
-| Formato estrito dos arquivos de animação/controlador (o que o celular rejeitava) | PASS |
+| "me dá 64 diamantes" (itens infinitos) | PASS |
+| "me fortalece": veste netherita encantada, entrega totem etc. | PASS |
+| "vira helicóptero": o dono entra no volante sozinho | PASS |
+| Botão de ataque dispara a metralhadora do helicóptero | PASS |
+| Sair do veículo: ele volta a ser drone | PASS |
+| Tanque: dono pilota, canhão dispara | PASS |
+| "Cancelar" desfaz o veículo | PASS |
+| Colosso: dono na cabine da cabeça (~20 blocos de altura) | PASS |
+| Colosso: piloto não leva dano | PASS |
+| Colosso: botão de ataque = soco | PASS |
+| Colosso continua colosso quando você sai; "Cancelar" volta ao drone | PASS |
+| Outro jogador bate em você → o DR-0N ataca ele | PASS |
+| Você bate no DR-0N → lição de leve (não mata) | PASS |
+| Modo proteger: ataca primeiro um zumbi a 20 blocos | PASS |
+| Exército: vira 10 robôs, derrubam monstros, levam maçã dourada com vida baixa | PASS |
+| "Cancelar" junta o exército de volta no drone | PASS |
+| "constrói um poço aqui" por texto; construção do jogador intacta | PASS |
 
-## DR-0N com jogador (jogador simulado)
+## Não testado (limite do ambiente)
 | Item | Resultado |
 |---|---|
-| Invocar o drone junto com a Lila | PASS |
-| Voar em órbita em volta do dono (3,2 blocos, 2,9 de altura) | PASS |
-| Passar voando por cima de muro de 9 blocos até o dono (50 ticks) | PASS |
-| Modo torreta mata 3 zumbis (145 ticks) | PASS |
-| Carona: dono sobe; ao descer ele volta a trabalhar | PASS |
-| "pega 4 madeira" voando e entrega (160 ticks) | PASS |
-| Escaneamento do dono e lista de missões | PASS |
-
-## Não testado (precisa de cliente/celular)
-| Item | Resultado |
-|---|---|
-| Aparência do modelo/textura/animações no cliente | NOT TESTED (conferido só por renderização própria) |
-| Item 3D do controle na mão (1ª e 3ª pessoa) | NOT TESTED |
-| Menu do controle no toque (itemUse no Android) | NOT TESTED |
-| HUD na barra de ação e ponto na barra de localização | NOT TESTED |
-| Pilotagem na carona com o controle de toque (entrada do jogador real) | NOT TESTED (jogador simulado não mexe o analógico) |
-| Visual do drone, hélices e metralhadora no cliente | NOT TESTED (só renderização própria) |
-| Plantação completa, mansão e exploração muito longa | NOT TESTED (tempo de teste) |
+| Aparência dos modelos/animações no celular (conferidos por renderizações do próprio modelo) | NOT TESTED |
+| Sons ouvidos no jogo (arquivos e definições validados) | NOT TESTED |
+| Sensação de pilotar com o toque (o jogador simulado não envia o direcional) | NOT TESTED |
+| Mudança do ID do bioma (impossível por script no Bedrock: não existe `/fillbiome`) | não suportado pelo jogo |

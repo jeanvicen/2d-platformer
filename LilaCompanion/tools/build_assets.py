@@ -387,7 +387,7 @@ def build_robot(previews):
     follow = {"minecraft:behavior.follow_owner": {"priority": 4, "speed_multiplier": 1.4, "start_distance": 7, "stop_distance": 3,
                                                   "can_teleport": True, "ignore_vibration": True}}
     hunt = {"minecraft:behavior.nearest_attackable_target": {
-        "priority": 2, "must_see": False, "reselect_targets": True, "within_radius": 28, "scan_interval": 5,
+        "priority": 2, "must_see": False, "reselect_targets": True, "within_radius": 28, "scan_interval": 10,
         "entity_types": [{"filters": {"all_of": [{"test": "is_family", "subject": "other", "value": "monster"},
                                                  {"test": "is_family", "subject": "other", "operator": "!=", "value": "lila_robot"}]},
                           "max_dist": 28}]}}

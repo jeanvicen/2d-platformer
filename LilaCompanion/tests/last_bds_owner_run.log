@@ -1,134 +1,33 @@
 server started: True
-[2026-11-20 05:25:05:992 INFO] [Scripting] [Lila:boot] Lila Companion carregado
-[2026-11-20 05:25:11:113 INFO] [Scripting] LILA-TEST START
-[2026-11-20 05:25:12:506 INFO] [Scripting] LILA-TEST PASS arena chunks loaded
-[2026-11-20 05:25:13:049 INFO] [Scripting] LILA-HARNESS owner spawned -8589934591
-[2026-11-20 05:25:13:298 INFO] [Scripting] LILA-TEST PASS simulated owner joined
-[2026-11-20 05:25:13:300 INFO] [Scripting] LILA-TEST PASS summon in front of owner
-[2026-11-20 05:25:24:697 INFO] [Scripting] LILA-TEST PASS follows the owner while walking :: dist=3.2
-[2026-11-20 05:25:30:448 INFO] [Scripting] LILA-TEST PASS climbs a 1-block-step hill after the owner :: ticks=15 dy=1.8 native=true
-[2026-11-20 05:25:30:448 INFO] [Scripting] LILA-TEST PASS tamed to the owner (native follow)
-[2026-11-20 05:25:33:698 INFO] [Scripting] LILA-TEST PASS 'vem aqui' brings her to the owner :: ticks=25
-[2026-11-20 05:25:33:698 INFO] [Scripting] LILA-TEST PASS walk animation property set while moving
-[2026-11-20 05:25:46:198 INFO] [Scripting] LILA-TEST PASS 'pega 4 madeira' delivers logs to the owner :: logs=4 goal=-
-[2026-11-20 05:25:46:215 INFO] [Scripting] [Lila:trace] t=0 job=- pos=-7,151,4 obra=- solido=oak_log:1
-[2026-11-20 05:25:46:297 INFO] [Scripting] [Lila:say] Deixa comigo, vou arranjar comida!
-[2026-11-20 05:25:46:349 INFO] [Scripting] [Lila:say] Vi uma ovelha ali, vou caçar pra gente.
-[2026-11-20 05:25:56:198 INFO] [Scripting] [Lila:trace] t=200 job=food pos=13,151,-16 obra=- solido=oak_log:1
-[2026-11-20 05:26:06:198 INFO] [Scripting] [Lila:trace] t=400 job=food pos=10,151,-16 obra=- solido=oak_log:1
-[2026-11-20 05:26:16:199 INFO] [Scripting] [Lila:trace] t=600 job=food pos=5,151,-9 obra=- solido=oak_log:1
-[2026-11-20 05:26:20:998 INFO] [Scripting] [Lila:say] Toma: 7 de comida.
-[2026-11-20 05:26:21:198 INFO] [Scripting] LILA-TEST PASS 'arranja comida pra mim' brings food within 90 s :: food=7 ticks=700 job=follow
-[2026-11-20 05:26:48:948 INFO] [Scripting] LILA-TEST PASS 'faz uma picareta de pedra' crafts and delivers :: ticks=555 job=follow
-[2026-11-20 05:26:49:452 INFO] [Scripting] [Lila:trace] t=0 job=- pos=23,151,22 obra=- solido=oak_log:63,oak_planks:3,cobblestone:7
-[2026-11-20 05:26:49:563 INFO] [Scripting] [Lila:say] Pra cabana falta: 1 wooden door, 1 baú. Já vou buscar!
-[2026-11-20 05:26:49:563 INFO] [Scripting] [Lila:say] Sem vidro (janela aberta), tochas por enquanto: vou fazer sem e coloco depois.
-[2026-11-20 05:26:55:997 INFO] [Scripting] [Lila:say] Materiais prontos! Começando cabana.
-[2026-11-20 05:26:59:448 INFO] [Scripting] [Lila:trace] t=200 job=build pos=22,151,16 obra=- solido=oak_log:16,oak_planks:177
-[2026-11-20 05:27:09:448 INFO] [Scripting] [Lila:trace] t=400 job=build pos=25,151,19 obra=13/206 solido=oak_log:16,oak_planks:164
-[2026-11-20 05:27:19:448 INFO] [Scripting] [Lila:trace] t=600 job=build pos=25,151,19 obra=30/206 solido=oak_log:16,oak_planks:147
-[2026-11-20 05:27:25:997 INFO] [Scripting] [Lila:say] Obra em andamento: 19%
-[2026-11-20 05:27:29:447 INFO] [Scripting] [Lila:trace] t=800 job=build pos=25,151,14 obra=42/206 solido=oak_log:16,oak_planks:135
-[2026-11-20 05:27:39:447 INFO] [Scripting] [Lila:trace] t=1000 job=build pos=26,151,16 obra=65/206 solido=oak_log:14,oak_planks:114
-[2026-11-20 05:27:43:997 INFO] [Scripting] [Lila:say] Obra em andamento: 38%
-[2026-11-20 05:27:49:447 INFO] [Scripting] [Lila:trace] t=1200 job=build pos=26,151,17 obra=98/206 solido=oak_log:6,oak_planks:88
-[2026-11-20 05:27:56:847 INFO] [Scripting] [Lila:say] Obra em andamento: 58%
-[2026-11-20 05:27:59:448 INFO] [Scripting] [Lila:trace] t=1400 job=build pos=24,151,20 obra=124/206 solido=oak_log:4,oak_planks:65
-[2026-11-20 05:28:09:448 INFO] [Scripting] [Lila:trace] t=1600 job=build pos=26,151,15 obra=134/206 solido=oak_log:4,oak_planks:55
-[2026-11-20 05:28:19:452 INFO] [Scripting] [Lila:trace] t=1800 job=build pos=29,151,15 obra=148/206 solido=oak_log:4,oak_planks:41
-[2026-11-20 05:28:29:448 INFO] [Scripting] [Lila:trace] t=2000 job=build pos=26,151,20 obra=148/206 solido=oak_log:4,oak_planks:42
-[2026-11-20 05:28:32:547 INFO] [Scripting] [Lila:say] Obra em andamento: 77%
-[2026-11-20 05:28:39:448 INFO] [Scripting] [Lila:trace] t=2200 job=build pos=24,151,17 obra=160/206 solido=oak_log:4,oak_planks:31
-[2026-11-20 05:28:49:448 INFO] [Scripting] [Lila:trace] t=2400 job=build pos=23,151,15 obra=162/206 solido=oak_log:4,oak_planks:31
-[2026-11-20 05:28:59:451 INFO] [Scripting] [Lila:trace] t=2600 job=build pos=28,153,15 obra=169/206 solido=oak_log:4,oak_planks:26
-[2026-11-20 05:29:09:452 INFO] [Scripting] [Lila:trace] t=2800 job=build pos=21,151,21 obra=169/206 solido=oak_log:4,oak_planks:26
-[2026-11-20 05:29:19:447 INFO] [Scripting] [Lila:trace] t=3000 job=build pos=22,153,19 obra=169/206 solido=oak_log:6,oak_planks:27
-[2026-11-20 05:29:29:452 INFO] [Scripting] [Lila:trace] t=3200 job=build pos=22,153,15 obra=173/206 solido=oak_log:6,oak_planks:26
-[2026-11-20 05:29:37:397 INFO] [Scripting] [Lila:say] Obra em andamento: 97%
-[2026-11-20 05:29:39:397 INFO] [Scripting] [Lila:say] Pronto! Cabana está pronta!
-[2026-11-20 05:29:39:448 INFO] [Scripting] [Lila:trace] t=3400 job=follow pos=26,154,19 obra=199/206 solido=oak_log:6,oak_planks:3
-[2026-11-20 05:29:39:448 INFO] [Scripting] LILA-TEST PASS 'constrói uma cabana' (só troncos) termina em até 4 min :: ticks=3400 job=follow err=-
-[2026-11-20 05:29:39:951 INFO] [Scripting] [Lila:say] Tô indo! (fazer uma plantação)
-[2026-11-20 05:29:39:951 INFO] [Scripting] [Lila:trace] t=0 job=- pos=-23,151,24 obra=199/206 solido=oak_log:22,oak_planks:3
-[2026-11-20 05:29:40:053 INFO] [Scripting] [Lila:say] Pra fazenda falta: 31 oak fence, 1 enxada de madeira. Já vou buscar!
-[2026-11-20 05:29:40:053 INFO] [Scripting] [Lila:say] Sem tochas por enquanto: vou fazer sem e coloco depois.
-[2026-11-20 05:29:49:947 INFO] [Scripting] [Lila:trace] t=200 job=farm pos=-23,151,24 obra=199/206 solido=oak_log:7,oak_planks:37
-[2026-11-20 05:29:55:899 INFO] [Scripting] [Lila:say] Materiais prontos! Começando fazenda.
-[2026-11-20 05:29:59:948 INFO] [Scripting] [Lila:trace] t=400 job=farm pos=-26,151,22 obra=3/130 solido=oak_log:7,oak_planks:1
-[2026-11-20 05:30:09:948 INFO] [Scripting] [Lila:trace] t=600 job=farm pos=-26,151,22 obra=16/130 solido=oak_log:7,oak_planks:1
-[2026-11-20 05:30:19:948 INFO] [Scripting] [Lila:trace] t=800 job=farm pos=-24,151,19 obra=28/130 solido=oak_log:7,oak_planks:1
-[2026-11-20 05:30:27:997 INFO] [Scripting] [Lila:say] Obra em andamento: 30%
-[2026-11-20 05:30:29:949 INFO] [Scripting] [Lila:trace] t=1000 job=farm pos=-24,151,19 obra=41/130 solido=oak_log:7,oak_planks:1
-[2026-11-20 05:30:39:947 INFO] [Scripting] [Lila:trace] t=1200 job=farm pos=-22,151,20 obra=55/130 solido=oak_log:7,oak_planks:1
-[2026-11-20 05:30:49:948 INFO] [Scripting] [Lila:trace] t=1400 job=farm pos=-24,151,15 obra=76/130 solido=oak_log:7,oak_planks:1
-[2026-11-20 05:30:51:048 INFO] [Scripting] [Lila:say] Obra em andamento: 61%
-[2026-11-20 05:30:55:297 INFO] [Scripting] [Lila:say] Plantação pronta! Vou cuidar dela e colher quando amadurecer.
-[2026-11-20 05:30:55:448 INFO] [Scripting] LILA-TEST PASS 'faz uma plantação' (6 sementes, sem balde) termina em até 3 min :: ticks=1510 job=follow err=-
-[2026-11-20 05:30:58:448 INFO] [Scripting] LILA-TEST PASS 'me dá tudo' keeps only her tools :: left=
-[2026-11-20 05:30:58:448 INFO] [Scripting] LILA-TEST PASS status answers
-[2026-11-20 05:30:58:948 INFO] [Scripting] LILA-TEST PASS drone: summon
-[2026-11-20 05:31:07:947 INFO] [Scripting] LILA-TEST PASS drone: flies around the owner :: dist=3.2 h=2.9
-[2026-11-20 05:31:10:848 INFO] [Scripting] LILA-TEST PASS drone: flies over a 9-block wall to the owner :: ticks=50
-[2026-11-20 05:31:10:849 INFO] [Scripting] LILA-TEST PASS drone: player wall intact
-[2026-11-20 05:31:19:598 INFO] [Scripting] LILA-TEST PASS drone: turret lands on the ground and transforms :: h=0.00 act=turret
-[2026-11-20 05:31:19:598 INFO] [Scripting] LILA-TEST PASS drone: turret mode kills 3 zombies :: ticks=165
-[2026-11-20 05:31:21:099 INFO] [Scripting] LILA-TEST PASS drone: owner can ride it
-[2026-11-20 05:31:22:103 INFO] [Scripting] LILA-TEST PASS drone: resumes work after the ride
-[2026-11-20 05:31:28:349 INFO] [Scripting] LILA-TEST PASS drone: 'pega 4 madeira' (flying) delivers :: ticks=125
-[2026-11-20 05:31:41:099 INFO] [Scripting] LILA-TEST PASS drone: 'quero comida' hunts, picks up and delivers food :: food=11 ticks=255 job=-
-[2026-11-20 05:31:41:100 INFO] [Scripting] LILA-TEST PASS drone: scan reports owner
-[2026-11-20 05:31:41:100 INFO] [Scripting] LILA-TEST PASS drone: missions list
-[2026-11-20 05:31:41:100 INFO] [Scripting] LILA-TEST PASS drone: lila still alive alongside
-[2026-11-20 05:31:41:100 INFO] [Scripting] LILA-TEST DONE pass=28 fail=0
+[2026-11-20 14:48:35:176 INFO] [Scripting] [Lila:boot] DR-0N Mega Drone carregado
+[2026-11-20 14:48:40:308 INFO] [Scripting] LILA-TEST START
+[2026-11-20 14:48:41:800 INFO] [Scripting] LILA-TEST PASS arena chunks loaded
+[2026-11-20 14:48:42:374 INFO] [Scripting] LILA-HARNESS owner spawned -8589934591
+[2026-11-20 14:48:42:622 INFO] [Scripting] LILA-TEST PASS simulated owner joined
+[2026-11-20 14:48:42:624 INFO] [Scripting] LILA-TEST PASS summon in front of owner
+[2026-11-20 14:48:44:375 INFO] [Scripting] LILA-TEST PASS 'me dá 64 diamantes' (infinite items)
+[2026-11-20 14:48:44:623 INFO] [Scripting] LILA-TEST PASS 'me fortalece' equips enchanted netherite :: totem=1
+[2026-11-20 14:48:45:125 INFO] [Scripting] LILA-TEST PASS 'vira helicóptero' puts the owner at the controls
+[2026-11-20 14:48:45:423 INFO] [Scripting] LILA-TEST PASS attack button fires the heli gun :: cd=205
+[2026-11-20 14:48:45:673 INFO] [Scripting] LILA-TEST PASS leaving a vehicle turns it back into the drone
+[2026-11-20 14:48:46:973 INFO] [Scripting] LILA-TEST PASS tank: owner drives, cannon fires
+[2026-11-20 14:48:47:473 INFO] [Scripting] LILA-TEST PASS 'cancelar' reverts the vehicle
+[2026-11-20 14:48:49:223 INFO] [Scripting] LILA-TEST PASS colossus: owner is in the head seat :: pilot height=19.7 blocks
+[2026-11-20 14:48:49:323 INFO] [Scripting] LILA-TEST PASS colossus: pilot is (almost) immortal :: hp 20->20
+[2026-11-20 14:48:49:523 INFO] [Scripting] LILA-TEST PASS colossus: attack button = punch
+[2026-11-20 14:48:51:523 INFO] [Scripting] LILA-TEST PASS colossus stays when you get out (until cancel)
+[2026-11-20 14:48:52:023 INFO] [Scripting] LILA-TEST PASS cancel turns the colossus back into the drone
+[2026-11-20 14:48:52:025 INFO] [Scripting] LILA-HARNESS intruder spawned -8589934584
+[2026-11-20 14:48:52:773 INFO] [Scripting] LILA-TEST PASS a player who hits you gets attacked by the drone :: intruder hp 20->15.5 aggro=true
+[2026-11-20 14:48:53:772 INFO] [Scripting] LILA-TEST PASS hitting the drone yourself = a light lesson :: hp 20->19.56800079345703
+[2026-11-20 14:49:13:023 INFO] [Scripting] LILA-TEST PASS protect mode attacks first (zombie 20 blocks away) :: ticks=385
+[2026-11-20 14:49:14:273 INFO] [Scripting] LILA-TEST PASS army: drone bursts into 10 robots :: robots=10
+[2026-11-20 14:49:16:275 INFO] [Scripting] LILA-TEST PASS army: robots take down monsters
+[2026-11-20 14:49:17:025 INFO] [Scripting] LILA-TEST PASS army: brings what you need (low health -> golden apples)
+[2026-11-20 14:49:17:275 INFO] [Scripting] LILA-TEST PASS cancel merges the army back into the drone :: robots=0
+[2026-11-20 14:49:18:023 INFO] [Scripting] LILA-TEST PASS 'constrói um poço aqui' (mega builder by text)
+[2026-11-20 14:49:18:023 INFO] [Scripting] LILA-TEST PASS player build untouched
+[2026-11-20 14:49:18:023 INFO] [Scripting] LILA-TEST DONE pass=24 fail=0
 selftest finished: True
-log lines: 205 · error/warn/lila lines: 50
-   [2026-11-20 05:25:05:992 INFO] [Scripting] [Lila:boot] Lila Companion carregado
-   [2026-11-20 05:25:46:215 INFO] [Scripting] [Lila:trace] t=0 job=- pos=-7,151,4 obra=- solido=oak_log:1
-   [2026-11-20 05:25:46:297 INFO] [Scripting] [Lila:say] Deixa comigo, vou arranjar comida!
-   [2026-11-20 05:25:46:349 INFO] [Scripting] [Lila:say] Vi uma ovelha ali, vou caçar pra gente.
-   [2026-11-20 05:25:56:198 INFO] [Scripting] [Lila:trace] t=200 job=food pos=13,151,-16 obra=- solido=oak_log:1
-   [2026-11-20 05:26:06:198 INFO] [Scripting] [Lila:trace] t=400 job=food pos=10,151,-16 obra=- solido=oak_log:1
-   [2026-11-20 05:26:16:199 INFO] [Scripting] [Lila:trace] t=600 job=food pos=5,151,-9 obra=- solido=oak_log:1
-   [2026-11-20 05:26:20:998 INFO] [Scripting] [Lila:say] Toma: 7 de comida.
-   [2026-11-20 05:26:49:452 INFO] [Scripting] [Lila:trace] t=0 job=- pos=23,151,22 obra=- solido=oak_log:63,oak_planks:3,cobblestone:7
-   [2026-11-20 05:26:49:563 INFO] [Scripting] [Lila:say] Pra cabana falta: 1 wooden door, 1 baú. Já vou buscar!
-   [2026-11-20 05:26:49:563 INFO] [Scripting] [Lila:say] Sem vidro (janela aberta), tochas por enquanto: vou fazer sem e coloco depois.
-   [2026-11-20 05:26:55:997 INFO] [Scripting] [Lila:say] Materiais prontos! Começando cabana.
-   [2026-11-20 05:26:59:448 INFO] [Scripting] [Lila:trace] t=200 job=build pos=22,151,16 obra=- solido=oak_log:16,oak_planks:177
-   [2026-11-20 05:27:09:448 INFO] [Scripting] [Lila:trace] t=400 job=build pos=25,151,19 obra=13/206 solido=oak_log:16,oak_planks:164
-   [2026-11-20 05:27:19:448 INFO] [Scripting] [Lila:trace] t=600 job=build pos=25,151,19 obra=30/206 solido=oak_log:16,oak_planks:147
-   [2026-11-20 05:27:25:997 INFO] [Scripting] [Lila:say] Obra em andamento: 19%
-   [2026-11-20 05:27:29:447 INFO] [Scripting] [Lila:trace] t=800 job=build pos=25,151,14 obra=42/206 solido=oak_log:16,oak_planks:135
-   [2026-11-20 05:27:39:447 INFO] [Scripting] [Lila:trace] t=1000 job=build pos=26,151,16 obra=65/206 solido=oak_log:14,oak_planks:114
-   [2026-11-20 05:27:43:997 INFO] [Scripting] [Lila:say] Obra em andamento: 38%
-   [2026-11-20 05:27:49:447 INFO] [Scripting] [Lila:trace] t=1200 job=build pos=26,151,17 obra=98/206 solido=oak_log:6,oak_planks:88
-   [2026-11-20 05:27:56:847 INFO] [Scripting] [Lila:say] Obra em andamento: 58%
-   [2026-11-20 05:27:59:448 INFO] [Scripting] [Lila:trace] t=1400 job=build pos=24,151,20 obra=124/206 solido=oak_log:4,oak_planks:65
-   [2026-11-20 05:28:09:448 INFO] [Scripting] [Lila:trace] t=1600 job=build pos=26,151,15 obra=134/206 solido=oak_log:4,oak_planks:55
-   [2026-11-20 05:28:19:452 INFO] [Scripting] [Lila:trace] t=1800 job=build pos=29,151,15 obra=148/206 solido=oak_log:4,oak_planks:41
-   [2026-11-20 05:28:29:448 INFO] [Scripting] [Lila:trace] t=2000 job=build pos=26,151,20 obra=148/206 solido=oak_log:4,oak_planks:42
-   [2026-11-20 05:28:32:547 INFO] [Scripting] [Lila:say] Obra em andamento: 77%
-   [2026-11-20 05:28:39:448 INFO] [Scripting] [Lila:trace] t=2200 job=build pos=24,151,17 obra=160/206 solido=oak_log:4,oak_planks:31
-   [2026-11-20 05:28:49:448 INFO] [Scripting] [Lila:trace] t=2400 job=build pos=23,151,15 obra=162/206 solido=oak_log:4,oak_planks:31
-   [2026-11-20 05:28:59:451 INFO] [Scripting] [Lila:trace] t=2600 job=build pos=28,153,15 obra=169/206 solido=oak_log:4,oak_planks:26
-   [2026-11-20 05:29:09:452 INFO] [Scripting] [Lila:trace] t=2800 job=build pos=21,151,21 obra=169/206 solido=oak_log:4,oak_planks:26
-   [2026-11-20 05:29:19:447 INFO] [Scripting] [Lila:trace] t=3000 job=build pos=22,153,19 obra=169/206 solido=oak_log:6,oak_planks:27
-   [2026-11-20 05:29:29:452 INFO] [Scripting] [Lila:trace] t=3200 job=build pos=22,153,15 obra=173/206 solido=oak_log:6,oak_planks:26
-   [2026-11-20 05:29:37:397 INFO] [Scripting] [Lila:say] Obra em andamento: 97%
-   [2026-11-20 05:29:39:397 INFO] [Scripting] [Lila:say] Pronto! Cabana está pronta!
-   [2026-11-20 05:29:39:448 INFO] [Scripting] [Lila:trace] t=3400 job=follow pos=26,154,19 obra=199/206 solido=oak_log:6,oak_planks:3
-   [2026-11-20 05:29:39:951 INFO] [Scripting] [Lila:say] Tô indo! (fazer uma plantação)
-   [2026-11-20 05:29:39:951 INFO] [Scripting] [Lila:trace] t=0 job=- pos=-23,151,24 obra=199/206 solido=oak_log:22,oak_planks:3
-   [2026-11-20 05:29:40:053 INFO] [Scripting] [Lila:say] Pra fazenda falta: 31 oak fence, 1 enxada de madeira. Já vou buscar!
-   [2026-11-20 05:29:40:053 INFO] [Scripting] [Lila:say] Sem tochas por enquanto: vou fazer sem e coloco depois.
-   [2026-11-20 05:29:49:947 INFO] [Scripting] [Lila:trace] t=200 job=farm pos=-23,151,24 obra=199/206 solido=oak_log:7,oak_planks:37
-   [2026-11-20 05:29:55:899 INFO] [Scripting] [Lila:say] Materiais prontos! Começando fazenda.
-   [2026-11-20 05:29:59:948 INFO] [Scripting] [Lila:trace] t=400 job=farm pos=-26,151,22 obra=3/130 solido=oak_log:7,oak_planks:1
-   [2026-11-20 05:30:09:948 INFO] [Scripting] [Lila:trace] t=600 job=farm pos=-26,151,22 obra=16/130 solido=oak_log:7,oak_planks:1
-   [2026-11-20 05:30:19:948 INFO] [Scripting] [Lila:trace] t=800 job=farm pos=-24,151,19 obra=28/130 solido=oak_log:7,oak_planks:1
-   [2026-11-20 05:30:27:997 INFO] [Scripting] [Lila:say] Obra em andamento: 30%
-   [2026-11-20 05:30:29:949 INFO] [Scripting] [Lila:trace] t=1000 job=farm pos=-24,151,19 obra=41/130 solido=oak_log:7,oak_planks:1
-   [2026-11-20 05:30:39:947 INFO] [Scripting] [Lila:trace] t=1200 job=farm pos=-22,151,20 obra=55/130 solido=oak_log:7,oak_planks:1
-   [2026-11-20 05:30:49:948 INFO] [Scripting] [Lila:trace] t=1400 job=farm pos=-24,151,15 obra=76/130 solido=oak_log:7,oak_planks:1
-   [2026-11-20 05:30:51:048 INFO] [Scripting] [Lila:say] Obra em andamento: 61%
-   [2026-11-20 05:30:55:297 INFO] [Scripting] [Lila:say] Plantação pronta! Vou cuidar dela e colher quando amadurecer.
+log lines: 102 · error/warn/lila lines: 1
+   [2026-11-20 14:48:35:176 INFO] [Scripting] [Lila:boot] DR-0N Mega Drone carregado

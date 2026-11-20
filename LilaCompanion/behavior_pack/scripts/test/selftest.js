@@ -240,7 +240,8 @@ async function soloTests(dim, check) {
     check(`mega: ${key}`, res.ok && c.rec.stats.built === b0 + 1, `ticks=${res.ticks} ${res.err ?? ""}`);
     if (key === "cidade" || key === "castelo" || key === "arranha_ceu") {
       const id = { cidade: "minecraft:black_concrete", castelo: "minecraft:stone_bricks", arranha_ceu: "minecraft:light_blue_stained_glass" }[key];
-      const n = countBlocks(dim, id, x - 70, Y - 3, 0, x + 70, Y + 40, 150, 3);
+      const top = key === "arranha_ceu" ? Y + 125 : Y + 40;
+      const n = countBlocks(dim, id, x - 70, Y - 3, 0, x + 70, top, 150, 3);
       check(`mega: ${key} really placed its blocks`, n > 200, `${id.replace("minecraft:", "")} (amostra 1/27)=${n}`);
     }
     if (key === "montanha_russa") {
