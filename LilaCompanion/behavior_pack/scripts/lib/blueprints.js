@@ -171,20 +171,21 @@ function ponte() {
 }
 
 function fazenda() {
+  // terra arada no nível do chão: na grama/terra ela só ara (não precisa cavar nada)
   const o = new Plan();
   for (let x = -4; x <= 4; x++)
     for (let z = 1; z <= 9; z++) {
       const edge = x === -4 || x === 4 || z === 1 || z === 9;
-      if (edge) setAt(o, x, 0, z, "fence");
+      if (edge) setAt(o, x, 1, z, "fence");
       else if (x === 0 && z === 5) {
-        setAt(o, x, -1, z, "water");
+        setAt(o, x, 0, z, "water");
       } else {
-        setAt(o, x, -1, z, "farmland");
-        setAt(o, x, 0, z, "crop");
+        setAt(o, x, 0, z, "farmland");
+        setAt(o, x, 1, z, "crop");
       }
     }
-  setAt(o, 0, 0, 1, "air");
-  setAt(o, 0, 1, 5, "lantern_post");
+  setAt(o, 0, 1, 1, "air");
+  setAt(o, -4, 2, 1, "lantern_post"); // tocha em cima do poste da cerca
   return dedupe(o);
 }
 

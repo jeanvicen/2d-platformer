@@ -317,6 +317,16 @@ export function* tendFarm(c) {
     yield* harvestCrop(c, p);
   }
   yield* sweepItems(c, center, 7);
+  // terra arada vazia: planta as sementes que tiver (a plantação vai crescendo sozinha)
+  const SEED_CROP = { "minecraft:wheat_seeds": "minecraft:wheat", "minecraft:carrot": "minecraft:carrots", "minecraft:potato": "minecraft:potatoes", "minecraft:beetroot_seeds": "minecraft:beetroot" };
+  const empty = findBlocks(dim, center, ["minecraft:farmland"], { r: 6, dy: 2, max: 60, filter: (p) => !!blockAt(dim, p.x, p.y + 1, p.z)?.isAir });
+  for (const p of empty) {
+    const seed = [f.crop, ...Object.keys(SEED_CROP)].find((sd) => sd && SEED_CROP[sd] && inv.count(c, sd) > 0);
+    if (!seed) break;
+    const top = { x: p.x, y: p.y + 1, z: p.z };
+    if (!(yield* reach(c, top, 3.2))) continue;
+    yield* placeAt(c, top, SEED_CROP[seed], seed, { growth: 0 });
+  }
   if (inv.count(c, "minecraft:wheat") >= 3) yield* craft(c, "minecraft:bread", inv.count(c, "minecraft:bread") + Math.floor(inv.count(c, "minecraft:wheat") / 3));
 }
 
