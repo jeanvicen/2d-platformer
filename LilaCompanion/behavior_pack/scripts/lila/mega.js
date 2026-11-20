@@ -75,11 +75,17 @@ function* fillBox(dim, a, b, p, filter) {
 }
 
 function topSolid(dim, x, z, fromY) {
-  for (let y = Math.floor(fromY) + 40; y > fromY - 40; y--) {
-    const b = dim.getBlock({ x, y, z });
-    if (!b) return undefined;
-    if (b.isAir || b.isLiquid || LEAVES.includes(b.typeId) || LOGS.includes(b.typeId) || PLANTS.includes(b.typeId)) continue;
-    return y;
+  // uma chamada nativa acha o topo; depois desce só pela vegetação (folhas, troncos, plantas)
+  let b;
+  try {
+    b = dim.getTopmostBlock({ x, z }, Math.min(dim.heightRange.max - 1, Math.floor(fromY) + 40));
+  } catch {
+    return undefined;
+  }
+  for (let k = 0; b && k < 48; k++) {
+    if (b.y < fromY - 40) return undefined;
+    if (!(b.isAir || b.isLiquid || LEAVES.includes(b.typeId) || LOGS.includes(b.typeId) || PLANTS.includes(b.typeId))) return b.y;
+    b = dim.getBlock({ x, y: b.y - 1, z });
   }
   return undefined;
 }

@@ -16,9 +16,9 @@ import { logError } from "../core/log.js";
 /** @typedef {{x:number,y:number,z:number,id:string,st?:any,soft?:boolean,natural?:boolean}} Work */
 
 export const SPEEDS = {
-  humano: { per: 1, every: 2, reach: 5, glide: 0.35, sfx: 1, label: "humano (devagar, bloco por bloco)", rate: 10 },
-  normal: { per: 3, every: 1, reach: 7, glide: 0.55, sfx: 3, label: "normal", rate: 60 },
-  rapido: { per: 25, every: 1, reach: 14, glide: 0.9, sfx: 12, label: "rápido", rate: 500 },
+  humano: { per: 1, every: 2, reach: 5, glide: 0.35, sfx: 1, fx: 1, label: "humano (devagar, bloco por bloco)", rate: 10 },
+  normal: { per: 3, every: 1, reach: 7, glide: 0.55, sfx: 3, fx: 2, label: "normal", rate: 60 },
+  rapido: { per: 25, every: 1, reach: 14, glide: 0.9, sfx: 12, fx: 8, label: "rápido", rate: 500 },
 };
 export const speedOf = (c) => (c.rec.settings.buildSpeed && (SPEEDS[c.rec.settings.buildSpeed] || c.rec.settings.buildSpeed === "instantaneo") ? c.rec.settings.buildSpeed : "humano");
 
@@ -133,13 +133,15 @@ export class Placer {
       logError("hand.set", `${w.id}: ${err}`);
       return;
     }
-    // feixe do drone até o bloco + efeito no bloco
+    // feixe do drone até o bloco + efeito no bloco (nos modos rápidos, a cada alguns blocos)
     const at = { x: w.x + 0.5, y: w.y + 0.5, z: w.z + 0.5 };
-    for (let k = 1; k <= 3; k++) {
-      const t = k / 4;
-      particle(dim, "lila:scan", { x: from.x + (at.x - from.x) * t, y: from.y + 0.3 + (at.y - from.y - 0.3) * t, z: from.z + (at.z - from.z) * t });
+    if (this.n % this.sp.fx === 0) {
+      for (let k = 1; k <= 3; k++) {
+        const t = k / 4;
+        particle(dim, "lila:scan", { x: from.x + (at.x - from.x) * t, y: from.y + 0.3 + (at.y - from.y - 0.3) * t, z: from.z + (at.z - from.z) * t });
+      }
+      particle(dim, breaking ? "lila:dust" : "lila:build", at);
     }
-    particle(dim, breaking ? "lila:dust" : "lila:build", at);
     if (this.n % this.sp.sfx === 0) {
       try {
         const snd = breaking ? digSound(cur) : digSound(w.id).replace("dig.", "use.");
@@ -152,7 +154,7 @@ export class Placer {
     else this.placed++;
     this.n++;
     if (this.n % this.sp.per === 0) yield this.sp.every;
-    else yield* breathe(6);
+    else yield* breathe(9);
   }
 
   /** Executa uma fila (array ou gerador de Work; números no gerador = esperar ticks). */
@@ -161,7 +163,7 @@ export class Placer {
       if (!this.c.alive()) return false;
       if (typeof w === "number") {
         if (w > 0) yield w;
-        else yield* breathe(6);
+        else yield* breathe(9);
         continue;
       }
       yield* this.work(w);
