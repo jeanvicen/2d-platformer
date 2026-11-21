@@ -7,7 +7,7 @@
     "version": [
       2,
       2,
-      0
+      1
     ],
     "min_engine_version": [
       1,
@@ -22,7 +22,7 @@
       "version": [
         2,
         2,
-        0
+        1
       ],
       "description": "DR-0N behaviors"
     },
@@ -33,7 +33,7 @@
       "version": [
         2,
         2,
-        0
+        1
       ],
       "entry": "scripts/main.js",
       "description": "DR-0N brain"
@@ -45,7 +45,7 @@
       "version": [
         2,
         2,
-        0
+        1
       ]
     },
     {

@@ -1,4 +1,4 @@
-# Checklist de aceitação — DR-0N Mega Drone 2.2
+# Checklist de aceitação — DR-0N Mega Drone 2.2.1
 
 Legenda: **PASS** = verificado de verdade · **NOT TESTED** = não dá para testar neste ambiente
 (servidor sem tela, sem celular, sem som).
@@ -15,6 +15,8 @@ com jogadores simulados "Dono" e "Intruso" → `tests/last_bds_owner_run.log`.
 | Todo `minecraft:*` usado existe no jogo (vanilla-data), inclusive as 4851 plantas do catálogo | PASS |
 | Referências cruzadas (18 geometrias, render controller com 16 formas, animações, partículas, sons) | PASS |
 | Testes unitários (frases pt-BR antigas e novas, receitas, A*) | PASS |
+| Molang (444 expressões): parênteses, funções/consultas conhecidas e toda variável lida é escrita em algum lugar | PASS |
+| Física das animações (molas): simulada fora do jogo a 20 e 60 FPS — estável, 1 quique ao frear, assenta em < 1 s | PASS |
 | As 4851 construções do catálogo geram sem erro (Node) e as amostras renderizadas conferem planta e móveis | PASS |
 
 ## Sem jogador (servidor oficial)
@@ -55,7 +57,8 @@ com jogadores simulados "Dono" e "Intruso" → `tests/last_bds_owner_run.log`.
 ## Não testado (limite do ambiente)
 | Item | Resultado |
 |---|---|
-| Aparência dos modelos/animações no celular (conferidos por renderizações do próprio modelo e das poses) | NOT TESTED |
+| Aparência dos modelos/animações no celular (conferidos por renderizações do próprio modelo e das poses, inclusive acelerando/freando/curva) | NOT TESTED |
+| Física das peças rodando no cliente do jogo (Molang de cada quadro; o servidor não desenha) | NOT TESTED |
 | Capota recolhendo ao entrar (animação no cliente; `q.has_rider`) — conferida só no arquivo de animação | NOT TESTED |
 | Partículas do enxame (milhares de nanorrobôs) e desempenho delas no celular | NOT TESTED |
 | Sons ouvidos no jogo (arquivos e definições validados) | NOT TESTED |

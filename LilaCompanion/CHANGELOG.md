@@ -1,14 +1,32 @@
 # Changelog
 
+## 2.2.1
+- **Sem engrenagens voando**: o robô ficou só com cabeça, tronco e as duas mãos, presos por magnetismo.
+- **Animações com física de verdade** (calculada no próprio jogo, a cada quadro): cada peça é uma massa
+  presa por uma "mola magnética" com amortecimento. Acelerou, as mãos e a cabeça ficam pra trás;
+  freou, elas passam do ponto e voltam quicando; na curva o corpo deita pra dentro e as peças pendem
+  pra fora; voando rápido as mãos vão pra trás pelo arrasto e o corpo inclina pra frente. A cabeça
+  olha macio para quem está perto. Levitação em repouso com duas frequências e um zumbido fino.
+- **Golpes com peso:** soco com preparação, impacto que passa do ponto e recuo (o tronco e a cabeça
+  levam um tranco); tiro do núcleo com coice e quique; martelar com impacto seco; construir alcançando
+  o bloco; carregar energia com as mãos tremendo no campo.
+- **Desligar**: cada peça cai com aceleração e **quica** no chão; os brilhos falham e apagam.
+  **Ligar**: as peças sobem em arco girando, tremem com o campo e **encaixam com um estalo
+  magnético** (passam um pouco do lugar e voltam); os olhos acendem piscando.
+- **Veículos com suspensão de mola**: carro, moto, caminhão e tanque empinam ao acelerar e mergulham
+  na freada; lancha levanta o bico; helicóptero, nave e disco inclinam com a aceleração.
+- Novo teste automático do Molang (`tests/check_molang.py`): parênteses, funções e toda variável lida
+  precisa existir.
+
 ## 2.2.0
 - **DR-0N agora é um robô de peças flutuantes** (no lugar do drone de hélices): cabeça arredondada de
   pedra-metal com olhos ciano e boca brilhando, tronco cúbico com núcleo de energia, duas mãos soltas
-  com dedos e engrenagens/parafusos orbitando. Cada parte flutua com o seu ritmo; voando ele inclina,
+  com dedos. Cada parte flutua com o seu ritmo; voando ele inclina,
   as mãos ficam pra trás e a cabeça olha para quem está perto. **Soco forte** (a mão voa no alvo,
   dano alto e arremesso) alternado com **tiro do núcleo do peito**; mãos martelando ao quebrar,
   alcançando o bloco ao construir, guarda erguida na torreta.
 - **Desligar / ligar:** botão no controle (ou "desliga" / "liga"). Desligado, ele desmonta no chão
-  — a cabeça cai primeiro, depois as mãos e o tronco, as engrenagens rolam e os brilhos apagam — e
+  — a cabeça cai primeiro, depois as mãos e o tronco e os brilhos apagam — e
   fica quieto (não segue, não ataca, não obedece até ligar). Ao ligar, o tronco sobe, as mãos e a
   cabeça voam girando em arco até o lugar e os olhos acendem piscando.
 - **Visão livre nos veículos:** a cabine/capota (vidro e teto) do helicóptero, carro, escavadeira,

@@ -23,16 +23,13 @@ SOCKET = Paint(mat="matte", color=(18, 22, 28), seed=43)                        
 CORE = Paint(mat="glow", color=(40, 215, 235), color2=(200, 255, 255), seed=45)        # brilho ciano
 CORE_DIM = Paint(mat="glow", color=(20, 150, 170), color2=(120, 230, 240), seed=47)
 
-# peças soltas que orbitam (engrenagens, parafusos, lascas): nome, posição, tipo
-DEBRIS = [("gear0", (-12, 30, -3), "gear"), ("gear1", (11, 8, 4), "gear"), ("gear2", (-8, 4, 3), "gear"),
-          ("bolt0", (-13, 21, 2), "bolt"), ("bolt1", (17, 27, -2), "bolt"), ("shard0", (11, 32, 2), "shard"),
-          ("shard1", (8, 3, -6), "shard"), ("shard2", (-3, 2, -7), "shard")]
+DEBRIS = []  # (2.2) sem detritos orbitando: só as partes principais flutuando por magnetismo
 
 
 def drone_model():
     """DR-0N (2.2): robô de peças flutuantes, original — cabeça arredondada de pedra-metal com dois
-    olhos ciano e boca brilhando, tronco cúbico com núcleo de energia, duas mãos soltas com dedos e
-    engrenagens/parafusos orbitando. Nada é ligado: cada parte flutua no seu lugar (dá pra desmontar
+    olhos ciano e boca brilhando, tronco cúbico com núcleo de energia e duas mãos soltas com dedos,
+    tudo preso por magnetismo (flutua, sem nada ligando as partes). Nada é ligado: cada parte flutua no seu lugar (dá pra desmontar
     no chão quando desligado e remontar voando ao ligar). As partes que brilham ficam em ossos
     próprios (eyes, mouth, core, glow_hr, glow_hl) para apagar quando ele desliga."""
     m = Model("geometry.lila.drone", 256, 256, density=4, bounds=(4, 4, (0, 1.4, 0)))
@@ -103,21 +100,6 @@ def drone_model():
         hd.cube((tx - 0.7, 11.8, -2.6), (1.4, 2, 1.4), ROCK)
         g = m.bone("glow_hr" if sx < 0 else "glow_hl", side, pivot=(x, 18, 2.6))
         g.cube((x - 2, 17, 2.5), (4, 2, 0.5), CORE)                     # anel de energia no punho
-    # ---------------- detritos orbitando
-    deb = m.bone("debris", "float", pivot=(0, 18, 0))
-    for name, (x, y, z), kind in DEBRIS:
-        b = m.bone(name, "debris", pivot=(x, y, z))
-        if kind == "gear":
-            b.cube((x - 1.5, y - 1.5, z - 0.4), (3, 3, 0.8), PLATE)
-            for a in (0, 45):
-                b.cube((x - 2.2, y - 0.5, z - 0.3), (4.4, 1, 0.6), SOCKET, rotation=(0, 0, a), pivot=(x, y, z))
-                b.cube((x - 0.5, y - 2.2, z - 0.3), (1, 4.4, 0.6), SOCKET, rotation=(0, 0, a), pivot=(x, y, z))
-            b.cube((x - 0.5, y - 0.5, z - 0.5), (1, 1, 1), STEEL)
-        elif kind == "bolt":
-            b.cube((x - 0.4, y - 1.5, z - 0.4), (0.8, 3, 0.8), STEEL)
-            b.cube((x - 0.9, y + 1.2, z - 0.9), (1.8, 0.8, 1.8), PLATE)
-        else:
-            b.cube((x - 1, y - 0.8, z - 0.6), (2, 1.6, 1.2), ROCK, rotation=(20, 35, 15), pivot=(x, y, z))
     return m
 
 

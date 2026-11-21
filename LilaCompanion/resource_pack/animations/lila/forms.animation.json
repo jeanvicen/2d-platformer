@@ -45,9 +45,9 @@
         },
         "body": {
           "rotation": [
-            "v.htilt",
+            "v.htilt - v.chp * 1.4",
             0.0,
-            "-v.lean * 0.6"
+            "-v.lean * 0.6 + v.chr * 0.6"
           ]
         },
         "root": {
@@ -107,9 +107,9 @@
         },
         "body": {
           "rotation": [
-            "math.sin(q.anim_time * 900) * 0.25 * math.min(1, q.ground_speed / 4)",
+            "math.sin(q.anim_time * 900) * 0.25 * math.min(1, q.ground_speed / 4) + v.chp",
             0.0,
-            "v.lean * 0.18"
+            "v.lean * 0.18 + v.chr * 0.5"
           ],
           "position": [
             0.0,
@@ -301,9 +301,9 @@
         },
         "hull": {
           "rotation": [
-            "math.sin(q.anim_time * 700) * 0.3 * math.min(1, q.ground_speed / 3)",
+            "math.sin(q.anim_time * 700) * 0.3 * math.min(1, q.ground_speed / 3) + v.chp * 0.5",
             0.0,
-            "v.lean * 0.08"
+            "v.lean * 0.08 + v.chr * 0.25"
           ]
         }
       },
@@ -473,7 +473,7 @@
         },
         "body": {
           "rotation": [
-            "-math.clamp(q.ground_speed * 0.25, 0, 4)",
+            "-math.clamp(q.ground_speed * 0.25, 0, 4) + v.chp * 0.6",
             0.0,
             0.0
           ]
@@ -1860,9 +1860,9 @@
         },
         "body": {
           "rotation": [
-            "v.jpitch * 0.8",
+            "v.jpitch * 0.8 - v.chp * 0.6",
             0.0,
-            "v.lean * 1.2"
+            "v.lean * 1.2 + v.chr * 0.5"
           ],
           "position": [
             0.0,
@@ -1899,9 +1899,9 @@
         },
         "body": {
           "rotation": [
-            "v.htilt * 0.5",
+            "v.htilt * 0.5 - v.chp * 0.8",
             0.0,
-            "-v.lean * 0.4"
+            "-v.lean * 0.4 + v.chr * 0.8"
           ],
           "position": [
             0.0,
@@ -1992,9 +1992,9 @@
         },
         "body": {
           "rotation": [
-            "-math.clamp(q.ground_speed * 0.5, 0, 8) + math.sin(q.anim_time * 160) * 0.8",
+            "-math.clamp(q.ground_speed * 0.5, 0, 8) + math.sin(q.anim_time * 160) * 0.8 + v.chp * 1.2",
             0.0,
-            "v.lean * 0.5 + math.sin(q.anim_time * 110) * 1.2"
+            "v.lean * 0.5 + math.sin(q.anim_time * 110) * 1.2 + v.chr * 0.6"
           ]
         }
       },
@@ -2032,9 +2032,9 @@
         },
         "body": {
           "rotation": [
-            "math.sin(q.anim_time * 500) * 0.6 * math.min(1, q.ground_speed / 4)",
+            "math.sin(q.anim_time * 500) * 0.6 * math.min(1, q.ground_speed / 4) + v.chp * 1.2",
             0.0,
-            "v.lean * 0.3"
+            "v.lean * 0.3 + v.chr"
           ],
           "position": [
             0.0,

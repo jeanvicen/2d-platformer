@@ -6,42 +6,10 @@
       "states": {
         "default": {
           "animations": [
-            "still"
+            "motion"
           ],
           "blend_transition": 0.3,
-          "transitions": [
-            {
-              "dash": "q.property('lila:move') == 'run' || q.ground_speed > 6"
-            },
-            {
-              "fly": "q.property('lila:move') != 'none' || q.ground_speed > 0.5"
-            }
-          ]
-        },
-        "fly": {
-          "animations": [
-            "fly"
-          ],
-          "blend_transition": 0.3,
-          "transitions": [
-            {
-              "dash": "q.property('lila:move') == 'run' || q.ground_speed > 6"
-            },
-            {
-              "default": "q.property('lila:move') == 'none' && q.ground_speed < 0.3"
-            }
-          ]
-        },
-        "dash": {
-          "animations": [
-            "dash"
-          ],
-          "blend_transition": 0.3,
-          "transitions": [
-            {
-              "fly": "q.property('lila:move') != 'run' && q.ground_speed < 5"
-            }
-          ]
+          "transitions": []
         }
       }
     },

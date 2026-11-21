@@ -44,11 +44,8 @@
       },
       "animations": {
         "base": "animation.lila.drone.base",
+        "motion": "animation.lila.drone.motion",
         "power": "animation.lila.drone.power",
-        "look": "animation.lila.drone.look",
-        "still": "animation.lila.drone.still",
-        "fly": "animation.lila.drone.fly",
-        "dash": "animation.lila.drone.dash",
         "punch": "animation.lila.drone.punch",
         "shoot": "animation.lila.drone.shoot",
         "work": "animation.lila.drone.work",
@@ -105,7 +102,7 @@
       },
       "scripts": {
         "initialize": [
-          "v.po = q.property('lila:off') ? 1 : 0; v.ot = 9; v.bt = 9; v.dsp = 0; v.ride = 0; v.dtilt = 0; v.htilt = 0; v.jpitch = 0; v.aims = 0; v.pits = 0; v.cwd = 0; v.cws = 0; v.wheel = 0; v.pby = q.body_y_rotation; v.lean = 0; v.tf = 9; v.pf = q.property('lila:form'); v.gspin = 0; v.gear = 1;"
+          "v.svf = 0; v.svl = 0; v.svu = 0; v.pvf = 0; v.pvl = 0; v.pvu = 0; v.afw = 0; v.alf = 0; v.aup = 0; v.pipn = 0; v.pish = 0; v.chp = 0; v.chpw = 0; v.chr = 0; v.chrw = 0; v.tz = 0; v.tzw = 0; v.tx = 0; v.txw = 0; v.ty = 0; v.tyw = 0; v.hz = 0; v.hzw = 0; v.hx = 0; v.hxw = 0; v.hy = 0; v.hyw = 0; v.rz = 0; v.rzw = 0; v.rx = 0; v.rxw = 0; v.ry = 0; v.ryw = 0; v.lz = 0; v.lzw = 0; v.lx = 0; v.lxw = 0; v.ly = 0; v.lyw = 0; v.hlx = 0; v.hly = 0; v.po = q.property('lila:off') ? 1 : 0; v.ot = 9; v.bt = 9; v.dsp = 0; v.ride = 0; v.dtilt = 0; v.htilt = 0; v.jpitch = 0; v.aims = 0; v.pits = 0; v.cwd = 0; v.cws = 0; v.wheel = 0; v.pby = q.body_y_rotation; v.lean = 0; v.tf = 9; v.pf = q.property('lila:form'); v.gspin = 0; v.gear = 1;"
         ],
         "pre_animation": [
           "v.form = q.property('lila:form');",
@@ -121,6 +118,51 @@
           "v.kd = (v.offp > 0.5) ? math.clamp((v.ot - 0.1) * 2.0, 0, 1) : 1 - math.clamp((v.bt - 0.2) * 1.1, 0, 1);",
           "v.kg = (v.offp > 0.5) ? math.clamp(v.ot * 6, 0, 1) : 1 - math.clamp((v.bt - 1.45) * 3, 0, 1);",
           "v.dsp = v.dsp + math.min(q.delta_time, 0.1) * 45 * (1 - v.kd);",
+          "v.hlx = v.hlx + (math.clamp(q.target_x_rotation, -25, 25) - v.hlx) * math.min(1, q.delta_time * 6);",
+          "v.hly = v.hly + (math.clamp(q.target_y_rotation, -35, 35) - v.hly) * math.min(1, q.delta_time * 6);",
+          "v.pdt = math.clamp(q.delta_time, 0.001, 0.05);",
+          "v.byr = q.body_y_rotation;",
+          "v.vfw = math.clamp((math.cos(v.byr) * q.position_delta(2) - math.sin(v.byr) * q.position_delta(0)) / v.pdt, -40, 40);",
+          "v.vlf = math.clamp((math.cos(v.byr) * q.position_delta(0) + math.sin(v.byr) * q.position_delta(2)) / v.pdt, -40, 40);",
+          "v.vup = math.clamp(q.position_delta(1) / v.pdt, -40, 40);",
+          "v.sk = math.min(1, v.pdt * 15);",
+          "v.svf = v.svf + (v.vfw - v.svf) * v.sk; v.svl = v.svl + (v.vlf - v.svl) * v.sk; v.svu = v.svu + (v.vup - v.svu) * v.sk;",
+          "v.ak = math.min(1, v.pdt * 12);",
+          "v.afw = math.clamp(v.afw + ((v.svf - v.pvf) / v.pdt - v.afw) * v.ak, -60, 60); v.pvf = v.svf;",
+          "v.alf = math.clamp(v.alf + ((v.svl - v.pvl) / v.pdt - v.alf) * v.ak, -60, 60); v.pvl = v.svl;",
+          "v.aup = math.clamp(v.aup + ((v.svu - v.pvu) / v.pdt - v.aup) * v.ak, -60, 60); v.pvu = v.svu;",
+          "v.yr = math.clamp(v.dy / v.pdt, -360, 360);",
+          "v.acs = math.clamp(v.alf - v.svf * v.yr * 0.01745, -60, 60);",
+          "v.ipn = (q.property('lila:action') == 'punch') ? 1 : 0; v.tzw = v.tzw + ((v.ipn > v.pipn) ? -70 : 0); v.hzw = v.hzw + ((v.ipn > v.pipn) ? -45 : 0); v.pipn = v.ipn;",
+          "v.ish = (q.property('lila:action') == 'shoot') ? 1 : 0; v.tzw = v.tzw + ((v.ish > v.pish) ? 40 : 0); v.pish = v.ish;",
+          "v.tzw = v.tzw + (90 * ((0.06 * v.afw) - v.tz) - 13 * v.tzw) * v.pdt;",
+          "v.tz = math.clamp(v.tz + v.tzw * v.pdt, -3, 3);",
+          "v.txw = v.txw + (90 * ((-0.06 * v.acs) - v.tx) - 13 * v.txw) * v.pdt;",
+          "v.tx = math.clamp(v.tx + v.txw * v.pdt, -3, 3);",
+          "v.tyw = v.tyw + (90 * ((-0.04 * v.aup) - v.ty) - 13 * v.tyw) * v.pdt;",
+          "v.ty = math.clamp(v.ty + v.tyw * v.pdt, -3, 3);",
+          "v.hzw = v.hzw + (70 * ((0.12 * v.afw) - v.hz) - 8 * v.hzw) * v.pdt;",
+          "v.hz = math.clamp(v.hz + v.hzw * v.pdt, -5, 5);",
+          "v.hxw = v.hxw + (70 * ((-0.12 * v.acs) - v.hx) - 8 * v.hxw) * v.pdt;",
+          "v.hx = math.clamp(v.hx + v.hxw * v.pdt, -5, 5);",
+          "v.hyw = v.hyw + (70 * ((-0.08 * v.aup) - v.hy) - 8 * v.hyw) * v.pdt;",
+          "v.hy = math.clamp(v.hy + v.hyw * v.pdt, -5, 5);",
+          "v.rzw = v.rzw + (52 * ((0.2 * v.afw) - v.rz) - 6 * v.rzw) * v.pdt;",
+          "v.rz = math.clamp(v.rz + v.rzw * v.pdt, -7, 7);",
+          "v.rxw = v.rxw + (52 * ((-0.2 * v.acs) - v.rx) - 6 * v.rxw) * v.pdt;",
+          "v.rx = math.clamp(v.rx + v.rxw * v.pdt, -7, 7);",
+          "v.ryw = v.ryw + (52 * ((-0.1 * v.aup) - v.ry) - 6 * v.ryw) * v.pdt;",
+          "v.ry = math.clamp(v.ry + v.ryw * v.pdt, -7, 7);",
+          "v.lzw = v.lzw + (48 * ((0.2 * v.afw) - v.lz) - 6 * v.lzw) * v.pdt;",
+          "v.lz = math.clamp(v.lz + v.lzw * v.pdt, -7, 7);",
+          "v.lxw = v.lxw + (48 * ((-0.2 * v.acs) - v.lx) - 6 * v.lxw) * v.pdt;",
+          "v.lx = math.clamp(v.lx + v.lxw * v.pdt, -7, 7);",
+          "v.lyw = v.lyw + (48 * ((-0.1 * v.aup) - v.ly) - 6 * v.lyw) * v.pdt;",
+          "v.ly = math.clamp(v.ly + v.lyw * v.pdt, -7, 7);",
+          "v.chpw = v.chpw + (45 * ((-v.afw * 0.35) - v.chp) - 7 * v.chpw) * v.pdt;",
+          "v.chp = math.clamp(v.chp + v.chpw * v.pdt, -10, 10);",
+          "v.chrw = v.chrw + (40 * ((v.acs * 0.3) - v.chr) - 6 * v.chrw) * v.pdt;",
+          "v.chr = math.clamp(v.chr + v.chrw * v.pdt, -10, 10);",
           "v.tf = (v.form != v.pf) ? 0 : v.tf + q.delta_time; v.pf = v.form;",
           "v.dir = (q.property('lila:move') == 'sneak') ? -1 : 1;",
           "v.wheel = v.wheel + q.ground_speed * math.min(q.delta_time, 0.1) * 160 * v.dir;",
@@ -142,9 +184,6 @@
           },
           {
             "power": "v.form == 0"
-          },
-          {
-            "look": "v.form == 0"
           },
           {
             "ctrl_move": "v.form == 0 && v.offp < 0.5"

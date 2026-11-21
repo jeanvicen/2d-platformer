@@ -1,8 +1,9 @@
 # DR-0N Mega Drone — Minecraft Bedrock
 
 **DR-0N** é um robô de peças flutuantes para Minecraft Bedrock (celular, PC e console) com **itens infinitos**
-(cabeça, tronco com núcleo de energia e duas mãos soltas que voam; dá pra **desligar** — ele desmonta
-no chão — e **ligar** de novo, com as peças voando e se montando).
+(cabeça, tronco com núcleo de energia e duas mãos soltas presas por magnetismo, com animação de física
+de verdade — inércia, mola e quique; dá pra **desligar** — ele desmonta no chão — e **ligar** de novo,
+com as peças voando e encaixando com um estalo magnético).
 Ele vira **12 veículos** (helicóptero, carro, moto, caminhão-monstro, escavadeira, tanque, jato, caça
 furtivo, nave espacial, disco voador, lancha e submarino), vira uma **torreta gigante**, o **robô
 gigante TITÃ** (você vai em cima da cabeça, quase imortal), um **enxame de milhares de nanorrobôs**,
@@ -200,6 +201,7 @@ poder; enxame com anéis de nanorrobôs; robôs com andar, voo de propulsor, tir
 - `node --test tests/unit.test.mjs` — parser de frases (inclusive as novas), receitas, caminhos.
 - `node tests/validate_ids.mjs` — todo `minecraft:*` usado existe no jogo.
 - `python3 tools/validate_packs.py` — referências cruzadas, formato de animações, sons, formas.
+- `python3 tests/check_molang.py` — Molang: parênteses, funções/consultas conhecidas, toda variável lida existe.
 - `cd tools && npx tsc -p tsconfig.json` — tipos contra as APIs oficiais 2.8.0.
 - `python3 tools/bds_test/run_bds_test.py <bedrock-server> [owner]` — servidor oficial do Bedrock,
   autoteste dentro do mundo (com `owner`, jogadores simulados "Dono" e "Intruso").

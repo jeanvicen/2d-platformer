@@ -23,7 +23,7 @@ FORM_IDS = {"drone": 0, "heli": 1, "car": 2, "excavator": 3, "tank": 4, "jet": 5
 # capota (vidro/teto) recolhe quando alguém está dentro: quem pilota vê tudo
 CANOPY = "1 - v.ride * 0.98"
 
-INITIALIZE = ["v.po = q.property('lila:off') ? 1 : 0; v.ot = 9; v.bt = 9; v.dsp = 0; v.ride = 0; v.dtilt = 0; v.htilt = 0; v.jpitch = 0; v.aims = 0; v.pits = 0; v.cwd = 0; v.cws = 0; v.wheel = 0; v.pby = q.body_y_rotation; v.lean = 0; v.tf = 9; v.pf = q.property('lila:form'); v.gspin = 0; v.gear = 1;"]
+INITIALIZE = ["v.svf = 0; v.svl = 0; v.svu = 0; v.pvf = 0; v.pvl = 0; v.pvu = 0; v.afw = 0; v.alf = 0; v.aup = 0; v.pipn = 0; v.pish = 0; v.chp = 0; v.chpw = 0; v.chr = 0; v.chrw = 0; v.tz = 0; v.tzw = 0; v.tx = 0; v.txw = 0; v.ty = 0; v.tyw = 0; v.hz = 0; v.hzw = 0; v.hx = 0; v.hxw = 0; v.hy = 0; v.hyw = 0; v.rz = 0; v.rzw = 0; v.rx = 0; v.rxw = 0; v.ry = 0; v.ryw = 0; v.lz = 0; v.lzw = 0; v.lx = 0; v.lxw = 0; v.ly = 0; v.lyw = 0; v.hlx = 0; v.hly = 0; v.po = q.property('lila:off') ? 1 : 0; v.ot = 9; v.bt = 9; v.dsp = 0; v.ride = 0; v.dtilt = 0; v.htilt = 0; v.jpitch = 0; v.aims = 0; v.pits = 0; v.cwd = 0; v.cws = 0; v.wheel = 0; v.pby = q.body_y_rotation; v.lean = 0; v.tf = 9; v.pf = q.property('lila:form'); v.gspin = 0; v.gear = 1;"]
 PRE_ANIMATION = [
     "v.form = q.property('lila:form');",
     "v.ride = math.lerp(v.ride, q.has_rider ? 1 : 0, 0.15);",
@@ -39,6 +39,52 @@ PRE_ANIMATION = [
     "v.kd = (v.offp > 0.5) ? math.clamp((v.ot - 0.1) * 2.0, 0, 1) : 1 - math.clamp((v.bt - 0.2) * 1.1, 0, 1);",
     "v.kg = (v.offp > 0.5) ? math.clamp(v.ot * 6, 0, 1) : 1 - math.clamp((v.bt - 1.45) * 3, 0, 1);",
     "v.dsp = v.dsp + math.min(q.delta_time, 0.1) * 45 * (1 - v.kd);",
+    "v.hlx = v.hlx + (math.clamp(q.target_x_rotation, -25, 25) - v.hlx) * math.min(1, q.delta_time * 6);",
+    "v.hly = v.hly + (math.clamp(q.target_y_rotation, -35, 35) - v.hly) * math.min(1, q.delta_time * 6);",
+    # física (2.2): velocidade/aceleração no referencial do corpo + molas com amortecimento (peças com inércia)
+    "v.pdt = math.clamp(q.delta_time, 0.001, 0.05);",
+    "v.byr = q.body_y_rotation;",
+    "v.vfw = math.clamp((math.cos(v.byr) * q.position_delta(2) - math.sin(v.byr) * q.position_delta(0)) / v.pdt, -40, 40);",
+    "v.vlf = math.clamp((math.cos(v.byr) * q.position_delta(0) + math.sin(v.byr) * q.position_delta(2)) / v.pdt, -40, 40);",
+    "v.vup = math.clamp(q.position_delta(1) / v.pdt, -40, 40);",
+    "v.sk = math.min(1, v.pdt * 15);",
+    "v.svf = v.svf + (v.vfw - v.svf) * v.sk; v.svl = v.svl + (v.vlf - v.svl) * v.sk; v.svu = v.svu + (v.vup - v.svu) * v.sk;",
+    "v.ak = math.min(1, v.pdt * 12);",
+    "v.afw = math.clamp(v.afw + ((v.svf - v.pvf) / v.pdt - v.afw) * v.ak, -60, 60); v.pvf = v.svf;",
+    "v.alf = math.clamp(v.alf + ((v.svl - v.pvl) / v.pdt - v.alf) * v.ak, -60, 60); v.pvl = v.svl;",
+    "v.aup = math.clamp(v.aup + ((v.svu - v.pvu) / v.pdt - v.aup) * v.ak, -60, 60); v.pvu = v.svu;",
+    "v.yr = math.clamp(v.dy / v.pdt, -360, 360);",
+    "v.acs = math.clamp(v.alf - v.svf * v.yr * 0.01745, -60, 60);",
+    "v.ipn = (q.property('lila:action') == 'punch') ? 1 : 0; v.tzw = v.tzw + ((v.ipn > v.pipn) ? -70 : 0); v.hzw = v.hzw + ((v.ipn > v.pipn) ? -45 : 0); v.pipn = v.ipn;",
+    "v.ish = (q.property('lila:action') == 'shoot') ? 1 : 0; v.tzw = v.tzw + ((v.ish > v.pish) ? 40 : 0); v.pish = v.ish;",
+    "v.tzw = v.tzw + (90 * ((0.06 * v.afw) - v.tz) - 13 * v.tzw) * v.pdt;",
+    "v.tz = math.clamp(v.tz + v.tzw * v.pdt, -3, 3);",
+    "v.txw = v.txw + (90 * ((-0.06 * v.acs) - v.tx) - 13 * v.txw) * v.pdt;",
+    "v.tx = math.clamp(v.tx + v.txw * v.pdt, -3, 3);",
+    "v.tyw = v.tyw + (90 * ((-0.04 * v.aup) - v.ty) - 13 * v.tyw) * v.pdt;",
+    "v.ty = math.clamp(v.ty + v.tyw * v.pdt, -3, 3);",
+    "v.hzw = v.hzw + (70 * ((0.12 * v.afw) - v.hz) - 8 * v.hzw) * v.pdt;",
+    "v.hz = math.clamp(v.hz + v.hzw * v.pdt, -5, 5);",
+    "v.hxw = v.hxw + (70 * ((-0.12 * v.acs) - v.hx) - 8 * v.hxw) * v.pdt;",
+    "v.hx = math.clamp(v.hx + v.hxw * v.pdt, -5, 5);",
+    "v.hyw = v.hyw + (70 * ((-0.08 * v.aup) - v.hy) - 8 * v.hyw) * v.pdt;",
+    "v.hy = math.clamp(v.hy + v.hyw * v.pdt, -5, 5);",
+    "v.rzw = v.rzw + (52 * ((0.2 * v.afw) - v.rz) - 6 * v.rzw) * v.pdt;",
+    "v.rz = math.clamp(v.rz + v.rzw * v.pdt, -7, 7);",
+    "v.rxw = v.rxw + (52 * ((-0.2 * v.acs) - v.rx) - 6 * v.rxw) * v.pdt;",
+    "v.rx = math.clamp(v.rx + v.rxw * v.pdt, -7, 7);",
+    "v.ryw = v.ryw + (52 * ((-0.1 * v.aup) - v.ry) - 6 * v.ryw) * v.pdt;",
+    "v.ry = math.clamp(v.ry + v.ryw * v.pdt, -7, 7);",
+    "v.lzw = v.lzw + (48 * ((0.2 * v.afw) - v.lz) - 6 * v.lzw) * v.pdt;",
+    "v.lz = math.clamp(v.lz + v.lzw * v.pdt, -7, 7);",
+    "v.lxw = v.lxw + (48 * ((-0.2 * v.acs) - v.lx) - 6 * v.lxw) * v.pdt;",
+    "v.lx = math.clamp(v.lx + v.lxw * v.pdt, -7, 7);",
+    "v.lyw = v.lyw + (48 * ((-0.1 * v.aup) - v.ly) - 6 * v.lyw) * v.pdt;",
+    "v.ly = math.clamp(v.ly + v.lyw * v.pdt, -7, 7);",
+    "v.chpw = v.chpw + (45 * ((-v.afw * 0.35) - v.chp) - 7 * v.chpw) * v.pdt;",
+    "v.chp = math.clamp(v.chp + v.chpw * v.pdt, -10, 10);",
+    "v.chrw = v.chrw + (40 * ((v.acs * 0.3) - v.chr) - 6 * v.chrw) * v.pdt;",
+    "v.chr = math.clamp(v.chr + v.chrw * v.pdt, -10, 10);",
     "v.tf = (v.form != v.pf) ? 0 : v.tf + q.delta_time; v.pf = v.form;",
     "v.dir = (q.property('lila:move') == 'sneak') ? -1 : 1;",
     "v.wheel = v.wheel + q.ground_speed * math.min(q.delta_time, 0.1) * 160 * v.dir;",
@@ -76,7 +122,7 @@ def form_anims():
     add("heli", {
         "rotor_main": bone(rot=[0, "q.anim_time * 1620", 0]),
         "rotor_tail": bone(rot=["q.anim_time * 2200", 0, 0]),
-        "body": bone(rot=["v.htilt", 0, "-v.lean * 0.6"]),
+        "body": bone(rot=["v.htilt - v.chp * 1.4", 0, "-v.lean * 0.6 + v.chr * 0.6"]),
         "root": bone(pos=[0, "q.is_on_ground ? 0 : math.sin(q.anim_time * 100) * 0.5", 0]),
         "canopy": bone(scale=CANOPY),
     })
@@ -89,7 +135,7 @@ def form_anims():
         "wheel_fr": bone(rot=[spin, "math.clamp(-v.lean * 1.4, -28, 28)", 0]),
         "wheel_rl": bone(rot=[spin, 0, 0]),
         "wheel_rr": bone(rot=[spin, 0, 0]),
-        "body": bone(rot=["math.sin(q.anim_time * 900) * 0.25 * math.min(1, q.ground_speed / 4)", 0, "v.lean * 0.18"],
+        "body": bone(rot=["math.sin(q.anim_time * 900) * 0.25 * math.min(1, q.ground_speed / 4) + v.chp", 0, "v.lean * 0.18 + v.chr * 0.5"],
                      pos=[0, "math.sin(q.anim_time * 1100) * 0.08", 0]),
         "canopy": bone(scale=CANOPY),
     })
@@ -110,7 +156,7 @@ def form_anims():
     # ---------------- tanque
     add("tank", {
         "turret": bone(rot=[0, "v.aims", 0]),
-        "hull": bone(rot=["math.sin(q.anim_time * 700) * 0.3 * math.min(1, q.ground_speed / 3)", 0, "v.lean * 0.08"]),
+        "hull": bone(rot=["math.sin(q.anim_time * 700) * 0.3 * math.min(1, q.ground_speed / 3) + v.chp * 0.5", 0, "v.lean * 0.08 + v.chr * 0.25"]),
     })
     add("tank_fire", {
         "barrel": bone(pos=smooth_keys([(0, [0, 0, 0]), (0.05, [0, 0, 6]), (0.6, [0, 0, 0])])),
@@ -133,7 +179,7 @@ def form_anims():
         "wheel_r": bone(rot=["v.wheel * 1.4", 0, 0]),
         "fork": bone(rot=[0, "math.clamp(-v.lean * 0.9, -22, 22)", 0]),
         "root": bone(rot=[0, 0, "v.lean * 1.1"]),
-        "body": bone(rot=["-math.clamp(q.ground_speed * 0.25, 0, 4)", 0, 0]),
+        "body": bone(rot=["-math.clamp(q.ground_speed * 0.25, 0, 4) + v.chp * 0.6", 0, 0]),
     })
 
     # ---------------- torreta gigante
@@ -226,13 +272,13 @@ def form_anims():
     add("ship", {
         "thrust": bone(scale=["1", "1", "0.6 + math.min(1, q.ground_speed / 14) * 1.2 + math.sin(q.anim_time * 2600) * 0.08"]),
         "gear": bone(scale="v.gear", pos=[0, "(1 - v.gear) * 4", 0]),
-        "body": bone(rot=["v.jpitch * 0.8", 0, "v.lean * 1.2"], pos=[0, "q.is_on_ground ? 0 : math.sin(q.anim_time * 80) * 0.4", 0]),
+        "body": bone(rot=["v.jpitch * 0.8 - v.chp * 0.6", 0, "v.lean * 1.2 + v.chr * 0.5"], pos=[0, "q.is_on_ground ? 0 : math.sin(q.anim_time * 80) * 0.4", 0]),
         "canopy": bone(scale=CANOPY),
     })
     add("ship_fire", {"body": bone(pos=[0, 0, osc(0.5, 2000)])}, loop=True)
     add("ufo", {
         "ring": bone(rot=[0, "q.anim_time * 220", 0]),
-        "body": bone(rot=["v.htilt * 0.5", 0, "-v.lean * 0.4"], pos=[0, "q.is_on_ground ? 0 : math.sin(q.anim_time * 70) * 0.8", 0]),
+        "body": bone(rot=["v.htilt * 0.5 - v.chp * 0.8", 0, "-v.lean * 0.4 + v.chr * 0.8"], pos=[0, "q.is_on_ground ? 0 : math.sin(q.anim_time * 70) * 0.8", 0]),
         "gear": bone(scale="v.gear", pos=[0, "(1 - v.gear) * 3", 0]),
         "canopy": bone(scale=CANOPY),
     })
@@ -246,14 +292,14 @@ def form_anims():
     add("boat", {
         "prop": bone(rot=[0, 0, "v.wheel * 4"]),
         "motor": bone(rot=[0, "math.clamp(v.lean * 1.2, -25, 25)", 0]),
-        "body": bone(rot=["-math.clamp(q.ground_speed * 0.5, 0, 8) + math.sin(q.anim_time * 160) * 0.8", 0, "v.lean * 0.5 + math.sin(q.anim_time * 110) * 1.2"]),
+        "body": bone(rot=["-math.clamp(q.ground_speed * 0.5, 0, 8) + math.sin(q.anim_time * 160) * 0.8 + v.chp * 1.2", 0, "v.lean * 0.5 + math.sin(q.anim_time * 110) * 1.2 + v.chr * 0.6"]),
     })
     add("truck", {
         "wheel_fl": bone(rot=["v.wheel * 0.7", "math.clamp(-v.lean * 1.4, -28, 28)", 0]),
         "wheel_fr": bone(rot=["v.wheel * 0.7", "math.clamp(-v.lean * 1.4, -28, 28)", 0]),
         "wheel_rl": bone(rot=["v.wheel * 0.7", 0, 0]),
         "wheel_rr": bone(rot=["v.wheel * 0.7", 0, 0]),
-        "body": bone(rot=["math.sin(q.anim_time * 500) * 0.6 * math.min(1, q.ground_speed / 4)", 0, "v.lean * 0.3"],
+        "body": bone(rot=["math.sin(q.anim_time * 500) * 0.6 * math.min(1, q.ground_speed / 4) + v.chp * 1.2", 0, "v.lean * 0.3 + v.chr"],
                      pos=[0, "math.sin(q.anim_time * 700) * 0.4 * math.min(1, q.ground_speed / 4)", 0]),
         "canopy": bone(scale=CANOPY),
     })

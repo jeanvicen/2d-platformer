@@ -37,7 +37,7 @@ from forge.render import render  # noqa: E402
 
 MOVES = ["none", "walk", "run", "swim", "climb", "fall", "sneak"]
 
-VERSION = [2, 2, 0]
+VERSION = [2, 2, 1]
 MIN_ENGINE = [1, 26, 30]
 SERVER_VERSION = "2.8.0"
 SERVER_UI_VERSION = "2.1.0"
@@ -303,7 +303,7 @@ def build_drone(previews):
     amap["ctrl_move"] = "controller.animation.lila.drone.move"
     amap["ctrl_act"] = "controller.animation.lila.drone.action"
     amap["ctrl_form"] = "controller.animation.lila.form.action"
-    animate = [{"base": "v.form == 0"}, {"power": "v.form == 0"}, {"look": "v.form == 0"},
+    animate = [{"base": "v.form == 0"}, {"power": "v.form == 0"},
                {"ctrl_move": "v.form == 0 && v.offp < 0.5"}, {"ctrl_act": "v.form == 0 && v.offp < 0.5"},
                {"intro": "v.form != 7"}, {"intro_colossus": "v.form == 7"},
                {"heli": "v.form == 1"}, {"car": "v.form == 2"}, {"excavator": "v.form == 3"}, {"tank": "v.form == 4"},
