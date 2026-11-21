@@ -93,8 +93,9 @@ def colossus_model():
     head = m.bone("head", "neck", pivot=(0, 112, -1))
     head.box((0, 116, -1), (18, 9, 18), ARMOR)                  # capacete
     head.box((0, 120.6, -1), (18, 0.6, 18), PLATE)               # plataforma do piloto (topo da cabeça)
+    rail = m.bone("rail", "head", pivot=(0, 121, -1))                # corrimão (some quando o piloto sobe)
     for x, z, w, d in ((0, -9.8, 18, 0.6), (0, 7.8, 18, 0.6), (-8.8, -1, 0.6, 18), (8.8, -1, 0.6, 18)):
-        head.box((x, 121.8, z), (w, 1.8, d), STEEL)              # corrimão baixo (não tapa a visão)
+        rail.box((x, 121.8, z), (w, 1.8, d), STEEL)
     head.box((0, 121.2, -1), (6, 0.4, 6), SEAM)                  # marca do assento
     visor = m.bone("visor", "head", pivot=(0, 116, -10.5))
     visor.box((0, 117, -10.4), (14, 2.4, 1), SEAM)               # visor em T
@@ -128,40 +129,74 @@ def colossus_model():
     return m
 
 
-def robot_model():
+# Paletas dos 5 tipos de soldado (mesma malha, cores e acessórios diferentes)
+ROBOT_KINDS = ["soldado", "construtor", "artilheiro", "medico", "ninja"]
+_G = lambda c, c2, seed: Paint(mat="glow", color=c, color2=c2, seed=seed)  # noqa: E731
+_M = lambda c, c2, seed: Paint(mat="metal", color=c, color2=c2, seed=seed)  # noqa: E731
+ROBOT_PALETTES = {
+    "soldado": dict(body=WHITE, glow=CYAN, dark=GRAPH, hot=ORANGE),
+    "construtor": dict(body=_M((222, 168, 40), (255, 222, 120), 81), glow=_G((255, 190, 40), (255, 246, 190), 82), dark=GRAPH, hot=ORANGE),
+    "artilheiro": dict(body=_M((150, 44, 40), (226, 96, 80), 83), glow=_G((255, 70, 50), (255, 210, 190), 84), dark=_M((44, 44, 52), (96, 96, 110), 85), hot=ORANGE),
+    "medico": dict(body=_M((228, 234, 236), (255, 255, 255), 86), glow=_G((60, 255, 120), (210, 255, 220), 87), dark=_M((90, 140, 110), (150, 200, 170), 88), hot=_G((255, 70, 80), (255, 200, 200), 89)),
+    "ninja": dict(body=_M((36, 34, 46), (84, 80, 104), 90), glow=_G((190, 70, 255), (240, 210, 255), 91), dark=_M((20, 20, 26), (60, 58, 74), 92), hot=_G((190, 70, 255), (240, 210, 255), 93)),
+}
+
+
+def robot_model(kind="soldado"):
+    """Robô-soldado do exército. Todos os tipos têm a mesma malha (a mesma UV), incluindo os
+    acessórios — capacete de obra, canhão de ombro, mochila médica e katana — e o render
+    controller mostra só o acessório do tipo (propriedade lila:kind)."""
+    P = ROBOT_PALETTES[kind]
+    WH, CY, GR, OR = P["body"], P["glow"], P["dark"], P["hot"]
     m = Model("geometry.lila.robot", 128, 128, density=4, bounds=(2, 3, (0, 1, 0)))
     root = m.bone("root", pivot=(0, 0, 0))
     root.locators = {"muzzle": (-7, 13, -6)}
     waist = m.bone("waist", "root", pivot=(0, 12, 0))
     body = m.bone("body", "waist", pivot=(0, 24, 0))
-    body.box((0, 19, 0), (10, 12, 6), WHITE)
-    body.box((0, 21, -3.3), (3, 3, 0.6), CYAN)
-    body.box((0, 14, 0), (8, 4, 5), GRAPH)
-    body.box((0, 20, 3.8), (6, 8, 2), GRAPH)                  # mochila-propulsor
-    body.box((-5.3, 19, 0), (0.6, 8, 1), CYAN)
-    body.box((5.3, 19, 0), (0.6, 8, 1), CYAN)
+    body.box((0, 19, 0), (10, 12, 6), WH)
+    body.box((0, 21, -3.3), (3, 3, 0.6), CY)
+    body.box((0, 14, 0), (8, 4, 5), GR)
+    body.box((0, 20, 3.8), (6, 8, 2), GR)                  # mochila-propulsor
+    body.box((-5.3, 19, 0), (0.6, 8, 1), CY)
+    body.box((5.3, 19, 0), (0.6, 8, 1), CY)
     jet = m.bone("jet", "body", pivot=(0, 15, 4.5))
-    jet.box((-1.8, 13, 4.8), (2, 5, 2), ORANGE)
-    jet.box((1.8, 13, 4.8), (2, 5, 2), ORANGE)
+    jet.box((-1.8, 13, 4.8), (2, 5, 2), OR)
+    jet.box((1.8, 13, 4.8), (2, 5, 2), OR)
     head = m.bone("head", "body", pivot=(0, 25, 0))
-    head.box((0, 29, 0), (8, 8, 8), WHITE)
-    head.box((0, 29.5, -4.2), (6.4, 2, 0.6), CYAN)
-    head.box((-4.3, 31, 1), (0.6, 4, 3), GRAPH)
-    head.box((4.3, 31, 1), (0.6, 4, 3), GRAPH)
-    head.box((0, 33.3, 0), (2, 0.6, 6), ORANGE)
+    head.box((0, 29, 0), (8, 8, 8), WH)
+    head.box((0, 29.5, -4.2), (6.4, 2, 0.6), CY)
+    head.box((-4.3, 31, 1), (0.6, 4, 3), GR)
+    head.box((4.3, 31, 1), (0.6, 4, 3), GR)
+    head.box((0, 33.3, 0), (2, 0.6, 6), OR)
+    # acessórios (um por tipo)
+    hat = m.bone("hat", "head", pivot=(0, 33, 0))            # construtor: capacete de obra
+    hat.box((0, 34.2, 0), (9, 2.4, 9), _M((250, 196, 30), (255, 236, 140), 94))
+    hat.box((0, 33.4, -1), (11, 0.8, 11), _M((250, 196, 30), (255, 236, 140), 95))
+    hat.box((0, 35.6, -4.7), (2, 1.4, 0.6), _G((255, 255, 200), (255, 255, 255), 96))
+    cannon = m.bone("cannon", "body", pivot=(4, 25, 1))       # artilheiro: canhão de ombro
+    cannon.box((5.5, 27.2, 0), (3.4, 3.4, 9), _M((60, 60, 70), (130, 130, 146), 97))
+    cannon.box((5.5, 27.2, -4.8), (2.4, 2.4, 0.8), _G((255, 80, 40), (255, 220, 180), 98))
+    cannon.box((5.5, 25.2, 1), (2, 1.2, 3), GR)
+    medkit = m.bone("medkit", "body", pivot=(0, 22, 5))        # médico: mochila com cruz
+    medkit.box((0, 21, 5.4), (7, 8, 2.4), _M((240, 244, 246), (255, 255, 255), 99))
+    medkit.box((0, 21, 6.7), (1.6, 5, 0.4), _G((255, 60, 70), (255, 200, 200), 100))
+    medkit.box((0, 21, 6.7), (5, 1.6, 0.4), _G((255, 60, 70), (255, 200, 200), 101))
+    katana = m.bone("katana", "body", pivot=(0, 22, 4))        # ninja: katana nas costas
+    katana.box((0, 22, 5.2), (0.8, 16, 1.2), _G((210, 160, 255), (255, 240, 255), 102), rotation=(0, 0, 38), pivot=(0, 22, 5.2))
+    katana.box((0, 22, 5.2), (2.4, 0.8, 1.6), _M((30, 30, 36), (80, 80, 90), 103), rotation=(0, 0, 38), pivot=(0, 22, 5.2))
     ra = m.bone("rightArm", "body", pivot=(-6, 24, 0))
-    ra.box((-7.5, 24, 0), (5, 3, 6), GRAPH)
-    ra.box((-7.5, 18.5, 0), (4, 10, 4), WHITE)
-    ra.box((-7.5, 13, -1), (5, 4, 7), GRAPH)                  # blaster
-    ra.box((-7.5, 13, -4.8), (2, 2, 0.6), CYAN)
+    ra.box((-7.5, 24, 0), (5, 3, 6), GR)
+    ra.box((-7.5, 18.5, 0), (4, 10, 4), WH)
+    ra.box((-7.5, 13, -1), (5, 4, 7), GR)                  # blaster
+    ra.box((-7.5, 13, -4.8), (2, 2, 0.6), CY)
     la = m.bone("leftArm", "body", pivot=(6, 24, 0))
-    la.box((7.5, 24, 0), (5, 3, 6), GRAPH)
-    la.box((7.5, 18.5, 0), (4, 10, 4), WHITE)
-    la.box((7.5, 13, 0), (4.4, 3, 4.4), GRAPH)
+    la.box((7.5, 24, 0), (5, 3, 6), GR)
+    la.box((7.5, 18.5, 0), (4, 10, 4), WH)
+    la.box((7.5, 13, 0), (4.4, 3, 4.4), GR)
     for name, x in (("rightLeg", -2.5), ("leftLeg", 2.5)):
         lg = m.bone(name, "waist", pivot=(x, 12, 0))
-        lg.box((x, 7, 0), (4, 10, 4), WHITE)
-        lg.box((x, 1.5, -0.5), (5, 3, 6), GRAPH)
-        lg.box((x, 0.2, 1.4), (3, 0.5, 3), ORANGE)
-        lg.box((x, 8, -2.2), (2, 2, 0.6), CYAN)
+        lg.box((x, 7, 0), (4, 10, 4), WH)
+        lg.box((x, 1.5, -0.5), (5, 3, 6), GR)
+        lg.box((x, 0.2, 1.4), (3, 0.5, 3), OR)
+        lg.box((x, 8, -2.2), (2, 2, 0.6), CY)
     return m

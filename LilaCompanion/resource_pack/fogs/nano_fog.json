@@ -1,0 +1,22 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:fog_settings": {
+    "description": {
+      "identifier": "lila:nano_fog"
+    },
+    "distance": {
+      "air": {
+        "fog_start": 0.78,
+        "fog_end": 1.0,
+        "fog_color": "#8FB7C4",
+        "render_distance_type": "render"
+      },
+      "water": {
+        "fog_start": 0.0,
+        "fog_end": 60.0,
+        "fog_color": "#2A5A78",
+        "render_distance_type": "fixed"
+      }
+    }
+  }
+}

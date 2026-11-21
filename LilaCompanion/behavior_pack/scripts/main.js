@@ -1,6 +1,6 @@
 // DR-0N Mega Drone — ponto de entrada (APIs estáveis: @minecraft/server 2.x + server-ui 2.x).
 // Nada aparece quando o jogador entra no mundo: tudo começa quando ele fabrica o Controle do DR-0N.
-import { CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus, EntityDamageCause, Player, system, world } from "@minecraft/server";
+import { ButtonState, CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus, EntityDamageCause, InputButton, Player, system, world } from "@minecraft/server";
 import { every, startScheduler } from "./core/scheduler.js";
 import { logError, logInfo } from "./core/log.js";
 import { COMPANIONS, OWNER_PROP, adopt, companionForEntity, companionsOf, findEntityFor, isCompanionType, loadAllRecords, loadCompanion } from "./lila/companion.js";
@@ -9,8 +9,8 @@ import { backupInventory, defeat, tickDefeat } from "./lila/lifecycle.js";
 import { flushHud, resetWaypoint, updateHud } from "./lila/hud.js";
 import { riddenBy, rideTick } from "./lila/drone.js";
 import { fight, markAggro } from "./lila/combat.js";
-import { formOf, formTick, isRideForm, primaryAttack, releaseRiders, riders } from "./lila/forms.js";
-import { shieldOn, swarmTick } from "./lila/swarm.js";
+import { exitVehicle, formOf, formTick, isRideForm, primaryAttack, releaseRiders, riders } from "./lila/forms.js";
+import { endSwarm, isNanoItem, nanoBreak, nanoDropped, nanoHitBlock, nanoHitEntity, nanoProtects, nanoSwing, nanoUse, shieldOn, swarmTick } from "./lila/swarm.js";
 import { booting, offTick } from "./lila/power.js";
 import { armyActive, armyTick, ROBOT } from "./lila/army.js";
 import { particle, sound } from "./lila/anim.js";
@@ -98,6 +98,7 @@ world.afterEvents.worldLoad.subscribe(() => {
           formTick(c); // veículos e colosso: você pilota, o cérebro descansa
           continue;
         }
+        if (c.flags.nanoActive && (formOf(c) !== "swarm" || !c.alive())) endSwarm(c); // saiu do enxame: limpa ferramentas, névoa, luz
         if (c.alive() && formOf(c) === "swarm") swarmTick(c); // enxame: poderes + o cérebro de sempre
         // carona no drone: o dono pilota; o cérebro espera e retoma quando ele descer
         if (c.def?.flying && c.alive()) {
@@ -165,7 +166,39 @@ world.afterEvents.worldLoad.subscribe(() => {
 
 // ------------------------------------------------------------------ controle
 world.afterEvents.itemUse.subscribe((ev) => {
-  if (ev.itemStack?.typeId === CONTROLLER) openController(ev.source);
+  const id = ev.itemStack?.typeId;
+  if (id === CONTROLLER) openController(ev.source);
+  else if (isNanoItem(id)) {
+    const c = swarmOf(ev.source);
+    if (c) nanoUse(c, ev.source, ev.itemStack);
+  }
+});
+
+/** Companheiro do jogador que está na forma de enxame (ou undefined). */
+function swarmOf(player) {
+  for (const c of companionsOf(player.id)) if (c.alive() && formOf(c) === "swarm") return c;
+  return undefined;
+}
+
+// enxame inteligente: mão vazia num bloco vira a ferramenta certa; quebrou → árvore/veio/túnel
+world.afterEvents.entityHitBlock.subscribe((ev) => {
+  const p = ev.damagingEntity;
+  if (p?.typeId !== "minecraft:player") return;
+  const c = swarmOf(p);
+  if (c) nanoHitBlock(c, p, ev.hitBlock);
+});
+
+world.afterEvents.playerBreakBlock.subscribe((ev) => {
+  const t = ev.itemStackBeforeBreak;
+  if (!t || !isNanoItem(t.typeId)) return;
+  const c = swarmOf(ev.player);
+  if (c) nanoBreak(c, ev.player, ev.block, ev.brokenBlockPermutation.type.id, t);
+});
+
+// ferramenta de nanorrobô largada no chão: se desfaz
+world.afterEvents.entitySpawn.subscribe((ev) => {
+  const e = ev.entity;
+  if (e?.typeId === "minecraft:item") system.run(() => e.isValid && nanoDropped(e));
 });
 
 world.afterEvents.playerInteractWithBlock.subscribe((ev) => {
@@ -199,9 +232,19 @@ function pilotOf(player) {
 world.afterEvents.playerSwingStart.subscribe((ev) => {
   const c = pilotOf(ev.player);
   if (c) primaryAttack(c, ev.player);
+  else {
+    const s = swarmOf(ev.player);
+    if (s) nanoSwing(s, ev.player);
+  }
 });
 
-// Sair do veículo = agachar (o próprio jogo desmonta). Pular = o tick de pilotagem lê o botão.
+// Sair do veículo = AGACHAR (o "descer" do jogo fica bloqueado enquanto você pilota: no celular ele
+// ocupa o lugar do pulo). Pular = o tick de pilotagem lê o botão.
+world.afterEvents.playerButtonInput.subscribe((ev) => {
+  if (ev.button !== InputButton.Sneak || ev.newButtonState !== ButtonState.Pressed) return;
+  const c = pilotOf(ev.player);
+  if (c) exitVehicle(c, ev.player);
+});
 
 // ------------------------------------------------------------------ entidades
 world.afterEvents.entityLoad.subscribe((ev) => {
@@ -254,6 +297,10 @@ world.beforeEvents.entityHurt.subscribe((ev) => {
       }
       // escudo do enxame: nada passa (só o vazio do mundo e comandos)
       const cause = ev.damageSource?.cause;
+      if (nanoProtects(c, cause)) {
+        ev.cancel = true; // queda (almofada de nanorrobôs) e a explosão do próprio martelo
+        return;
+      }
       if (shieldOn(c) && cause !== "void" && cause !== "selfDestruct" && cause !== "override") {
         ev.cancel = true;
         const a = ev.damageSource?.damagingEntity;
@@ -317,7 +364,7 @@ world.afterEvents.entityHurt.subscribe((ev) => {
   for (const c of list) {
     if (!c || c.rec.defeat || attacker.id === c.rec.ownerId) continue;
     markAggro(c, attacker, 800);
-    if (!c.alive() || c.urgent || c.flags.ridden || isRideForm(formOf(c)) || armyActive(c) || formOf(c) === "turret") continue;
+    if (!c.alive() || c.urgent || c.flags.ridden || isRideForm(formOf(c)) || armyActive(c) || formOf(c) === "turret" || c.rec.mode === "turret" || c.rec.off) continue;
     if (attacker.typeId === "minecraft:player") say(c, `${/** @type {any} */ (attacker).name ?? "Jogador"} te atacou. Revidando!`, { force: true });
     const gen = fight(c, attacker, 600);
     c.urgent = { desc: { type: "defend", origin: "auto" }, gen, wait: 0, t0: system.currentTick };
@@ -328,6 +375,11 @@ world.afterEvents.entityHurt.subscribe((ev) => {
 world.afterEvents.entityHitEntity.subscribe((ev) => {
   const p = ev.damagingEntity;
   const t = ev.hitEntity;
+  if (p?.typeId === "minecraft:player" && t && !isCompanionType(t.typeId) && t.typeId !== ROBOT) {
+    const s = swarmOf(p);
+    if (s) nanoHitEntity(s, p, t);
+    return;
+  }
   if (p?.typeId !== "minecraft:player" || !t || !isCompanionType(t.typeId)) return;
   const c = companionForEntity(t);
   if (!c || c.rec.ownerId !== p.id || c.rec.settings.lesson === false || isRideForm(formOf(c))) return;

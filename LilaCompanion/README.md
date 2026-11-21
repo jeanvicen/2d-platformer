@@ -45,6 +45,9 @@ brilhos apagados e fica quieto (não segue, não ataca). Ligando, as peças sobe
 **Luta:** ele alterna **socos fortes** (a mão voa no alvo e arremessa) com **tiros do núcleo** do
 peito, e protege você atacando primeiro.
 
+**No dia a dia ele passeia por perto** (4 a 9 blocos, do lado ou atrás, olhando em volta) em vez de
+ficar rodando em volta de você; quando você anda, ele acompanha.
+
 ## 3. Veículos
 
 "vira helicóptero / carro / moto / caminhão-monstro / escavadeira / tanque / jato / caça furtivo /
@@ -55,9 +58,10 @@ já entra. **A capota recolhe quando você entra: dá pra ver tudo em volta.**
 |---|---|
 | andar | acelera / ré |
 | olhar | direção — nos voadores, olhar pra cima/baixo e acelerar sobe/desce |
-| pular | o veículo **pula** (terrestres, lancha) · sobe (helicóptero, nave, disco, submarino) · pós-combustor (jatos) |
-| bater | arma: metralhadora (helicóptero), canhão (tanque), mísseis (jatos), cavar (escavadeira), lasers (nave), raio desintegrador / **raio trator** olhando pra baixo (disco), torpedo (submarino), **turbo** (carro, moto, caminhão, lancha) |
-| **agachar** | **sai** — e ele volta a ser drone (do alto você cai devagar) |
+| pular | o veículo **pula** (terrestres, lancha) · sobe (helicóptero, nave, disco, submarino) · pós-combustor (jatos) — **pular nunca tira você** |
+| **slot da barra (1, 2…)** | **escolhe o poder** (a tela mostra a lista, o escolhido em amarelo) — sem abrir o controle |
+| bater | usa o poder escolhido: metralhadora/mísseis (helicóptero), mísseis/metralhadora (jatos), canhão/metralhadora (tanque), cavar/escavar grande (escavadeira), lasers/mísseis (nave), desintegrador/**raio trator** (disco), torpedo (submarino), **turbo**/buzina (carro, moto, caminhão, lancha) |
+| **agachar** | **sai** (é o único jeito de sair) — e ele volta à forma normal (do alto você cai devagar) |
 
 Velocidades: carro ~23 blocos/s, moto ~26, caminhão ~20, tanque ~11, escavadeira ~9, lancha ~25 na
 água, helicóptero ~20, disco ~28, nave ~36, jato ~44, caça furtivo ~60. Submarino: quem está dentro
@@ -70,33 +74,54 @@ pilota.**
 branca e vermelha, visor em T, reator no peito, propulsores nas costas). Ele te põe **em cima da
 cabeça** (plataforma com corrimão baixo: visão 360°), onde você fica **quase imortal**.
 
-- **andar**: passadas pesadas (tremor de tela, poeira), derruba árvores/paredes na frente, sobe morros;
-- **bater perto**: soco que destrói blocos e arremessa inimigos · **mirar longe e bater**: raio do visor;
-- **pular**: salto com os propulsores e onda de choque ao cair;
-- **agachar**: sai (cai devagar);
-- **painel** (use o controle lá em cima): pose de poder (monstros ficam fracos), pisão, trocar de lugar.
+- **câmera em terceira pessoa** automática enquanto você pilota (dá pra ver o robô e o caminho);
+- **andar**: passadas pesadas (tremor de tela, poeira); sobe morros de até 9 blocos de forma suave e
+  **atravessa paredes e árvores** abrindo caminho na largura do corpo (não trava mais);
+- **poderes na barra**: slot 1 soco · 2 raio do visor · 3 salto com pisão · 4 onda de choque · 5 pose de
+  poder (monstros ficam fracos) — escolha o slot e **bata**;
+- **pular**: salto com os propulsores e onda de choque ao cair (não sai);
+- **agachar**: sai (cai devagar).
 
 Mais pessoas sobem nas ombreiras e na mochila. Se você sair sem cancelar, ele **continua TITÃ**
 (parado, pisando em monstros) até você mandar "Cancelar".
 
 ## 4b. Enxame de nanorrobôs
 
-"modo enxame" (ou menu **Modo ENXAME**). O DR-0N vira milhares de robozinhos. Ele continua fazendo tudo
-que o drone faz (seguir, construir, aplainar, itens infinitos...) e mais:
+"modo enxame" (ou menu **Modo ENXAME**). O DR-0N vira uma **névoa de nanorrobôs**: uma fumacinha
+escura com brilhos e, em volta de você, robozinhos minúsculos espalhados no ar (eles não ficam
+orbitando) com uma névoa levíssima no horizonte. Ele continua fazendo tudo que o robô faz e você
+**não precisa abrir o controle** — eles agem sozinhos:
 
-- **Escudo em volta de você** (ligado ao virar enxame): você não leva dano, flechas e bolas de fogo
-  somem, monstros que chegam perto são empurrados e picados;
-- pica sozinho os monstros perto de você (e quem estiver marcado como inimigo);
-- formas: **muralha**, **ponte** (40 blocos para onde você olha), **escada**, **cúpula** (abrigo com
-  porta) — blocos de nanorrobô que se desmancham sozinhos depois —, **punho gigante**, **espada
-  giratória**, **tornado**, **asas** (pular alto e planar), **elevador**, **ataca** (o que você mira) e
-  **devora tudo** (destrói tudo em volta, rápido);
-- já em enxame, basta escrever "ponte", "escudo", "tornado"... "Cancelar" desmancha tudo.
+- **Ferramentas na sua mão**: de mão vazia, bata num bloco e os nanorrobôs se juntam na sua mão:
+  **machado** em madeira (derruba a árvore inteira), **picareta** em pedra/minério (veio inteiro ou
+  túnel 3×3), **pá** em terra/areia (3×3), **enxada** em folhas/plantas. Bata num bicho de mão vazia e
+  vira **espada** (corte em área). Pare de usar por 15 s, ou largue no chão, e ela se desfaz.
+- **Martelo**: peça "martelo" e **use** para arremessar — explode no que acertar e volta para a mão.
+- **Proteção**: almofada nas quedas (sem dano), plataforma sobre lava ou vazio, luz que te segue no
+  escuro, fôlego debaixo d'água, apagam o fogo, remendam você com vida baixa, somem com flechas perto
+  de você e picam os monstros que chegam.
+
+**Modos** — use o **Núcleo do enxame** (ele aparece na sua barra; agachado volta um modo), fale o nome
+ou escolha no menu:
+
+| Modo | O que faz |
+|---|---|
+| **Inteligente** | tudo acima, sozinho |
+| **Escudo** | barreira girando em volta: nada passa e **nada te acerta**; eles não atacam |
+| **Asas** | asas enormes nas costas: olhe e ande para voar · pular sobe · agachar desce planando |
+| **Prancha voadora** | anda para voar · pular sobe · agachar desce |
+| **Mãos gigantes** | duas mãozonas atrás de você: **bata** e a mão da vez soca até 12 blocos |
+| **Devorador** | come tudo por onde você passa (agachado, o chão também; precisa de "pode destruir") |
+
+Também: **muralha, ponte** (40 blocos), **escada, cúpula** (se desmancham depois), **punho do céu,
+lâmina giratória, tornado, elevador, ataca** (o que você mira). "Cancelar" desmancha tudo e recolhe as
+ferramentas.
 
 ## 5. Torreta gigante
 
-"modo torreta": pousa, crava no chão e vira uma arma gigante (metralhadora rotativa de 6 canos,
-lança-mísseis, radar). Atira em todo monstro perto e em **qualquer um que te atacar** (jogador também).
+"modo torreta": pousa, **crava no chão e fica parada** (não anda, não teleporta), abre as pernas e arma
+a metralhadora rotativa de 6 canos, lança-mísseis e radar. Atira **de longe (~60 blocos)** em todo
+monstro e em **qualquer um que te atacar** (jogador também).
 
 ## 6. Proteção e revide
 
@@ -107,17 +132,29 @@ lança-mísseis, radar). Atira em todo monstro perto e em **qualquer um que te a
 
 ## 7. Modo exército
 
-"modo exército" (ou "com 15 robôs"; padrão 10, até 24). O drone sobe, explode num clarão e vira
-robôs-soldado humanoides. Eles:
+"modo exército" (ou "com 15 robôs"; padrão 10, até 24). O menu pergunta o **estilo**: misto, só
+soldados, ninjas, artilharia, construtores ou médicos (por texto: "exército de ninjas"). O robô sobe,
+explode num clarão e vira robôs humanoides de 5 tipos:
 
-- seguem você com a IA do jogo (pulam, nadam, abrem portas) e teleportam se você for longe;
-- caçam monstros antes de chegarem, revidam em quem te atacar (jogador também), atiram laser;
-- **trazem o que você precisa**: maçã dourada + regeneração com vida baixa, comida com fome,
-  armadura de netherita encantada se você estiver sem, visão noturna no escuro, respiração na água,
-  resistência ao fogo, queda lenta em queda livre, força/resistência quando há muitos monstros.
+| Tipo | Visual | Faz |
+|---|---|---|
+| Soldado | branco e ciano | laser |
+| Construtor | amarelo, capacete de obra | laser fraco, **constrói rápido** |
+| Artilheiro | vermelho, canhão no ombro | tiro de canhão de longe com estouro em área (não quebra blocos) |
+| Médico | branco e verde, mochila com cruz | **cura você** e os robôs feridos |
+| Ninja | preto e roxo, katana | some na fumaça, aparece **nas costas** do inimigo e corta |
 
-Comandos (menu **Comandar o exército**): proteger, seguir, ficar, atacar o que você olha, ir até onde
-você olha, formação em círculo, me fortalecer. **Cancelar** junta todos no drone.
+Todos seguem você com a IA do jogo, caçam monstros antes de chegarem, revidam em quem te atacar
+(jogador também) e **trazem o que você precisa** (maçã dourada, comida, armadura, visão noturna,
+respiração na água, resistência ao fogo, queda lenta, força com muitos monstros).
+
+**O exército constrói junto:** com o exército ativo, peça qualquer construção ("constrói um castelo",
+"faz uma padaria média estilo japonês" ou **Comandar o exército → Construir com o exército…**). Cada
+robô voa até um pedaço da obra e solda os blocos; no fim eles conferem tudo e corrigem o que faltou.
+"Cancelar" para só a obra; "Cancelar" de novo junta todos.
+
+Comandos: construir, proteger, seguir, ficar, atacar o que você olha, ir até onde você olha, formações
+**círculo / linha de frente / V**, me fortalecer, juntar.
 
 ## 8. Itens infinitos e kit de força
 
@@ -139,7 +176,17 @@ castelo (muralhas com ameias, 4 torres, portão com grade, ponte, fosso, torre d
 hora, tesouro no centro) · casa inteligente (lâmpadas que acendem sozinhas à noite, portas
 automáticas, piscina iluminada, "placas solares", câmeras) · montanha (neve no pico, árvores,
 cachoeira) · pirâmide · farol · arranha-céu de 30 andares · estádio. As casas antigas (cabana, casa,
-torre, mansão, fazenda...) continuam no menu.
+torre, mansão, fazenda...) agora saem do catálogo, mobiliadas.
+
+**Tudo num lugar só e tudo mobiliado:** menu **Construir…** (botões grandes, legíveis no celular) com
+as megaconstruções, as 6 categorias do catálogo e "Surpresa". As megaconstruções vêm **mobiliadas por
+dentro**: a vila usa casas e lojas do catálogo (camas, mesas, cozinha, baús, janelas) + igreja; a cidade
+tem prédios com andares de escritório e apartamento, hotel e hospital; o castelo tem a torre de
+menagem mobiliada, ferreiro e estábulo; o arranha-céu é um prédio futurista com 30 andares
+mobiliados e heliponto; pirâmide com câmara do faraó; farol com quarto do faroleiro.
+
+**Autocorreção:** no fim de toda obra ele confere bloco por bloco e recoloca o que faltou (incluindo a
+metade de cima de portas e a cabeceira das camas) e avisa quantos corrigiu.
 
 **Construção à mão (padrão):** ele voa até cada ponto e coloca bloco por bloco, parte por parte, de
 baixo para cima, como um jogador construindo voando (feixe, som do material, poeira). Velocidade em

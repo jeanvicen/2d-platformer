@@ -26,6 +26,15 @@
             },
             {
               "spawn": "q.property('lila:action') == 'spawn'"
+            },
+            {
+              "build": "q.property('lila:action') == 'build'"
+            },
+            {
+              "slash": "q.property('lila:action') == 'slash'"
+            },
+            {
+              "heal": "q.property('lila:action') == 'heal'"
             }
           ]
         },
@@ -82,6 +91,48 @@
           "transitions": [
             {
               "default": "q.property('lila:action') != 'spawn'"
+            }
+          ]
+        },
+        "build": {
+          "animations": [
+            "build",
+            {
+              "fly": "!q.is_on_ground"
+            }
+          ],
+          "blend_transition": 0.12,
+          "transitions": [
+            {
+              "default": "q.property('lila:action') != 'build'"
+            }
+          ]
+        },
+        "slash": {
+          "animations": [
+            "slash",
+            {
+              "fly": "!q.is_on_ground"
+            }
+          ],
+          "blend_transition": 0.12,
+          "transitions": [
+            {
+              "default": "q.property('lila:action') != 'slash'"
+            }
+          ]
+        },
+        "heal": {
+          "animations": [
+            "heal",
+            {
+              "fly": "!q.is_on_ground"
+            }
+          ],
+          "blend_transition": 0.12,
+          "transitions": [
+            {
+              "default": "q.property('lila:action') != 'heal'"
             }
           ]
         }

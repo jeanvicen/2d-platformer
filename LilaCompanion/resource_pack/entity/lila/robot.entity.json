@@ -7,7 +7,11 @@
         "default": "entity_emissive_alpha"
       },
       "textures": {
-        "default": "textures/entity/lila/robot"
+        "default": "textures/entity/lila/robot",
+        "construtor": "textures/entity/lila/robot_construtor",
+        "artilheiro": "textures/entity/lila/robot_artilheiro",
+        "medico": "textures/entity/lila/robot_medico",
+        "ninja": "textures/entity/lila/robot_ninja"
       },
       "geometry": {
         "default": "geometry.lila.robot"
@@ -21,6 +25,9 @@
         "punch": "animation.lila.robot.punch",
         "give": "animation.lila.robot.give",
         "spawn": "animation.lila.robot.spawn",
+        "build": "animation.lila.robot.build",
+        "slash": "animation.lila.robot.slash",
+        "heal": "animation.lila.robot.heal",
         "ctrl": "controller.animation.lila.robot.action"
       },
       "scripts": {
@@ -33,7 +40,7 @@
         ]
       },
       "render_controllers": [
-        "controller.render.lila.lila"
+        "controller.render.lila.robot"
       ]
     }
   }

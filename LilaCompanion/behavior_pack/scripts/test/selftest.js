@@ -10,7 +10,7 @@ import { command, handleIntents, stats } from "../lila/brain.js";
 import { summon, dismiss, restoreBodyForTest, RESPAWN_TICKS } from "../lila/lifecycle.js";
 import { formOf, riders, setForm, turretGoal, primaryAttack, testDrive, tractor, jumpAction } from "../lila/forms.js";
 import { archPlan, catalogList, TOTAL } from "../lib/archgen.js";
-import { NANO_BLOCK } from "../lila/swarm.js";
+import { NANO_BLOCK, modeOf, nanoBreak, nanoHitBlock, nanoHitEntity, nanoUse, shieldOn } from "../lila/swarm.js";
 import { megaBuild, biomeTransform, flatten, sweepGround } from "../lila/mega.js";
 import { armyActive, robotsOf } from "../lila/army.js";
 import { FORM_LIST } from "../lib/catalog.js";
@@ -259,11 +259,20 @@ async function soloTests(dim, check) {
   const tg = turretGoal(c);
   const tt = system.currentTick;
   const tr = runGen(tg, 700);
+  let tPos, tMove = 0;
+  const tIv = system.runInterval(() => {
+    if (formOf(c) !== "turret" || !c.alive()) return;
+    const p = c.pos();
+    if (!tPos) tPos = { x: p.x, z: p.z };
+    tMove = Math.max(tMove, Math.hypot(p.x - tPos.x, p.z - tPos.z));
+  }, 2);
   await waitUntil(() => zs.every(dead), 600);
   const wasTurret = formOf(c) === "turret";
+  system.clearRun(tIv);
   c.rec.mode = "follow";
   await tr;
   check("giant turret form kills 3 zombies", zs.every(dead) && wasTurret, `ticks=${system.currentTick - tt} form=${wasTurret}`);
+  check("turret stays planted while shooting (no walking, no teleporting)", !!tPos && tMove < 1.2, `moved=${tMove.toFixed(2)}`);
   check("turret folds back to drone when done", formOf(c) === "drone");
 
   // construção À MÃO (modo humano): poço bloco por bloco, com o drone voando pela obra
@@ -344,7 +353,7 @@ async function soloTests(dim, check) {
     check(`mega: ${key}`, res.ok && c.rec.stats.built === b0 + 1, `ticks=${res.ticks} ${res.err ?? ""}`);
     const lb = c.flags.lastBuild ?? { cx: x, cz: 60, y0: Y, half: 60 };
     if (key === "cidade" || key === "castelo" || key === "arranha_ceu") {
-      const id = { cidade: "minecraft:black_concrete", castelo: "minecraft:stone_bricks", arranha_ceu: "minecraft:light_blue_stained_glass" }[key];
+      const id = { cidade: "minecraft:black_concrete", castelo: "minecraft:stone_bricks", arranha_ceu: "minecraft:quartz_block" }[key];
       const top = key === "arranha_ceu" ? lb.y0 + 125 : lb.y0 + 40;
       const n = countBlocks(dim, id, lb.cx - lb.half, lb.y0 - 3, lb.cz - lb.half, lb.cx + lb.half, top, lb.cz + lb.half, 3);
       check(`mega: ${key} really placed its blocks`, n > 200, `${id.replace("minecraft:", "")} (amostra 1/27)=${n}`);
@@ -699,12 +708,51 @@ async function ownerTests(dim, check) {
   handleIntents(c, [{ type: "stop" }]);
   await system.waitTicks(10);
 
-  // ENXAME de nanorrobôs: escudo, picadas, formas, cancelar desmancha tudo
-  owner.teleport({ x: 0.5, y: Y + 1, z: 6.5 });
+  // ENXAME de nanorrobôs 2.3: modo inteligente, ferramentas automáticas, modos, formas, cancelar limpa tudo
+  owner.teleport({ x: 0.5, y: Y + 1, z: 6.5 }, { rotation: { x: 0, y: 0 } });
   await system.waitTicks(4);
   command(c, "modo enxame");
+  await waitUntil(() => formOf(c) === "swarm", 60);
+  await system.waitTicks(6);
+  check("'modo enxame': becomes the nano swarm (smart mode) and hands you the swarm core", formOf(c) === "swarm" && modeOf(c) === "auto" &&
+    pcount((id) => id === "lila:nano_core") === 1, `mode=${modeOf(c)} core=${pcount((id) => id === "lila:nano_core")}`);
+  const heldId = () => pinv()?.getItem(owner.selectedSlotIndex)?.typeId;
+  pinv()?.setItem(owner.selectedSlotIndex, undefined);
+  nanoHitBlock(c, owner, dim.getBlock({ x: 10, y: Y + 1, z: 10 }));
+  await waitUntil(() => heldId() === "lila:nano_axe", 40);
+  check("smart swarm: empty hand on wood -> nanobot axe forms in your hand", heldId() === "lila:nano_axe", `held=${heldId()}`);
+  cmd(dim, `setblock 10 ${Y + 1} 10 air`); // "quebrou" o tronco de baixo com o machado
+  nanoBreak(c, owner, dim.getBlock({ x: 10, y: Y + 1, z: 10 }), "minecraft:oak_log", new ItemStack("lila:nano_axe", 1));
+  await system.waitTicks(20);
+  const logsLeft = countBlocks(dim, "minecraft:oak_log", 10, Y + 1, 10, 10, Y + 6, 10);
+  check("nanobot axe fells the whole tree", logsLeft === 0, `logs left=${logsLeft}`);
+  pinv()?.setItem(owner.selectedSlotIndex, undefined);
   await system.waitTicks(10);
-  check("'modo enxame': drone becomes the nano swarm with shield", formOf(c) === "swarm" && !!c.flags.swarmShield);
+  const pig = dim.spawnEntity("minecraft:pig", { x: 2.5, y: Y + 1, z: 6.5 });
+  nanoHitEntity(c, owner, pig);
+  await waitUntil(() => heldId() === "lila:nano_sword", 40);
+  check("smart swarm: empty hand hitting a mob -> nanobot sword", heldId() === "lila:nano_sword", `held=${heldId()}`);
+  try {
+    pig.remove();
+  } catch {
+    /* ignore */
+  }
+  // martelo: arremessa, explode e volta para a mão
+  pinv()?.setItem(owner.selectedSlotIndex, undefined);
+  await system.waitTicks(10);
+  command(c, "martelo");
+  await waitUntil(() => heldId() === "lila:nano_hammer", 40);
+  owner.teleport({ x: 0.5, y: Y + 1, z: 6.5 }, { rotation: { x: -35, y: 0 } });
+  await system.waitTicks(2);
+  const hs = pinv()?.getItem(owner.selectedSlotIndex);
+  if (hs) nanoUse(c, owner, hs);
+  const thrown = !!c.flags.hammer && !heldId();
+  await waitUntil(() => !c.flags.hammer && pcount((id) => id === "lila:nano_hammer") === 1, 200);
+  check("nanobot hammer: thrown, explodes, flies back to your hand", thrown && !c.flags.hammer && pcount((id) => id === "lila:nano_hammer") === 1);
+  // escudo: barreira total (não ataca)
+  command(c, "escudo");
+  await system.waitTicks(4);
+  check("shield mode on", shieldOn(c) && modeOf(c) === "escudo");
   const sh0 = hp(owner);
   try {
     owner.applyDamage(8);
@@ -716,6 +764,28 @@ async function ownerTests(dim, check) {
   const arrow = dim.spawnEntity("minecraft:arrow", { x: 2.5, y: Y + 2, z: 6.5 });
   await waitUntil(() => !arrow.isValid, 30);
   check("swarm shield: arrows near you are destroyed", !arrow.isValid);
+  // prancha voadora: sobe e segura a altura
+  owner.teleport({ x: 0.5, y: Y + 1, z: 6.5 }, { rotation: { x: 0, y: 0 } });
+  await system.waitTicks(4);
+  const by0 = owner.location.y;
+  command(c, "prancha");
+  await system.waitTicks(30);
+  const by1 = owner.location.y;
+  check("hover board lifts you and holds the height", modeOf(c) === "prancha" && by1 > by0 + 0.7, `y ${by0.toFixed(2)}->${by1.toFixed(2)}`);
+  command(c, "modo inteligente");
+  await waitUntil(() => owner.isOnGround, 120);
+  // devorador: come tudo em volta de você
+  owner.teleport({ x: -10.5, y: Y + 1, z: -10.5 });
+  cmd(dim, `fill -13 ${Y + 1} -13 -9 ${Y + 3} -9 stone`);
+  cmd(dim, `fill -11 ${Y + 1} -11 -11 ${Y + 2} -11 air`);
+  c.rec.settings.destroy = true;
+  command(c, "devorador");
+  await system.waitTicks(50);
+  const stoneLeft = countBlocks(dim, "minecraft:stone", -13, Y + 1, -13, -9, Y + 3, -9);
+  check("devourer mode eats everything around you", modeOf(c) === "devorador" && stoneLeft < 8, `stone left=${stoneLeft}`);
+  command(c, "modo inteligente");
+  owner.teleport({ x: 0.5, y: Y + 1, z: 6.5 });
+  await system.waitTicks(4);
   const sz = dim.spawnEntity("minecraft:zombie", { x: 0.5, y: Y + 1, z: 14.5 });
   await waitUntil(() => dead(sz), 300);
   check("swarm stings monsters near you to death", dead(sz));
@@ -735,7 +805,9 @@ async function ownerTests(dim, check) {
   handleIntents(c, [{ type: "stop" }]);
   await system.waitTicks(10);
   const leftN = countBlocks(dim, NANO_BLOCK, -8, Y - 1, -9, 8, Y + 6, 40);
-  check("cancel dissolves the swarm shapes and returns to drone", formOf(c) === "drone" && leftN === 0, `left=${leftN}`);
+  const nanoLeft = pcount((id) => id.startsWith("lila:nano_"));
+  check("cancel dissolves the swarm (shapes, nano tools, core) and returns to normal", formOf(c) === "drone" && leftN === 0 && nanoLeft === 0,
+    `blocks left=${leftN} nano items=${nanoLeft}`);
   owner.teleport({ x: 0.5, y: Y + 1, z: 6.5 });
   await system.waitTicks(4);
 
@@ -800,6 +872,27 @@ async function ownerTests(dim, check) {
   const ga0 = pcount((id) => id === "minecraft:golden_apple");
   await waitUntil(() => pcount((id) => id === "minecraft:golden_apple") > ga0, 200);
   check("army: brings what you need (low health -> golden apples)", pcount((id) => id === "minecraft:golden_apple") > ga0);
+  const kinds = new Set(robotsOf(c).map((r) => Number(r.getProperty("lila:kind"))));
+  check("army: mixed squad (soldiers, builders, artillery, medics, ninjas)", kinds.size >= 4, `kinds=${[...kinds].join(",")}`);
+  // o exército inteiro constrói junto (catálogo mobiliado), com conferência no fim
+  owner.teleport({ x: -20.5, y: Y + 1, z: -20.5 }, { rotation: { x: 0, y: 180 } });
+  await system.waitTicks(10);
+  const ab = c.rec.stats.built;
+  const at0 = system.currentTick;
+  command(c, "faz uma casa pequena aqui");
+  await waitUntil(() => !!c.flags.armyJob, 20);
+  const jobOn = !!c.flags.armyJob;
+  await waitUntil(() => c.rec.stats.built > ab, 1500);
+  const alb = c.flags.lastBuild;
+  let adoors = 0;
+  if (alb) {
+    for (let x = alb.cx - alb.half; x <= alb.cx + alb.half; x++) for (let z = alb.cz - alb.half; z <= alb.cz + alb.half; z++) for (let y = alb.y0; y <= alb.y0 + 4; y++) {
+      if (/door/.test(dim.getBlock({ x, y, z })?.typeId ?? "")) adoors++;
+    }
+  }
+  check("army builds together (furnished catalog house with doors)", jobOn && c.rec.stats.built > ab && adoors >= 2, `ticks=${system.currentTick - at0} door blocks=${adoors}`);
+  owner.teleport({ x: 0.5, y: Y + 1, z: 6.5 });
+  await system.waitTicks(4);
   handleIntents(c, [{ type: "stop" }]);
   await waitUntil(() => c.alive() && robotsOf(c).length === 0, 100);
   check("cancel merges the army back into the drone", c.alive() && !armyActive(c) && robotsOf(c).length === 0, `robots=${robotsOf(c).length}`);

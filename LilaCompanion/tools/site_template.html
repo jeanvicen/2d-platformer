@@ -163,10 +163,10 @@ footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line)
       <img src="%%F_COLOSSUS%%" alt="Robô gigante TITÃ: armadura branca e vermelha, visor em T ciano, reator no peito e ombreiras" style="width:100%;max-width:420px">
       <div class="legend">
         <p class="note">Robô humanoide de uns 26 blocos. Ele te põe <b>em cima da cabeça</b> (plataforma com corrimão baixo, visão 360°): lá você fica quase imortal. Outros jogadores sobem nas ombreiras e na mochila, mas só você pilota.</p>
-        <div><b>andar</b> passadas que tremem a tela e derrubam o que estiver na frente</div>
-        <div><b>bater perto</b> soco que destrói blocos · <b>mirar longe</b> raio do visor</div>
-        <div><b>pular</b> salto com os propulsores e onda de choque ao cair</div>
-        <div><b>agachar</b> sair · <b>painel</b> pose de poder, pisão, trocar de lugar</div>
+        <div><b>câmera</b> terceira pessoa automática enquanto você pilota</div>
+        <div><b>andar</b> sobe morros de até 9 blocos e atravessa paredes e árvores (não trava)</div>
+        <div><b>slot da barra</b> escolhe o poder: 1 soco · 2 raio do visor · 3 salto · 4 onda de choque · 5 pose de poder — <b>bater</b> usa</div>
+        <div><b>pular</b> salto com os propulsores · <b>agachar</b> sair (pular nunca tira você)</div>
         <p class="note">Se você sai sem cancelar, ele continua TITÃ parado e pisando em monstros. Só volta a ser drone no "Cancelar".</p>
       </div>
     </div>
@@ -175,12 +175,17 @@ footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line)
   <section style="display:grid;gap:18px">
     <h2>Enxame de nanorrobôs</h2>
     <div class="recipe">
-      <img src="%%F_SWARM%%" alt="Núcleo do enxame: um ponto ciano rodeado por anéis de nanorrobôs" style="width:100%;max-width:260px">
+      <img src="%%F_SWARM%%" alt="Núcleo do enxame: um ponto ciano rodeado por nanorrobôs" style="width:100%;max-width:260px">
       <div class="legend">
-        <p class="note">O DR-0N se desmancha em milhares de robozinhos e continua fazendo tudo que o drone faz. Ao virar enxame ele liga um <b>escudo em volta de você</b>: você não leva dano, flechas e bolas de fogo somem e os monstros que chegam perto são empurrados e picados.</p>
-        <p class="note">Formas: <b>muralha · ponte · escada · cúpula</b> (somem sozinhas depois) · <b>punho gigante · espada giratória · tornado · asas · elevador</b> · <b>ataca</b> o que você mira · <b>devora tudo</b> em volta. Diga "modo enxame" e depois só "ponte", "tornado"...</p>
+        <p class="note">O DR-0N vira uma névoa de nanorrobôs: fumacinha escura com brilhos e robozinhos minúsculos espalhados no ar em volta de você (sem ficar orbitando). Eles agem sozinhos, <b>sem abrir o controle</b>.</p>
+        <div><b>mão vazia num bloco</b> eles viram a ferramenta na sua mão: machado (árvore inteira), picareta (veio inteiro / túnel 3×3), pá, enxada</div>
+        <div><b>mão vazia num bicho</b> espada de nanorrobôs com corte em área</div>
+        <div><b>"martelo"</b> use para arremessar: explode e volta para a mão</div>
+        <div><b>sempre</b> almofada nas quedas, luz no escuro, fôlego na água, apagam o fogo, somem com flechas</div>
+        <p class="note">Modos pelo <b>Núcleo do enxame</b> (aparece na sua barra; use para trocar): <b>Inteligente · Escudo</b> (barreira: nada te acerta) · <b>Asas</b> enormes para voar · <b>Prancha voadora · Mãos gigantes</b> que socam junto com você · <b>Devorador</b> (come tudo por onde você passa). E ainda muralha, ponte, escada, cúpula, punho do céu, tornado.</p>
       </div>
     </div>
+    <img src="%%NANO_ITEMS%%" alt="Itens de nanorrobô: espada, picareta, machado, pá, enxada, martelo e o núcleo do enxame" style="width:100%;max-width:560px;image-rendering:pixelated">
   </section>
 
   <section style="display:grid;gap:18px">
@@ -212,18 +217,21 @@ footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line)
 
   <section style="display:grid;gap:18px">
     <h2>Modo exército</h2>
-    <div class="recipe">
-      <img src="%%ROBOT%%" alt="Robô-soldado branco com visor ciano, blaster no braço e propulsor nas costas" style="width:100%;max-width:260px">
-      <div class="legend">
-        <p class="note">O DR-0N sobe, explode num clarão e vira robôs-soldado (10 no padrão, até 24). Eles atacam os monstros antes de chegarem em você, revidam em quem te atacar (jogador também), atiram laser e trazem o que você precisa: cura, comida, armadura de netherita encantada, visão noturna, respiração na água, resistência ao fogo e queda lenta.</p>
-        <p class="note">Comandos: proteger · seguir · ficar · atacar o que você olha · ir até onde você olha · formação em círculo · me fortalecer. <b>Cancelar</b> junta todos de volta no drone.</p>
-      </div>
+    <div class="turn">
+      <figure><img src="%%RK_SOLDADO%%" alt="Robô soldado branco com visor ciano"><figcaption>Soldado · laser</figcaption></figure>
+      <figure><img src="%%RK_CONSTRUTOR%%" alt="Robô construtor amarelo com capacete de obra"><figcaption>Construtor · obra rápida</figcaption></figure>
+      <figure><img src="%%RK_ARTILHEIRO%%" alt="Robô artilheiro vermelho com canhão no ombro"><figcaption>Artilheiro · canhão de longe</figcaption></figure>
+      <figure><img src="%%RK_MEDICO%%" alt="Robô médico branco e verde com mochila de cruz"><figcaption>Médico · cura você</figcaption></figure>
+      <figure><img src="%%RK_NINJA%%" alt="Robô ninja preto e roxo com katana"><figcaption>Ninja · teleporte e corte</figcaption></figure>
     </div>
+    <p class="note">O DR-0N sobe, explode num clarão e vira robôs (10 no padrão, até 24) no estilo que você escolher: misto, soldados, ninjas, artilharia, construtores ou médicos. Eles caçam monstros antes de chegarem em você, revidam em quem te atacar e trazem o que você precisa.</p>
+    <p class="note"><b>O exército constrói junto:</b> com ele ativo, peça qualquer construção (castelo, cidade, qualquer coisa do catálogo). Cada robô voa até um pedaço da obra e solda os blocos; no fim eles conferem tudo e corrigem o que faltou. Formações: círculo, linha de frente e V.</p>
   </section>
 
   <section style="display:grid;gap:18px">
     <h2>Construções gigantes</h2>
     <p class="note"><b>Ele constrói à mão:</b> voa até cada ponto e coloca bloco por bloco, parte por parte, de baixo para cima, como um jogador construindo voando (feixe, som do material, poeira). A velocidade muda em Configurações: à mão (~10 blocos/s), normal, rápido ou instantâneo.</p>
+    <p class="note"><b>Tudo mobiliado e num lugar só:</b> menu <b>Construir…</b> com botões grandes (legível no celular). Vila com casas e lojas mobiliadas, cidade com prédios de escritório e apartamento, castelo com torre mobiliada, ferreiro e estábulo, arranha-céu futurista com 30 andares mobiliados. No fim de cada obra ele <b>confere bloco por bloco e corrige o que faltou</b>.</p>
     <p class="note">Material infinito, sem travar o jogo. Castelo com fosso e torres · cidade com ruas, postes, prédios, arranha-céus e parque · vila com igreja e plantações · montanha-russa com subida, quedas, curvas, estação e carrinho · poço · labirinto gerado na hora com tesouro no centro · casa inteligente (luz automática à noite, portas automáticas, piscina iluminada) · montanha com neve no pico · pirâmide · farol · arranha-céu de 30 andares com heliponto · estádio. Ele nunca derruba construção sua: se tiver coisa sua no lugar, procura outro ao lado.</p>
     <p class="note"><b>Biomas:</b> neve, deserto, selva, cerejeiras, cogumelos, flores, floresta e pântano num raio de 36 blocos. O jogo não deixa script trocar o ID do bioma, então a cor da grama e o clima continuam os de antes. O resto (chão, árvores, plantas, gelo) muda.</p>
   </section>
@@ -240,6 +248,12 @@ footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line)
       <button class="cmd" type="button">vira helicóptero</button>
       <button class="cmd" type="button">modo colosso</button>
       <button class="cmd" type="button">modo exército com 15 robôs</button>
+      <button class="cmd" type="button">exército de ninjas</button>
+      <button class="cmd" type="button">modo enxame</button>
+      <button class="cmd" type="button">prancha</button>
+      <button class="cmd" type="button">mãos gigantes</button>
+      <button class="cmd" type="button">devorador</button>
+      <button class="cmd" type="button">martelo</button>
       <button class="cmd" type="button">constrói um castelo aqui</button>
       <button class="cmd" type="button">faz uma cidade inteira</button>
       <button class="cmd" type="button">faz uma montanha russa</button>

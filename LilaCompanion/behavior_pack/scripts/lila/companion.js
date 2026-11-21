@@ -19,7 +19,7 @@ export const OWNER_PROP = "lila:owner";
  *   stayPos?:{x:number,y:number,z:number}, goals:GoalDesc[], paused:boolean,
  *   defeat?:{left:number, sid:string, goals:GoalDesc[]}|null, saved?:{sid:string}|null,
  *   base?:{x:number,y:number,z:number,d:string}|null, farm?:any, mem:any,
- *   settings:{hud:string, chat:string, hunt:boolean, roam:number, army?:number, destroy?:boolean, lesson?:boolean, buildSpeed?:string},
+ *   settings:{hud:string, chat:string, hunt:boolean, roam:number, army?:number, destroy?:boolean, lesson?:boolean, buildSpeed?:string, armyStyle?:string, nanoMode?:string},
  *   stats:{blocks:number, crafted:number, kills:number, defeats:number, built:number, missions?:number},
  *   placed:string[], kind?:string, form?:string, army?:any, off?:boolean, offPos?:{x:number,y:number,z:number}, diary?:{t:number,msg:string}[], anchor?:{x:number,y:number,z:number}, backup?:{id:string,n:number,d:number}[]
  * }} Rec

@@ -29,7 +29,7 @@ from forge import drone_art  # noqa: E402
 from forge.drone_anims import DRONE_ACTIONS, drone_anims, drone_controllers, power_pose  # noqa: E402
 from forge.forms_art import FORMS as FORM_MODELS  # noqa: E402
 from forge.forms_art2 import FORMS2  # noqa: E402
-from forge.colossus_art import colossus_model, robot_model  # noqa: E402
+from forge.colossus_art import ROBOT_KINDS, colossus_model, robot_model  # noqa: E402
 from forge.forms_anims import (FORM_IDS, INITIALIZE, PRE_ANIMATION, ROBOT_ACTIONS, form_anims, form_controllers,  # noqa: E402
                                robot_anims, robot_controllers)
 from forge.audio import build_sounds  # noqa: E402
@@ -37,7 +37,7 @@ from forge.render import render  # noqa: E402
 
 MOVES = ["none", "walk", "run", "swim", "climb", "fall", "sneak"]
 
-VERSION = [2, 2, 1]
+VERSION = [2, 3, 0]
 MIN_ENGINE = [1, 26, 30]
 SERVER_VERSION = "2.8.0"
 SERVER_UI_VERSION = "2.1.0"
@@ -56,7 +56,7 @@ ENTITY_FORMAT = "1.21.0"
 
 GENERATED_BP = ["entities", "items", "recipes", "texts"]
 GENERATED_RP = ["entity", "models", "animations", "animation_controllers", "render_controllers", "attachables",
-                "particles", "textures", "texts", "sounds"]
+                "particles", "textures", "texts", "sounds", "fogs"]
 
 LANGS = {
     "en_US": {"entity.lila:drone.name": "DR-0N", "entity.lila:robot.name": "DR-0N Soldier", "item.lila.drone_controller.name": "DR-0N Remote",
@@ -64,9 +64,20 @@ LANGS = {
     "pt_BR": {"entity.lila:drone.name": "DR-0N", "entity.lila:robot.name": "Soldado DR-0N", "item.lila.drone_controller.name": "Controle do DR-0N",
               "action.interact.lila.ride": "Entrar", "action.interact.lila.talk": "Conversar"},
 }
+NANO_NAMES = {
+    "en_US": {"sword": "Nanobot Sword", "pickaxe": "Nanobot Pickaxe", "axe": "Nanobot Axe", "shovel": "Nanobot Shovel", "hoe": "Nanobot Hoe",
+              "hammer": "Nanobot Hammer (use to throw)", "core": "Swarm Core (use to switch mode)"},
+    "pt_BR": {"sword": "Espada de Nanorrobôs", "pickaxe": "Picareta de Nanorrobôs", "axe": "Machado de Nanorrobôs", "shovel": "Pá de Nanorrobôs",
+              "hoe": "Enxada de Nanorrobôs", "hammer": "Martelo de Nanorrobôs (use para arremessar)", "core": "Núcleo do Enxame (use para trocar o modo)"},
+    "es_ES": {"sword": "Espada de Nanobots", "pickaxe": "Pico de Nanobots", "axe": "Hacha de Nanobots", "shovel": "Pala de Nanobots",
+              "hoe": "Azada de Nanobots", "hammer": "Martillo de Nanobots (úsalo para lanzar)", "core": "Núcleo del Enjambre (úsalo para cambiar el modo)"},
+}
+for _lg, _names in NANO_NAMES.items():
+    LANGS.setdefault(_lg, {}).update({f"item.lila.nano_{k}.name": v for k, v in _names.items()})
 LANGS["pt_PT"] = dict(LANGS["pt_BR"])
 LANGS["es_ES"] = {"entity.lila:drone.name": "DR-0N", "entity.lila:robot.name": "Soldado DR-0N", "item.lila.drone_controller.name": "Mando del DR-0N",
-                  "action.interact.lila.ride": "Subir", "action.interact.lila.talk": "Hablar"}
+                  "action.interact.lila.ride": "Subir", "action.interact.lila.talk": "Hablar",
+                  **{f"item.lila.nano_{k}.name": v for k, v in NANO_NAMES["es_ES"].items()}}
 
 
 def wjson(path, data):
@@ -178,7 +189,7 @@ SEATS = {
     "jet": [[0, 1.1, -1.94], [0, 1.05, -1.2]],
     "moto": [[0, 0.82, 0.35], [0, 0.88, 0.95]],
     # piloto EM CIMA da cabeça (visão 360°), ombreiras e topo da mochila (em blocos sem escala)
-    "colossus": [[0, 7.58, -0.06], [-1.85, 7.06, 0], [1.85, 7.06, 0], [-0.5, 6.76, 1.12], [0.5, 6.76, 1.12]],
+    "colossus": [[0, 7.85, -0.06], [-1.85, 7.06, 0], [1.85, 7.06, 0], [-0.5, 6.76, 1.12], [0.5, 6.76, 1.12]],
     "ship": [[0, 0.92, -0.875], [0, 0.92, 0.25]],
     "ufo": [[0, 0.92, -0.375], [-0.56, 0.92, 0.44], [0.56, 0.92, 0.44]],
     "sub": [[0, 1.07, -0.75], [-0.31, 1.08, 0.875], [0.31, 1.08, 1.5]],
@@ -388,6 +399,12 @@ def build_robot(previews):
     wjson(os.path.join(RP, "models", "entity", "lila", "robot.geo.json"), m.to_json())
     tex = bake(m)
     wpng(os.path.join(RP, "textures", "entity", "lila", "robot.png"), tex)
+    kind_tex = {"soldado": tex}
+    for kind in ROBOT_KINDS[1:]:
+        mk = robot_model(kind)
+        assert [(c.origin, c.size) for b in mk.bones for c in b.cubes] == [(c.origin, c.size) for b in m.bones for c in b.cubes]
+        kind_tex[kind] = bake(mk)
+        wpng(os.path.join(RP, "textures", "entity", "lila", f"robot_{kind}.png"), kind_tex[kind])
     A = robot_anims()
     wjson(os.path.join(RP, "animations", "lila", "robot.animation.json"),
           {"format_version": "1.10.0", "animations": {name: data for _, (name, data) in A.items()}})
@@ -399,11 +416,11 @@ def build_robot(previews):
         "minecraft:client_entity": {"description": {
             "identifier": "lila:robot",
             "materials": {"default": "entity_emissive_alpha"},
-            "textures": {"default": "textures/entity/lila/robot"},
+            "textures": {"default": "textures/entity/lila/robot", **{k: f"textures/entity/lila/robot_{k}" for k in ROBOT_KINDS[1:]}},
             "geometry": {"default": "geometry.lila.robot"},
             "animations": amap,
             "scripts": {"animate": ["look", {"idle": "q.ground_speed < 0.6"}, "ctrl"]},
-            "render_controllers": ["controller.render.lila.lila"],
+            "render_controllers": ["controller.render.lila.robot"],
         }}})
     follow = {"minecraft:behavior.follow_owner": {"priority": 4, "speed_multiplier": 1.4, "start_distance": 7, "stop_distance": 3,
                                                   "can_teleport": True, "ignore_vibration": True}}
@@ -416,7 +433,8 @@ def build_robot(previews):
         "format_version": ENTITY_FORMAT,
         "minecraft:entity": {
             "description": {"identifier": "lila:robot", "is_spawnable": False, "is_summonable": True, "properties": {
-                "lila:action": {"type": "enum", "values": ROBOT_ACTIONS, "default": "idle", "client_sync": True}}},
+                "lila:action": {"type": "enum", "values": ROBOT_ACTIONS, "default": "idle", "client_sync": True},
+                "lila:kind": {"type": "int", "range": [0, len(ROBOT_KINDS) - 1], "default": 0, "client_sync": True}}},
             "component_groups": {
                 "lila:despawn": {"minecraft:instant_despawn": {"remove_child_entities": False}},
                 "lila:follow": dict(follow),
@@ -463,7 +481,219 @@ def build_robot(previews):
         }})
     if previews:
         wpng(os.path.join(PREVIEW_DIR, "robot.png"), render(m, tex, size=420, yaw=-30, pitch=8, outline=True))
+        acc = {"construtor": "hat", "artilheiro": "cannon", "medico": "medkit", "ninja": "katana"}
+        for kind in ROBOT_KINDS:
+            mk = robot_model(kind)
+            bake(mk)  # atribui as UVs (mesmo layout da textura do tipo)
+            hide = [b for b in ("hat", "cannon", "medkit", "katana") if b != acc.get(kind)]
+            for b in mk.bones:
+                if b.name in hide:
+                    b.cubes = []
+            wpng(os.path.join(PREVIEW_DIR, f"robot_{kind}.png"), render(mk, kind_tex[kind], size=300, yaw=-30, pitch=8, outline=True))
     return m
+
+
+# ============================================================ itens de nanorrobô (enxame 2.3)
+NANO_ICONS = {
+    "sword": [
+        "..............o+",
+        ".............o#+",
+        "............o#+.",
+        "...........o#+..",
+        "..........o#+...",
+        ".........o#+....",
+        "........o#+.....",
+        ".......o#+......",
+        "..+...o#+.......",
+        "..+#.o#+........",
+        "...+##+.........",
+        "....##..........",
+        "...#+#+.........",
+        "..#+..+.........",
+        ".#+.............",
+        "#+..............",
+    ],
+    "pickaxe": [
+        "....oooooooo....",
+        "..oo##++++##oo..",
+        ".o#+#......#+#o.",
+        "o#+..#....#..+#o",
+        "o+...o#..#o...+o",
+        "......o##o......",
+        "......o##o......",
+        ".......##.......",
+        ".......#+.......",
+        ".......##.......",
+        ".......#+.......",
+        ".......##.......",
+        ".......#+.......",
+        ".......##.......",
+        ".......++.......",
+        "................",
+    ],
+    "axe": [
+        "........oooo....",
+        ".......o####o...",
+        "......o##++##o..",
+        "......o#+..+#o..",
+        ".....o##+..+#o..",
+        ".....o#####+o...",
+        "......o###oo....",
+        ".......##.......",
+        ".......#+.......",
+        ".......##.......",
+        ".......#+.......",
+        ".......##.......",
+        ".......#+.......",
+        ".......##.......",
+        ".......++.......",
+        "................",
+    ],
+    "shovel": [
+        "......oooo......",
+        ".....o####o.....",
+        ".....o#++#o.....",
+        ".....o#++#o.....",
+        ".....o####o.....",
+        "......o##o......",
+        ".......##.......",
+        ".......#+.......",
+        ".......##.......",
+        ".......#+.......",
+        ".......##.......",
+        ".......#+.......",
+        "......o##o......",
+        "......#++#......",
+        "......o##o......",
+        "................",
+    ],
+    "hoe": [
+        "....ooooooo.....",
+        "...o###++##o....",
+        "...o#+oooo#o....",
+        "...o+o..o##o....",
+        "........o##o....",
+        ".........##.....",
+        ".........#+.....",
+        ".........##.....",
+        ".........#+.....",
+        ".........##.....",
+        ".........#+.....",
+        ".........##.....",
+        ".........#+.....",
+        ".........##.....",
+        ".........++.....",
+        "................",
+    ],
+    "hammer": [
+        "..oooooooooooo..",
+        ".o############o.",
+        ".o#+##++++##+#o.",
+        ".o#+########+#o.",
+        ".o############o.",
+        "..oooo####oooo..",
+        "......o##o......",
+        ".......#+.......",
+        ".......##.......",
+        ".......#+.......",
+        ".......##.......",
+        ".......#+.......",
+        ".......##.......",
+        "......o##o......",
+        "......#++#......",
+        "......oooo......",
+    ],
+    "core": [
+        "................",
+        "......oooo......",
+        "....oo####oo....",
+        "...o###++###o...",
+        "..o##+####+##o..",
+        "..o#+##++##+#o..",
+        ".o##+#++++#+##o.",
+        ".o#+#++oo++#+#o.",
+        ".o#+#++oo++#+#o.",
+        ".o##+#++++#+##o.",
+        "..o#+##++##+#o..",
+        "..o##+####+##o..",
+        "...o###++###o...",
+        "....oo####oo....",
+        "......oooo......",
+        "................",
+    ],
+}
+
+
+def nano_icon(rows, seed):
+    """Pixel art 16×16: corpo de nanorrobôs (grafite com granulado) + brilhos ciano."""
+    import random
+    rnd = random.Random(seed)
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    px = img.load()
+    for y, row in enumerate(rows):
+        for x, ch in enumerate(row):
+            if ch == "#":
+                g = rnd.randint(82, 118)
+                px[x, y] = (g, g + 8, g + 22, 255) if rnd.random() > 0.14 else (120, 230, 255, 255)
+            elif ch == "+":
+                px[x, y] = (70 + rnd.randint(0, 40), 220 + rnd.randint(0, 35), 255, 255)
+            elif ch == "o":
+                g = rnd.randint(30, 48)
+                px[x, y] = (g, g + 4, g + 10, 255)
+    return img
+
+
+def build_nano(previews):
+    tex = {"lila_drone_controller": {"textures": "textures/items/lila/drone_controller"}}
+    digs = {
+        "pickaxe": "query.any_tag('stone', 'metal', 'minecraft:is_pickaxe_item_destructible')",
+        "axe": "query.any_tag('wood', 'log', 'minecraft:is_axe_item_destructible')",
+        "shovel": "query.any_tag('dirt', 'sand', 'gravel', 'grass', 'snow', 'minecraft:is_shovel_item_destructible')",
+        "hoe": "query.any_tag('plant', 'minecraft:is_hoe_item_destructible')",
+    }
+    sheet = Image.new("RGBA", (16 * len(NANO_ICONS) + 4 * (len(NANO_ICONS) - 1), 16), (0, 0, 0, 0))
+    for i, (key, rows) in enumerate(NANO_ICONS.items()):
+        icon = nano_icon(rows, 500 + i)
+        wpng(os.path.join(RP, "textures", "items", "lila", f"nano_{key}.png"), icon)
+        sheet.paste(icon, (i * 20, 0))
+        tex[f"lila_nano_{key}"] = {"textures": f"textures/items/lila/nano_{key}"}
+        comps = {
+            "minecraft:icon": f"lila_nano_{key}",
+            "minecraft:display_name": {"value": f"item.lila.nano_{key}.name"},
+            "minecraft:max_stack_size": 1,
+            "minecraft:hand_equipped": key != "core",
+            "minecraft:glint": True,
+            "minecraft:rarity": "epic",
+            "minecraft:tags": {"tags": ["lila:nano"] + ({"sword": ["minecraft:is_sword"], "pickaxe": ["minecraft:is_pickaxe", "minecraft:is_tool"],
+                                                         "axe": ["minecraft:is_axe", "minecraft:is_tool"], "shovel": ["minecraft:is_shovel", "minecraft:is_tool"],
+                                                         "hoe": ["minecraft:is_hoe", "minecraft:is_tool"]}.get(key, []))
+                               + (["minecraft:netherite_tier"] if key in digs or key == "sword" else [])},
+        }
+        if key in digs:
+            comps["minecraft:digger"] = {"use_efficiency": True, "destroy_speeds": [{"block": {"tags": digs[key]}, "speed": 60}]}
+            comps["minecraft:damage"] = {"value": 9}
+        if key == "sword":
+            comps["minecraft:damage"] = {"value": 16}
+            comps["minecraft:can_destroy_in_creative"] = False
+        if key == "hammer":
+            comps["minecraft:damage"] = {"value": 12}
+            comps["minecraft:can_destroy_in_creative"] = False
+        wjson(os.path.join(BP, "items", f"nano_{key}.json"), {
+            "format_version": ITEM_FORMAT,
+            "minecraft:item": {"description": {"identifier": f"lila:nano_{key}", "menu_category": {"category": "none"}}, "components": comps}})
+    wjson(os.path.join(RP, "textures", "item_texture.json"), {"resource_pack_name": "lila", "texture_name": "atlas.items", "texture_data": tex})
+    # névoa levíssima do enxame (só um tom ciano no horizonte: não atrapalha a visão)
+    wjson(os.path.join(RP, "fogs", "nano_fog.json"), {
+        "format_version": "1.16.100",
+        "minecraft:fog_settings": {
+            "description": {"identifier": "lila:nano_fog"},
+            "distance": {
+                "air": {"fog_start": 0.78, "fog_end": 1.0, "fog_color": "#8FB7C4", "render_distance_type": "render"},
+                "water": {"fog_start": 0.0, "fog_end": 60.0, "fog_color": "#2A5A78", "render_distance_type": "fixed"},
+            },
+        }})
+    if previews:
+        wpng(os.path.join(PREVIEW_DIR, "nano_items.png"), sheet.resize((sheet.width * 8, 128), Image.NEAREST))
 
 
 def build_render_controllers():
@@ -486,6 +716,16 @@ def build_render_controllers():
                 "materials": [{"*": "Material.default"}],
                 "textures": ["Array.tex[q.property('lila:form')]"],
                 "is_hurt_color": {"r": "0.85", "g": "0.25", "b": "0.25", "a": "0.25"},
+            },
+            # soldados do exército: 5 tipos (textura + acessório visível por lila:kind)
+            "controller.render.lila.robot": {
+                "arrays": {"textures": {"Array.kind": ["Texture.default"] + [f"Texture.{k}" for k in ROBOT_KINDS[1:]]}},
+                "geometry": "Geometry.default",
+                "materials": [{"*": "Material.default"}],
+                "textures": ["Array.kind[q.property('lila:kind')]"],
+                "part_visibility": [{"hat": "q.property('lila:kind') == 1"}, {"cannon": "q.property('lila:kind') == 2"},
+                                    {"medkit": "q.property('lila:kind') == 3"}, {"katana": "q.property('lila:kind') == 4"}],
+                "is_hurt_color": {"r": "0.85", "g": "0.25", "b": "0.25", "a": "0.35"},
             },
             "controller.render.lila.item": {
                 "geometry": "Geometry.default",
@@ -562,6 +802,84 @@ def nano_texture(size=8):
     return img
 
 
+def _shape_fx(ident, n, life, pos, size, grad, texture="textures/particle/lila/nano"):
+    """Partícula que desenha uma forma: n pontinhos de vida curta, posição relativa por expressão
+    Molang (usa v.particle_random_1..4 e as variáveis passadas pelo script: v.yaw, v.flap, v.size)."""
+    d = particle(ident, texture, n, (life * 0.85, life), (0.0, 0.0), size, grad, accel=(0, 0, 0),
+                 shape={"minecraft:emitter_shape_point": {"offset": [0, 0, 0]}}, duration=0.05)
+    comps = d["particle_effect"]["components"]
+    comps.pop("minecraft:particle_motion_dynamic", None)
+    comps.pop("minecraft:particle_initial_speed", None)
+    comps["minecraft:particle_motion_parametric"] = {"relative_position": pos}
+    comps["minecraft:particle_appearance_billboard"]["size"] = [str(size), str(size)]
+    comps["minecraft:emitter_initialization"] = {"creation_expression": "v.yaw = v.yaw ?? 0; v.flap = v.flap ?? 0; v.size = v.size ?? 1;"}
+    return d
+
+
+def _yaw_rot(lat, up, back):
+    """(lateral à direita, cima, trás) do jogador → x, y, z do mundo (yaw em graus, Molang usa graus)."""
+    return [f"(({lat}) * -math.cos(v.yaw) + ({back}) * math.sin(v.yaw))", f"({up})",
+            f"(({lat}) * -math.sin(v.yaw) - ({back}) * math.cos(v.yaw))"]
+
+
+def nano_fx(fx, nano_grad):
+    glow = {"0.0": "#FFC8F8FF", "0.5": "#FF4C6878", "1.0": "#C0283038"}
+    # fumaça do núcleo: poucas baforadas que crescem e duram (leve)
+    sm = particle("lila:nano_smoke", "textures/particle/lila/soft", 5, (1.0, 1.8), (0.1, 0.5), 0.7,
+                  {"0.0": "#00262C34", "0.15": "#60283038", "0.6": "#40222830", "1.0": "#00202630"}, accel=(0, 0.12, 0), drag=1.6,
+                  shape={"minecraft:emitter_shape_sphere": {"offset": [0, 0, 0], "radius": 0.6, "direction": "outwards"}})
+    sm["particle_effect"]["components"]["minecraft:particle_appearance_billboard"]["size"] = [
+        "0.45 + v.particle_age / v.particle_lifetime * 0.6", "0.45 + v.particle_age / v.particle_lifetime * 0.6"]
+    fx["lila_nano_smoke.json"] = sm
+    # atmosfera: pontinhos minúsculos espalhados no ar, vagando devagar e cintilando (não orbitam)
+    air = particle("lila:nano_air", "textures/particle/lila/nano", 34, (3.0, 5.0), (0.0, 0.08), 0.04,
+                   {"0.0": "#00A8E8F8", "0.2": "#B0506470", "0.5": "#E0A8F0FF", "0.8": "#B04A5864", "1.0": "#004A5864"},
+                   accel=(0, 0, 0), drag=0.6,
+                   shape={"minecraft:emitter_shape_box": {"offset": [0, 2.5, 0], "half_dimensions": [12, 4, 12], "direction": "outwards"}})
+    ac = air["particle_effect"]["components"]
+    ac["minecraft:particle_motion_dynamic"] = {"linear_acceleration": [
+        "math.sin(v.particle_age * 90 + v.particle_random_1 * 360) * 0.09",
+        "math.cos(v.particle_age * 70 + v.particle_random_2 * 360) * 0.05",
+        "math.cos(v.particle_age * 80 + v.particle_random_3 * 360) * 0.09"], "linear_drag_coefficient": 0.6}
+    ac["minecraft:particle_appearance_billboard"]["size"] = ["0.035 + v.particle_random_4 * 0.02", "0.035 + v.particle_random_4 * 0.02"]
+    fx["lila_nano_air.json"] = air
+    # asas: envergadura ~3 blocos de cada lado, batendo (v.flap) e viradas para onde você olha (v.yaw)
+    S = "v.particle_random_1"
+    side = "(v.particle_random_2 > 0.5 ? 1 : -1)"
+    L = f"(0.25 + {S} * 2.9)"
+    fl = f"(math.sin(v.flap + {S} * 50) * (12 + 30 * {S}))"
+    ch = f"(v.particle_random_3 * (1.1 - {S} * 0.8))"
+    lat = f"{side} * {L} * math.cos({fl})"
+    up = f"0.15 + {L} * math.sin({fl}) + {S} * 0.55 - {ch} * 0.9"
+    back = f"0.3 + {ch} * 0.35 + {S} * 0.25"
+    fx["lila_nano_wings.json"] = _shape_fx("lila:nano_wings", 80, 0.14, _yaw_rot(lat, up, back), 0.07, glow)
+    # mão gigante: palma (cubo arredondado) + nó dos dedos na frente, escala v.size
+    a, b, cc = "(v.particle_random_1 - 0.5)", "(v.particle_random_2 - 0.5)", "(v.particle_random_3 - 0.5)"
+    m = f"math.max(math.abs({a}), math.max(math.abs({b}), math.abs({cc})))"
+    knuck = "(v.particle_random_4 > 0.75 ? 1 : 0)"
+    hx = f"(({a}) / {m} * 0.5 * 0.9)"
+    hy = f"(({b}) / {m} * 0.5 * (1 - {knuck} * 0.6) + {knuck} * 0.32)"
+    hz = f"(({cc}) / {m} * 0.5 * 0.75 * (1 - {knuck}) + {knuck} * -0.48)"
+    fx["lila_nano_hand.json"] = _shape_fx("lila:nano_hand", 70, 0.14, _yaw_rot(f"{hx} * v.size", f"{hy} * v.size", f"{hz} * v.size"), 0.09, glow)
+    # prancha: retângulo 1,9 × 0,75 com propulsores atrás (v.size aumenta: almofada de queda)
+    u = "(v.particle_random_1 - 0.5) * 1.9"
+    w = "(v.particle_random_2 - 0.5) * 0.75"
+    jet = "(v.particle_random_4 > 0.85 ? 1 : 0)"
+    fx["lila_nano_board.json"] = _shape_fx("lila:nano_board", 48, 0.14,
+                                           _yaw_rot(f"({w}) * v.size", f"(v.particle_random_3 * 0.08 - {jet} * v.particle_random_3 * 0.3)",
+                                                    f"(-({u}) * (1 - {jet}) + {jet} * 1.05) * v.size"), 0.07, glow)
+    # formação de ferramenta: nanorrobôs convergindo para um ponto
+    th, ph = "(v.particle_random_1 * 360)", "(v.particle_random_2 * 180 - 90)"
+    k = "math.pow(1 - v.particle_age / v.particle_lifetime, 2) * 1.3"
+    fx["lila_nano_form.json"] = _shape_fx("lila:nano_form", 28, 0.38, [f"math.cos({th}) * math.cos({ph}) * {k}", f"math.sin({ph}) * {k}",
+                                                                       f"math.sin({th}) * math.cos({ph}) * {k}"], 0.07, nano_grad)
+    # corte da espada: arco horizontal que abre
+    arc = "(v.particle_random_1 * 160 - 80 + v.particle_age * 600)"
+    rr = "(1.2 + v.particle_random_2 * 0.5)"
+    fx["lila_nano_slash.json"] = _shape_fx("lila:nano_slash", 30, 0.2, [f"math.cos({arc}) * {rr}", "(v.particle_random_3 - 0.5) * 0.3",
+                                                                        f"math.sin({arc}) * {rr}"], 0.08, glow)
+
+
 def build_particles():
     wpng(os.path.join(RP, "textures", "particle", "lila", "soft.png"), soft_texture())
     point = {"minecraft:emitter_shape_point": {"offset": [0, 0, 0]}}
@@ -604,7 +922,10 @@ def build_particles():
     fx["lila_nano_point.json"] = particle("lila:nano_point", "textures/particle/lila/nano", 10, (0.35, 0.7), (0.2, 0.9), 0.08, nano_grad,
                                           accel=(0, 0, 0), drag=3.0,
                                           shape={"minecraft:emitter_shape_sphere": {"offset": [0, 0, 0], "radius": 0.4, "direction": "outwards"}})
-    for name, n, R, ry, spd in (("nano_cloud", 70, 1.5, 0.8, 300), ("nano_shield", 160, 2.5, 1.0, 220), ("nano_big", 220, 4.5, 1.0, 160)):
+    # 2.3: menos partículas por emissão (o enxame travava): cloud 70→24, shield 160→56, big 220→90, point 10→5
+    fx["lila_nano_point.json"]["particle_effect"]["components"]["minecraft:emitter_rate_instant"]["num_particles"] = 5
+    for name, n, R, ry, spd in (("nano_cloud", 24, 1.5, 0.8, 300), ("nano_shield", 56, 2.5, 1.0, 220), ("nano_big", 90, 4.5, 1.0, 160),
+                                ("nano_ring", 36, 2.8, 0.55, 150), ("nano_ball", 16, 0.45, 1.0, 900)):
         d = particle(f"lila:{name}", "textures/particle/lila/nano", n, (0.45, 0.8), (0.0, 0.0), 0.08, nano_grad, accel=(0, 0, 0), shape=point,
                      duration=0.05)
         comps = d["particle_effect"]["components"]
@@ -618,6 +939,9 @@ def build_particles():
             f"math.sin({phi}) * {rr} * {ry} + math.sin(v.particle_age * 600 + v.particle_random_3 * 360) * 0.12",
             f"math.sin({ang}) * math.cos({phi}) * {rr}"]}
         fx[f"lila_{name}.json"] = d
+    fx["lila_nano_ring.json"]["particle_effect"]["components"]["minecraft:particle_lifetime_expression"]["max_lifetime"] = "math.random(0.7, 1.0)"
+    fx["lila_nano_ball.json"]["particle_effect"]["components"]["minecraft:particle_lifetime_expression"]["max_lifetime"] = "math.random(0.08, 0.12)"
+    nano_fx(fx, nano_grad)
     for fname, data in fx.items():
         wjson(os.path.join(RP, "particles", fname), data)
     wpng(os.path.join(RP, "textures", "particle", "lila", "nano.png"), nano_texture())
@@ -671,6 +995,7 @@ def main():
     clean()
     m, tex = build_drone(previews)
     build_robot(previews)
+    build_nano(previews)
     build_render_controllers()
     build_particles()
     wjson(os.path.join(RP, "sounds", "sound_definitions.json"), build_sounds(RP))

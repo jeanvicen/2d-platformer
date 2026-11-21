@@ -169,10 +169,22 @@ export function* flyTo(c, target, o = {}) {
   return false;
 }
 
-/** Seguir voando em órbita em volta do dono (como um drone de verdade). */
+/**
+ * Acompanhar o dono sem ficar rodando em volta dele (2.2.1): escolhe um ponto por perto (4 a 9
+ * blocos, de preferência do lado ou atrás), vai até lá, fica um tempo flutuando e olhando em volta
+ * e depois escolhe outro. Se você anda, ele vem atrás de lado; se você vai longe, ele voa até você.
+ * (O nome antigo continua para não mexer em quem chama.)
+ */
 export function* orbitOwner(c, ticks = Infinity) {
   const t0 = system.currentTick;
-  let ang = Math.random() * Math.PI * 2;
+  let spot = null, until = 0, lookAt = null;
+  const pick = (o) => {
+    const yaw = (o.getRotation().y * Math.PI) / 180;
+    // de lado ou atrás do dono (nunca bem na frente da câmera)
+    const a = yaw + Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.4;
+    const r = 4 + Math.random() * 5;
+    return { x: o.location.x - Math.sin(a) * r, y: o.location.y + 1.5 + Math.random() * 2, z: o.location.z + Math.cos(a) * r };
+  };
   while (c.alive() && system.currentTick - t0 < ticks) {
     const o = c.owner();
     if (!o || o.dimension.id !== c.dim().id) {
@@ -180,15 +192,45 @@ export function* orbitOwner(c, ticks = Infinity) {
       yield 20;
       continue;
     }
+    const now = system.currentTick;
     const d = hdist(c.pos(), o.location);
     if (d > 24) {
       yield* flyTo(c, { x: o.location.x, y: o.location.y + 3, z: o.location.z }, { reach: 6, yTol: 4, timeout: 200, follow: () => { const q = c.owner()?.location; return q ? { x: q.x, y: q.y + 3, z: q.z } : undefined; } });
+      spot = null;
       continue;
     }
-    ang += 0.035;
-    const ring = { x: o.location.x + Math.cos(ang) * 3.2, y: o.location.y + 2.6 + Math.sin(ang * 2) * 0.3, z: o.location.z + Math.sin(ang) * 3.2 };
-    if (!clearLine(c.dim(), c.pos(), ring, 0.5)) ring.y += 2;
-    steer(c, ring, Math.min(cruise(c), 0.12 + d * 0.06));
+    let ov = { x: 0, y: 0, z: 0 };
+    try {
+      ov = o.getVelocity();
+    } catch {
+      /* ignore */
+    }
+    const moving = Math.hypot(ov.x, ov.z) > 0.12;
+    if (moving) {
+      // você andando: vem junto, um pouco atrás e de lado
+      const yaw = (o.getRotation().y * Math.PI) / 180;
+      const side = c.flags.followSide ?? (c.flags.followSide = Math.random() < 0.5 ? -1 : 1);
+      const tgt = { x: o.location.x + Math.sin(yaw) * 2.5 + Math.cos(yaw) * 2.5 * side, y: o.location.y + 2.2, z: o.location.z - Math.cos(yaw) * 2.5 + Math.sin(yaw) * 2.5 * side };
+      if (!clearLine(c.dim(), c.pos(), tgt, 0.5)) tgt.y += 2;
+      steer(c, tgt, Math.min(cruise(c), 0.15 + d * 0.07));
+      spot = null;
+      yield 1;
+      continue;
+    }
+    if (!spot || now > until || hdist(spot, o.location) > 11) {
+      spot = pick(o);
+      until = now + 80 + Math.floor(Math.random() * 120);
+      lookAt = Math.random() < 0.5 ? null : { x: spot.x + (Math.random() - 0.5) * 16, y: spot.y, z: spot.z + (Math.random() - 0.5) * 16 };
+      if (!clearLine(c.dim(), c.pos(), spot, 0.5)) spot.y += 2;
+    }
+    const ds = Math.hypot(c.pos().x - spot.x, c.pos().y - spot.y, c.pos().z - spot.z);
+    if (ds > 0.8) steer(c, spot, Math.min(cruise(c) * 0.7, 0.08 + ds * 0.05));
+    else {
+      hover(c);
+      // parado: olha em volta ou para você, devagar
+      const tgt = lookAt ?? o.location;
+      if (now % 10 === 0) face(c, { x: tgt.x - 0.5, y: tgt.y, z: tgt.z - 0.5 });
+    }
     yield 1;
   }
   hover(c);

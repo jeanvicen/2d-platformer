@@ -9,10 +9,10 @@ import { command, handleIntents, inventoryText, statusText } from "../lila/brain
 import { goalLabel } from "../lila/goals.js";
 import { missions } from "../lila/drone.js";
 import { formOf, isRideForm, isVehicle, beam, roar, stomp, switchSeat, mountOwner, riders, jumpAction, tractor } from "../lila/forms.js";
-import { shieldOn } from "../lila/swarm.js";
+import { MODE_NAMES, NANO_MODES, modeOf } from "../lila/swarm.js";
 import { powerOff, powerOn } from "../lila/power.js";
 import * as A from "../lib/archgen.js";
-import { armyActive, command as armyCommand, empower, robotsOf } from "../lila/army.js";
+import { ARMY_STYLES, KIND_NAMES, armyActive, command as armyCommand, empower, robotsOf, stopBuild } from "../lila/army.js";
 import { findItemType } from "../lila/creative.js";
 import { say } from "../lila/talk.js";
 import { show } from "./forms.js";
@@ -127,9 +127,8 @@ export async function openController(player) {
       [formOf(c) === "colossus" ? "§6Subir no TITÃ (em cima da cabeça)" : "§6§lRobô gigante TITÃ", I.colossus, () => (formOf(c) === "colossus" ? mountOwner(c, player) : handleIntents(c, [{ type: "form", form: "colossus" }]))],
       [formOf(c) === "swarm" ? "§d§lEnxame: formas e poderes…" : "§d§lModo ENXAME (nanorrobôs)", I.swarm, () => (formOf(c) === "swarm" ? swarmMenu(player) : handleIntents(c, [{ type: "swarm" }]))],
       [c.rec.mode === "turret" ? "§cDesmontar a torreta" : "§cTorreta gigante", I.turret, () => handleIntents(c, [{ type: c.rec.mode === "turret" ? "stop" : "turret" }])],
-      [army ? "§aComandar o exército…" : "§aModo EXÉRCITO", I.army, () => (army ? armyMenu(player) : handleIntents(c, [{ type: "army", count: c.rec.settings.army ?? 10 }]))],
-      ["§eConstruções gigantes…", I.build, () => buildMenu(player)],
-      ["§eCatálogo: 1000+ construções…", I.house, () => archMenu(player)],
+      [army ? "§aComandar o exército…" : "§aModo EXÉRCITO", I.army, () => (army ? armyMenu(player) : armyStyleMenu(player))],
+      ["§e§lConstruir…§r §e(tudo mobiliado)", I.build, () => buildMenu(player)],
       ["§2Transformar bioma…", I.biome, () => biomeMenu(player)],
       ["§6Aplainar / destruir em volta…", I.flatten, () => flattenMenu(player)],
       ["§6Recolher os itens do chão", I.sweep, () => handleIntents(c, [{ type: "vacuum", radius: 32 }])],
@@ -194,9 +193,10 @@ async function vehicleMenu(player) {
 async function swarmMenu(player) {
   const c = comp(player);
   const keys = Object.keys(SWARM_SHAPES);
+  const mode = modeOf(c);
   const f = new ActionFormData().title("§l§dEnxame de nanorrobôs")
-    .body(`§fMilhares de nanorrobôs. Eles continuam fazendo tudo que o robô faz e picam sozinhos os monstros perto de você.\n§7Escudo: ${shieldOn(c) ? "§aLIGADO (nada te acerta)" : "§cdesligado"}`);
-  for (const k of keys) f.button(k === "escudo" ? `${SWARM_SHAPES[k].name}: ${shieldOn(c) ? "§cdesligar" : "§aligar"}` : SWARM_SHAPES[k].name, I.swarm);
+    .body(`§fModo agora: §b§l${MODE_NAMES[mode] ?? "—"}§r\n§7Você não precisa deste menu: de mão vazia, bata num bloco que eles viram a ferramenta certa, bata num bicho que viram espada. O §bNúcleo do enxame§7 (na sua barra) troca o modo; agachado, volta um.`);
+  for (const k of keys) f.button(`${NANO_MODES.includes(k) && k === mode ? "§a● " : ""}${SWARM_SHAPES[k].name}`, I.swarm);
   f.button("§c✖ Voltar à forma normal", I.cancel);
   f.button("Voltar", I.back);
   const r = await show(player, f);
@@ -206,37 +206,33 @@ async function swarmMenu(player) {
   handleIntents(c, [{ type: "swarm", shape: keys[r.selection] }]);
 }
 
-/** Catálogo de 1000+ construções (tipo × estilo × tamanho), todas mobiliadas por dentro. */
-async function archMenu(player) {
+/** Catálogo: tipo → estilo → tamanho, só com botões (legível no celular). */
+async function archMenu(player, cat) {
   const c = comp(player);
-  const cats = A.CATEGORIES;
-  const f = new ActionFormData().title("§l§eCatálogo de construções")
-    .body(`§f${A.TOTAL} construções diferentes (${A.TYPES.length} tipos × ${A.STYLES.length} estilos × ${A.SIZES.length} tamanhos + ${A.OBJECTS.length} objetos/decorações), todas com interior arrumado e mobiliado.\n§7Ele constrói à mão, voando, bloco por bloco (velocidade em Configurações).`);
-  for (const cat of cats) f.button(`§l${cat.name}`, I.house);
-  f.button("§dSurpresa (uma aleatória)", I.creative);
+  const isObj = cat.key === "objetos";
+  const items = isObj ? A.OBJECTS : A.TYPES.filter((t) => t.cat === cat.key);
+  const f = new ActionFormData().title(`§l${cat.name}`).body("§fEscolha o que construir (depois o estilo e o tamanho).");
+  for (const it of items) f.button(`§l${it.name}`, I.house);
   f.button("Voltar", I.back);
   const r = await show(player, f);
   if (!r || r.canceled || r.selection === undefined) return;
-  if (r.selection === cats.length) {
-    const t = A.TYPES[Math.floor(Math.random() * A.TYPES.length)];
-    return handleIntents(c, [{ type: "arch", kind: t.key, style: A.STYLES[Math.floor(Math.random() * A.STYLES.length)].key, size: A.SIZES[Math.floor(Math.random() * 3)].key }]);
+  if (r.selection >= items.length) return buildMenu(player);
+  const it = items[r.selection];
+  const g = new ActionFormData().title(`§l${it.name}: estilo`).body("§fQual estilo?");
+  g.button("§l§dQualquer um (surpresa)", I.creative);
+  for (const st of A.STYLES) g.button(`§l${st.name}`, I.house);
+  const r2 = await show(player, g);
+  if (!r2 || r2.canceled || r2.selection === undefined) return;
+  const style = r2.selection === 0 ? A.STYLES[Math.floor(Math.random() * A.STYLES.length)].key : A.STYLES[r2.selection - 1].key;
+  let size = "medio";
+  if (!isObj) {
+    const h = new ActionFormData().title(`§l${it.name}: tamanho`).body("§fQual tamanho?");
+    for (const z of A.SIZES) h.button(`§l${z.name}`, I.house);
+    const r3 = await show(player, h);
+    if (!r3 || r3.canceled || r3.selection === undefined) return;
+    size = A.SIZES[r3.selection].key;
   }
-  if (r.selection > cats.length) return openController(player);
-  const cat = cats[r.selection];
-  const types = A.TYPES.filter((t) => t.cat === cat.key);
-  const isObj = cat.key === "objetos";
-  const items = isObj ? A.OBJECTS : types;
-  const m = new ModalFormData().title(`§l${cat.name}`)
-    .dropdown("O quê?", items.map((t) => t.name), { defaultValueIndex: 0 })
-    .dropdown("Estilo", A.STYLES.map((s) => s.name), { defaultValueIndex: 0 });
-  if (!isObj) m.dropdown("Tamanho", A.SIZES.map((s) => s.name), { defaultValueIndex: 1 });
-  m.submitButton("§lConstruir aqui");
-  const r2 = await show(player, m);
-  if (!r2 || r2.canceled || !r2.formValues) return;
-  const it = items[Number(r2.formValues[0] ?? 0)];
-  const st = A.STYLES[Number(r2.formValues[1] ?? 0)];
-  const sz = isObj ? A.SIZES[1] : A.SIZES[Number(r2.formValues[2] ?? 1)];
-  handleIntents(c, [{ type: "arch", kind: it.key, style: st.key, size: sz.key }]);
+  handleIntents(c, [{ type: "arch", kind: it.key, style, size, here: true }]);
 }
 
 /** Painel de quem está pilotando (usar o controle dentro do veículo/colosso). */
@@ -282,19 +278,32 @@ function exit(c, player) {
 
 async function armyMenu(player) {
   const c = comp(player);
-  const n = robotsOf(c).length;
+  const rs = robotsOf(c);
+  const kinds = [0, 0, 0, 0, 0];
+  for (const r of rs) {
+    try {
+      kinds[Number(r.getProperty("lila:kind") ?? 0)]++;
+    } catch {
+      /* ignore */
+    }
+  }
+  const job = c.flags.armyJob;
   /** @type {[string, string, () => any][]} */
   const b = [
+    job ? [`§c■ Parar a obra (${job.label})`, I.cancel, () => stopBuild(c)] : ["§6Construir com o exército…\n§8castelos, megaconstruções, catálogo", I.build, () => buildMenu(player)],
     ["§aProteger (atacam primeiro)", I.protect, () => armyCommand(c, "guard", player)],
     ["Me seguir", I.follow, () => armyCommand(c, "follow", player)],
     ["Ficar aqui", I.stay, () => armyCommand(c, "stay", player)],
     ["§cAtacar o que estou olhando", I.turret, () => armyCommand(c, "attack", player)],
     ["Ir até onde estou olhando", I.come, () => armyCommand(c, "goto", player)],
-    ["Formação em círculo", I.army, () => armyCommand(c, "circle", player)],
+    ["Formação: círculo", I.army, () => armyCommand(c, "circle", player)],
+    ["Formação: linha de frente", I.army, () => armyCommand(c, "line", player)],
+    ["Formação: V (cunha)", I.army, () => armyCommand(c, "wedge", player)],
     ["§dMe fortalecer (kit + efeitos)", I.kit, () => empower(c, player)],
-    ["§c✖ Juntar e voltar ao normal", I.cancel, () => handleIntents(c, [{ type: "stop" }])],
+    ["§c✖ Juntar e voltar ao normal", I.cancel, () => (stopBuild(c, true), handleIntents(c, [{ type: "normal" }]))],
   ];
-  const f = new ActionFormData().title("§l§aExército DR-0N").body(`§f${n} robôs ativos.\n§7Eles caçam monstros, revidam em quem te atacar (jogador também), atiram laser e trazem o que você precisar: cura, comida, armadura, visão noturna, respiração na água, resistência a fogo e queda lenta.`);
+  const mix = kinds.map((k, i) => (k ? `${k} ${KIND_NAMES[i]}` : "")).filter(Boolean).join(" · ");
+  const f = new ActionFormData().title("§l§aExército DR-0N").body(`§f${rs.length} robôs: §7${mix || "—"}\n§7Soldados atiram laser, artilheiros usam canhão de longe, ninjas teleportam e cortam, médicos curam você e os robôs, construtores erguem obras rápido. Todos trazem o que você precisar.${job ? `\n§6Obra em andamento: ${job.label}` : ""}`);
   for (const [t, icon] of b) f.button(t, icon);
   f.button("Voltar", I.back);
   const r = await show(player, f);
@@ -303,25 +312,58 @@ async function armyMenu(player) {
   await b[r.selection][2]();
 }
 
+/** Escolhe o estilo do exército antes de dividir. */
+async function armyStyleMenu(player) {
+  const c = comp(player);
+  const keys = Object.keys(ARMY_STYLES);
+  const f = new ActionFormData().title("§l§aModo EXÉRCITO").body(`§7O DR-0N explode em ${c.rec.settings.army ?? 10} robôs. Que tipo de exército?`);
+  for (const k of keys) f.button(ARMY_STYLES[k].name, I.army);
+  f.button("Voltar", I.back);
+  const r = await show(player, f);
+  if (!r || r.canceled || r.selection === undefined) return;
+  if (r.selection >= keys.length) return openController(player);
+  c.rec.settings.armyStyle = keys[r.selection];
+  handleIntents(c, [{ type: "army", count: c.rec.settings.army ?? 10, style: keys[r.selection] }]);
+}
+
 async function buildMenu(player) {
   const c = comp(player);
-  const mega = Object.keys(MEGA);
-  const small = Object.keys(BLUEPRINTS);
-  const names = [...mega.map((k) => `§e${MEGA[k].name}§r — ${MEGA[k].desc}`), ...small.map((k) => `${BLUEPRINTS[k].name} — ${BLUEPRINTS[k].desc}`)];
-  const f = new ModalFormData()
-    .title("§l§eConstruções gigantes")
-    .dropdown(`§fO que construir? §7(material infinito · construção ${({ humano: "à mão, bloco por bloco", normal: "normal", rapido: "rápida", instantaneo: "instantânea" })[c.rec.settings.buildSpeed ?? "humano"]} — muda em Configurações)`, names, { defaultValueIndex: 0 })
-    .toggle("§fBem aqui na minha frente", { defaultValue: true })
-    .submitButton("§lConstruir");
+  const spd = ({ humano: "à mão, bloco por bloco", normal: "normal", rapido: "rápida", instantaneo: "instantânea" })[c.rec.settings.buildSpeed ?? "humano"];
+  const cats = A.CATEGORIES;
+  const f = new ActionFormData().title("§l§eConstruir")
+    .body(`§fMaterial infinito, tudo mobiliado por dentro.\n§7Construção ${spd} (muda em Configurações). Ele confere no fim e corrige o que faltar.`);
+  f.button("§l§6Megaconstruções\n§r§8cidade, castelo, vila, montanha-russa...", I.build);
+  for (const cat of cats) f.button(`§l${cat.name}\n§r§8${A.TYPES.filter((t) => t.cat === cat.key).length || A.OBJECTS.length} opções`, I.house);
+  f.button("§l§dSurpresa\n§r§8uma construção aleatória", I.creative);
+  f.button("Voltar", I.back);
   const r = await show(player, f);
-  if (!r || r.canceled || !r.formValues) return;
-  const i = Number(r.formValues[0] ?? 0);
-  const here = !!r.formValues[1];
-  if (i < mega.length) handleIntents(c, [{ type: "mega", key: mega[i], here }]);
-  else {
-    const key = small[i - mega.length];
-    handleIntents(c, [key === "fazenda" ? { type: "farm", here, crop: "minecraft:wheat_seeds" } : { type: "build", blueprint: key, here }]);
+  if (!r || r.canceled || r.selection === undefined) return;
+  if (r.selection === 0) return megaMenu(player);
+  if (r.selection === cats.length + 1) {
+    const t = A.TYPES[Math.floor(Math.random() * A.TYPES.length)];
+    return handleIntents(c, [{ type: "arch", kind: t.key, style: A.STYLES[Math.floor(Math.random() * A.STYLES.length)].key, size: A.SIZES[Math.floor(Math.random() * 3)].key }]);
   }
+  if (r.selection > cats.length + 1) return openController(player);
+  return archMenu(player, cats[r.selection - 1]);
+}
+
+const MEGA_SHORT = {
+  castelo: "muralhas, torres, fosso, trono", cidade: "ruas, prédios mobiliados, parque", vila: "casas, lojas, igreja, plantações",
+  montanha_russa: "trilhos, quedas, carrinho", poco: "poço de pedra", labirinto: "cerca viva com prêmio", casa_tech: "mansão moderna, piscina",
+  montanha: "neve no pico, cachoeira", piramide: "câmara do faraó", farol: "farol com quarto", arranha_ceu: "30 andares + heliponto",
+  estadio: "campo e arquibancadas",
+};
+
+async function megaMenu(player) {
+  const c = comp(player);
+  const keys = Object.keys(MEGA);
+  const f = new ActionFormData().title("§l§6Megaconstruções").body("§fConstruções gigantes, mobiliadas por dentro. Ele escolhe um lugar livre na sua frente.");
+  for (const k of keys) f.button(`§l${MEGA[k].name}\n§r§8${MEGA_SHORT[k] ?? ""}`, I.build);
+  f.button("Voltar", I.back);
+  const r = await show(player, f);
+  if (!r || r.canceled || r.selection === undefined) return;
+  if (r.selection >= keys.length) return buildMenu(player);
+  handleIntents(c, [{ type: "mega", key: keys[r.selection], here: true }]);
 }
 
 async function flattenMenu(player) {

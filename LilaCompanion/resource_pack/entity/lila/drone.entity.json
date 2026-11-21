@@ -102,7 +102,7 @@
       },
       "scripts": {
         "initialize": [
-          "v.svf = 0; v.svl = 0; v.svu = 0; v.pvf = 0; v.pvl = 0; v.pvu = 0; v.afw = 0; v.alf = 0; v.aup = 0; v.pipn = 0; v.pish = 0; v.chp = 0; v.chpw = 0; v.chr = 0; v.chrw = 0; v.tz = 0; v.tzw = 0; v.tx = 0; v.txw = 0; v.ty = 0; v.tyw = 0; v.hz = 0; v.hzw = 0; v.hx = 0; v.hxw = 0; v.hy = 0; v.hyw = 0; v.rz = 0; v.rzw = 0; v.rx = 0; v.rxw = 0; v.ry = 0; v.ryw = 0; v.lz = 0; v.lzw = 0; v.lx = 0; v.lxw = 0; v.ly = 0; v.lyw = 0; v.hlx = 0; v.hly = 0; v.po = q.property('lila:off') ? 1 : 0; v.ot = 9; v.bt = 9; v.dsp = 0; v.ride = 0; v.dtilt = 0; v.htilt = 0; v.jpitch = 0; v.aims = 0; v.pits = 0; v.cwd = 0; v.cws = 0; v.wheel = 0; v.pby = q.body_y_rotation; v.lean = 0; v.tf = 9; v.pf = q.property('lila:form'); v.gspin = 0; v.gear = 1;"
+          "v.svf = 0; v.svl = 0; v.svu = 0; v.pvf = 0; v.pvl = 0; v.pvu = 0; v.afw = 0; v.alf = 0; v.aup = 0; v.pipn = 0; v.pish = 0; v.chp = 0; v.chpw = 0; v.chr = 0; v.chrw = 0; v.tz = 0; v.tzw = 0; v.tx = 0; v.txw = 0; v.ty = 0; v.tyw = 0; v.hz = 0; v.hzw = 0; v.hx = 0; v.hxw = 0; v.hy = 0; v.hyw = 0; v.rz = 0; v.rzw = 0; v.rx = 0; v.rxw = 0; v.ry = 0; v.ryw = 0; v.lz = 0; v.lzw = 0; v.lx = 0; v.lxw = 0; v.ly = 0; v.lyw = 0; v.hlx = 0; v.hly = 0; v.gsv = 0; v.po = q.property('lila:off') ? 1 : 0; v.ot = 9; v.bt = 9; v.dsp = 0; v.ride = 0; v.dtilt = 0; v.htilt = 0; v.jpitch = 0; v.aims = 0; v.pits = 0; v.cwd = 0; v.cws = 0; v.wheel = 0; v.pby = q.body_y_rotation; v.lean = 0; v.tf = 9; v.pf = q.property('lila:form'); v.gspin = 0; v.gear = 1;"
         ],
         "pre_animation": [
           "v.form = q.property('lila:form');",
@@ -169,7 +169,7 @@
           "v.dy = math.mod(q.body_y_rotation - v.pby + 540, 360) - 180; v.pby = q.body_y_rotation;",
           "v.lean = math.lerp(v.lean, math.clamp(v.dy / math.max(q.delta_time, 0.016) * 0.12, -30, 30), 0.08);",
           "v.aim = q.property('lila:aim');",
-          "v.gspin = v.gspin + math.min(q.delta_time, 0.1) * ((q.property('lila:action') == 'shoot') ? 2400 : 90);",
+          "v.gsv = math.lerp(v.gsv, (q.property('lila:action') == 'shoot') ? 2400 : 40, math.min(1, q.delta_time * 3)); v.gspin = v.gspin + math.min(q.delta_time, 0.1) * v.gsv;",
           "v.gear = math.lerp(v.gear, q.is_on_ground ? 1 : 0, 0.06);",
           "v.cwd = v.cwd + q.ground_speed * math.min(q.delta_time, 0.1) / 3.4; v.cws = math.lerp(v.cws, math.min(1, q.ground_speed / 2.5), 0.12);",
           "v.dtilt = math.lerp(v.dtilt, math.clamp(q.ground_speed * 2.4, 0, 24), 0.08);",

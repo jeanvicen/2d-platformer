@@ -20,7 +20,8 @@ import { LINES, pick, say } from "./talk.js";
 import { keepLoaded } from "./areas.js";
 import { missions, orbitOwner, remember, scanOwner } from "./drone.js";
 import { turretGoal } from "./forms.js";
-import { megaBuild, biomeTransform, flatten, sweepGround } from "./mega.js";
+import { megaBuild, megaPlan, biomeTransform, flatten, sweepGround } from "./mega.js";
+import { MEGA } from "../lib/catalog.js";
 import { archPlan, facingQuarter, SIZES, STYLES, TYPES, OBJECTS } from "../lib/archgen.js";
 import { deploy, empower, armyActive } from "./army.js";
 import { isCreative, materialize, strengthKit, equipArmor, giveStacks, buff } from "./creative.js";
@@ -368,7 +369,7 @@ export function runGoal(c, g) {
     case "arch": return archBuild(c, a);
     case "vacuum": return sweepGround(c, a.radius ?? 32);
     case "army": return (function* () {
-      yield* deploy(c, a.count ?? c.rec.settings.army ?? 10);
+      yield* deploy(c, a.count ?? c.rec.settings.army ?? 10, a.style ?? c.rec.settings.armyStyle ?? "misto");
     })();
     case "kit": return (function* () {
       const o = c.owner();
@@ -593,8 +594,8 @@ export function archName(a) {
   return `${t?.name ?? a.kind}${TYPES.some((x) => x.key === a.kind) ? ` ${sz.name.toLowerCase()}` : ""} (${st.name})`;
 }
 
-/** Catálogo 2.2: gera a planta (virada para você) e constrói à mão como as megaconstruções. */
-function* archBuild(c, a) {
+/** Planta de uma obra do catálogo, virada para o dono (usada pelo DR-0N e pelo exército). */
+export function archJob(c, a) {
   const o = c.owner();
   let q = 0;
   try {
@@ -606,5 +607,17 @@ function* archBuild(c, a) {
   const style = a.style ?? STYLES[Math.floor(Math.random() * STYLES.length)].key;
   const size = a.size ?? "medio";
   const plan = archPlan(a.kind, style, size, q, Math.floor(Math.random() * 1000));
-  return yield* megaBuild(c, "arch", { plan, label: archName({ ...a, style, size }), here: a.here });
+  return { plan, label: archName({ ...a, style, size }), here: a.here };
+}
+
+/** Planta de uma megaconstrução (ou undefined se o nome não existe). */
+export function megaJob(key, here) {
+  const plan = megaPlan(key);
+  return plan && { plan, label: MEGA[key]?.name ?? plan.name, here };
+}
+
+/** Catálogo 2.2: gera a planta (virada para você) e constrói à mão como as megaconstruções. */
+function* archBuild(c, a) {
+  const j = archJob(c, a);
+  return yield* megaBuild(c, "arch", { plan: j.plan, label: j.label, here: a.here });
 }

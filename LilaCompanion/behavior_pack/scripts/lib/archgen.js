@@ -11,7 +11,17 @@
 //   ["f", x0,y0,z0, x1,y1,z1, bloco, estados?]   ["s", x,y,z, bloco, estados?, par?]
 //   ["e", x,y,z, entidade]                      ["c", x,y,z, [[item, qtd], ...]]
 // "par" = segundo bloco colocado junto (metade de cima da porta, cabeceira da cama): [dx,dy,dz, estados].
-import { rng } from "./megaplans.js";
+/** Gerador pseudoaleatório determinístico (cópia local para não depender de megaplans.js). */
+export function rng(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
 
 const M = (s) => `minecraft:${s}`;
 
@@ -537,7 +547,7 @@ function layout(hw, hd, n) {
  * @param {Plan} p
  * @param {any} st estilo
  * @param {{w:number,d:number,floors:number,program:string[][],goods?:string,hall?:string,openFront?:boolean,glassRoof?:boolean,roof?:string,
- *   storey?:number,glassWalls?:boolean,bigWindows?:boolean,doorX?:number}} o
+ *   storey?:number,glassWalls?:boolean,bigWindows?:boolean,doorX?:number,bare?:boolean,cycle?:boolean}} o
  */
 function building(p, st, o, R) {
   const hw = Math.floor(o.w / 2), hd = Math.floor(o.d / 2);
@@ -560,7 +570,7 @@ function building(p, st, o, R) {
     for (const [x, z] of [[-hw, -hd], [hw, -hd], [-hw, hd], [hw, hd]]) p.f(x, y + 1, z, x, yT, z, st.pillar, pillarSt(st.pillar));
     if (f > 0) p.walls(-hw, y, -hd, hw, y, hd, st.trim);
     // cômodos do andar
-    const plan = o.program[Math.min(f, o.program.length - 1)];
+    const plan = o.cycle && o.program.length > 1 ? o.program[f === 0 ? 0 : 1 + ((f - 1) % (o.program.length - 1))] : o.program[Math.min(f, o.program.length - 1)];
     const L = layout(hw, hd, plan.length);
     for (const [xa, za, xb, zb] of L.walls) p.f(xa, y + 1, za, xb, yT - 1, zb, st.wall === M("glass") ? M("white_concrete") : interiorWall(st));
     const reserved = new Set();
@@ -612,6 +622,7 @@ function building(p, st, o, R) {
   roof(p, st, hw, hd, top, roofKind, o);
   // entrada: caminho, luzes, degrau
   const dx = o.doorX ?? 0;
+  if (o.bare) return { hw, hd, top, doorX: dx };
   for (let z = -hd - 1; z >= -p.half; z--) p.s(dx, 0, z, st.path);
   if (p.half >= hd + 2) {
     const lamp = st.light === M("soul_lantern") ? M("soul_lantern") : M("lantern");
@@ -1281,7 +1292,7 @@ const hash = (s) => {
  * @param {string} kind chave do tipo (TYPES) ou do objeto (OBJECTS)
  * @param {string} styleKey  @param {string} sizeKey  @param {number} q quartos de volta (porta para você)
  */
-export function archPlan(kind, styleKey = "medieval", sizeKey = "medio", q = 0, seed = 0) {
+export function archPlan(kind, styleKey = "medieval", sizeKey = "medio", q = 0, seed = 0, opts = {}) {
   const st = STYLES.find((s) => s.key === styleKey) ?? STYLES[0];
   const size = SIZES.find((s) => s.key === sizeKey) ?? SIZES[1];
   const k = size.k;
@@ -1293,10 +1304,11 @@ export function archPlan(kind, styleKey = "medieval", sizeKey = "medio", q = 0, 
   else if (t) {
     if (t.tree) tree(p, st, t, k, R);
     else if (t.w && !t.kiosk && !t.gazebo && !t.pool && !t.dock && !t.playground) {
-      const hw = Math.floor(t.w[k] / 2), hd = Math.floor(t.d[k] / 2);
-      p.half = Math.max(hw, hd) + (t.garden ? 5 : 4);
-      const info = building(p, st, { ...t, w: t.w[k], d: t.d[k], floors: t.floors[k] }, R);
-      extras(p, t, st, info, k, R);
+      const w = opts.w ?? t.w[k], d = opts.d ?? t.d[k];
+      const hw = Math.floor(w / 2), hd = Math.floor(d / 2);
+      p.half = Math.max(hw, hd) + (t.garden && !opts.bare ? 5 : 4);
+      const info = building(p, st, { ...t, ...opts, w, d, floors: opts.floors ?? t.floors[k], program: opts.program ?? t.program }, R);
+      extras(p, opts.bare ? { ...t, garden: false, fields: false, canopy: false, rails: false } : t, st, info, k, R);
     } else special(p, t, st, k, R);
   } else throw new Error(`construção desconhecida: ${kind}`);
   return rotatePlan(p, q);

@@ -1,0 +1,73 @@
+{
+  "format_version": "1.10.0",
+  "particle_effect": {
+    "description": {
+      "identifier": "lila:nano_board",
+      "basic_render_parameters": {
+        "material": "particles_blend",
+        "texture": "textures/particle/lila/nano"
+      }
+    },
+    "components": {
+      "minecraft:emitter_rate_instant": {
+        "num_particles": 48
+      },
+      "minecraft:emitter_lifetime_once": {
+        "active_time": 0.05
+      },
+      "minecraft:emitter_shape_point": {
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "minecraft:particle_lifetime_expression": {
+        "max_lifetime": "math.random(0.11900000000000001, 0.14)"
+      },
+      "minecraft:particle_initial_spin": {
+        "rotation": "math.random(0, 360)",
+        "rotation_rate": "math.random(-180, 180)"
+      },
+      "minecraft:particle_appearance_billboard": {
+        "size": [
+          "0.07",
+          "0.07"
+        ],
+        "facing_camera_mode": "rotate_xyz",
+        "uv": {
+          "texture_width": 16,
+          "texture_height": 16,
+          "uv": [
+            0,
+            0
+          ],
+          "uv_size": [
+            16,
+            16
+          ]
+        }
+      },
+      "minecraft:particle_appearance_tinting": {
+        "color": {
+          "interpolant": "v.particle_age / v.particle_lifetime",
+          "gradient": {
+            "0.0": "#FFC8F8FF",
+            "0.5": "#FF4C6878",
+            "1.0": "#C0283038"
+          }
+        }
+      },
+      "minecraft:particle_motion_parametric": {
+        "relative_position": [
+          "((((v.particle_random_2 - 0.5) * 0.75) * v.size) * -math.cos(v.yaw) + ((-((v.particle_random_1 - 0.5) * 1.9) * (1 - (v.particle_random_4 > 0.85 ? 1 : 0)) + (v.particle_random_4 > 0.85 ? 1 : 0) * 1.05) * v.size) * math.sin(v.yaw))",
+          "((v.particle_random_3 * 0.08 - (v.particle_random_4 > 0.85 ? 1 : 0) * v.particle_random_3 * 0.3))",
+          "((((v.particle_random_2 - 0.5) * 0.75) * v.size) * -math.sin(v.yaw) - ((-((v.particle_random_1 - 0.5) * 1.9) * (1 - (v.particle_random_4 > 0.85 ? 1 : 0)) + (v.particle_random_4 > 0.85 ? 1 : 0) * 1.05) * v.size) * math.cos(v.yaw))"
+        ]
+      },
+      "minecraft:emitter_initialization": {
+        "creation_expression": "v.yaw = v.yaw ?? 0; v.flap = v.flap ?? 0; v.size = v.size ?? 1;"
+      }
+    }
+  }
+}

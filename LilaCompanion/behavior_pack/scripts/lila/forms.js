@@ -99,11 +99,43 @@ function burst(dim, at, kind = "lila:sparkle", n = 6, r = 1.5) {
  * Troca de forma com efeito (partículas, som, giro). O dono entra sozinho nos veículos.
  * @param {Companion} c
  * @param {string} form
- * @param {{mount?:boolean, quiet?:boolean}} o
+ * @param {{mount?:boolean, quiet?:boolean, now?:boolean}} o
  */
 export function setForm(c, form, o = {}) {
   const e = c.entity;
   if (!e?.isValid || !FORM_LIST.includes(form)) return false;
+  const prev = formOf(c);
+  // transformação com "carga": o robô abre as peças, o núcleo acende e os nanorrobôs espiralam pra
+  // dentro (0,6 s); aí a forma nova monta (animação "intro" no pacote de recursos)
+  if (!o.quiet && !o.now && prev === "drone" && form !== "drone" && !c.rec.off) {
+    if (c.flags.transforming) return true;
+    c.flags.transforming = form;
+    setAction(e, "charge");
+    sound(e, "lila.servo", 0.8, 1.4);
+    sound(e, "beacon.power", 0.6, 1.6);
+    for (let k = 0; k < 6; k++) {
+      system.runTimeout(() => {
+        if (!c.alive()) return;
+        const p = c.pos();
+        const r = 3.2 - k * 0.5;
+        for (let i = 0; i < 6; i++) {
+          const a = (i / 6) * Math.PI * 2 + k * 0.7;
+          particle(c.dim(), "lila:nano_point", { x: p.x + Math.cos(a) * r, y: p.y + 0.6 + k * 0.3, z: p.z + Math.sin(a) * r });
+        }
+      }, k * 2);
+    }
+    system.runTimeout(() => {
+      c.flags.transforming = undefined;
+      if (c.alive()) applyForm(c, form, o);
+    }, 12);
+    return true;
+  }
+  return applyForm(c, form, o);
+}
+
+function applyForm(c, form, o = {}) {
+  const e = c.entity;
+  if (!e?.isValid) return false;
   const prev = formOf(c);
   const inside = riders(c);
   releaseRiders(c);
@@ -138,6 +170,8 @@ export function setForm(c, form, o = {}) {
     sound(e, "random.anvil_use", 0.35, 1.4);
     burst(dim, at, "lila:sparkle", 10, form === "colossus" ? 4 : 1.6);
     burst(dim, at, "lila:smoke", 6, form === "colossus" ? 5 : 1.4);
+    particle(dim, "lila:shock", { x: at.x, y: at.y + 0.2, z: at.z }); // onda de luz no chão
+    sound(e, "random.orb", 0.5, 0.8);
     if (form === "colossus") {
       shake(dim, at, 0.6, 2.4, 60);
       system.runTimeout(() => {
@@ -151,7 +185,6 @@ export function setForm(c, form, o = {}) {
   }
   // dono (e quem estava junto) entra na forma nova
   const owner = c.owner();
-  if (form === "swarm") c.flags.swarmShield = true;
   if (o.mount !== false && isRideForm(form) && owner) {
     system.runTimeout(() => {
       if (!c.alive()) return;
@@ -164,7 +197,7 @@ export function setForm(c, form, o = {}) {
       drone: "De volta à forma normal. Pronto pra próxima!",
       colossus: "ROBÔ GIGANTE TITÃ! Você está em cima da cabeça: andar = mover · bater perto = soco · mirar longe e bater = raio do visor · pular = salto com pisão · agachar = sair.",
       turret: "Torreta gigante armada e cravada no chão. Ninguém passa!",
-      swarm: "ENXAME! Virei milhares de nanorrobôs. Escudo em volta de você ligado. Me peça: muralha, ponte, escada, cúpula, punho, espada, tornado, asas, ataca, devora tudo.",
+      swarm: "ENXAME! Virei uma névoa de nanorrobôs em volta de você. Modo inteligente: de mão vazia, bata num bloco e eu viro a ferramenta certa (machado derruba a árvore toda), bata num bicho e viro espada, e te seguro nas quedas. Use o Núcleo do enxame (na sua barra) para trocar: escudo, asas, prancha, mãos gigantes, devorador. Peça também: martelo, ponte, muralha, cúpula, tornado.",
       sub: "Submarino! Olhe pra baixo e acelere pra mergulhar. Bater = torpedo. Você respira e enxerga debaixo d'água. Agachar = sair.",
       boat: "Lancha! Na água ela voa. Pular = salto nas ondas, bater = turbo. Agachar = sair.",
       ufo: "Disco voador! Bater = raio desintegrador · olhando pra baixo = raio trator (abduz quem estiver embaixo). Agachar = sair.",
@@ -284,15 +317,18 @@ export function formTick(c) {
   const owner = c.owner();
   const rs = riders(c);
   const piloting = !!owner && rs.some((r) => r.id === owner.id);
-  if (owner && !c.flags.permFixed) {
-    setPerm(owner, true); // mundos da 2.1 podiam ter ficado com "descer" bloqueado
-    c.flags.permFixed = true;
-  }
   if (f === "sub" && system.currentTick % 40 === 0) subPerks(rs);
   if (piloting && owner) {
     c.flags.hadDriver = true;
+    if (!c.flags.piloting) onEnter(c, owner, f);
     c.flags.piloting = true;
-    // agachar = sair (o jogo já faz; isto garante em qualquer versão/controle)
+    if (!c.flags.permOff) {
+      // o botão "descer" do jogo (no celular ele fica no lugar do pulo) não tira você: só AGACHAR tira
+      setPerm(owner, false);
+      c.flags.permOff = true;
+    }
+    if (system.currentTick % 10 === 0) weaponHud(c, owner, f);
+    // agachar = sair
     let sneaking = false;
     try {
       sneaking = owner.isSneaking;
@@ -302,11 +338,7 @@ export function formTick(c) {
     c.flags.sneakT = sneaking ? (c.flags.sneakT ?? 0) + 1 : 0;
     if (c.flags.sneakT >= 2) {
       c.flags.sneakT = 0;
-      try {
-        e.getComponent("minecraft:rideable")?.ejectRider(owner);
-      } catch {
-        /* ignore */
-      }
+      exitVehicle(c, owner);
       c.flags.piloting = false;
       onExit(c, owner, f);
       if (f === "colossus") {
@@ -341,10 +373,42 @@ export function formTick(c) {
   return true;
 }
 
+/** Entrou para pilotar: no TITÃ a câmera vai para trás de você (dá pra ver o robô e o chão). */
+function onEnter(c, owner, f) {
+  if (f === "colossus" && c.rec.settings.titanCam !== false) {
+    try {
+      owner.camera.setCamera("minecraft:third_person");
+      c.flags.camSet = true;
+    } catch {
+      /* versão sem câmera por script */
+    }
+  }
+  weaponHud(c, owner, f);
+}
+
+/** Sair (agachar): libera o "descer", devolve a câmera e tira você do assento. */
+export function exitVehicle(c, player) {
+  setPerm(player, true);
+  try {
+    c.entity?.getComponent("minecraft:rideable")?.ejectRider(player);
+  } catch {
+    /* ignore */
+  }
+}
+
 /** Saiu do veículo (agachou): do alto, cai devagar em vez de se esborrachar. */
 function onExit(c, owner, f) {
   c.flags.spd = 0;
   c.flags.fv = undefined;
+  releaseRiders(c);
+  if (c.flags.camSet && owner?.isValid) {
+    try {
+      owner.camera.clear();
+    } catch {
+      /* ignore */
+    }
+    c.flags.camSet = false;
+  }
   if (!owner?.isValid) return;
   let high = f === "colossus";
   try {
@@ -566,7 +630,7 @@ function groundDrive(c, e, spec, f, mv, jump, jumpEdge, look, v) {
   if (lp) {
     const moved = Math.hypot(p.x - lp.x, p.z - lp.z);
     c.flags.stuckT = Math.abs(spd) > 0.2 && moved < Math.abs(spd) * 0.3 ? (c.flags.stuckT ?? 0) + 1 : 0;
-    if (c.flags.stuckT > 3) spd *= 0.6;
+    if (c.flags.stuckT > 3 && f !== "colossus") spd *= 0.6;
   }
   c.flags.lastPos = { x: p.x, z: p.z };
   c.flags.spd = spd;
@@ -612,7 +676,48 @@ function crush(c, hs) {
 }
 
 // ------------------------------------------------------------------ armas (botão de ataque)
-/** Botão de ataque do piloto. */
+/** Poderes de cada forma: o SLOT da barra de itens escolhe (1, 2, 3...), o botão de ataque usa. */
+export const WEAPONS = {
+  colossus: [["Soco", "punch"], ["Raio do visor", "beam"], ["Salto com pisão", "jump"], ["Onda de choque", "stomp"], ["Pose de poder", "roar"]],
+  heli: [["Metralhadora", "gun"], ["Mísseis", "missiles"]],
+  jet: [["Mísseis", "missiles"], ["Metralhadora", "gun"]],
+  stealth: [["Mísseis", "missiles"], ["Metralhadora", "gun"]],
+  tank: [["Canhão", "cannon"], ["Metralhadora", "gun"]],
+  excavator: [["Cavar", "dig"], ["Escavar grande", "bigdig"]],
+  ship: [["Lasers", "laser"], ["Mísseis", "missiles"]],
+  ufo: [["Desintegrador", "ufo"], ["Raio trator", "tractor"]],
+  sub: [["Torpedo", "torpedo"]],
+  car: [["Turbo", "nitro"], ["Buzina", "horn"]],
+  moto: [["Turbo", "nitro"], ["Buzina", "horn"]],
+  truck: [["Turbo", "nitro"], ["Buzina", "horn"]],
+  boat: [["Turbo", "nitro"], ["Buzina", "horn"]],
+};
+
+function weaponOf(f, owner) {
+  const list = WEAPONS[f] ?? [];
+  let slot = 0;
+  try {
+    slot = owner?.selectedSlotIndex ?? 0;
+  } catch {
+    /* ignore */
+  }
+  return list[slot] ?? list[0];
+}
+
+/** Mostra na tela os poderes da forma (o escolhido em amarelo). */
+function weaponHud(c, owner, f) {
+  const list = WEAPONS[f];
+  if (!list || !owner?.onScreenDisplay) return;
+  const cur = weaponOf(f, owner);
+  const txt = list.map(([n], i) => `${list[i] === cur ? "§e§l" : "§7"}${i + 1} ${n}§r`).join(" §8·§r ");
+  try {
+    owner.onScreenDisplay.setActionBar(`${txt} §8| §fslot escolhe · bater usa · agachar sai`);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Botão de ataque do piloto: usa o poder do slot escolhido. */
 export function primaryAttack(c, owner) {
   const f = formOf(c);
   const now = system.currentTick;
@@ -621,25 +726,35 @@ export function primaryAttack(c, owner) {
     c.flags[k] = now + t;
     return true;
   };
-  if (f === "colossus") {
-    // mirando longe = raio do visor; perto = soco
-    const far = d3(aimPoint(c, owner, 120), c.pos()) > 18;
-    if (far && now >= (c.flags.cdBeam ?? 0)) {
+  const w = weaponOf(f, owner);
+  if (!w) return false;
+  if (owner?.onScreenDisplay) weaponHud(c, owner, f);
+  switch (w[1]) {
+    case "punch": return cd("cdPunch", 16) && punch(c, owner);
+    case "beam":
+      if (now < (c.flags.cdBeam ?? 0)) return false;
       beam(c, owner);
       return true;
-    }
-    if (cd("cdPunch", 16)) return punch(c, owner);
-    return false;
+    case "jump": colossusJump(c); return true;
+    case "stomp": return cd("cdStompBtn", 30) && (stomp(c), true);
+    case "roar": roar(c); return true;
+    case "cannon": return cd("cdShell", 28) && cannon(c, owner);
+    case "missiles": return cd("cdMissile", f === "stealth" ? 12 : 18) && missiles(c, owner);
+    case "gun": return cd("cdGun", 3) && heliGun(c, owner);
+    case "dig": return cd("cdDig", 14) && dig(c, owner);
+    case "bigdig": return cd("cdDig", 24) && dig(c, owner, 3.2, 14);
+    case "laser": return cd("cdLaser", 5) && shipLaser(c, owner);
+    case "ufo": return cd("cdUfo", 10) && ufoAttack(c, owner);
+    case "tractor": return cd("cdUfo", 30) && tractor(c);
+    case "torpedo": return cd("cdTorpedo", 24) && torpedo(c, owner);
+    case "nitro": return cd("cdNitro", 70) && nitro(c);
+    case "horn":
+      if (!cd("cdHorn", 20)) return false;
+      sound(c.entity, "note.bass", 1, 0.6);
+      sound(c.entity, "note.bass", 1, 0.8);
+      return true;
+    default: return false;
   }
-  if (f === "tank" && cd("cdShell", 28)) return cannon(c, owner);
-  if ((f === "jet" || f === "stealth") && cd("cdMissile", f === "stealth" ? 12 : 18)) return missiles(c, owner);
-  if (f === "heli" && cd("cdGun", 3)) return heliGun(c, owner);
-  if (f === "excavator" && cd("cdDig", 14)) return dig(c, owner);
-  if (f === "ship" && cd("cdLaser", 5)) return shipLaser(c, owner);
-  if (f === "ufo" && cd("cdUfo", 10)) return ufoAttack(c, owner);
-  if (f === "sub" && cd("cdTorpedo", 24)) return torpedo(c, owner);
-  if ((f === "car" || f === "moto" || f === "truck" || f === "boat") && cd("cdNitro", 70)) return nitro(c);
-  return false;
 }
 
 /** Botão de pular (o tick de pilotagem já trata; isto é para o painel e o autoteste). */
@@ -867,14 +982,14 @@ function heliGun(c, owner) {
   return true;
 }
 
-function dig(c, owner) {
+function dig(c, owner, r = 1.6, reach = 9) {
   const dim = c.dim();
-  const at = aimPoint(c, owner, 9);
-  if (d3(at, c.pos()) > 9.5) return false;
+  const at = aimPoint(c, owner, reach);
+  if (d3(at, c.pos()) > reach + 0.5) return false;
   setAction(c.entity, "work");
   system.runTimeout(() => getAction(c.entity) === "work" && setAction(c.entity, "idle"), 24);
   system.runTimeout(() => {
-    smash(dim, at, 1.6, true);
+    smash(dim, at, r, true);
     particle(dim, "lila:dust", at);
     sound(c.entity, "dig.gravel", 1, 0.6);
     sound(c.entity, "lila.servo", 0.7, 0.8);
@@ -907,42 +1022,81 @@ function colossusTick(c, hs) {
   }
 }
 
-/** Anda derrubando o que estiver na frente (árvores, paredes) e sobe morros. */
+/**
+ * TITÃ andando (2.2.1): sobe morros de até 9 blocos subindo suave, e o que estiver na frente na
+ * altura do corpo (árvores, paredes, prédios) ele derruba numa faixa da LARGURA DO CORPO (o corpo tem
+ * ~9 blocos de largura; antes a faixa era de 6 e os ombros enroscavam). Se mesmo assim travar, abre
+ * caminho à força e dá um passo.
+ */
 function colossusStep(c, fwd, sign) {
   const e = c.entity;
-  if (!e || system.currentTick % 4 !== 0) return;
+  if (!e || system.currentTick % 2 !== 0) return;
   const dim = e.dimension;
   const p = e.location;
-  const ax = p.x + fwd.x * 4.5 * sign, az = p.z + fwd.z * 4.5 * sign;
-  // degrau de até 6 blocos: sobe
-  for (let up = 1; up <= 6; up++) {
-    const b = blockAt(dim, Math.floor(ax), Math.floor(p.y) + up - 1, Math.floor(az));
-    const free = blockAt(dim, Math.floor(ax), Math.floor(p.y) + up, Math.floor(az));
-    if (!b || b.isAir || b.isLiquid) break;
-    if (free && free.isAir && up >= 2) {
-      try {
-        e.teleport({ x: p.x + fwd.x * 0.6 * sign, y: Math.floor(p.y) + up, z: p.z + fwd.z * 0.6 * sign }, { keepVelocity: false });
-      } catch {
-        /* ignore */
-      }
-      return;
+  const y0 = Math.floor(p.y);
+  const left = { x: -fwd.z, z: fwd.x };
+  const ahead = (d, s) => ({ x: p.x + fwd.x * d * sign + left.x * s, z: p.z + fwd.z * d * sign + left.z * s });
+  const solid = (x, y, z) => {
+    const b = blockAt(dim, Math.floor(x), y, Math.floor(z));
+    return !!b && !b.isAir && !b.isLiquid && !SOFT.includes(b.typeId);
+  };
+  // 1) degrau/morro: altura do chão na frente (5 amostras na largura do corpo)
+  let climb = 0, wall = false;
+  for (const sx of [-3.5, -1.75, 0, 1.75, 3.5]) {
+    const q = ahead(5, sx);
+    let h = 0;
+    while (h <= 10 && solid(q.x, y0 + h, q.z)) h++;
+    if (h > 9) wall = true;
+    else climb = Math.max(climb, h);
+  }
+  if (climb >= 1 && !wall) {
+    try {
+      e.teleport({ x: p.x + fwd.x * 0.35 * sign, y: Math.min(p.y + climb, p.y + 1.25), z: p.z + fwd.z * 0.35 * sign }, { keepVelocity: false });
+    } catch {
+      /* ignore */
     }
   }
-  // o que tiver na altura do corpo, ele atravessa derrubando
+  // 2) o que estiver na altura do corpo, numa faixa da largura dele, ele derruba
+  const base = y0 + (wall ? 0 : climb) + 1;
+  let blocked = false;
+  for (const sx of [-4, -2, 0, 2, 4]) for (const dy of [0, 3, 8, 14, 20]) {
+    const q = ahead(4.8, sx);
+    if (solid(q.x, base + dy, q.z)) {
+      blocked = true;
+      break;
+    }
+  }
+  if (blocked || (c.flags.stuckT ?? 0) > 4) colossusClear(c, fwd, sign, base);
+}
+
+/** Abre a passagem na frente do TITÃ (largura do corpo, até a cabeça). */
+function colossusClear(c, fwd, sign, base) {
+  const e = c.entity;
+  const dim = e.dimension;
+  const p = e.location;
+  const left = { x: -fwd.z, z: fwd.x };
+  const pts = [];
+  for (const d of [3.5, 6.5]) for (const s of [-5, 5]) pts.push({ x: p.x + fwd.x * d * sign + left.x * s, z: p.z + fwd.z * d * sign + left.z * s });
+  const lo = { x: Math.floor(Math.min(...pts.map((q) => q.x))), y: base, z: Math.floor(Math.min(...pts.map((q) => q.z))) };
+  const hi = { x: Math.floor(Math.max(...pts.map((q) => q.x))), y: Math.min(dim.heightRange.max - 1, Math.floor(p.y) + 26), z: Math.floor(Math.max(...pts.map((q) => q.z))) };
   try {
-    const left = { x: -fwd.z, z: fwd.x };
-    const x0 = ax - left.x * 3, z0 = az - left.z * 3, x1 = ax + left.x * 3, z1 = az + left.z * 3;
-    const vol = new BlockVolume({ x: Math.floor(Math.min(x0, x1)), y: Math.floor(p.y) + 1, z: Math.floor(Math.min(z0, z1)) },
-      { x: Math.floor(Math.max(x0, x1)), y: Math.floor(p.y) + 22, z: Math.floor(Math.max(z0, z1)) });
-    if (c.rec.settings.destroy !== false) {
-      const before = dim.getBlock({ x: Math.floor(ax), y: Math.floor(p.y) + 2, z: Math.floor(az) });
-      if (before && !before.isAir) {
-        dim.fillBlocks(vol, "minecraft:air", { blockFilter: { excludeTypes: NEVER_BREAK } });
-        particle(dim, "lila:dust", { x: ax, y: p.y + 3, z: az });
-        sound(e, "random.break", 1, 0.5);
-      }
-    } else {
-      dim.fillBlocks(vol, "minecraft:air", { blockFilter: { includeTypes: SOFT } });
+    for (let y = lo.y; y <= hi.y; y += 8) {
+      const vol = new BlockVolume({ x: lo.x, y, z: lo.z }, { x: hi.x, y: Math.min(hi.y, y + 7), z: hi.z });
+      if (c.rec.settings.destroy !== false) dim.fillBlocks(vol, "minecraft:air", { blockFilter: { excludeTypes: NEVER_BREAK } });
+      else dim.fillBlocks(vol, "minecraft:air", { blockFilter: { includeTypes: SOFT } });
+    }
+    if (system.currentTick - (c.flags.lastCrash ?? 0) > 8) {
+      c.flags.lastCrash = system.currentTick;
+      const mid = { x: p.x + fwd.x * 5 * sign, y: base + 4, z: p.z + fwd.z * 5 * sign };
+      particle(dim, "lila:dust", mid);
+      particle(dim, "lila:smoke", { x: mid.x, y: mid.y + 6, z: mid.z });
+      sound(e, "random.break", 1, 0.5);
+      sound(e, "dig.stone", 1, 0.6);
+    }
+    if ((c.flags.stuckT ?? 0) > 6) {
+      // ainda preso: dá um passo à força
+      e.teleport({ x: p.x + fwd.x * 0.8 * sign, y: p.y + 0.2, z: p.z + fwd.z * 0.8 * sign }, { keepVelocity: false });
+      c.flags.stuckT = 0;
     }
   } catch {
     /* ignore */
@@ -1168,9 +1322,19 @@ export function* turretGoal(c) {
   const anchor = { ...e.location };
   const baseYaw = e.getRotation().y;
   let lastShot = 0, lastMissile = 0;
+  sound(e, "lila.servo", 1, 0.6);
+  system.runTimeout(() => c.alive() && sound(c.entity, "random.anvil_land", 0.6, 0.7), 12); // pernas cravando no chão
+  system.runTimeout(() => c.alive() && sound(c.entity, "lila.servo", 1, 1.2), 22);
   while (c.alive() && c.rec.mode === "turret" && formOf(c) === "turret") {
     const p = c.pos();
-    if (Math.abs(p.x - anchor.x) > 0.4 || Math.abs(p.z - anchor.z) > 0.4) {
+    // cravada no chão: zera qualquer empurrão; só volta ao lugar se alguém a deslocar de verdade
+    try {
+      const v = c.entity.getVelocity();
+      if (Math.abs(v.x) + Math.abs(v.z) > 0.001) c.entity.applyImpulse({ x: -v.x, y: 0, z: -v.z });
+    } catch {
+      /* ignore */
+    }
+    if (Math.abs(p.x - anchor.x) > 1 || Math.abs(p.z - anchor.z) > 1) {
       try {
         c.entity?.teleport(anchor, { keepVelocity: false, rotation: { x: 0, y: baseYaw } });
       } catch {
@@ -1219,6 +1383,7 @@ export function* turretGoal(c) {
         }, 8);
       }
     } else {
+      if (lastShot && system.currentTick - lastShot === 20) sound(c.entity, "lila.servo", 0.6, 0.7); // canos desacelerando
       if (getAction(c.entity) !== "idle") setAction(c.entity, "idle");
       if (system.currentTick % 50 === 0) {
         try {
@@ -1230,7 +1395,6 @@ export function* turretGoal(c) {
         }
       }
     }
-    hover(c);
     yield 1;
   }
   setAction(c.entity, "idle");
@@ -1252,7 +1416,7 @@ function turretTarget(c) {
   // inimigos marcados (inclusive jogadores que bateram em você ou nele) primeiro
   for (const id of c.flags.aggro?.keys() ?? []) {
     try {
-      const t = dim.getEntities({ location: p, maxDistance: 56 }).find((x) => x.id === id);
+      const t = dim.getEntities({ location: p, maxDistance: 64 }).find((x) => x.id === id);
       if (t?.isValid) {
         const d = d3(t.location, p);
         if (d < bd) {
@@ -1269,7 +1433,7 @@ function turretTarget(c) {
   const centers = [p, ...(o ? [o.location] : [])];
   for (const ce of centers) {
     try {
-      for (const t of dim.getEntities({ location: ce, maxDistance: 44, families: ["monster"] })) {
+      for (const t of dim.getEntities({ location: ce, maxDistance: 60, families: ["monster"] })) {
         if (!canAttack(c, t) || !isHostile(t)) continue;
         const d = d3(t.location, p);
         if (d < bd) {

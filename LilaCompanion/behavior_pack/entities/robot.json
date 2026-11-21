@@ -14,9 +14,21 @@
             "punch",
             "give",
             "fly",
-            "spawn"
+            "spawn",
+            "build",
+            "slash",
+            "heal"
           ],
           "default": "idle",
+          "client_sync": true
+        },
+        "lila:kind": {
+          "type": "int",
+          "range": [
+            0,
+            4
+          ],
+          "default": 0,
           "client_sync": true
         }
       }

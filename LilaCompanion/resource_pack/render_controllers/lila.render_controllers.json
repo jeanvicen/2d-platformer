@@ -83,6 +83,48 @@
         "a": "0.25"
       }
     },
+    "controller.render.lila.robot": {
+      "arrays": {
+        "textures": {
+          "Array.kind": [
+            "Texture.default",
+            "Texture.construtor",
+            "Texture.artilheiro",
+            "Texture.medico",
+            "Texture.ninja"
+          ]
+        }
+      },
+      "geometry": "Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "Array.kind[q.property('lila:kind')]"
+      ],
+      "part_visibility": [
+        {
+          "hat": "q.property('lila:kind') == 1"
+        },
+        {
+          "cannon": "q.property('lila:kind') == 2"
+        },
+        {
+          "medkit": "q.property('lila:kind') == 3"
+        },
+        {
+          "katana": "q.property('lila:kind') == 4"
+        }
+      ],
+      "is_hurt_color": {
+        "r": "0.85",
+        "g": "0.25",
+        "b": "0.25",
+        "a": "0.35"
+      }
+    },
     "controller.render.lila.item": {
       "geometry": "Geometry.default",
       "materials": [

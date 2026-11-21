@@ -8,6 +8,19 @@
 //   ["e", x,y,z, entidade]                      cria uma entidade (ex.: carrinho na montanha-russa)
 //   ["c", x,y,z, [[item, qtd], ...]]             baú com tesouro
 
+import { archPlan, facingQuarter } from "./archgen.js";
+
+/** Carimba uma planta (ex.: prédio mobiliado do catálogo) dentro de outra, deslocada. */
+function stamp(parent, child, dx, dz, dy = 0) {
+  for (const op of child.ops) {
+    if (op[0] === "f") parent.ops.push(["f", op[1] + dx, op[2] + dy, op[3] + dz, op[4] + dx, op[5] + dy, op[6] + dz, op[7], op[8]]);
+    else if (op[0] === "s") parent.ops.push(op[6] ? ["s", op[1] + dx, op[2] + dy, op[3] + dz, op[4], op[5], op[6]] : ["s", op[1] + dx, op[2] + dy, op[3] + dz, op[4], op[5]]);
+    else parent.ops.push([op[0], op[1] + dx, op[2] + dy, op[3] + dz, op[4]]);
+  }
+  parent.height = Math.max(parent.height, (child.height ?? 10) + dy + 2);
+  return parent;
+}
+
 export function rng(seed) {
   let a = seed >>> 0;
   return () => {
@@ -179,32 +192,15 @@ export function castelo(seed = 3) {
   p.crenel(-3, -H - 1, 3, -H + 1, 10, "minecraft:stone_bricks");
   // caminho até a torre de menagem
   p.f(-1, 0, -H + 1, 1, 0, 2, "minecraft:gravel");
-  // torre de menagem (3 andares + torreão)
-  const kx = 9, kz0 = 3, kz1 = 17;
-  p.f(-kx, 1, kz0, kx, 22, kz1, "minecraft:stone_bricks");
-  p.f(-kx + 1, 1, kz0 + 1, kx - 1, 21, kz1 - 1, "minecraft:air");
-  for (const y of [1, 8, 15]) p.f(-kx + 1, y - 1, kz0 + 1, kx - 1, y - 1, kz1 - 1, "minecraft:spruce_planks");
-  p.f(-kx + 1, 21, kz0 + 1, kx - 1, 21, kz1 - 1, "minecraft:stone_bricks");
-  for (const y of [3, 10, 17]) {
-    for (let x = -kx + 2; x <= kx - 2; x += 3) {
-      p.f(x, y, kz0, x, y + 2, kz0, "minecraft:glass_pane").f(x, y, kz1, x, y + 2, kz1, "minecraft:glass_pane");
-    }
-    for (let z = kz0 + 2; z <= kz1 - 2; z += 3) p.f(-kx, y, z, -kx, y + 2, z, "minecraft:glass_pane").f(kx, y, z, kx, y + 2, z, "minecraft:glass_pane");
-    p.s(0, y + 3, kz0 + 7, "minecraft:lantern", { hanging: true });
-  }
-  p.f(-1, 1, kz0, 1, 4, kz0, "minecraft:air");
-  for (let y = 1; y <= 20; y++) p.s(kx - 1, y, kz1 - 1, "minecraft:ladder", { facing_direction: 2 });
-  p.crenel(-kx, kz0, kx, kz0, 23, "minecraft:stone_bricks").crenel(-kx, kz1, kx, kz1, 23, "minecraft:stone_bricks");
-  p.crenel(-kx, kz0, -kx, kz1, 23, "minecraft:stone_bricks").crenel(kx, kz0, kx, kz1, 23, "minecraft:stone_bricks");
-  p.cyl(0, 10, 3, 22, 30, "minecraft:polished_andesite", false);
-  p.cyl(0, 10, 2, 23, 29, "minecraft:air", false);
-  for (let k = 0; k <= 3; k++) p.cyl(0, 10, 3 - k, 31 + k, 31 + k, "minecraft:deepslate_tiles", false);
-  p.s(0, 30, 10, "minecraft:sea_lantern");
+  // torre de menagem mobiliada (sala do trono, quartos, biblioteca, dormitório) + ferreiro e estábulo
+  stamp(p, archPlan("castelinho", "castelo", "grande", 0, seed, { bare: true }), 0, 9);
+  stamp(p, archPlan("ferreiro", "medieval", "pequeno", 1, seed + 1, { bare: true }), -14, -9);
+  stamp(p, archPlan("estabulo", "rustico", "pequeno", 3, seed + 2, { bare: true }), 14, -9);
   // tochas nas muralhas (pátio iluminado)
   for (let i = -H + 4; i <= H - 4; i += 6) {
     p.s(i, 13, -H + 1, "minecraft:lantern").s(i, 13, H - 1, "minecraft:lantern").s(-H + 1, 13, i, "minecraft:lantern").s(H - 1, 13, i, "minecraft:lantern");
   }
-  p.chest(0, 15, 10, LOOT);
+  p.chest(3, 1, -1, LOOT);
   return p;
 }
 
@@ -256,17 +252,16 @@ export function vila(seed = 11) {
   for (const [x0, z0, x1, z1] of [[-24, -24, 24, -23], [-24, 23, 24, 24], [-24, -24, -23, 24], [23, -24, 24, 24]]) p.f(x0, 0, z0, x1, 0, z1, "minecraft:grass_path");
   // poço no meio
   for (const op of poco().ops) p.ops.push(op);
-  const woods = ["oak", "spruce", "birch", "acacia"];
   const spots = [[-12, -12], [12, -12], [-12, 12], [12, 12], [-32, -10], [32, 10], [-10, 32], [10, -32], [-32, 14], [32, -14]];
-  spots.forEach(([x, z], i) => cottage(p, x, z, woods[i % woods.length], R));
-  // igreja com torre do sino
-  p.f(-6, 0, 28, 6, 0, 38, "minecraft:stone_bricks");
-  p.f(-5, 1, 29, 5, 7, 37, "minecraft:white_terracotta").f(-4, 1, 30, 4, 6, 36, "minecraft:air");
-  p.f(-5, 8, 29, 5, 8, 37, "minecraft:dark_oak_planks").f(-4, 9, 30, 4, 9, 36, "minecraft:dark_oak_planks").f(-3, 10, 31, 3, 10, 35, "minecraft:dark_oak_slab");
-  p.f(-1, 1, 29, 1, 3, 29, "minecraft:air");
-  p.f(-2, 1, 35, 2, 14, 39, "minecraft:stone_bricks").f(-1, 9, 35, 1, 12, 39, "minecraft:air");
-  p.s(0, 12, 37, "minecraft:bell").f(-2, 15, 35, 2, 15, 39, "minecraft:dark_oak_slab");
-  for (const x of [-3, 3]) p.f(x, 3, 29, x, 5, 29, "minecraft:glass_pane");
+  // casas e lojas do catálogo (mobiliadas por dentro), com a porta virada para o centro da vila
+  const kinds = ["casa", "cabana", "padaria", "taverna", "ferreiro", "casa", "acougue", "livraria", "cabana", "casa_fazenda"];
+  const styles = ["medieval", "rustico", "rural", "nordico"];
+  spots.forEach(([x, z], i) => {
+    const plan = archPlan(kinds[i % kinds.length], styles[Math.floor(R() * styles.length)], "pequeno", facingQuarter(x, z), i, { bare: true });
+    stamp(p, plan, x, z);
+  });
+  // igreja de verdade (bancos, altar, velas, torre do sino) virada para a praça
+  stamp(p, archPlan("igreja", "medieval", "pequeno", 0, 3, { bare: true }), 0, 33);
   // plantações com canal de água
   for (const [x0, z0] of [[18, 18], [-30, -30], [26, -34]]) {
     p.f(x0, 0, z0, x0 + 8, 0, z0 + 6, "minecraft:farmland", { moisturized_amount: 7 });
@@ -320,29 +315,18 @@ export function cidade(seed = 5) {
       const k = (i === 1 && j === 1) || (i === 2 && j === 2) ? "plaza" : kinds[Math.floor(R() * kinds.length)];
       const ax = x0 + 3, az = z0 + 3, bx = x1 - 3, bz = z1 - 3;
       if (k === "sky" || k === "office" || k === "apt") {
-        const floors = k === "sky" ? 12 + Math.floor(R() * 7) : k === "office" ? 6 + Math.floor(R() * 5) : 4 + Math.floor(R() * 4);
-        const glass = k === "sky" ? "minecraft:light_blue_stained_glass" : k === "office" ? "minecraft:cyan_stained_glass" : "minecraft:glass";
-        const frame = k === "apt" ? (R() < 0.5 ? "minecraft:brick_block" : "minecraft:hardened_clay") : k === "office" ? "minecraft:gray_concrete" : "minecraft:white_concrete";
-        const top = floors * 4;
-        p.f(ax, 1, az, bx, top, bz, glass);
-        p.f(ax + 1, 1, az + 1, bx - 1, top - 1, bz - 1, "minecraft:air");
-        for (let y = 0; y <= top; y += 4) {
-          p.walls(ax, y + 1, az, bx, y + 1, bz, frame);
-          p.f(ax + 1, y + 1, az + 1, bx - 1, y + 1, bz - 1, "minecraft:smooth_stone");
-          for (let x = ax + 3; x < bx; x += 4) for (let z = az + 3; z < bz; z += 4) p.s(x, y + 4, z, "minecraft:sea_lantern");
-        }
-        for (const [cx, cz] of [[ax, az], [bx, az], [ax, bz], [bx, bz]]) p.f(cx, 1, cz, cx, top + 1, cz, frame);
-        p.f(ax + 1, top + 1, az + 1, bx - 1, top + 1, bz - 1, "minecraft:gray_concrete");
+        // prédios mobiliados do catálogo (apartamentos, escritórios, hotel, hospital, escola...)
+        const mx = Math.floor((ax + bx) / 2), mz = Math.floor((az + bz) / 2);
+        const opts = { bare: true, w: 17, d: 17 };
+        let plan;
         if (k === "sky") {
-          const mx = Math.floor((ax + bx) / 2), mz = Math.floor((az + bz) / 2);
-          p.f(mx - 3, top + 2, mz - 3, mx + 3, top + 2, mz + 3, "minecraft:yellow_concrete");
-          p.f(mx - 2, top + 2, mz - 2, mx + 2, top + 2, mz + 2, "minecraft:gray_concrete");
-          p.f(mx - 1, top + 2, mz - 2, mx - 1, top + 2, mz + 2, "minecraft:white_concrete").f(mx + 1, top + 2, mz - 2, mx + 1, top + 2, mz + 2, "minecraft:white_concrete").s(mx, top + 2, mz, "minecraft:white_concrete");
-          p.f(bx - 1, top + 2, bz - 1, bx - 1, top + 7, bz - 1, "minecraft:iron_bars").s(bx - 1, top + 8, bz - 1, "minecraft:redstone_lamp");
+          plan = archPlan("apartamento", R() < 0.5 ? "futurista" : "moderno", "grande", 0, i * 7 + j, { ...opts, floors: 10 + Math.floor(R() * 7), cycle: true, roof: "flat",
+            program: [["recepcao", "sala"], ["sala", "cozinha", "quarto", "banheiro"], ["escritorio", "escritorio", "recepcao", "banheiro"]] });
+        } else {
+          const pick = (k === "office" ? ["hotel", "hospital", "banco", "prefeitura", "museu", "shopping"] : ["apartamento", "escola", "mercado", "cinema", "restaurante", "biblioteca"])[Math.floor(R() * 6)];
+          plan = archPlan(pick, ["moderno", "colonial", "industrial", "futurista", "colorido"][Math.floor(R() * 5)], "medio", 0, i * 7 + j, opts);
         }
-        // entrada
-        const mx = Math.floor((ax + bx) / 2);
-        p.f(mx - 1, 2, az, mx + 1, 4, az, "minecraft:air");
+        stamp(p, plan, mx, mz);
       } else if (k === "park" || k === "plaza") {
         p.f(ax, 0, az, bx, 0, bz, k === "park" ? "minecraft:grass_block" : "minecraft:polished_andesite");
         const mx = Math.floor((ax + bx) / 2), mz = Math.floor((az + bz) / 2);
@@ -353,7 +337,9 @@ export function cidade(seed = 5) {
           p.f(mx - 1, 0, az, mx + 1, 0, bz, "minecraft:gravel");
         }
       } else if (k === "houses") {
-        for (const [hx, hz] of [[ax + 4, az + 4], [bx - 4, az + 4], [ax + 4, bz - 4], [bx - 4, bz - 4]]) cottage(p, hx, hz, R() < 0.5 ? "oak" : "birch", R);
+        for (const [hx, hz] of [[ax + 4, az + 4], [bx - 4, az + 4], [ax + 4, bz - 4], [bx - 4, bz - 4]]) {
+          stamp(p, archPlan(R() < 0.5 ? "casa" : "bangalo", ["moderno", "colorido", "colonial", "praiano"][Math.floor(R() * 4)], "pequeno", hz < (az + bz) / 2 ? 0 : 2, hx * 31 + hz, { bare: true, w: 9, d: 9 }), hx, hz);
+        }
       }
     }
   }
@@ -432,51 +418,22 @@ export function montanha_russa() {
 
 // ------------------------------------------------------------------ casa inteligente
 export function casa_tech() {
-  const p = new P("casa inteligente", 16, 14);
-  const W = 11, D = 8;
-  p.f(-W - 4, 0, -D - 6, W + 4, 0, D + 4, "minecraft:smooth_quartz");
-  // piscina iluminada
-  p.f(-W - 3, -3, -D - 5, -2, 0, -D - 1, "minecraft:prismarine");
-  p.f(-W - 2, -2, -D - 4, -3, 0, -D - 2, "minecraft:water");
-  for (let x = -W - 2; x <= -3; x += 3) p.s(x, -3, -D - 3, "minecraft:sea_lantern");
-  // térreo e 1º andar
-  for (const [y0, y1, inset] of [[1, 5, 0], [6, 10, 2]]) {
-    p.f(-W + inset, y0, -D, W, y1, D, "minecraft:white_concrete");
-    p.f(-W + inset + 1, y0, -D + 1, W - 1, y1 - 1, D - 1, "minecraft:air");
-    p.f(-W + inset + 1, y0 + 1, -D, W - 1, y1 - 1, -D, "minecraft:light_gray_stained_glass"); // fachada de vidro
-    p.f(-W + inset, y0 + 1, -D + 2, -W + inset, y1 - 1, D - 2, "minecraft:light_gray_stained_glass");
-    p.f(-W + inset + 1, y0 - 1, -D + 1, W - 1, y0 - 1, D - 1, "minecraft:polished_diorite");
-    // teto com lâmpadas automáticas: sensor de luz invertido em cima de cada lâmpada (acendem à noite)
-    for (let x = -W + inset + 2; x <= W - 2; x += 4) {
-      for (let z = -D + 2; z <= D - 2; z += 4) {
-        p.s(x, y1, z, "minecraft:redstone_lamp");
-        p.s(x, y1 + 1, z, "minecraft:daylight_detector_inverted");
-      }
-    }
-  }
-  p.f(-W + 2, 11, -D, W, 11, D, "minecraft:black_concrete");
-  // "placas solares" no teto
-  for (let x = -W + 3; x <= W - 1; x += 2) p.f(x, 12, -D + 1, x, 12, -3, "minecraft:daylight_detector");
-  // portas automáticas: porta de ferro com placa de pressão dos dois lados
-  for (const [x, z, dz] of [[0, -D, -1], [W, 0, 0]]) {
-    if (dz) {
-      p.door(x, 1, z, "minecraft:iron_door", "south");
-      p.s(x, 1, z - 1, "minecraft:stone_pressure_plate").s(x, 1, z + 1, "minecraft:stone_pressure_plate");
-    } else {
-      p.door(x, 1, z, "minecraft:iron_door", "west");
-      p.s(x + 1, 1, z, "minecraft:stone_pressure_plate").s(x - 1, 1, z, "minecraft:stone_pressure_plate");
-    }
-  }
-  // sala: parede de TV, sofá, cozinha
-  p.f(-6, 2, D - 1, -1, 4, D - 1, "minecraft:black_concrete").f(-5, 3, D - 1, -2, 3, D - 1, "minecraft:light_blue_stained_glass");
-  p.f(-6, 1, D - 4, -1, 1, D - 4, "minecraft:gray_wool");
-  p.f(4, 1, D - 1, 9, 1, D - 1, "minecraft:polished_andesite").s(5, 2, D - 1, "minecraft:cauldron").s(7, 1, D - 1, "minecraft:smoker");
-  // escada para o andar de cima
-  for (let k = 0; k < 5; k++) p.f(W - 2 - k, 1 + k, D - 2, W - 2 - k, 1 + k, D - 1, "minecraft:quartz_block");
-  p.f(W - 7, 5, D - 2, W - 2, 5, D - 1, "minecraft:air");
-  // câmeras de segurança (observadores) e jardim
-  for (const [x, z] of [[-W, -D], [W, -D], [W, D]]) p.s(x, 11, z, "minecraft:observer");
-  for (let x = 3; x <= W + 3; x += 4) p.s(x, 1, -D - 3, "minecraft:flowering_azalea");
+  const p = new P("casa inteligente", 16, 16);
+  const m = archPlan("mansao", "moderno", "grande", 0, 21, { bare: true, roof: "flat" });
+  const W = 11, D = 8, top = 12;
+  p.f(-W - 4, 0, -D - 7, W + 4, 0, D + 4, "minecraft:smooth_quartz");
+  stamp(p, m, 0, 0);
+  // piscina iluminada na frente
+  p.f(-W - 3, -3, -D - 7, -2, 0, -D - 2, "minecraft:prismarine");
+  p.f(-W - 2, -2, -D - 6, -3, 0, -D - 3, "minecraft:water");
+  for (let x = -W - 2; x <= -3; x += 3) p.s(x, -3, -D - 4, "minecraft:sea_lantern");
+  for (let x = -W - 1; x <= -4; x += 3) p.s(x, 1, -D - 7, "minecraft:white_carpet");
+  // placas solares e câmeras no telhado
+  for (let x = -W + 2; x <= W - 2; x += 2) p.f(x, top + 1, -D + 2, x, top + 1, -1, "minecraft:daylight_detector");
+  for (const [x, z] of [[-W, -D], [W, -D], [W, D], [-W, D]]) p.s(x, top + 2, z, "minecraft:observer", { "minecraft:facing_direction": "down" });
+  // luzes do jardim que acendem sozinhas à noite (sensor invertido em cima da lâmpada)
+  for (let x = 1; x <= W + 3; x += 4) p.s(x, 1, -D - 4, "minecraft:redstone_lamp").s(x, 2, -D - 4, "minecraft:daylight_detector_inverted");
+  for (let x = 3; x <= W + 3; x += 4) p.s(x, 1, -D - 6, "minecraft:flowering_azalea");
   return p;
 }
 
@@ -520,6 +477,11 @@ export function piramide() {
   p.f(-2, 1, -B, 2, 5, -B, "minecraft:cut_sandstone").f(-1, 1, -B, 1, 4, -B, "minecraft:air");
   p.f(-3, 0, -3, 3, 0, 3, "minecraft:gold_block").f(-2, 0, -2, 2, 0, 2, "minecraft:lapis_block");
   p.chest(0, 1, 2, LOOT);
+  // câmara do faraó: colunas, sarcófago, braseiros, baús e potes decorados
+  for (const [x, z] of [[-8, -8], [8, -8], [-8, 8], [8, 8], [-8, 0], [8, 0]]) p.f(x, 1, z, x, 8, z, "minecraft:cut_sandstone").s(x, 9, z, "minecraft:chiseled_sandstone");
+  p.f(-1, 1, 6, 1, 1, 9, "minecraft:quartz_block").f(-1, 2, 6, 1, 2, 9, "minecraft:smooth_quartz_slab").s(0, 2, 9, "minecraft:carved_pumpkin", { "minecraft:cardinal_direction": "north" });
+  for (const [x, z] of [[-4, -4], [4, -4], [-4, 10], [4, 10]]) p.s(x, 1, z, "minecraft:campfire", { "minecraft:cardinal_direction": "north", extinguished: false });
+  for (const [x, z] of [[-12, 12], [12, 12], [-12, -12], [12, -12]]) p.chest(x, 1, z, [["minecraft:gold_ingot", 16], ["minecraft:emerald", 8]]).s(x + (x > 0 ? -1 : 1), 1, z, "minecraft:decorated_pot");
   for (const [x, z] of [[-B + 4, -B + 4], [B - 4, -B + 4], [-B + 4, B - 4], [B - 4, B - 4]]) p.s(x, 1, z, "minecraft:lantern");
   for (let x = -B + 4; x <= B - 4; x += 6) p.s(x, 8, 0, "minecraft:lantern", { hanging: true });
   p.s(0, B + 2, 0, "minecraft:gold_block");
@@ -533,6 +495,9 @@ export function farol() {
   for (let y = 1; y <= 30; y += 4) p.cyl(0, 0, 4, y, y + 3, y % 8 === 1 ? "minecraft:red_concrete" : "minecraft:white_concrete");
   p.cyl(0, 0, 3, 1, 30, "minecraft:air", false);
   for (let y = 1; y <= 30; y++) p.s(3, y, 0, "minecraft:ladder", { facing_direction: 4 });
+  // quarto do faroleiro: cama, baú, mesa e lanterna
+  p.s(-2, 1, 1, "minecraft:bed", { direction: 0, head_piece_bit: false }, [0, 0, 1, { direction: 0, head_piece_bit: true }]);
+  p.chest(-2, 1, -1, [["minecraft:cod", 8], ["minecraft:map", 1]]).s(0, 1, -2, "minecraft:lectern", { "minecraft:cardinal_direction": "south" }).s(0, 4, 0, "minecraft:lantern", { hanging: true });
   p.f(4, 1, -1, 4, 3, 1, "minecraft:air").f(4, 1, 0, 4, 2, 0, "minecraft:air");
   p.cyl(0, 0, 6, 31, 31, "minecraft:polished_andesite", false).cyl(0, 0, 6, 32, 32, "minecraft:iron_bars");
   p.cyl(0, 0, 3, 32, 35, "minecraft:glass");
@@ -548,27 +513,14 @@ export function arranha_ceu() {
   const p = new P("arranha-céu", 12, 128);
   const A = 9, F = 30, top = F * 4;
   p.f(-A - 2, 0, -A - 2, A + 2, 0, A + 2, "minecraft:polished_andesite");
-  p.f(-A, 1, -A, A, top, A, "minecraft:light_blue_stained_glass");
-  p.f(-A + 1, 1, -A + 1, A - 1, top - 1, A - 1, "minecraft:air");
-  for (let y = 0; y <= top; y += 4) {
-    p.walls(-A, y + 1, -A, A, y + 1, A, "minecraft:white_concrete");
-    p.f(-A + 1, y + 1, -A + 1, A - 1, y + 1, A - 1, "minecraft:smooth_stone");
-    for (let x = -A + 3; x < A; x += 4) for (let z = -A + 3; z < A; z += 4) p.s(x, y + 4, z, "minecraft:sea_lantern");
-  }
-  for (const [x, z] of [[-A, -A], [A, -A], [-A, A], [A, A]]) p.f(x, 1, z, x, top + 2, z, "minecraft:white_concrete");
-  p.f(-2, 2, -A, 2, 4, -A, "minecraft:air");
-  // escada central em espiral simples (degraus de laje)
-  for (let y = 2; y <= top; y++) {
-    const k = y % 8;
-    const pos = [[-1, -1], [0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0]][k];
-    p.s(pos[0], y, pos[1], "minecraft:quartz_block");
-    p.f(pos[0], y + 1, pos[1], pos[0], y + 2, pos[1], "minecraft:air");
-  }
+  stamp(p, archPlan("apartamento", "futurista", "grande", 0, 30, { bare: true, w: 19, d: 19, floors: F, cycle: true, roof: "flat",
+    program: [["recepcao", "sala"], ["escritorio", "escritorio", "recepcao", "banheiro"], ["sala", "cozinha", "quarto", "banheiro"]] }), 0, 0);
   // heliponto
   p.f(-A, top + 1, -A, A, top + 1, A, "minecraft:gray_concrete");
   p.f(-5, top + 1, -5, 5, top + 1, 5, "minecraft:yellow_concrete").f(-4, top + 1, -4, 4, top + 1, 4, "minecraft:gray_concrete");
   p.f(-2, top + 1, -3, -2, top + 1, 3, "minecraft:white_concrete").f(2, top + 1, -3, 2, top + 1, 3, "minecraft:white_concrete").f(-1, top + 1, 0, 1, top + 1, 0, "minecraft:white_concrete");
   p.f(A - 1, top + 2, A - 1, A - 1, top + 8, A - 1, "minecraft:iron_bars").s(A - 1, top + 9, A - 1, "minecraft:redstone_lamp");
+  p.height = top + 12;
   return p;
 }
 

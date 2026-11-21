@@ -6,10 +6,15 @@
         "root": {
           "rotation": [
             0.0,
-            "v.tf < 0.7 ? (1 - v.tf / 0.7) * 540 : 0",
+            "v.tf < 0.8 ? (1 - v.tf / 0.8) * (1 - v.tf / 0.8) * 720 : 0",
             0.0
           ],
-          "scale": "v.tf < 1.0 ? (math.min(1, 0.15 + v.tf * 1.9) + math.sin(math.min(v.tf, 1) * 540) * 0.07 * (1 - v.tf)) : 1"
+          "position": [
+            0.0,
+            "v.tf < 0.3 ? (1 - v.tf / 0.3) * 6 : (v.tf < 0.55 ? -math.sin((v.tf - 0.3) / 0.25 * 180) * 0.8 : 0)",
+            0.0
+          ],
+          "scale": "v.tf < 0.25 ? 0.2 + (v.tf / 0.25) * 0.92 : (v.tf < 1.4 ? 1 + 0.12 * math.cos((v.tf - 0.25) * 900) * math.exp(-(v.tf - 0.25) * 6) : 1)"
         }
       },
       "loop": true
@@ -488,6 +493,11 @@
             0.0,
             "v.aims",
             0.0
+          ],
+          "position": [
+            0.0,
+            "-12 * (1 - math.clamp((v.tf - 0.45) / 0.5, 0, 1)) * (1 - math.clamp((v.tf - 0.45) / 0.5, 0, 1)) + math.sin(math.clamp((v.tf - 0.45) / 0.5, 0, 1) * 180) * 1.2",
+            0.0
           ]
         },
         "pitch": {
@@ -502,6 +512,11 @@
             0.0,
             0.0,
             "v.gspin"
+          ],
+          "position": [
+            0.0,
+            0.0,
+            "10 * (1 - math.clamp((v.tf - 0.9) / 0.4, 0, 1))"
           ]
         },
         "radar": {
@@ -509,10 +524,57 @@
             0.0,
             "q.anim_time * 140",
             0.0
+          ],
+          "scale": "math.clamp((v.tf - 1.0) / 0.3, 0, 1)"
+        },
+        "pod_l": {
+          "position": [
+            "4 * (1 - math.clamp((v.tf - 1.0) / 0.35, 0, 1))",
+            0.0,
+            0.0
           ]
         },
-        "root": {
-          "scale": "1 + (v.tf < 0.6 ? math.sin(v.tf * 300) * 0.04 : 0)"
+        "pod_r": {
+          "position": [
+            "-4 * (1 - math.clamp((v.tf - 1.0) / 0.35, 0, 1))",
+            0.0,
+            0.0
+          ]
+        },
+        "leg0": {
+          "rotation": [
+            "-70 * (1 - (1 - (1 - math.clamp((v.tf - 0.05) / 0.55, 0, 1)) * (1 - math.clamp((v.tf - 0.05) / 0.55, 0, 1)) * (1 - math.clamp((v.tf - 0.05) / 0.55, 0, 1)) + math.sin(math.clamp((v.tf - 0.05) / 0.55, 0, 1) * 180) * 0.08))",
+            0.0,
+            "70 * (1 - (1 - (1 - math.clamp((v.tf - 0.05) / 0.55, 0, 1)) * (1 - math.clamp((v.tf - 0.05) / 0.55, 0, 1)) * (1 - math.clamp((v.tf - 0.05) / 0.55, 0, 1)) + math.sin(math.clamp((v.tf - 0.05) / 0.55, 0, 1) * 180) * 0.08))"
+          ]
+        },
+        "leg1": {
+          "rotation": [
+            "-70 * (1 - (1 - (1 - math.clamp((v.tf - 0.05) / 0.55, 0, 1)) * (1 - math.clamp((v.tf - 0.05) / 0.55, 0, 1)) * (1 - math.clamp((v.tf - 0.05) / 0.55, 0, 1)) + math.sin(math.clamp((v.tf - 0.05) / 0.55, 0, 1) * 180) * 0.08))",
+            0.0,
+            "-70 * (1 - (1 - (1 - math.clamp((v.tf - 0.05) / 0.55, 0, 1)) * (1 - math.clamp((v.tf - 0.05) / 0.55, 0, 1)) * (1 - math.clamp((v.tf - 0.05) / 0.55, 0, 1)) + math.sin(math.clamp((v.tf - 0.05) / 0.55, 0, 1) * 180) * 0.08))"
+          ]
+        },
+        "leg2": {
+          "rotation": [
+            "70 * (1 - (1 - (1 - math.clamp((v.tf - 0.05) / 0.55, 0, 1)) * (1 - math.clamp((v.tf - 0.05) / 0.55, 0, 1)) * (1 - math.clamp((v.tf - 0.05) / 0.55, 0, 1)) + math.sin(math.clamp((v.tf - 0.05) / 0.55, 0, 1) * 180) * 0.08))",
+            0.0,
+            "70 * (1 - (1 - (1 - math.clamp((v.tf - 0.05) / 0.55, 0, 1)) * (1 - math.clamp((v.tf - 0.05) / 0.55, 0, 1)) * (1 - math.clamp((v.tf - 0.05) / 0.55, 0, 1)) + math.sin(math.clamp((v.tf - 0.05) / 0.55, 0, 1) * 180) * 0.08))"
+          ]
+        },
+        "leg3": {
+          "rotation": [
+            "70 * (1 - (1 - (1 - math.clamp((v.tf - 0.05) / 0.55, 0, 1)) * (1 - math.clamp((v.tf - 0.05) / 0.55, 0, 1)) * (1 - math.clamp((v.tf - 0.05) / 0.55, 0, 1)) + math.sin(math.clamp((v.tf - 0.05) / 0.55, 0, 1) * 180) * 0.08))",
+            0.0,
+            "-70 * (1 - (1 - (1 - math.clamp((v.tf - 0.05) / 0.55, 0, 1)) * (1 - math.clamp((v.tf - 0.05) / 0.55, 0, 1)) * (1 - math.clamp((v.tf - 0.05) / 0.55, 0, 1)) + math.sin(math.clamp((v.tf - 0.05) / 0.55, 0, 1) * 180) * 0.08))"
+          ]
+        },
+        "base": {
+          "position": [
+            0.0,
+            "-math.sin(math.clamp((v.tf - 0.55) / 0.2, 0, 1) * 180) * 1.2",
+            0.0
+          ]
         }
       },
       "loop": true
@@ -523,14 +585,21 @@
           "position": [
             0.0,
             0.0,
-            "0.7 + math.sin(q.anim_time * 3000.0) * 0.7"
+            "0.9 + math.sin(q.anim_time * 3000.0) * 0.9"
+          ]
+        },
+        "pitch": {
+          "rotation": [
+            "math.sin(q.anim_time * 2600.0) * 0.8",
+            0.0,
+            0.0
           ]
         },
         "yaw": {
           "position": [
-            "math.sin(q.anim_time * 2600.0) * 0.15",
+            "math.sin(q.anim_time * 2600.0) * 0.2",
             0.0,
-            0.0
+            "math.sin(q.anim_time * 3000.0) * 0.25"
           ]
         }
       },
@@ -655,6 +724,9 @@
             "q.is_on_ground ? 0.25 : 1.5 + math.sin(q.anim_time * 2600) * 0.2",
             "1"
           ]
+        },
+        "rail": {
+          "scale": "1 - v.ride * 0.98"
         },
         "thigh_l": {
           "rotation": [

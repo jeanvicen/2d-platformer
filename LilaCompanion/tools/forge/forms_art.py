@@ -256,12 +256,14 @@ def turret_model():
     root.locators = {"muzzle": (0, 32, -62)}
     base = m.bone("base", "root", pivot=(0, 0, 0))
     base.box((0, 10, 0), (14, 20, 14), GRAPH)
-    for fx, fz in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
+    # quatro pernas articuladas (abrem na montagem e cravam no chão)
+    for i, (fx, fz) in enumerate(((-1, -1), (1, -1), (-1, 1), (1, 1))):
+        leg = m.bone(f"leg{i}", "base", pivot=(fx * 6, 16, fz * 6))
         for k in range(4):
             t = (k + 1) / 4
-            base.box((fx * (6 + 12 * t), 16 - k * 4, fz * (6 + 12 * t)), (5, 5, 5), GRAPH)
-        base.box((fx * 19, 1, fz * 19), (9, 2, 9), WHITE)
-        base.box((fx * 19, 2.3, fz * 19), (3, 0.6, 3), ORANGE)
+            leg.box((fx * (6 + 12 * t), 16 - k * 4, fz * (6 + 12 * t)), (5, 5, 5), GRAPH)
+        leg.box((fx * 19, 1, fz * 19), (9, 2, 9), WHITE)
+        leg.box((fx * 19, 2.3, fz * 19), (3, 0.6, 3), ORANGE)
     base.box((0, 21, 0), (28, 4, 28), DARK)
     _sym(base, (14.2, 21, 0), (0.4, 1, 20), ORANGE)
     yaw = m.bone("yaw", "root", pivot=(0, 23, 0))

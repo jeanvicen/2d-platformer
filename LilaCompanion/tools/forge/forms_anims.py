@@ -23,7 +23,7 @@ FORM_IDS = {"drone": 0, "heli": 1, "car": 2, "excavator": 3, "tank": 4, "jet": 5
 # capota (vidro/teto) recolhe quando alguém está dentro: quem pilota vê tudo
 CANOPY = "1 - v.ride * 0.98"
 
-INITIALIZE = ["v.svf = 0; v.svl = 0; v.svu = 0; v.pvf = 0; v.pvl = 0; v.pvu = 0; v.afw = 0; v.alf = 0; v.aup = 0; v.pipn = 0; v.pish = 0; v.chp = 0; v.chpw = 0; v.chr = 0; v.chrw = 0; v.tz = 0; v.tzw = 0; v.tx = 0; v.txw = 0; v.ty = 0; v.tyw = 0; v.hz = 0; v.hzw = 0; v.hx = 0; v.hxw = 0; v.hy = 0; v.hyw = 0; v.rz = 0; v.rzw = 0; v.rx = 0; v.rxw = 0; v.ry = 0; v.ryw = 0; v.lz = 0; v.lzw = 0; v.lx = 0; v.lxw = 0; v.ly = 0; v.lyw = 0; v.hlx = 0; v.hly = 0; v.po = q.property('lila:off') ? 1 : 0; v.ot = 9; v.bt = 9; v.dsp = 0; v.ride = 0; v.dtilt = 0; v.htilt = 0; v.jpitch = 0; v.aims = 0; v.pits = 0; v.cwd = 0; v.cws = 0; v.wheel = 0; v.pby = q.body_y_rotation; v.lean = 0; v.tf = 9; v.pf = q.property('lila:form'); v.gspin = 0; v.gear = 1;"]
+INITIALIZE = ["v.svf = 0; v.svl = 0; v.svu = 0; v.pvf = 0; v.pvl = 0; v.pvu = 0; v.afw = 0; v.alf = 0; v.aup = 0; v.pipn = 0; v.pish = 0; v.chp = 0; v.chpw = 0; v.chr = 0; v.chrw = 0; v.tz = 0; v.tzw = 0; v.tx = 0; v.txw = 0; v.ty = 0; v.tyw = 0; v.hz = 0; v.hzw = 0; v.hx = 0; v.hxw = 0; v.hy = 0; v.hyw = 0; v.rz = 0; v.rzw = 0; v.rx = 0; v.rxw = 0; v.ry = 0; v.ryw = 0; v.lz = 0; v.lzw = 0; v.lx = 0; v.lxw = 0; v.ly = 0; v.lyw = 0; v.hlx = 0; v.hly = 0; v.gsv = 0; v.po = q.property('lila:off') ? 1 : 0; v.ot = 9; v.bt = 9; v.dsp = 0; v.ride = 0; v.dtilt = 0; v.htilt = 0; v.jpitch = 0; v.aims = 0; v.pits = 0; v.cwd = 0; v.cws = 0; v.wheel = 0; v.pby = q.body_y_rotation; v.lean = 0; v.tf = 9; v.pf = q.property('lila:form'); v.gspin = 0; v.gear = 1;"]
 PRE_ANIMATION = [
     "v.form = q.property('lila:form');",
     "v.ride = math.lerp(v.ride, q.has_rider ? 1 : 0, 0.15);",
@@ -91,7 +91,7 @@ PRE_ANIMATION = [
     "v.dy = math.mod(q.body_y_rotation - v.pby + 540, 360) - 180; v.pby = q.body_y_rotation;",
     "v.lean = math.lerp(v.lean, math.clamp(v.dy / math.max(q.delta_time, 0.016) * 0.12, -30, 30), 0.08);",
     "v.aim = q.property('lila:aim');",
-    f"v.gspin = v.gspin + math.min(q.delta_time, 0.1) * (({ACT} == 'shoot') ? 2400 : 90);",
+    f"v.gsv = math.lerp(v.gsv, ({ACT} == 'shoot') ? 2400 : 40, math.min(1, q.delta_time * 3)); v.gspin = v.gspin + math.min(q.delta_time, 0.1) * v.gsv;",
     "v.gear = math.lerp(v.gear, q.is_on_ground ? 1 : 0, 0.06);",
     "v.cwd = v.cwd + q.ground_speed * math.min(q.delta_time, 0.1) / 3.4; v.cws = math.lerp(v.cws, math.min(1, q.ground_speed / 2.5), 0.12);",
     # suavizações: inclinação do drone/heli/jato e mira das torres giram macio (sem estalar)
@@ -112,8 +112,10 @@ def form_anims():
 
     # ---------------- transformação: a forma nova "monta" girando e crescendo
     add("intro", {"root": bone(
-        scale="v.tf < 1.0 ? (math.min(1, 0.15 + v.tf * 1.9) + math.sin(math.min(v.tf, 1) * 540) * 0.07 * (1 - v.tf)) : 1",
-        rot=[0, "v.tf < 0.7 ? (1 - v.tf / 0.7) * 540 : 0", 0])})
+        # cresce rápido passando do tamanho e assenta com oscilação amortecida; gira desacelerando; desce e quica
+        scale="v.tf < 0.25 ? 0.2 + (v.tf / 0.25) * 0.92 : (v.tf < 1.4 ? 1 + 0.12 * math.cos((v.tf - 0.25) * 900) * math.exp(-(v.tf - 0.25) * 6) : 1)",
+        rot=[0, "v.tf < 0.8 ? (1 - v.tf / 0.8) * (1 - v.tf / 0.8) * 720 : 0", 0],
+        pos=[0, "v.tf < 0.3 ? (1 - v.tf / 0.3) * 6 : (v.tf < 0.55 ? -math.sin((v.tf - 0.3) / 0.25 * 180) * 0.8 : 0)", 0])})
     add("intro_colossus", {"root": bone(
         scale="v.tf < 2.2 ? math.min(1, 0.3 + v.tf * 0.4) : 1",
         pos=[0, "v.tf < 2.2 ? -(1 - v.tf / 2.2) * 40 : 0", 0])})
@@ -183,15 +185,25 @@ def form_anims():
     })
 
     # ---------------- torreta gigante
+    # torreta: montagem (pernas abrem e cravam, arma sobe do miolo, radar e canos saem), mira macia,
+    # metralhadora que acelera/desacelera de verdade (v.gsv) e coice a cada tiro
+    leg_open = "math.clamp((v.tf - 0.05) / 0.55, 0, 1)"
+    leg_ease = f"(1 - (1 - {leg_open}) * (1 - {leg_open}) * (1 - {leg_open}) + math.sin({leg_open} * 180) * 0.08)"
+    rise = "math.clamp((v.tf - 0.45) / 0.5, 0, 1)"
     add("turret_g", {
-        "yaw": bone(rot=[0, "v.aims", 0]),
+        "yaw": bone(rot=[0, "v.aims", 0], pos=[0, f"-12 * (1 - {rise}) * (1 - {rise}) + math.sin({rise} * 180) * 1.2", 0]),
         "pitch": bone(rot=["-v.pits", 0, 0]),
-        "gatling": bone(rot=[0, 0, "v.gspin"]),
-        "radar": bone(rot=[0, "q.anim_time * 140", 0]),
-        "root": bone(scale="1 + (v.tf < 0.6 ? math.sin(v.tf * 300) * 0.04 : 0)"),
+        "gatling": bone(rot=[0, 0, "v.gspin"], pos=[0, 0, "10 * (1 - math.clamp((v.tf - 0.9) / 0.4, 0, 1))"]),
+        "radar": bone(rot=[0, "q.anim_time * 140", 0], scale="math.clamp((v.tf - 1.0) / 0.3, 0, 1)"),
+        "pod_l": bone(pos=["4 * (1 - math.clamp((v.tf - 1.0) / 0.35, 0, 1))", 0, 0]),
+        "pod_r": bone(pos=["-4 * (1 - math.clamp((v.tf - 1.0) / 0.35, 0, 1))", 0, 0]),
+        **{f"leg{i}": bone(rot=[f"{fz * 70} * (1 - {leg_ease})", 0, f"{-fx * 70} * (1 - {leg_ease})"])
+           for i, (fx, fz) in enumerate(((-1, -1), (1, -1), (-1, 1), (1, 1)))},
+        "base": bone(pos=[0, "-math.sin(math.clamp((v.tf - 0.55) / 0.2, 0, 1) * 180) * 1.2", 0]),
     })
-    add("turret_fire", {"gatling": bone(pos=[0, 0, osc(0.7, 3000, base=0.7)]),
-                        "yaw": bone(pos=[osc(0.15, 2600), 0, 0])}, loop=True)
+    add("turret_fire", {"gatling": bone(pos=[0, 0, osc(0.9, 3000, base=0.9)]),
+                        "pitch": bone(rot=[osc(0.8, 2600), 0, 0]),
+                        "yaw": bone(pos=[osc(0.2, 2600), 0, osc(0.25, 3000)])}, loop=True)
     add("turret_missile", {
         "pod_l": bone(pos=smooth_keys([(0, [0, 0, 0]), (0.05, [0, 0, 3]), (0.5, [0, 0, 0])])),
         "pod_r": bone(pos=smooth_keys([(0, [0, 0, 0]), (0.15, [0, 0, 3]), (0.6, [0, 0, 0])])),
@@ -208,6 +220,7 @@ def form_anims():
         "arm_r": bone(rot=[osc(2, 45, phase=40, base=-4), 0, osc(1, 45, phase=40, base=6)]),
         "forearm_l": bone(rot=[-14, 0, 0]), "forearm_r": bone(rot=[-14, 0, 0]),
         "jets": bone(scale=["1", "q.is_on_ground ? 0.25 : 1.5 + math.sin(q.anim_time * 2600) * 0.2", "1"]),
+        "rail": bone(scale=CANOPY),
         "thigh_l": bone(rot=["q.is_on_ground ? 0 : -18", 0, 0]), "shin_l": bone(rot=["q.is_on_ground ? 0 : 30", 0, 0]),
         "thigh_r": bone(rot=["q.is_on_ground ? 0 : -6", 0, 0]), "shin_r": bone(rot=["q.is_on_ground ? 0 : 14", 0, 0]),
     })
@@ -372,16 +385,27 @@ def robot_anims():
     add("give", {"leftArm": bone(rot=[-75, -10, 0]), "head": bone(rot=[10, 0, 0])}, loop=True)
     add("spawn", {"root": bone(scale=smooth_keys([(0, [0.1, 0.1, 0.1]), (0.4, [1.1, 1.1, 1.1]), (0.6, [1, 1, 1])]),
                                 rot=smooth_keys([(0, [0, -720, 0]), (0.6, [0, 0, 0])]))}, loop="hold", length=0.7)
+    # construtor: braço do blaster aponta e "solda" o bloco (tremidinha), o outro ajusta
+    add("build", {"rightArm": bone(rot=["-70 + math.sin(q.anim_time * 1900) * 4", 0, 6], pos=[0, 0, osc(0.25, 1900)]),
+                  "leftArm": bone(rot=[osc(14, 260, base=-40), 0, -8]), "body": bone(rot=[8, osc(6, 140), 0]),
+                  "head": bone(rot=[18, 0, 0])}, loop=True)
+    # ninja: golpe em arco com giro do corpo
+    add("slash", {"leftArm": bone(rot=smooth_keys([(0, [-150, 0, -20]), (0.12, [-40, 30, -60]), (0.3, [0, 0, 0])])),
+                  "rightArm": bone(rot=smooth_keys([(0, [-120, 0, 20]), (0.14, [-30, -30, 60]), (0.3, [0, 0, 0])])),
+                  "body": bone(rot=smooth_keys([(0, [0, -40, 0]), (0.15, [10, 50, 0]), (0.3, [0, 0, 0])]))}, loop=True, length=0.3)
+    # médico: braços abertos, cabeça inclinada, peito pulsando
+    add("heal", {"rightArm": bone(rot=[-60, 0, osc(6, 120, base=30)]), "leftArm": bone(rot=[-60, 0, osc(6, 120, phase=180, base=-30)]),
+                 "body": bone(scale=["1", osc(0.03, 240, base=1), "1"]), "head": bone(rot=[-10, 0, 0])}, loop=True)
     return A
 
 
-ROBOT_ACTIONS = ["idle", "shoot", "punch", "give", "fly", "spawn"]
+ROBOT_ACTIONS = ["idle", "shoot", "punch", "give", "fly", "spawn", "build", "slash", "heal"]
 
 
 def robot_controllers():
     act = "q.property('lila:action')"
     states = {"default": {"animations": [{"walk": "q.is_on_ground"}, {"fly": "!q.is_on_ground"}], "blend_transition": 0.2, "transitions": []}}
-    for a in ("shoot", "punch", "give", "spawn"):
+    for a in ("shoot", "punch", "give", "spawn", "build", "slash", "heal"):
         states["default"]["transitions"].append({a: f"{act} == '{a}'"})
         states[a] = {"animations": [a, {"fly": "!q.is_on_ground"}], "blend_transition": 0.12, "transitions": [{"default": f"{act} != '{a}'"}]}
     return [controller("controller.animation.lila.robot.action", states)]

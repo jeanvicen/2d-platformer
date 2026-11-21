@@ -4,6 +4,27 @@
   "texture_data": {
     "lila_drone_controller": {
       "textures": "textures/items/lila/drone_controller"
+    },
+    "lila_nano_sword": {
+      "textures": "textures/items/lila/nano_sword"
+    },
+    "lila_nano_pickaxe": {
+      "textures": "textures/items/lila/nano_pickaxe"
+    },
+    "lila_nano_axe": {
+      "textures": "textures/items/lila/nano_axe"
+    },
+    "lila_nano_shovel": {
+      "textures": "textures/items/lila/nano_shovel"
+    },
+    "lila_nano_hoe": {
+      "textures": "textures/items/lila/nano_hoe"
+    },
+    "lila_nano_hammer": {
+      "textures": "textures/items/lila/nano_hammer"
+    },
+    "lila_nano_core": {
+      "textures": "textures/items/lila/nano_core"
     }
   }
 }

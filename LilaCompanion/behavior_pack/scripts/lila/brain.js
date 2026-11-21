@@ -5,7 +5,7 @@ import { system, world } from "@minecraft/server";
 import { parseCommands, describe, swarmShapeOf } from "../lib/intent.js";
 import { ORES, TIER_RANK } from "../lib/items.js";
 import { GoalError } from "./companion.js";
-import { runGoal, goalLabel } from "./goals.js";
+import { runGoal, goalLabel, archJob, megaJob } from "./goals.js";
 import { findThreat } from "./combat.js";
 import { abortAll, dismiss } from "./lifecycle.js";
 import { keepLoaded } from "./areas.js";
@@ -18,7 +18,7 @@ import { missions, mount } from "./drone.js";
 import { formOf, setForm, releaseRiders } from "./forms.js";
 import { clearSwarm, doShape } from "./swarm.js";
 import { powerOff, powerOn } from "./power.js";
-import { armyActive, merge, command as armyCommand } from "./army.js";
+import { armyActive, armyBuild, merge, stopBuild, command as armyCommand } from "./army.js";
 import { FORM_NAMES } from "../lib/catalog.js";
 import { overBudget } from "../core/budget.js";
 
@@ -244,7 +244,8 @@ export function sense(c) {
   // sense() roda a cada 10 ticks (com deslocamento): conta as próprias passadas em vez de usar o tick
   const pass = (c.flags.sensePass = (c.flags.sensePass ?? 0) + 1);
   // perigo: interrompe qualquer coisa (exceto se já está lutando) — no modo proteger ele vai atrás primeiro
-  if (!c.urgent) {
+  // torreta cuida dos alvos sozinha, parada no lugar (a defesa normal fazia ela andar e teleportar)
+  if (!c.urgent && c.rec.mode !== "turret" && formOf(c) !== "turret") {
     const t = findThreat(c);
     if (t) {
       if (c.sleeping) c.flags.wake = true;
@@ -371,11 +372,21 @@ export function command(c, text) {
       return;
     }
   }
+  // poderes que só o enxame tem: pedir direto já vira enxame ("prancha", "mãos gigantes", "devorador"...)
+  if (formOf(c) !== "swarm" && !/\bme d[aáeê](\s|$)|\bquero (um|uma)\s/i.test(text)) {
+    const sh = swarmShapeOf(text);
+    if (sh && NANO_ONLY.has(sh)) {
+      handleIntents(c, [{ type: "swarm", shape: sh }], text);
+      return;
+    }
+  }
   const intents = parseCommands(text);
   if (!intents.length) return;
   handleIntents(c, intents, text);
 }
 
+const NANO_ONLY = new Set(["prancha", "maos", "devorador", "martelo", "asas"]);
+const OLD_TO_ARCH = { casa: "casa", cabana: "cabana", torre: "torre_vigia", mansao: "mansao", abrigo: "cabana" };
 const GOAL_TYPES = new Set(["gather", "craft", "build", "farm", "food", "give", "explore", "hunt", "attack", "sleep", "home", "torches", "deposit", "come",
   "mega", "biome", "kit", "flatten", "vacuum", "arch"]);
 
@@ -403,6 +414,11 @@ export function handleIntents(c, intents, raw = "") {
     switch (it.type) {
       case "stop":
       case "normal":
+        // exército construindo: o primeiro "cancelar" só para a obra (o exército continua)
+        if (it.type === "stop" && armyActive(c) && c.flags.armyJob) {
+          stopBuild(c);
+          break;
+        }
         backToNormal(c);
         say(c, it.type === "normal" ? "Voltei ao normal! Drone de novo." : "Cancelei tudo e voltei ao normal. O que você quer agora?", { force: true });
         break;
@@ -444,14 +460,14 @@ export function handleIntents(c, intents, raw = "") {
           break;
         }
         if (armyActive(c)) merge(c);
-        if (formOf(c) !== "swarm") {
+        const wasSwarm = formOf(c) === "swarm";
+        if (!wasSwarm) {
           if (c.rec.mode === "turret") c.rec.mode = "follow";
           setForm(c, "swarm");
         }
-        if (it.shape === "devorar") {
-          abortAll(c);
-          newGoals.push({ type: "flatten", args: { radius: 16, all: true, speed: "rapido" }, origin: "cmd", label: "enxame devorando tudo em volta" });
-        } else if (it.shape) doShape(c, it.shape, o);
+        // vindo de outra forma, espera a transformação terminar para usar o poder pedido
+        if (it.shape && wasSwarm) doShape(c, it.shape, o);
+        else if (it.shape) system.runTimeout(() => formOf(c) === "swarm" && c.alive() && doShape(c, it.shape, c.owner() ?? o), 20);
         break;
       }
       case "pause":
@@ -500,7 +516,7 @@ export function handleIntents(c, intents, raw = "") {
         }
         if (formOf(c) !== "drone") setForm(c, "drone", { mount: false, quiet: true });
         abortAll(c);
-        newGoals.push({ type: "army", args: { count: it.count ?? c.rec.settings.army ?? 10 }, origin: "cmd", label: "modo exército" });
+        newGoals.push({ type: "army", args: { count: it.count ?? c.rec.settings.army ?? 10, style: it.style }, origin: "cmd", label: "modo exército" });
         break;
       case "wake":
         c.flags.wake = true;
@@ -553,6 +569,20 @@ export function handleIntents(c, intents, raw = "") {
         say(c, pick(LINES.unknown), { force: true });
         break;
       default:
+        // modo exército: quem constrói é o exército inteiro
+        if (armyActive(c) && (it.type === "mega" || it.type === "arch" || (it.type === "build" && OLD_TO_ARCH[it.blueprint]))) {
+          const job = it.type === "mega" ? megaJob(it.key, it.here)
+            : archJob(c, it.type === "arch" ? it : { kind: OLD_TO_ARCH[it.blueprint], size: "medio", here: it.here });
+          if (job) armyBuild(c, job);
+          else say(c, "Não conheço essa construção.", { force: true });
+          break;
+        }
+        if (it.type === "build" && OLD_TO_ARCH[it.blueprint]) {
+          // as casas simples antigas agora saem do catálogo, mobiliadas por dentro
+          const kind = OLD_TO_ARCH[it.blueprint];
+          newGoals.push({ type: "arch", args: { kind, size: "medio", here: it.here }, origin: "cmd", label: `construir ${kind.replace(/_/g, " ")}` });
+          break;
+        }
         if (GOAL_TYPES.has(it.type)) {
           const { type, ...args } = it;
           newGoals.push({ type, args, origin: "cmd", label: describe(it) });

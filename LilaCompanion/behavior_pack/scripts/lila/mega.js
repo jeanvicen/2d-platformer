@@ -9,7 +9,7 @@ import { BIOMES, MEGA } from "../lib/catalog.js";
 import { GoalError } from "./companion.js";
 import { particle, setAction, sound } from "./anim.js";
 import { hover } from "./drone.js";
-import { Placer, SPEEDS, serpentine, speedOf, vacuum } from "./handwork.js";
+import { Placer, SPEEDS, UNBREAKABLE, serpentine, speedOf, vacuum } from "./handwork.js";
 import { say } from "./talk.js";
 import { breathe } from "../core/budget.js";
 import { logError } from "../core/log.js";
@@ -106,7 +106,7 @@ function loadArea(dim, c, a, b) {
   return name;
 }
 
-function unloadArea(dim, name) {
+export function unloadArea(dim, name) {
   try {
     dim.runCommand(`tickingarea remove ${name}`);
   } catch {
@@ -134,20 +134,26 @@ function* playerBlocks(dim, cx, cz, y0, half) {
  * Constrói uma megaconstrução na sua frente.
  * @param {Companion} c
  */
-export function* megaBuild(c, key, o = {}) {
+/** Planta de uma megaconstrução pelo nome (ou undefined). */
+export function megaPlan(key) {
   const make = PLANS[key];
-  if (!make && !o.plan) throw new GoalError(`não conheço a construção "${key}"`);
+  return make ? make(Math.floor(Math.random() * 1e6)) : undefined;
+}
+
+/**
+ * Escolhe onde erguer a obra: na frente do dono, num lugar sem construção de jogador (tenta ao
+ * lado se tiver), carrega a área e acha a altura do chão.
+ * @returns {Generator<any, {dim: any, ref: any, cx: number, cz: number, y0: number, area: string}>}
+ */
+export function* pickSite(c, plan, o = {}) {
   const owner = c.owner();
-  const dim = c.dim();
-  const plan = o.plan ?? make(Math.floor(Math.random() * 1e6));
+  const dim = o.dim ?? c.dim();
   const ref = owner && owner.dimension.id === dim.id ? owner.location : c.pos();
   const view = owner ? owner.getViewDirection() : { x: 0, y: 0, z: 1 };
   const vl = Math.hypot(view.x, view.z) || 1;
   const fwd = { x: view.x / vl, z: view.z / vl };
   const dist = plan.half + (o.here ? 3 : 8);
   let cx = Math.round(ref.x + fwd.x * dist), cz = Math.round(ref.z + fwd.z * dist);
-  const label = o.label ?? MEGA[key]?.name ?? plan.name;
-  say(c, `Construindo: ${label} (${plan.half * 2 + 1}×${plan.half * 2 + 1}, ~${Math.round(volume(plan) / 1000)} mil blocos). Material infinito, bora!`, { force: true });
   const area = loadArea(dim, c, { x: cx - plan.half - 2, z: cz - plan.half - 2 }, { x: cx + plan.half + 2, z: cz + plan.half + 2 });
   try {
     // espera a área carregar
@@ -171,6 +177,38 @@ export function* megaBuild(c, key, o = {}) {
       if (shift === 2) throw new GoalError("tem construção sua em todo lugar aqui na frente. Vai pra um lugar mais aberto e me pede de novo");
     }
     c.flags.lastBuild = { cx, cz, y0, half: plan.half };
+    return { dim, ref, cx, cz, y0, area };
+  } catch (e) {
+    unloadArea(dim, area);
+    throw e;
+  }
+}
+
+/** Baús com itens e entidades da planta (depois dos blocos). */
+export function planExtras(dim, plan, cx, cz, y0) {
+  for (const op of plan.ops) {
+    try {
+      if (op[0] === "e") dim.spawnEntity(op[4], { x: cx + op[1], y: y0 + op[2], z: cz + op[3] });
+      else if (op[0] === "c") {
+        const ct = dim.getBlock({ x: cx + op[1], y: y0 + op[2], z: cz + op[3] })?.getComponent("minecraft:inventory")?.container;
+        for (const [id, n] of op[4]) ct?.addItem(new ItemStack(id, n));
+      }
+    } catch (e) {
+      logError("mega.extra", e);
+    }
+  }
+}
+
+export const planVolume = (plan) => volume(plan);
+
+export function* megaBuild(c, key, o = {}) {
+  const make = PLANS[key];
+  if (!make && !o.plan) throw new GoalError(`não conheço a construção "${key}"`);
+  const plan = o.plan ?? make(Math.floor(Math.random() * 1e6));
+  const label = o.label ?? MEGA[key]?.name ?? plan.name;
+  say(c, `Construindo: ${label} (${plan.half * 2 + 1}×${plan.half * 2 + 1}, ~${Math.round(volume(plan) / 1000)} mil blocos). Material infinito, bora!`, { force: true });
+  const { dim, ref, cx, cz, y0, area } = yield* pickSite(c, plan, o);
+  try {
     const speed = speedOf(c);
     if (speed === "instantaneo") {
       setAction(c.entity, "craft");
@@ -221,19 +259,15 @@ export function* megaBuild(c, key, o = {}) {
       const est = Math.max(1, Math.round((volume(plan) * 0.3) / sp.rate / 60));
       say(c, `Vou construir à mão, bloco por bloco (modo ${sp.label}): uns ${est} min. Dá pra acelerar em Configurações → Velocidade.`, { force: true });
       const placer = new Placer(c, speed, { natural: NAT_BREAK });
-      yield* placer.run(manualStream(c, dim, plan, cx, cz, y0, label));
+      yield* placer.run(planStream(c, dim, plan, cx, cz, y0, label));
       if (!c.alive()) return false;
-      for (const op of plan.ops) {
-        try {
-          if (op[0] === "e") dim.spawnEntity(op[4], { x: cx + op[1], y: y0 + op[2], z: cz + op[3] });
-          else if (op[0] === "c") {
-            const ct = dim.getBlock({ x: cx + op[1], y: y0 + op[2], z: cz + op[3] })?.getComponent("minecraft:inventory")?.container;
-            for (const [id, n] of op[4]) ct?.addItem(new ItemStack(id, n));
-          }
-        } catch (e) {
-          logError("mega.extra", e);
-        }
-      }
+      planExtras(dim, plan, cx, cz, y0);
+    }
+    // confere a obra inteira e corrige o que faltou (bloco que não pegou, porta pela metade...)
+    if (c.alive()) {
+      const fixed = yield* verifyPlan(c, dim, plan, cx, cz, y0);
+      if (fixed > 0) say(c, `Conferi a obra e corrigi ${fixed} bloco${fixed > 1 ? "s" : ""} que tinha${fixed > 1 ? "m" : ""} faltado.`, { force: true });
+      else say(c, "Conferi a obra: tudo no lugar!", { chatter: true });
     }
     setAction(c.entity, "celebrate");
     sound(c.entity, "random.levelup", 1, 1.1);
@@ -249,8 +283,68 @@ export function* megaBuild(c, key, o = {}) {
   }
 }
 
+/**
+ * Autocorreção: calcula o bloco final de cada célula da planta (a última operação vale) e compara
+ * com o mundo; o que estiver diferente ele recoloca (com a segunda metade de portas e camas).
+ * Enchimentos enormes (chão de asfalto, terra) não são conferidos, só as partes da construção.
+ */
+export function* verifyPlan(c, dim, plan, cx, cz, y0, o = {}) {
+  const alive = o.alive ?? (() => c.alive());
+  const fx = o.fx ?? ((at) => beamFx(c, at));
+  const SKIP = /water|lava|fire|snow_layer|wheat|carrots|potatoes|beetroot|farmland|grass_block|dirt/;
+  const want = new Map();
+  const key = (x, y, z) => `${x},${y},${z}`;
+  let n = 0;
+  for (const op of plan.ops) {
+    if (op[0] === "f") {
+      const vol = (op[4] - op[1] + 1) * (op[5] - op[2] + 1) * (op[6] - op[3] + 1);
+      const air = op[7] === "minecraft:air";
+      for (let x = op[1]; x <= op[4]; x++) for (let y = op[2]; y <= op[5]; y++) for (let z = op[3]; z <= op[6]; z++) {
+        const k = key(x, y, z);
+        if (air || vol > 4096 || SKIP.test(op[7])) want.delete(k);
+        else if (want.size < 120000) want.set(k, [x, y, z, op[7], op[8]]);
+        if (++n % 4000 === 0) yield* breathe(6);
+      }
+    } else if (op[0] === "s") {
+      const k = key(op[1], op[2], op[3]);
+      if (op[4] === "minecraft:air" || SKIP.test(op[4])) want.delete(k);
+      else want.set(k, [op[1], op[2], op[3], op[4], op[5], op[6]]);
+      if (op[6]) want.delete(key(op[1] + op[6][0], op[2] + op[6][1], op[3] + op[6][2]));
+    }
+  }
+  let fixed = 0, checked = 0;
+  for (const [x, y, z, id, st, pair] of want.values()) {
+    if (!alive()) break;
+    let b;
+    try {
+      b = dim.getBlock({ x: cx + x, y: y0 + y, z: cz + z });
+    } catch {
+      continue;
+    }
+    if (++checked % 300 === 0) yield* breathe(6);
+    if (!b || b.typeId === id || UNBREAKABLE.has(b.typeId)) continue;
+    const pm = perm(id, st);
+    if (!pm) continue;
+    try {
+      b.setPermutation(pm);
+      if (pair) {
+        const q = perm(id, pair[3]);
+        if (q) dim.getBlock({ x: cx + x + pair[0], y: y0 + y + pair[1], z: cz + z + pair[2] })?.setPermutation(q);
+      }
+      fixed++;
+      if (fixed % 8 === 1) {
+        particle(dim, "lila:build", { x: cx + x + 0.5, y: y0 + y + 0.5, z: cz + z + 0.5 });
+        fx({ x: cx + x, y: y0 + y + 1, z: cz + z });
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  return fixed;
+}
+
 /** Gera o trabalho à mão: para cada parte (24×24) limpa o terreno natural, nivela e ergue a obra. */
-function* manualStream(c, dim, plan, cx, cz, y0, label) {
+export function* planStream(c, dim, plan, cx, cz, y0, label) {
   const T = 24, H = plan.half;
   const tiles = [];
   let row = 0;
@@ -584,7 +678,7 @@ function giantMushroom(put, x, y, z, rnd) {
 }
 
 // ------------------------------------------------------------------ aplainar / destruir tudo em volta
-const CONTAINER_IDS = ["minecraft:chest", "minecraft:trapped_chest", "minecraft:barrel", "minecraft:ender_chest", "minecraft:furnace",
+export const CONTAINER_IDS = ["minecraft:chest", "minecraft:trapped_chest", "minecraft:barrel", "minecraft:ender_chest", "minecraft:furnace",
   "minecraft:lit_furnace", "minecraft:blast_furnace", "minecraft:smoker", "minecraft:hopper", "minecraft:dispenser", "minecraft:dropper",
   "minecraft:brewing_stand", "minecraft:beacon", "minecraft:enchanting_table", "minecraft:lectern", "minecraft:jukebox", "minecraft:bed",
   "minecraft:undyed_shulker_box", "minecraft:bedrock", "minecraft:barrier", "minecraft:command_block", "minecraft:structure_block"];

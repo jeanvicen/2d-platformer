@@ -1,0 +1,32 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:item": {
+    "description": {
+      "identifier": "lila:nano_sword",
+      "menu_category": {
+        "category": "none"
+      }
+    },
+    "components": {
+      "minecraft:icon": "lila_nano_sword",
+      "minecraft:display_name": {
+        "value": "item.lila.nano_sword.name"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": true,
+      "minecraft:glint": true,
+      "minecraft:rarity": "epic",
+      "minecraft:tags": {
+        "tags": [
+          "lila:nano",
+          "minecraft:is_sword",
+          "minecraft:netherite_tier"
+        ]
+      },
+      "minecraft:damage": {
+        "value": 16
+      },
+      "minecraft:can_destroy_in_creative": false
+    }
+  }
+}

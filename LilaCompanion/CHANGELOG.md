@@ -1,5 +1,61 @@
 # Changelog
 
+## 2.3.0
+- **Pilotar sem abrir o controle:** os poderes de cada veículo e da TITÃ ficam na **barra de itens**.
+  Troque o slot (1, 2, 3…) para escolher o poder e **bata** para usar; a tela mostra a lista com o
+  escolhido em amarelo. TITÃ: soco · raio do visor · salto com pisão · onda de choque · pose de poder.
+- **Pular não tira mais você do veículo** (no celular o "descer" ficava no lugar do pulo): enquanto
+  você pilota, o "descer" do jogo fica travado. **Só agachar sai.**
+- **TITÃ:** câmera em terceira pessoa automática (dá pra ver o robô e o caminho), assento mais alto e
+  corrimão escondido. **Não trava mais ao andar:** ele mede o terreno em 5 pontos da largura do corpo,
+  sobe morros de até 9 blocos de forma suave e **atravessa paredes e árvores** (abre caminho na largura
+  do corpo, respeitando "pode destruir"). Se ficar preso, ele força o passo.
+- **Transformações mais bonitas:** o robô carrega energia (espiral de partículas, mãos tremendo), dá um
+  clarão com anel de choque e a forma nova aparece crescendo com elástico, girando e assentando com um
+  quique.
+- **Forma normal passeia por perto** em vez de ficar rodando em volta de você: escolhe um ponto a 4–9
+  blocos (do lado ou atrás), paira olhando em volta, segue quando você anda e volta se você for longe.
+- **Torreta fica parada e atira de longe:** cravada no chão (não anda, não teleporta), alcance de ~60
+  blocos, animação nova de armar (pernas abrem, arma sobe, radar e canos estendem), giro dos canos e
+  servo ao parar.
+- **Construções:** menu **Construir…** único e legível no celular (botões grandes de 2 linhas, nada de
+  lista cortada): megaconstruções + as 6 categorias do catálogo + Surpresa. **Tudo mobiliado:** vila
+  (casas e lojas do catálogo + igreja), cidade (prédios com andares de escritório e apartamento,
+  hotel, hospital…), castelo (torre do castelinho mobiliada + ferreiro + estábulo), casa tecnológica,
+  arranha-céu futurista de 30 andares com heliponto, pirâmide (câmara do faraó), farol (quarto do
+  faroleiro). **Autocorreção:** no fim de toda obra ele confere bloco por bloco e recoloca o que
+  faltou (inclusive a metade de cima das portas e a cabeceira das camas).
+- **Exército:**
+  - **menos lag** (a lista de robôs fica em cache e a busca de inimigos é uma só por rodada; antes era
+    uma varredura de 256 blocos a cada 5 ticks + uma busca por robô). Corrigido também um bug que
+    deixava a maioria dos robôs sem atirar.
+  - **5 tipos de robô** com cor e acessório próprios: soldado (laser), construtor (capacete; obra
+    rápida), artilheiro (canhão de ombro, de longe, estouro em área), médico (mochila com cruz; cura
+    você e os robôs), ninja (katana; some na fumaça e aparece nas costas do inimigo).
+  - **Estilos de exército**: misto, só soldados, ninjas, artilharia, construtores, médicos ("exército
+    de ninjas", ou o menu).
+  - **O exército constrói junto:** castelos, megaconstruções e o catálogo inteiro. Cada robô voa até um
+    pedaço da obra e solda os blocos com o laser (construtores valem por dois), e no fim todos conferem
+    a obra. "Cancelar" para só a obra.
+  - Formações novas: **linha de frente** e **V**.
+- **Enxame de nanorrobôs refeito do zero:**
+  - **Leve:** fumaça escura com brilhos (poucas partículas que duram mais) em vez de milhares orbitando.
+  - **Atmosfera:** nanorrobôs minúsculos espalhados pelo ar em volta de você (não orbitam) e uma névoa
+    levíssima no horizonte.
+  - **Inteligente, sem controle:** de mão vazia, bata num bloco e eles se juntam na sua mão virando a
+    ferramenta certa — **machado** (derruba a árvore inteira), **picareta** (veio inteiro de minério ou
+    túnel 3×3), **pá** (3×3), **enxada**. Bata num bicho e vira **espada** (corte em área). As ferramentas
+    se desfazem quando você para de usar ou larga no chão.
+  - **Martelo de nanorrobôs:** use para arremessar; explode no que acertar e volta voando para a mão.
+  - **Modos** (item **Núcleo do enxame** na sua barra — use para trocar, agachado volta; ou fale):
+    **Inteligente**, **Escudo** (barreira girando: nada passa e nada te acerta; eles não atacam),
+    **Asas** enormes nas costas (voe para onde olha), **Prancha voadora**, **Mãos gigantes** atrás de
+    você que socam junto com você, **Devorador** (come tudo por onde você passa; agachado, o chão também).
+  - **Proteção automática:** almofada de nanorrobôs nas quedas (sem dano de queda), plataforma sobre
+    lava/vazio, luz que te acompanha no escuro, fôlego debaixo d'água, apagam o fogo e remendam você
+    com a vida baixa. Projéteis perto de você somem no ar.
+  - Continuam: muralha, ponte, escada, cúpula, punho do céu, lâmina giratória, tornado, elevador, ataca.
+
 ## 2.2.1
 - **Sem engrenagens voando**: o robô ficou só com cabeça, tronco e as duas mãos, presos por magnetismo.
 - **Animações com física de verdade** (calculada no próprio jogo, a cada quadro): cada peça é uma massa

@@ -50,6 +50,8 @@ def main():
         **{f"%%A_{k.upper()}%%": img(f"arch_{k}", 300) for k in ("casa", "padaria", "escola", "igreja", "mansao", "moinho", "farolzinho", "castelinho",
                                                                   "torre_mago", "hospital", "cafeteria", "fonte", "casa_in", "escola_in", "hospital_in", "padaria_in")},
         "%%F_TURRET%%": img("form_turret_g", 300), "%%R_OFF%%": img("robot_off", 300), "%%R_BOOT%%": img("robot_boot", 300), "%%ROBOT%%": img("robot", 260),
+        **{f"%%RK_{k.upper()}%%": img(f"robot_{k}", 220) for k in ("soldado", "construtor", "artilheiro", "medico", "ninja")},
+        "%%NANO_ITEMS%%": img("nano_items", 560, pixel=True),
         "%%TESTS%%": tests_rows(), "%%B64%%": base64.b64encode(addon).decode(),
         "%%SIZE%%": f"{len(addon) / 1024:.0f}", "%%SHA%%": hashlib.sha256(addon).hexdigest()[:16],
         "%%RAW%%": RAW, "%%VERSION%%": ver,

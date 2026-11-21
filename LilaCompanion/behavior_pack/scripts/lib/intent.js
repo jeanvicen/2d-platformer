@@ -212,7 +212,12 @@ export function parseOne(s) {
   if (spd && has(tok, ["constroi", "construir", "construcao", "constrói", "construa", "modo", "velocidade", "faz", "faca", "obra", "trabalha"]) && !findKey(tok, MEGA)) {
     return { type: "buildspeed", speed: spd };
   }
-  if (has(tok, ARMY_WORDS)) return { type: "army", count: amount ?? undefined };
+  if (has(tok, ARMY_WORDS)) {
+    const style = has(tok, ["ninja", "ninjas"]) ? "ninjas" : has(tok, ["artilharia", "artilheiro", "artilheiros", "canhao", "canhoes"]) ? "artilheiros"
+      : has(tok, ["medico", "medicos", "cura", "curandeiro", "curandeiros"]) ? "medicos" : has(tok, ["construtor", "construtores", "pedreiro", "pedreiros"]) ? "construtores"
+        : has(tok, ["soldado", "soldados"]) && !has(tok, ["misto", "mistura"]) ? "soldados" : undefined;
+    return { type: "army", count: amount ?? undefined, style };
+  }
   const biome = findKey(tok, BIOMES);
   if (biome && has(tok, ["bioma", "transforma", "transformar", "transforme", "muda", "mudar", "mude", "vira", "virar", "deixa", "faz"])) {
     return { type: "biome", biome };

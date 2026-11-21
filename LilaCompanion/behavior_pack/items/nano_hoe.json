@@ -1,0 +1,43 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:item": {
+    "description": {
+      "identifier": "lila:nano_hoe",
+      "menu_category": {
+        "category": "none"
+      }
+    },
+    "components": {
+      "minecraft:icon": "lila_nano_hoe",
+      "minecraft:display_name": {
+        "value": "item.lila.nano_hoe.name"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": true,
+      "minecraft:glint": true,
+      "minecraft:rarity": "epic",
+      "minecraft:tags": {
+        "tags": [
+          "lila:nano",
+          "minecraft:is_hoe",
+          "minecraft:is_tool",
+          "minecraft:netherite_tier"
+        ]
+      },
+      "minecraft:digger": {
+        "use_efficiency": true,
+        "destroy_speeds": [
+          {
+            "block": {
+              "tags": "query.any_tag('plant', 'minecraft:is_hoe_item_destructible')"
+            },
+            "speed": 60
+          }
+        ]
+      },
+      "minecraft:damage": {
+        "value": 9
+      }
+    }
+  }
+}
