@@ -364,8 +364,9 @@ export function metabolism(c) {
  * @param {string} text
  */
 export function command(c, text) {
-  // em forma de enxame, "ponte", "escudo", "tornado"... são formas do enxame
-  if (formOf(c) === "swarm" && !/cancel|normal|para tudo|volta/.test(text.toLowerCase())) {
+  // em forma de enxame (a forma normal do Hacknd), "ponte", "escudo", "tornado"... são poderes do enxame
+  // (pedidos de item — "me dá um escudo/machado" — e de construção seguem o caminho normal)
+  if ((formOf(c) === "swarm" || formOf(c) === "drone") && !/cancel|normal|para tudo|volta|constr|fabrica|\bme d[aáeê](\s|$)|\bquero (um|uma)\s|\bpega\b/i.test(text)) {
     const sh = swarmShapeOf(text);
     if (sh) {
       handleIntents(c, [{ type: "swarm", shape: sh }], text);
@@ -373,7 +374,7 @@ export function command(c, text) {
     }
   }
   // poderes que só o enxame tem: pedir direto já vira enxame ("prancha", "mãos gigantes", "devorador"...)
-  if (formOf(c) !== "swarm" && !/\bme d[aáeê](\s|$)|\bquero (um|uma)\s/i.test(text)) {
+  if (formOf(c) !== "swarm" && formOf(c) !== "drone" && !/\bme d[aáeê](\s|$)|\bquero (um|uma)\s/i.test(text)) {
     const sh = swarmShapeOf(text);
     if (sh && NANO_ONLY.has(sh)) {
       handleIntents(c, [{ type: "swarm", shape: sh }], text);
@@ -460,14 +461,15 @@ export function handleIntents(c, intents, raw = "") {
           break;
         }
         if (armyActive(c)) merge(c);
-        const wasSwarm = formOf(c) === "swarm";
+        // Hacknd: a forma normal já é o enxame; de veículo/titã/torreta ele se desfaz de volta na nuvem
+        const wasSwarm = formOf(c) === "swarm" || formOf(c) === "drone";
         if (!wasSwarm) {
           if (c.rec.mode === "turret") c.rec.mode = "follow";
-          setForm(c, "swarm");
-        }
+          setForm(c, "drone");
+        } else if (!it.shape) say(c, "Nós já somos o enxame! Peça um poder: escudo, asas, prancha, mãos gigantes, devorador, martelo...", { force: true });
         // vindo de outra forma, espera a transformação terminar para usar o poder pedido
         if (it.shape && wasSwarm) doShape(c, it.shape, o);
-        else if (it.shape) system.runTimeout(() => formOf(c) === "swarm" && c.alive() && doShape(c, it.shape, c.owner() ?? o), 20);
+        else if (it.shape) system.runTimeout(() => (formOf(c) === "swarm" || formOf(c) === "drone") && c.alive() && doShape(c, it.shape, c.owner() ?? o), 20);
         break;
       }
       case "pause":
@@ -534,7 +536,7 @@ export function handleIntents(c, intents, raw = "") {
         break;
       case "ride": {
         const o = c.owner();
-        if (!c.def?.flying) say(c, "Eu não consigo te carregar... mas o DR-0N consegue!", { force: true });
+        if (!c.def?.flying) say(c, "Eu não consigo te carregar... mas o Hacknd consegue!", { force: true });
         else if (o && !mount(c, o)) say(c, "Não consegui te pegar agora. Chega mais perto!", { force: true });
         break;
       }

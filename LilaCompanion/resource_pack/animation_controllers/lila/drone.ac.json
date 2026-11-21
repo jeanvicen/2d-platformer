@@ -359,6 +359,943 @@
           ]
         }
       }
+    },
+    "controller.animation.lila.swarmfx": {
+      "initial_state": "default",
+      "states": {
+        "default": {
+          "transitions": [
+            {
+              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+            },
+            {
+              "pile": "q.property('lila:off')"
+            },
+            {
+              "aura_1": "v.form == 1 && !q.property('lila:off')"
+            },
+            {
+              "aura_2": "v.form == 2 && !q.property('lila:off')"
+            },
+            {
+              "aura_3": "v.form == 3 && !q.property('lila:off')"
+            },
+            {
+              "aura_4": "v.form == 4 && !q.property('lila:off')"
+            },
+            {
+              "aura_5": "v.form == 5 && !q.property('lila:off')"
+            },
+            {
+              "aura_6": "v.form == 6 && !q.property('lila:off')"
+            },
+            {
+              "aura_7": "v.form == 7 && !q.property('lila:off')"
+            },
+            {
+              "aura_8": "v.form == 8 && !q.property('lila:off')"
+            },
+            {
+              "aura_10": "v.form == 10 && !q.property('lila:off')"
+            },
+            {
+              "aura_11": "v.form == 11 && !q.property('lila:off')"
+            },
+            {
+              "aura_12": "v.form == 12 && !q.property('lila:off')"
+            },
+            {
+              "aura_13": "v.form == 13 && !q.property('lila:off')"
+            },
+            {
+              "aura_14": "v.form == 14 && !q.property('lila:off')"
+            },
+            {
+              "aura_15": "v.form == 15 && !q.property('lila:off')"
+            }
+          ]
+        },
+        "cloud": {
+          "animations": [
+            "fx_swarm"
+          ],
+          "transitions": [
+            {
+              "pile": "q.property('lila:off')"
+            },
+            {
+              "aura_1": "v.form == 1 && !q.property('lila:off')"
+            },
+            {
+              "aura_2": "v.form == 2 && !q.property('lila:off')"
+            },
+            {
+              "aura_3": "v.form == 3 && !q.property('lila:off')"
+            },
+            {
+              "aura_4": "v.form == 4 && !q.property('lila:off')"
+            },
+            {
+              "aura_5": "v.form == 5 && !q.property('lila:off')"
+            },
+            {
+              "aura_6": "v.form == 6 && !q.property('lila:off')"
+            },
+            {
+              "aura_7": "v.form == 7 && !q.property('lila:off')"
+            },
+            {
+              "aura_8": "v.form == 8 && !q.property('lila:off')"
+            },
+            {
+              "aura_10": "v.form == 10 && !q.property('lila:off')"
+            },
+            {
+              "aura_11": "v.form == 11 && !q.property('lila:off')"
+            },
+            {
+              "aura_12": "v.form == 12 && !q.property('lila:off')"
+            },
+            {
+              "aura_13": "v.form == 13 && !q.property('lila:off')"
+            },
+            {
+              "aura_14": "v.form == 14 && !q.property('lila:off')"
+            },
+            {
+              "aura_15": "v.form == 15 && !q.property('lila:off')"
+            },
+            {
+              "default": "!((v.form == 0 || v.form == 9) && !q.property('lila:off'))"
+            }
+          ]
+        },
+        "pile": {
+          "animations": [
+            "fx_pile"
+          ],
+          "transitions": [
+            {
+              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+            },
+            {
+              "aura_1": "v.form == 1 && !q.property('lila:off')"
+            },
+            {
+              "aura_2": "v.form == 2 && !q.property('lila:off')"
+            },
+            {
+              "aura_3": "v.form == 3 && !q.property('lila:off')"
+            },
+            {
+              "aura_4": "v.form == 4 && !q.property('lila:off')"
+            },
+            {
+              "aura_5": "v.form == 5 && !q.property('lila:off')"
+            },
+            {
+              "aura_6": "v.form == 6 && !q.property('lila:off')"
+            },
+            {
+              "aura_7": "v.form == 7 && !q.property('lila:off')"
+            },
+            {
+              "aura_8": "v.form == 8 && !q.property('lila:off')"
+            },
+            {
+              "aura_10": "v.form == 10 && !q.property('lila:off')"
+            },
+            {
+              "aura_11": "v.form == 11 && !q.property('lila:off')"
+            },
+            {
+              "aura_12": "v.form == 12 && !q.property('lila:off')"
+            },
+            {
+              "aura_13": "v.form == 13 && !q.property('lila:off')"
+            },
+            {
+              "aura_14": "v.form == 14 && !q.property('lila:off')"
+            },
+            {
+              "aura_15": "v.form == 15 && !q.property('lila:off')"
+            },
+            {
+              "default": "!(q.property('lila:off'))"
+            }
+          ]
+        },
+        "aura_1": {
+          "animations": [
+            "fx_aura_1"
+          ],
+          "transitions": [
+            {
+              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+            },
+            {
+              "pile": "q.property('lila:off')"
+            },
+            {
+              "aura_2": "v.form == 2 && !q.property('lila:off')"
+            },
+            {
+              "aura_3": "v.form == 3 && !q.property('lila:off')"
+            },
+            {
+              "aura_4": "v.form == 4 && !q.property('lila:off')"
+            },
+            {
+              "aura_5": "v.form == 5 && !q.property('lila:off')"
+            },
+            {
+              "aura_6": "v.form == 6 && !q.property('lila:off')"
+            },
+            {
+              "aura_7": "v.form == 7 && !q.property('lila:off')"
+            },
+            {
+              "aura_8": "v.form == 8 && !q.property('lila:off')"
+            },
+            {
+              "aura_10": "v.form == 10 && !q.property('lila:off')"
+            },
+            {
+              "aura_11": "v.form == 11 && !q.property('lila:off')"
+            },
+            {
+              "aura_12": "v.form == 12 && !q.property('lila:off')"
+            },
+            {
+              "aura_13": "v.form == 13 && !q.property('lila:off')"
+            },
+            {
+              "aura_14": "v.form == 14 && !q.property('lila:off')"
+            },
+            {
+              "aura_15": "v.form == 15 && !q.property('lila:off')"
+            },
+            {
+              "default": "!(v.form == 1 && !q.property('lila:off'))"
+            }
+          ]
+        },
+        "aura_2": {
+          "animations": [
+            "fx_aura_2"
+          ],
+          "transitions": [
+            {
+              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+            },
+            {
+              "pile": "q.property('lila:off')"
+            },
+            {
+              "aura_1": "v.form == 1 && !q.property('lila:off')"
+            },
+            {
+              "aura_3": "v.form == 3 && !q.property('lila:off')"
+            },
+            {
+              "aura_4": "v.form == 4 && !q.property('lila:off')"
+            },
+            {
+              "aura_5": "v.form == 5 && !q.property('lila:off')"
+            },
+            {
+              "aura_6": "v.form == 6 && !q.property('lila:off')"
+            },
+            {
+              "aura_7": "v.form == 7 && !q.property('lila:off')"
+            },
+            {
+              "aura_8": "v.form == 8 && !q.property('lila:off')"
+            },
+            {
+              "aura_10": "v.form == 10 && !q.property('lila:off')"
+            },
+            {
+              "aura_11": "v.form == 11 && !q.property('lila:off')"
+            },
+            {
+              "aura_12": "v.form == 12 && !q.property('lila:off')"
+            },
+            {
+              "aura_13": "v.form == 13 && !q.property('lila:off')"
+            },
+            {
+              "aura_14": "v.form == 14 && !q.property('lila:off')"
+            },
+            {
+              "aura_15": "v.form == 15 && !q.property('lila:off')"
+            },
+            {
+              "default": "!(v.form == 2 && !q.property('lila:off'))"
+            }
+          ]
+        },
+        "aura_3": {
+          "animations": [
+            "fx_aura_3"
+          ],
+          "transitions": [
+            {
+              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+            },
+            {
+              "pile": "q.property('lila:off')"
+            },
+            {
+              "aura_1": "v.form == 1 && !q.property('lila:off')"
+            },
+            {
+              "aura_2": "v.form == 2 && !q.property('lila:off')"
+            },
+            {
+              "aura_4": "v.form == 4 && !q.property('lila:off')"
+            },
+            {
+              "aura_5": "v.form == 5 && !q.property('lila:off')"
+            },
+            {
+              "aura_6": "v.form == 6 && !q.property('lila:off')"
+            },
+            {
+              "aura_7": "v.form == 7 && !q.property('lila:off')"
+            },
+            {
+              "aura_8": "v.form == 8 && !q.property('lila:off')"
+            },
+            {
+              "aura_10": "v.form == 10 && !q.property('lila:off')"
+            },
+            {
+              "aura_11": "v.form == 11 && !q.property('lila:off')"
+            },
+            {
+              "aura_12": "v.form == 12 && !q.property('lila:off')"
+            },
+            {
+              "aura_13": "v.form == 13 && !q.property('lila:off')"
+            },
+            {
+              "aura_14": "v.form == 14 && !q.property('lila:off')"
+            },
+            {
+              "aura_15": "v.form == 15 && !q.property('lila:off')"
+            },
+            {
+              "default": "!(v.form == 3 && !q.property('lila:off'))"
+            }
+          ]
+        },
+        "aura_4": {
+          "animations": [
+            "fx_aura_4"
+          ],
+          "transitions": [
+            {
+              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+            },
+            {
+              "pile": "q.property('lila:off')"
+            },
+            {
+              "aura_1": "v.form == 1 && !q.property('lila:off')"
+            },
+            {
+              "aura_2": "v.form == 2 && !q.property('lila:off')"
+            },
+            {
+              "aura_3": "v.form == 3 && !q.property('lila:off')"
+            },
+            {
+              "aura_5": "v.form == 5 && !q.property('lila:off')"
+            },
+            {
+              "aura_6": "v.form == 6 && !q.property('lila:off')"
+            },
+            {
+              "aura_7": "v.form == 7 && !q.property('lila:off')"
+            },
+            {
+              "aura_8": "v.form == 8 && !q.property('lila:off')"
+            },
+            {
+              "aura_10": "v.form == 10 && !q.property('lila:off')"
+            },
+            {
+              "aura_11": "v.form == 11 && !q.property('lila:off')"
+            },
+            {
+              "aura_12": "v.form == 12 && !q.property('lila:off')"
+            },
+            {
+              "aura_13": "v.form == 13 && !q.property('lila:off')"
+            },
+            {
+              "aura_14": "v.form == 14 && !q.property('lila:off')"
+            },
+            {
+              "aura_15": "v.form == 15 && !q.property('lila:off')"
+            },
+            {
+              "default": "!(v.form == 4 && !q.property('lila:off'))"
+            }
+          ]
+        },
+        "aura_5": {
+          "animations": [
+            "fx_aura_5"
+          ],
+          "transitions": [
+            {
+              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+            },
+            {
+              "pile": "q.property('lila:off')"
+            },
+            {
+              "aura_1": "v.form == 1 && !q.property('lila:off')"
+            },
+            {
+              "aura_2": "v.form == 2 && !q.property('lila:off')"
+            },
+            {
+              "aura_3": "v.form == 3 && !q.property('lila:off')"
+            },
+            {
+              "aura_4": "v.form == 4 && !q.property('lila:off')"
+            },
+            {
+              "aura_6": "v.form == 6 && !q.property('lila:off')"
+            },
+            {
+              "aura_7": "v.form == 7 && !q.property('lila:off')"
+            },
+            {
+              "aura_8": "v.form == 8 && !q.property('lila:off')"
+            },
+            {
+              "aura_10": "v.form == 10 && !q.property('lila:off')"
+            },
+            {
+              "aura_11": "v.form == 11 && !q.property('lila:off')"
+            },
+            {
+              "aura_12": "v.form == 12 && !q.property('lila:off')"
+            },
+            {
+              "aura_13": "v.form == 13 && !q.property('lila:off')"
+            },
+            {
+              "aura_14": "v.form == 14 && !q.property('lila:off')"
+            },
+            {
+              "aura_15": "v.form == 15 && !q.property('lila:off')"
+            },
+            {
+              "default": "!(v.form == 5 && !q.property('lila:off'))"
+            }
+          ]
+        },
+        "aura_6": {
+          "animations": [
+            "fx_aura_6"
+          ],
+          "transitions": [
+            {
+              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+            },
+            {
+              "pile": "q.property('lila:off')"
+            },
+            {
+              "aura_1": "v.form == 1 && !q.property('lila:off')"
+            },
+            {
+              "aura_2": "v.form == 2 && !q.property('lila:off')"
+            },
+            {
+              "aura_3": "v.form == 3 && !q.property('lila:off')"
+            },
+            {
+              "aura_4": "v.form == 4 && !q.property('lila:off')"
+            },
+            {
+              "aura_5": "v.form == 5 && !q.property('lila:off')"
+            },
+            {
+              "aura_7": "v.form == 7 && !q.property('lila:off')"
+            },
+            {
+              "aura_8": "v.form == 8 && !q.property('lila:off')"
+            },
+            {
+              "aura_10": "v.form == 10 && !q.property('lila:off')"
+            },
+            {
+              "aura_11": "v.form == 11 && !q.property('lila:off')"
+            },
+            {
+              "aura_12": "v.form == 12 && !q.property('lila:off')"
+            },
+            {
+              "aura_13": "v.form == 13 && !q.property('lila:off')"
+            },
+            {
+              "aura_14": "v.form == 14 && !q.property('lila:off')"
+            },
+            {
+              "aura_15": "v.form == 15 && !q.property('lila:off')"
+            },
+            {
+              "default": "!(v.form == 6 && !q.property('lila:off'))"
+            }
+          ]
+        },
+        "aura_7": {
+          "animations": [
+            "fx_aura_7"
+          ],
+          "transitions": [
+            {
+              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+            },
+            {
+              "pile": "q.property('lila:off')"
+            },
+            {
+              "aura_1": "v.form == 1 && !q.property('lila:off')"
+            },
+            {
+              "aura_2": "v.form == 2 && !q.property('lila:off')"
+            },
+            {
+              "aura_3": "v.form == 3 && !q.property('lila:off')"
+            },
+            {
+              "aura_4": "v.form == 4 && !q.property('lila:off')"
+            },
+            {
+              "aura_5": "v.form == 5 && !q.property('lila:off')"
+            },
+            {
+              "aura_6": "v.form == 6 && !q.property('lila:off')"
+            },
+            {
+              "aura_8": "v.form == 8 && !q.property('lila:off')"
+            },
+            {
+              "aura_10": "v.form == 10 && !q.property('lila:off')"
+            },
+            {
+              "aura_11": "v.form == 11 && !q.property('lila:off')"
+            },
+            {
+              "aura_12": "v.form == 12 && !q.property('lila:off')"
+            },
+            {
+              "aura_13": "v.form == 13 && !q.property('lila:off')"
+            },
+            {
+              "aura_14": "v.form == 14 && !q.property('lila:off')"
+            },
+            {
+              "aura_15": "v.form == 15 && !q.property('lila:off')"
+            },
+            {
+              "default": "!(v.form == 7 && !q.property('lila:off'))"
+            }
+          ]
+        },
+        "aura_8": {
+          "animations": [
+            "fx_aura_8"
+          ],
+          "transitions": [
+            {
+              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+            },
+            {
+              "pile": "q.property('lila:off')"
+            },
+            {
+              "aura_1": "v.form == 1 && !q.property('lila:off')"
+            },
+            {
+              "aura_2": "v.form == 2 && !q.property('lila:off')"
+            },
+            {
+              "aura_3": "v.form == 3 && !q.property('lila:off')"
+            },
+            {
+              "aura_4": "v.form == 4 && !q.property('lila:off')"
+            },
+            {
+              "aura_5": "v.form == 5 && !q.property('lila:off')"
+            },
+            {
+              "aura_6": "v.form == 6 && !q.property('lila:off')"
+            },
+            {
+              "aura_7": "v.form == 7 && !q.property('lila:off')"
+            },
+            {
+              "aura_10": "v.form == 10 && !q.property('lila:off')"
+            },
+            {
+              "aura_11": "v.form == 11 && !q.property('lila:off')"
+            },
+            {
+              "aura_12": "v.form == 12 && !q.property('lila:off')"
+            },
+            {
+              "aura_13": "v.form == 13 && !q.property('lila:off')"
+            },
+            {
+              "aura_14": "v.form == 14 && !q.property('lila:off')"
+            },
+            {
+              "aura_15": "v.form == 15 && !q.property('lila:off')"
+            },
+            {
+              "default": "!(v.form == 8 && !q.property('lila:off'))"
+            }
+          ]
+        },
+        "aura_10": {
+          "animations": [
+            "fx_aura_10"
+          ],
+          "transitions": [
+            {
+              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+            },
+            {
+              "pile": "q.property('lila:off')"
+            },
+            {
+              "aura_1": "v.form == 1 && !q.property('lila:off')"
+            },
+            {
+              "aura_2": "v.form == 2 && !q.property('lila:off')"
+            },
+            {
+              "aura_3": "v.form == 3 && !q.property('lila:off')"
+            },
+            {
+              "aura_4": "v.form == 4 && !q.property('lila:off')"
+            },
+            {
+              "aura_5": "v.form == 5 && !q.property('lila:off')"
+            },
+            {
+              "aura_6": "v.form == 6 && !q.property('lila:off')"
+            },
+            {
+              "aura_7": "v.form == 7 && !q.property('lila:off')"
+            },
+            {
+              "aura_8": "v.form == 8 && !q.property('lila:off')"
+            },
+            {
+              "aura_11": "v.form == 11 && !q.property('lila:off')"
+            },
+            {
+              "aura_12": "v.form == 12 && !q.property('lila:off')"
+            },
+            {
+              "aura_13": "v.form == 13 && !q.property('lila:off')"
+            },
+            {
+              "aura_14": "v.form == 14 && !q.property('lila:off')"
+            },
+            {
+              "aura_15": "v.form == 15 && !q.property('lila:off')"
+            },
+            {
+              "default": "!(v.form == 10 && !q.property('lila:off'))"
+            }
+          ]
+        },
+        "aura_11": {
+          "animations": [
+            "fx_aura_11"
+          ],
+          "transitions": [
+            {
+              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+            },
+            {
+              "pile": "q.property('lila:off')"
+            },
+            {
+              "aura_1": "v.form == 1 && !q.property('lila:off')"
+            },
+            {
+              "aura_2": "v.form == 2 && !q.property('lila:off')"
+            },
+            {
+              "aura_3": "v.form == 3 && !q.property('lila:off')"
+            },
+            {
+              "aura_4": "v.form == 4 && !q.property('lila:off')"
+            },
+            {
+              "aura_5": "v.form == 5 && !q.property('lila:off')"
+            },
+            {
+              "aura_6": "v.form == 6 && !q.property('lila:off')"
+            },
+            {
+              "aura_7": "v.form == 7 && !q.property('lila:off')"
+            },
+            {
+              "aura_8": "v.form == 8 && !q.property('lila:off')"
+            },
+            {
+              "aura_10": "v.form == 10 && !q.property('lila:off')"
+            },
+            {
+              "aura_12": "v.form == 12 && !q.property('lila:off')"
+            },
+            {
+              "aura_13": "v.form == 13 && !q.property('lila:off')"
+            },
+            {
+              "aura_14": "v.form == 14 && !q.property('lila:off')"
+            },
+            {
+              "aura_15": "v.form == 15 && !q.property('lila:off')"
+            },
+            {
+              "default": "!(v.form == 11 && !q.property('lila:off'))"
+            }
+          ]
+        },
+        "aura_12": {
+          "animations": [
+            "fx_aura_12"
+          ],
+          "transitions": [
+            {
+              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+            },
+            {
+              "pile": "q.property('lila:off')"
+            },
+            {
+              "aura_1": "v.form == 1 && !q.property('lila:off')"
+            },
+            {
+              "aura_2": "v.form == 2 && !q.property('lila:off')"
+            },
+            {
+              "aura_3": "v.form == 3 && !q.property('lila:off')"
+            },
+            {
+              "aura_4": "v.form == 4 && !q.property('lila:off')"
+            },
+            {
+              "aura_5": "v.form == 5 && !q.property('lila:off')"
+            },
+            {
+              "aura_6": "v.form == 6 && !q.property('lila:off')"
+            },
+            {
+              "aura_7": "v.form == 7 && !q.property('lila:off')"
+            },
+            {
+              "aura_8": "v.form == 8 && !q.property('lila:off')"
+            },
+            {
+              "aura_10": "v.form == 10 && !q.property('lila:off')"
+            },
+            {
+              "aura_11": "v.form == 11 && !q.property('lila:off')"
+            },
+            {
+              "aura_13": "v.form == 13 && !q.property('lila:off')"
+            },
+            {
+              "aura_14": "v.form == 14 && !q.property('lila:off')"
+            },
+            {
+              "aura_15": "v.form == 15 && !q.property('lila:off')"
+            },
+            {
+              "default": "!(v.form == 12 && !q.property('lila:off'))"
+            }
+          ]
+        },
+        "aura_13": {
+          "animations": [
+            "fx_aura_13"
+          ],
+          "transitions": [
+            {
+              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+            },
+            {
+              "pile": "q.property('lila:off')"
+            },
+            {
+              "aura_1": "v.form == 1 && !q.property('lila:off')"
+            },
+            {
+              "aura_2": "v.form == 2 && !q.property('lila:off')"
+            },
+            {
+              "aura_3": "v.form == 3 && !q.property('lila:off')"
+            },
+            {
+              "aura_4": "v.form == 4 && !q.property('lila:off')"
+            },
+            {
+              "aura_5": "v.form == 5 && !q.property('lila:off')"
+            },
+            {
+              "aura_6": "v.form == 6 && !q.property('lila:off')"
+            },
+            {
+              "aura_7": "v.form == 7 && !q.property('lila:off')"
+            },
+            {
+              "aura_8": "v.form == 8 && !q.property('lila:off')"
+            },
+            {
+              "aura_10": "v.form == 10 && !q.property('lila:off')"
+            },
+            {
+              "aura_11": "v.form == 11 && !q.property('lila:off')"
+            },
+            {
+              "aura_12": "v.form == 12 && !q.property('lila:off')"
+            },
+            {
+              "aura_14": "v.form == 14 && !q.property('lila:off')"
+            },
+            {
+              "aura_15": "v.form == 15 && !q.property('lila:off')"
+            },
+            {
+              "default": "!(v.form == 13 && !q.property('lila:off'))"
+            }
+          ]
+        },
+        "aura_14": {
+          "animations": [
+            "fx_aura_14"
+          ],
+          "transitions": [
+            {
+              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+            },
+            {
+              "pile": "q.property('lila:off')"
+            },
+            {
+              "aura_1": "v.form == 1 && !q.property('lila:off')"
+            },
+            {
+              "aura_2": "v.form == 2 && !q.property('lila:off')"
+            },
+            {
+              "aura_3": "v.form == 3 && !q.property('lila:off')"
+            },
+            {
+              "aura_4": "v.form == 4 && !q.property('lila:off')"
+            },
+            {
+              "aura_5": "v.form == 5 && !q.property('lila:off')"
+            },
+            {
+              "aura_6": "v.form == 6 && !q.property('lila:off')"
+            },
+            {
+              "aura_7": "v.form == 7 && !q.property('lila:off')"
+            },
+            {
+              "aura_8": "v.form == 8 && !q.property('lila:off')"
+            },
+            {
+              "aura_10": "v.form == 10 && !q.property('lila:off')"
+            },
+            {
+              "aura_11": "v.form == 11 && !q.property('lila:off')"
+            },
+            {
+              "aura_12": "v.form == 12 && !q.property('lila:off')"
+            },
+            {
+              "aura_13": "v.form == 13 && !q.property('lila:off')"
+            },
+            {
+              "aura_15": "v.form == 15 && !q.property('lila:off')"
+            },
+            {
+              "default": "!(v.form == 14 && !q.property('lila:off'))"
+            }
+          ]
+        },
+        "aura_15": {
+          "animations": [
+            "fx_aura_15"
+          ],
+          "transitions": [
+            {
+              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+            },
+            {
+              "pile": "q.property('lila:off')"
+            },
+            {
+              "aura_1": "v.form == 1 && !q.property('lila:off')"
+            },
+            {
+              "aura_2": "v.form == 2 && !q.property('lila:off')"
+            },
+            {
+              "aura_3": "v.form == 3 && !q.property('lila:off')"
+            },
+            {
+              "aura_4": "v.form == 4 && !q.property('lila:off')"
+            },
+            {
+              "aura_5": "v.form == 5 && !q.property('lila:off')"
+            },
+            {
+              "aura_6": "v.form == 6 && !q.property('lila:off')"
+            },
+            {
+              "aura_7": "v.form == 7 && !q.property('lila:off')"
+            },
+            {
+              "aura_8": "v.form == 8 && !q.property('lila:off')"
+            },
+            {
+              "aura_10": "v.form == 10 && !q.property('lila:off')"
+            },
+            {
+              "aura_11": "v.form == 11 && !q.property('lila:off')"
+            },
+            {
+              "aura_12": "v.form == 12 && !q.property('lila:off')"
+            },
+            {
+              "aura_13": "v.form == 13 && !q.property('lila:off')"
+            },
+            {
+              "aura_14": "v.form == 14 && !q.property('lila:off')"
+            },
+            {
+              "default": "!(v.form == 15 && !q.property('lila:off'))"
+            }
+          ]
+        }
+      }
     }
   }
 }

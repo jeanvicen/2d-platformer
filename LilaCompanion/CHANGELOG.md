@@ -1,5 +1,33 @@
 # Changelog
 
+## 3.0.0 — Hacknd
+- **O add-on agora se chama Hacknd** e é um **enxame de nanorrobôs**. O corpo de robô saiu: na forma
+  normal existe só a nuvem de robozinhos do tamanho de poeira. Mesmo pacote (mesmos IDs), então o
+  mundo e o inventário continuam.
+- **Movimento de inseto** (pesquisado: abelhas e mosquitos não voam alinhados como pássaros, voam em
+  zigue-zague turbulento — o "ruído de curl" usado em simulação de enxames). Cada robozinho tem um lar
+  num elipsoide, gira devagar em volta do centro, respira junto com a nuvem e faz zigue-zague em duas
+  frequências. Por cima, uma névoa quase transparente dá a sensação de milhões, e fica um rastro de
+  poeira por onde a nuvem passa.
+- **Não trava:** a nuvem roda no aparelho de quem joga (partículas presas à entidade, em espaço local).
+  O servidor não manda nada por quadro para desenhar o enxame. As fumaças que o script mandava a cada
+  poucos ticks foram removidas.
+- **Invocar = descem do céu:** milhares de pontinhos em ~9 correntes, vindos de lugares diferentes,
+  fazem curva e espiral até formar a nuvem. **Ligar** também. **Desligar:** o campo cai e a poeira
+  desce num montinho que fica brilhando fraquinho no chão.
+- **Tudo feito de nanorrobôs:** veículos, TITÃ, torreta, soldados do exército e o controle ganharam
+  material de enxame (grafite granulado, grade de células microscópicas, um resto da cor original e
+  pontinhos ciano que brilham no escuro), com robozinhos soltos deslizando pela superfície de cada forma.
+- **Transformar:** a nuvem gira e compacta na forma. **Voltar:** a forma se desfaz em poeira. O exército
+  sai de uma explosão macia de poeira, cada soldado compactando a partir dela, e ao juntar eles viram
+  poeira de novo.
+- **Golpes de enxame:** o soco virou um punho de nanorrobôs que voa até o alvo, o tiro virou um dardo
+  de poeira e a construção virou um fio de nanorrobôs até o bloco.
+- **Os poderes do enxame valem sempre** (escudo, asas, prancha, mãos gigantes, devorador, ferramentas
+  automáticas, martelo, proteção de queda, luz, muralha/ponte/escada/cúpula/tornado...): não precisa
+  mais "virar enxame". "Cancelar" desmancha formas e ferramentas e volta ao modo inteligente.
+- Comando novo **`/hacknd`** (o `/drone` continua). Pacote: `Hacknd.mcaddon`.
+
 ## 2.3.0
 - **Pilotar sem abrir o controle:** os poderes de cada veículo e da TITÃ ficam na **barra de itens**.
   Troque o slot (1, 2, 3…) para escolher o poder e **bata** para usar; a tela mostra a lista com o

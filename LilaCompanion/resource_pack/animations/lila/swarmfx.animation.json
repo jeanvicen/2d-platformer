@@ -1,0 +1,171 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.lila.fx_swarm": {
+      "loop": true,
+      "animation_length": 2.0,
+      "particle_effects": {
+        "0.0": [
+          {
+            "effect": "swarm"
+          },
+          {
+            "effect": "haze"
+          },
+          {
+            "effect": "trail"
+          }
+        ]
+      }
+    },
+    "animation.lila.fx_pile": {
+      "loop": true,
+      "animation_length": 2.0,
+      "particle_effects": {
+        "0.0": {
+          "effect": "pile"
+        }
+      }
+    },
+    "animation.lila.fx_aura_1": {
+      "loop": true,
+      "animation_length": 2.0,
+      "particle_effects": {
+        "0.0": {
+          "effect": "aura",
+          "pre_effect_script": "v.sx = 1.8; v.sy = 0.9; v.sz = 1.8;"
+        }
+      }
+    },
+    "animation.lila.fx_aura_2": {
+      "loop": true,
+      "animation_length": 2.0,
+      "particle_effects": {
+        "0.0": {
+          "effect": "aura",
+          "pre_effect_script": "v.sx = 1.4; v.sy = 0.6; v.sz = 1.4;"
+        }
+      }
+    },
+    "animation.lila.fx_aura_3": {
+      "loop": true,
+      "animation_length": 2.0,
+      "particle_effects": {
+        "0.0": {
+          "effect": "aura",
+          "pre_effect_script": "v.sx = 1.5; v.sy = 1.0; v.sz = 1.5;"
+        }
+      }
+    },
+    "animation.lila.fx_aura_4": {
+      "loop": true,
+      "animation_length": 2.0,
+      "particle_effects": {
+        "0.0": {
+          "effect": "aura",
+          "pre_effect_script": "v.sx = 1.7; v.sy = 0.8; v.sz = 1.7;"
+        }
+      }
+    },
+    "animation.lila.fx_aura_5": {
+      "loop": true,
+      "animation_length": 2.0,
+      "particle_effects": {
+        "0.0": {
+          "effect": "aura",
+          "pre_effect_script": "v.sx = 2.2; v.sy = 0.7; v.sz = 2.2;"
+        }
+      }
+    },
+    "animation.lila.fx_aura_6": {
+      "loop": true,
+      "animation_length": 2.0,
+      "particle_effects": {
+        "0.0": {
+          "effect": "aura",
+          "pre_effect_script": "v.sx = 0.9; v.sy = 0.6; v.sz = 0.9;"
+        }
+      }
+    },
+    "animation.lila.fx_aura_7": {
+      "loop": true,
+      "animation_length": 2.0,
+      "particle_effects": {
+        "0.0": {
+          "effect": "aura",
+          "pre_effect_script": "v.sx = 3.6; v.sy = 13.0; v.sz = 3.6;"
+        }
+      }
+    },
+    "animation.lila.fx_aura_8": {
+      "loop": true,
+      "animation_length": 2.0,
+      "particle_effects": {
+        "0.0": {
+          "effect": "aura",
+          "pre_effect_script": "v.sx = 1.5; v.sy = 1.6; v.sz = 1.5;"
+        }
+      }
+    },
+    "animation.lila.fx_aura_10": {
+      "loop": true,
+      "animation_length": 2.0,
+      "particle_effects": {
+        "0.0": {
+          "effect": "aura",
+          "pre_effect_script": "v.sx = 2.1; v.sy = 0.8; v.sz = 2.1;"
+        }
+      }
+    },
+    "animation.lila.fx_aura_11": {
+      "loop": true,
+      "animation_length": 2.0,
+      "particle_effects": {
+        "0.0": {
+          "effect": "aura",
+          "pre_effect_script": "v.sx = 2.2; v.sy = 0.6; v.sz = 2.2;"
+        }
+      }
+    },
+    "animation.lila.fx_aura_12": {
+      "loop": true,
+      "animation_length": 2.0,
+      "particle_effects": {
+        "0.0": {
+          "effect": "aura",
+          "pre_effect_script": "v.sx = 1.8; v.sy = 1.0; v.sz = 1.8;"
+        }
+      }
+    },
+    "animation.lila.fx_aura_13": {
+      "loop": true,
+      "animation_length": 2.0,
+      "particle_effects": {
+        "0.0": {
+          "effect": "aura",
+          "pre_effect_script": "v.sx = 1.5; v.sy = 0.6; v.sz = 1.5;"
+        }
+      }
+    },
+    "animation.lila.fx_aura_14": {
+      "loop": true,
+      "animation_length": 2.0,
+      "particle_effects": {
+        "0.0": {
+          "effect": "aura",
+          "pre_effect_script": "v.sx = 1.7; v.sy = 1.1; v.sz = 1.7;"
+        }
+      }
+    },
+    "animation.lila.fx_aura_15": {
+      "loop": true,
+      "animation_length": 2.0,
+      "particle_effects": {
+        "0.0": {
+          "effect": "aura",
+          "pre_effect_script": "v.sx = 2.5; v.sy = 0.5; v.sz = 2.5;"
+        }
+      }
+    }
+  }
+}

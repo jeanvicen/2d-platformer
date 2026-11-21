@@ -65,7 +65,7 @@ export function* obtain(c, target, count, o = {}) {
   const t = normTarget(target);
   const depth = o.depth ?? 0;
   if (depth > MAX_DEPTH) throw new GoalError("essa cadeia de fabricação ficou longa demais");
-  // DR-0N tem itens infinitos: o que faltar ele materializa na hora
+  // Hacknd tem itens infinitos: o que faltar ele materializa na hora
   if (isCreative(c) && materialize(c, t.toolKind ? { toolKind: t.toolKind, tier: t.tier } : t, count)) {
     yield 4;
     return true;

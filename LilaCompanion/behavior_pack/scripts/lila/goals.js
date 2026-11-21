@@ -594,7 +594,7 @@ export function archName(a) {
   return `${t?.name ?? a.kind}${TYPES.some((x) => x.key === a.kind) ? ` ${sz.name.toLowerCase()}` : ""} (${st.name})`;
 }
 
-/** Planta de uma obra do catálogo, virada para o dono (usada pelo DR-0N e pelo exército). */
+/** Planta de uma obra do catálogo, virada para o dono (usada pelo Hacknd e pelo exército). */
 export function archJob(c, a) {
   const o = c.owner();
   let q = 0;

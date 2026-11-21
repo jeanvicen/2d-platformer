@@ -101,11 +101,11 @@ export const CREATIVE_ITEMS = [
   { w: ["ovo de gato", "gato"], id: "minecraft:cat_spawn_egg", n: 1 },
 ];
 
-/** Formas do DR-0N (índice = propriedade lila:form). */
+/** Formas do Hacknd (índice = propriedade lila:form). */
 export const FORM_LIST = ["drone", "heli", "car", "excavator", "tank", "jet", "moto", "colossus", "turret",
   "swarm", "ship", "ufo", "sub", "boat", "truck", "stealth"];
 export const FORM_NAMES = {
-  drone: "robô (forma normal)", heli: "helicóptero", car: "carro esportivo", excavator: "escavadeira", tank: "tanque de guerra",
+  drone: "enxame (forma normal)", heli: "helicóptero", car: "carro esportivo", excavator: "escavadeira", tank: "tanque de guerra",
   jet: "caça a jato", moto: "moto", colossus: "robô gigante TITÃ", turret: "torreta gigante", swarm: "enxame de nanorrobôs",
   ship: "nave espacial", ufo: "disco voador", sub: "submarino", boat: "lancha", truck: "caminhão-monstro", stealth: "caça supersônico furtivo",
 };

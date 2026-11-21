@@ -1,4 +1,4 @@
-# Checklist de aceitação — DR-0N Mega Drone 2.3.0
+# Checklist de aceitação — Hacknd 3.0.0 (antigo DR-0N Mega Drone)
 
 Legenda: **PASS** = verificado de verdade · **NOT TESTED** = não dá para testar neste ambiente
 (servidor sem tela, sem celular, sem som).
@@ -15,7 +15,8 @@ com jogadores simulados "Dono" e "Intruso" → `tests/last_bds_owner_run.log`.
 | Todo `minecraft:*` usado existe no jogo (vanilla-data), inclusive as 4851 plantas do catálogo | PASS |
 | Referências cruzadas (18 geometrias, render controllers das 16 formas e dos 5 tipos de robô, animações, partículas, sons) | PASS |
 | Testes unitários (frases pt-BR antigas e novas, receitas, A*) | PASS |
-| Molang (479 expressões, inclusive as partículas novas de asas/mãos/prancha): parênteses, funções conhecidas, toda variável lida é escrita | PASS |
+| Molang (751 expressões, inclusive a nuvem do enxame, chegada pelo céu, montar/desmanchar, asas/mãos/prancha): parênteses, funções conhecidas, toda variável lida é escrita | PASS |
+| Hacknd: corpo de robô escondido na forma normal (render controller); efeitos do enxame ligados por controlador de animação no cliente (nuvem / montinho desligado / robozinhos em cada forma) — referências conferidas | PASS |
 | As 4851 construções do catálogo geram sem erro (Node) e as megaconstruções mobiliadas geram (vila, cidade, castelo, casa tech, arranha-céu, pirâmide, farol) | PASS |
 
 ## Sem jogador (servidor oficial)
@@ -39,12 +40,13 @@ com jogadores simulados "Dono" e "Intruso" → `tests/last_bds_owner_run.log`.
 | Helicóptero: dono no volante, poder do slot dispara no botão de ataque | PASS |
 | **Agachar = sair** do veículo (pular não tira) | PASS |
 | Tanque, nave, TITÃ (dono em cima da cabeça, quase imortal, soco/raio) | PASS |
-| **Enxame inteligente**: núcleo do enxame na barra; mão vazia na madeira vira **machado**; machado **derruba a árvore inteira**; mão vazia num bicho vira **espada** | PASS |
+| **Hacknd: a forma normal já é o enxame** (modo inteligente ativo, núcleo do enxame na barra) | PASS |
+| **Enxame inteligente**: mão vazia na madeira vira **machado**; machado **derruba a árvore inteira**; mão vazia num bicho vira **espada** | PASS |
 | **Martelo de nanorrobôs**: arremessa, explode e volta para a mão | PASS |
 | **Modo escudo**: dono não leva dano, flechas somem | PASS |
 | **Prancha voadora**: levanta o jogador e segura a altura (medido: +1,5 bloco) | PASS |
 | **Devorador**: come os blocos em volta do jogador | PASS |
-| Enxame pica monstros; muralha; ponte sobre o vazio; "Cancelar" desmancha tudo **e recolhe as ferramentas/núcleo** | PASS |
+| Enxame pica monstros; muralha; ponte sobre o vazio; "Cancelar" desmancha as formas **e recolhe as ferramentas** (volta ao modo inteligente) | PASS |
 | Revide contra jogador; lição de leve; modo proteger | PASS |
 | Exército: 10 robôs, derrubam monstros, levam maçã dourada; **esquadrão misto com os 5 tipos** | PASS |
 | **Exército constrói junto** (casa do catálogo mobiliada com portas, conferida no fim) | PASS |
@@ -53,6 +55,8 @@ com jogadores simulados "Dono" e "Intruso" → `tests/last_bds_owner_run.log`.
 ## Não testado (limite do ambiente)
 | Item | Resultado |
 |---|---|
+| A nuvem do enxame na tela (centenas de pontinhos em zigue-zague, névoa, rastro), a chegada pelo céu, o montinho desligado e montar/desmanchar formas — tudo é partícula desenhada no aparelho; conferido por arquivo e por imagens geradas com a mesma matemática | NOT TESTED |
+| Desempenho da nuvem no celular (≈ 560 pontinhos + 22 manchas de névoa + 120 de rastro por enxame; a chegada pelo céu usa até 1000 por 2 s) | NOT TESTED |
 | Aparência no celular: robôs do exército, itens de nanorrobô, asas/mãos/prancha de partículas (conferidos por renderização do modelo e por cálculo; a partícula com orientação depende do cliente) | NOT TESTED |
 | Desempenho das partículas novas no celular (foram reduzidas: nuvem 70→24, escudo 160→56, grande 220→90 por emissão) | NOT TESTED |
 | Névoa do enxame (tom leve no horizonte) e câmera em terceira pessoa da TITÃ vistas na tela | NOT TESTED |

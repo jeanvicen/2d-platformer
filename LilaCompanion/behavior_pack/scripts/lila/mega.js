@@ -1,4 +1,4 @@
-// Executor das megaconstruções, transformações de bioma e do "aplainar". O DR-0N tem material
+// Executor das megaconstruções, transformações de bioma e do "aplainar". O Hacknd tem material
 // infinito. No modo padrão ("humano") ele constrói À MÃO: voa até cada ponto e coloca bloco por
 // bloco, parte por parte, de baixo para cima, como um jogador voando (veja handwork.js). O modo
 // "instantâneo" (Configurações) ainda existe. Nunca quebra construção de jogador sem você pedir:
@@ -448,10 +448,10 @@ function beamFx(c, at) {
     /* ignore */
   }
   const dim = e.dimension;
-  const n = 6;
+  const n = 4; // Hacknd: um fio de nanorrobôs da nuvem até o bloco
   for (let i = 1; i <= n; i++) {
     const t = i / (n + 1);
-    particle(dim, "lila:scan", { x: p.x + (at.x - p.x) * t, y: p.y + (at.y - p.y) * t, z: p.z + (at.z - p.z) * t });
+    particle(dim, "lila:nano_point", { x: p.x + (at.x - p.x) * t, y: p.y + 1 + (at.y - p.y - 1) * t, z: p.z + (at.z - p.z) * t });
   }
   particle(dim, "lila:build", at);
   if (Math.random() < 0.3) sound(e, "random.pop", 0.4, 1.6 + Math.random() * 0.3);

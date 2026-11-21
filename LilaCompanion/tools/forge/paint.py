@@ -20,6 +20,42 @@ from .geom import FACES
 
 GLOW_ALPHA = 1  # 1/255 -> fully emissive under entity_emissive_alpha
 
+# Hacknd: "tudo feito de nanorrobôs". Ligado, toda textura assada vira material de enxame —
+# grafite granulado (milhões de robozinhos), grade fina de células, um resto da cor original
+# (para as formas continuarem reconhecíveis) e pontinhos ciano que brilham no escuro.
+NANO = {"on": False, "chroma": 0.2}
+
+
+def _nano_skin(rgb, glow, P, st, seed):
+    x, y, z = P
+    s, t, fw, fh = st
+    L = (rgb[..., 0] * 0.299 + rgb[..., 1] * 0.587 + rgb[..., 2] * 0.114)
+    ln = np.clip(L / 255.0, 0, 1) ** 0.85
+    dark = np.array([18.0, 22.0, 29.0])
+    mid = np.array([96.0, 110.0, 130.0])
+    base = dark[None, None, :] + (mid - dark)[None, None, :] * ln[..., None]
+    chroma = (rgb - L[..., None]) * NANO["chroma"]
+    # granulado: ruído de alta frequência no espaço 3D (cada texel é um aglomerado de robôs)
+    hx = np.floor(x * 8.0 + 1000).astype(np.int64)
+    hy = np.floor(y * 8.0 + 1000).astype(np.int64)
+    hz = np.floor(z * 8.0 + 1000).astype(np.int64)
+    h = (hx * 73856093 ^ hy * 19349663 ^ hz * 83492791 ^ (seed * 2654435761)) & 0xFFFFFF
+    r = h / float(0xFFFFFF)
+    grain = (r - 0.5) * 26.0
+    # células: linhas finas mais escuras a cada meio "pixel" do modelo
+    cs = np.minimum(np.mod(s * 2.0, 1.0), np.mod(t * 2.0, 1.0))
+    cell = np.where(cs < 0.14, 0.82, 1.0)
+    out = (base + chroma) * cell[..., None] + grain[..., None]
+    # brilho ciano: um robozinho aceso aqui e ali (emissivo)
+    spark = r > 0.986
+    out = np.where(spark[..., None], np.array([140.0, 236.0, 255.0])[None, None, :], out)
+    # partes que já brilhavam (olhos, faróis, núcleo, vidros) viram luz ciano do enxame
+    gl = glow
+    cyan = np.stack([L * 0.42, L * 0.9 + 20, np.minimum(255, L * 1.0 + 40)], axis=-1)
+    keep = rgb * 0.3 + cyan * 0.7
+    out = np.where(gl[..., None], keep, out)
+    return np.clip(out, 0, 255), glow | spark
+
 
 # ---------------------------------------------------------------- noise utils
 def _hash3(ix, iy, iz, seed):
@@ -423,6 +459,8 @@ def bake(model, ao=True, edge=True):
             for dface, kind, opt in p.decals:
                 if dface == face or dface == "*" or (dface == "sides" and face in ("north", "south", "east", "west")):
                     rgb, glow = apply_decal(rgb, glow, s, t, fw, fh, kind, opt)
+            if NANO["on"] and not p.params.get("no_nano"):
+                rgb, glow = _nano_skin(rgb, glow, (x, y, z), (s, t, fw, fh), p.seed)
             if ao and not p.glow:
                 if face in ("north", "south", "east", "west"):
                     grad = 0.86 + 0.14 * (1 - t / fh)

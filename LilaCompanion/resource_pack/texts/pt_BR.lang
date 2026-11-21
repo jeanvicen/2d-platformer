@@ -1,6 +1,6 @@
-entity.lila:drone.name=DR-0N
-entity.lila:robot.name=Soldado DR-0N
-item.lila.drone_controller.name=Controle do DR-0N
+entity.lila:drone.name=Hacknd
+entity.lila:robot.name=Soldado de nanorrobôs Hacknd
+item.lila.drone_controller.name=Controle do Hacknd
 action.interact.lila.ride=Entrar
 action.interact.lila.talk=Conversar
 item.lila.nano_sword.name=Espada de Nanorrobôs

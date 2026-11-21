@@ -1,4 +1,4 @@
-// SummonRegistry: catálogo do que o controle invoca. Hoje só o DR-0N (a Lila foi removida na 2.0).
+// SummonRegistry: catálogo do que o controle invoca. Hoje só o Hacknd (a Lila foi removida na 2.0).
 // O cérebro, o motor, o HUD e o menu são genéricos: outra entrada registrada aqui funciona igual.
 
 /**
@@ -24,13 +24,13 @@ export function registerSummon(def) {
 }
 
 /**
- * DR-0N: drone-robô que voa, tem itens infinitos (modo criativo), metralhadora, e vira veículos,
+ * Hacknd: drone-robô que voa, tem itens infinitos (modo criativo), metralhadora, e vira veículos,
  * torreta gigante, colosso e exército. As ações "de corpo humano" do cérebro genérico são
  * traduzidas para as dele (actionMap).
  */
 export const DRONE = registerSummon({
   key: "drone",
-  name: "DR-0N",
+  name: "Hacknd",
   entity: "lila:drone",
   controller: "lila:drone_controller",
   health: 300,
@@ -38,7 +38,7 @@ export const DRONE = registerSummon({
   creative: true,
   respawnTicks: 400,
   color: { red: 0.3, green: 0.75, blue: 1.0 },
-  chatTag: "§b§lDR-0N§r§7 »§r ",
+  chatTag: "§b§lHACKND§r§7 »§r ",
   defaults: { mode: "follow", roam: 160, hunt: true },
   flying: true, speed: 2.2, mineSpeed: 5, vision: 64,
   gun: { damage: 7, every: 2, range: 36 },

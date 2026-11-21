@@ -1,4 +1,4 @@
-// Combate e proteção do DR-0N. No modo proteger ele ATACA PRIMEIRO os monstros perto de você.
+// Combate e proteção do Hacknd. No modo proteger ele ATACA PRIMEIRO os monstros perto de você.
 // Quem bater em você ou nele vira inimigo marcado ("aggro") — inclusive outros jogadores — e
 // ele revida até o inimigo cair ou fugir. Aldeões, golens e bichos com nome nunca são alvo
 // (a não ser que ataquem). Se VOCÊ bater nele, ele te dá uma "lição" (tiros fracos).

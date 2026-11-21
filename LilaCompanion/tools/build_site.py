@@ -12,7 +12,7 @@ from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IMG = os.path.join(ROOT, "docs", "img")
-RAW = "https://github.com/jeanvicen/2d-platformer/raw/ccr-4f2624e6-c75bcj/LilaCompanion/dist/DR-0N_Mega_Drone.mcaddon"
+RAW = "https://github.com/jeanvicen/2d-platformer/raw/ccr-4f2624e6-c75bcj/LilaCompanion/dist/Hacknd.mcaddon"
 
 
 def img(name, size, pixel=False):
@@ -40,7 +40,7 @@ def tests_rows():
 
 
 def main():
-    addon = open(os.path.join(ROOT, "dist", "DR-0N_Mega_Drone.mcaddon"), "rb").read()
+    addon = open(os.path.join(ROOT, "dist", "Hacknd.mcaddon"), "rb").read()
     ver = ".".join(map(str, json.load(open(os.path.join(ROOT, "behavior_pack", "manifest.json")))["header"]["version"]))
     rep = {
         "%%PORTRAIT%%": img("portrait", 440),

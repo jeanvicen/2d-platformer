@@ -1,4 +1,4 @@
-// Menu do Controle do DR-0N: ordem por texto + botões (formas, colosso, torreta, exército,
+// Menu do Controle do Hacknd: ordem por texto + botões (formas, colosso, torreta, exército,
 // megaconstruções, biomas, itens infinitos, kit de força...). "Cancelar" sempre volta ao normal.
 import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
 import { BLUEPRINTS } from "../lib/blueprints.js";
@@ -89,11 +89,11 @@ export async function openController(player) {
     if (c.alive() && isRideForm(formOf(c)) && riders(c).some((r) => r.id === player.id)) return pilotPanel(player);
     if (!c.rec.summoned || (!c.alive() && !c.rec.defeat && !armyActive(c))) {
       const f = new ActionFormData()
-        .title("§l§bControle do DR-0N")
+        .title("§l§bControle do Hacknd")
         .body(c.rec.defeat
-          ? `§7O DR-0N está se recuperando. Volta em §e${Math.ceil(c.rec.defeat.left / 20)}s§7.`
-          : "§fO §bDR-0N§f é um robô de peças flutuantes com §eitens infinitos§f: vira §b12 veículos§f, §ctorreta gigante§f, o §6robô gigante TITÃ§f, um §denxame de nanorrobôs§f, um §aexército de robôs§f, constrói §emais de 1000 construções§f mobiliadas e pode ser §7desligado§f (desmonta no chão) quando você quiser.")
-        .button("§l§bInvocar DR-0N", I.drone)
+          ? `§7O Hacknd está se recuperando. Volta em §e${Math.ceil(c.rec.defeat.left / 20)}s§7.`
+          : "§fO §bHacknd§f é um §denxame de nanorrobôs§f (uma nuvem de robozinhos do tamanho de poeira) com §eitens infinitos§f. Eles descem do céu, viram §b12 veículos§f, §ctorreta gigante§f, o §6TITÃ§f, um §aexército§f, ferramentas na sua mão, asas, prancha, mãos gigantes, e constroem §emais de 4800 construções§f mobiliadas. Dá pra §7desligar§f (viram um montinho de poeira).")
+        .button("§l§bInvocar o enxame Hacknd", I.drone)
         .button("Como funciona", I.info);
       const r = await show(player, f);
       if (!r || r.canceled) return;
@@ -103,10 +103,10 @@ export async function openController(player) {
     }
     if (c.rec.off) {
       // desligado: desmontado no chão
-      const f = new ActionFormData().title("§l§bControle do DR-0N").body("§7O DR-0N está §cdesligado§7 (desmontado no chão, brilhos apagados).");
+      const f = new ActionFormData().title("§l§bControle do Hacknd").body("§7O Hacknd está §cdesligado§7 (um montinho de poeira de nanorrobôs no chão).");
       /** @type {[string, string, () => any][]} */
-      const b = [["§a§l⏻ LIGAR o robô", I.drone, () => powerOn(c)], ["Inventário e status", I.info, () => infoMenu(player)],
-        ["Configurações", I.settings, () => settingsMenu(player)], ["§cDispensar DR-0N", I.dismiss, () => dismiss(c)]];
+      const b = [["§a§l⏻ LIGAR o enxame", I.drone, () => powerOn(c)], ["Inventário e status", I.info, () => infoMenu(player)],
+        ["Configurações", I.settings, () => settingsMenu(player)], ["§cDispensar Hacknd", I.dismiss, () => dismiss(c)]];
       for (const [t, icon] of b) f.button(t, icon);
       const r = await show(player, f);
       if (!r || r.canceled || r.selection === undefined) return;
@@ -116,16 +116,16 @@ export async function openController(player) {
     const cur = c.urgent?.desc ?? c.job?.desc ?? c.rec.goals[0];
     const army = armyActive(c);
     const f = new ActionFormData()
-      .title("§l§bControle do DR-0N")
+      .title("§l§bControle do Hacknd")
       .body(`§7${statusText(c)}\n§fAgora: §a${army ? `exército (${robotsOf(c).length} robôs)` : goalLabel(cur)}${c.rec.paused ? " §c(pausado)" : ""}`);
     /** @type {[string, string, () => any][]} */
     const buttons = [
       ["§l✎ Escrever ordem", I.write, () => writeOrder(player)],
       ["§c§l✖ Cancelar tudo §r§c(volta ao normal)", I.cancel, () => handleIntents(c, [{ type: "stop" }])],
-      ["§8⏻ Desligar o robô", I.dismiss, () => (army ? handleIntents(c, [{ type: "stop" }]) : powerOff(c))],
+      ["§8⏻ Desligar o enxame (vira poeira)", I.dismiss, () => (army ? handleIntents(c, [{ type: "stop" }]) : powerOff(c))],
       ["§bVeículos…", I.vehicle, () => vehicleMenu(player)],
       [formOf(c) === "colossus" ? "§6Subir no TITÃ (em cima da cabeça)" : "§6§lRobô gigante TITÃ", I.colossus, () => (formOf(c) === "colossus" ? mountOwner(c, player) : handleIntents(c, [{ type: "form", form: "colossus" }]))],
-      [formOf(c) === "swarm" ? "§d§lEnxame: formas e poderes…" : "§d§lModo ENXAME (nanorrobôs)", I.swarm, () => (formOf(c) === "swarm" ? swarmMenu(player) : handleIntents(c, [{ type: "swarm" }]))],
+      ["§d§lPoderes do enxame…\n§8escudo, asas, prancha, mãos, devorador, ferramentas", I.swarm, () => (formOf(c) === "swarm" || formOf(c) === "drone" ? swarmMenu(player) : handleIntents(c, [{ type: "swarm" }]))],
       [c.rec.mode === "turret" ? "§cDesmontar a torreta" : "§cTorreta gigante", I.turret, () => handleIntents(c, [{ type: c.rec.mode === "turret" ? "stop" : "turret" }])],
       [army ? "§aComandar o exército…" : "§aModo EXÉRCITO", I.army, () => (army ? armyMenu(player) : armyStyleMenu(player))],
       ["§e§lConstruir…§r §e(tudo mobiliado)", I.build, () => buildMenu(player)],
@@ -138,14 +138,14 @@ export async function openController(player) {
       ["Me seguir", I.follow, () => handleIntents(c, [{ type: "follow" }])],
       ["Ficar aqui", I.stay, () => handleIntents(c, [{ type: "stay" }])],
       ["Vem aqui", I.come, () => handleIntents(c, [{ type: "come" }])],
-      ["Carona (subir no robô)", I.ride, () => handleIntents(c, [{ type: "ride" }])],
+      ["Carona (o enxame te carrega)", I.ride, () => handleIntents(c, [{ type: "ride" }])],
       ["Modo livre", I.auto, () => handleIntents(c, [{ type: "auto" }])],
       ["Escanear você", I.scan, () => handleIntents(c, [{ type: "scan" }])],
       ["Missões", I.missions, () => missionsMenu(player)],
       ["Memórias", I.memory, () => memoriesMenu(player)],
       ["Inventário e status", I.info, () => infoMenu(player)],
       ["Configurações", I.settings, () => settingsMenu(player)],
-      ["§cDispensar DR-0N", I.dismiss, () => dismiss(c)],
+      ["§cDispensar Hacknd", I.dismiss, () => dismiss(c)],
     ];
     for (const [t, icon] of buttons) f.button(t, icon);
     const r = await show(player, f);
@@ -159,8 +159,8 @@ export async function openController(player) {
 async function writeOrder(player) {
   const c = comp(player);
   const f = new ModalFormData()
-    .title("§l§bOrdem para o DR-0N")
-    .textField("§fO que o DR-0N deve fazer?\n§7Ex.: \"vira tanque\", \"constrói uma vila\", \"me dá um élitro\"", "ex.: modo colosso", { defaultValue: "" })
+    .title("§l§bOrdem para o Hacknd")
+    .textField("§fO que o Hacknd deve fazer?\n§7Ex.: \"vira tanque\", \"constrói uma vila\", \"me dá um élitro\"", "ex.: modo colosso", { defaultValue: "" })
     .dropdown("§7ou toque num exemplo:", EXAMPLES, { defaultValueIndex: 0 })
     .submitButton("§lEnviar");
   const r = await show(player, f);
@@ -169,7 +169,7 @@ async function writeOrder(player) {
   const ex = Number(r.formValues[1] ?? 0);
   const order = text || (ex > 0 ? EXAMPLES[ex] : "");
   if (!order) return;
-  player.sendMessage(`§7Você » DR-0N: §f${order}`);
+  player.sendMessage(`§7Você » Hacknd: §f${order}`);
   command(c, order);
 }
 
@@ -303,7 +303,7 @@ async function armyMenu(player) {
     ["§c✖ Juntar e voltar ao normal", I.cancel, () => (stopBuild(c, true), handleIntents(c, [{ type: "normal" }]))],
   ];
   const mix = kinds.map((k, i) => (k ? `${k} ${KIND_NAMES[i]}` : "")).filter(Boolean).join(" · ");
-  const f = new ActionFormData().title("§l§aExército DR-0N").body(`§f${rs.length} robôs: §7${mix || "—"}\n§7Soldados atiram laser, artilheiros usam canhão de longe, ninjas teleportam e cortam, médicos curam você e os robôs, construtores erguem obras rápido. Todos trazem o que você precisar.${job ? `\n§6Obra em andamento: ${job.label}` : ""}`);
+  const f = new ActionFormData().title("§l§aExército Hacknd").body(`§f${rs.length} robôs: §7${mix || "—"}\n§7Soldados atiram laser, artilheiros usam canhão de longe, ninjas teleportam e cortam, médicos curam você e os robôs, construtores erguem obras rápido. Todos trazem o que você precisar.${job ? `\n§6Obra em andamento: ${job.label}` : ""}`);
   for (const [t, icon] of b) f.button(t, icon);
   f.button("Voltar", I.back);
   const r = await show(player, f);
@@ -316,7 +316,7 @@ async function armyMenu(player) {
 async function armyStyleMenu(player) {
   const c = comp(player);
   const keys = Object.keys(ARMY_STYLES);
-  const f = new ActionFormData().title("§l§aModo EXÉRCITO").body(`§7O DR-0N explode em ${c.rec.settings.army ?? 10} robôs. Que tipo de exército?`);
+  const f = new ActionFormData().title("§l§aModo EXÉRCITO").body(`§7O enxame se divide em ${c.rec.settings.army ?? 10} soldados de nanorrobôs. Que tipo de exército?`);
   for (const k of keys) f.button(ARMY_STYLES[k].name, I.army);
   f.button("Voltar", I.back);
   const r = await show(player, f);
@@ -422,7 +422,7 @@ async function infoMenu(player) {
   const c = comp(player);
   const s = c.rec.stats;
   const f = new ActionFormData()
-    .title("§lDR-0N — status")
+    .title("§lHacknd — status")
     .body(`§f${statusText(c)}\n\n§bInventário:§f\n${inventoryText(c)}\n\n§bRecordes:§f ${s.kills} inimigos derrotados · ${s.built} construções · ${s.crafted} itens fabricados`)
     .button("Me dá tudo", I.creative)
     .button("Voltar", I.back);
@@ -438,7 +438,7 @@ async function settingsMenu(player) {
   const hud = ["auto", "always", "off"];
   const chat = ["normal", "pouco", "silencio"];
   const f = new ModalFormData()
-    .title("§lConfigurações do DR-0N")
+    .title("§lConfigurações do Hacknd")
     .dropdown("§fIndicador de posição (HUD)", ["Automático", "Sempre visível", "Desligado"], { defaultValueIndex: Math.max(0, hud.indexOf(st.hud)) })
     .dropdown("§fConversa no chat", ["Normal", "Pouca", "Só respostas"], { defaultValueIndex: Math.max(0, chat.indexOf(st.chat)) })
     .slider("§fRobôs no modo exército", 1, 24, { valueStep: 1, defaultValue: st.army ?? 10 })
@@ -456,18 +456,18 @@ async function settingsMenu(player) {
   st.destroy = !!r.formValues[4];
   st.lesson = !!r.formValues[5];
   c.save();
-  player.sendMessage("§b[DR-0N]§r Configurações salvas.");
+  player.sendMessage("§b[Hacknd]§r Configurações salvas.");
 }
 
 async function help(player) {
   const f = new ActionFormData()
     .title("§lComo funciona")
     .body([
-      "§bControle:§f use para abrir o menu. Toque no robô segurando o controle para falar com ele; de mão vazia você sobe nele.",
+      "§bControle:§f use para abrir o menu. Toque na nuvem segurando o controle para falar com o enxame; de mão vazia ele te carrega.",
       "§bOrdens em texto:§f \"vira helicóptero\", \"modo colosso\", \"modo exército\", \"constrói um castelo\", \"faz uma cidade\", \"transforma aqui em neve\", \"me dá um élitro\", \"me fortalece\", \"me protege\", \"volta ao normal\".",
       "§bPelo chat:§f /drone vira tanque",
       "§bDesligar:§f botão Desligar (ou \"desliga\"): ele desmonta no chão e fica quieto. Ligar: botão Ligar (ou \"liga\").",
-      "§bCancelar tudo:§f larga o que estiver fazendo e volta a ser o robô normal (junta o exército, desfaz veículo/colosso/torreta).",
+      "§bCancelar tudo:§f larga o que estiver fazendo e volta a ser o enxame (junta o exército, desfaz veículo/titã/torreta).",
       "§bProteção:§f no modo proteger ele ataca primeiro. Quem bater em você ou nele vira alvo, até outro jogador.",
       "§bDerrota:§f se cair, volta em 20 segundos.",
     ].join("\n\n"))
@@ -478,7 +478,7 @@ async function help(player) {
 async function missionsMenu(player) {
   const c = comp(player);
   const ms = missions(c);
-  const f = new ActionFormData().title("§l§bMissões do DR-0N").body(`§7Missões concluídas: §e${c.rec.stats.missions ?? 0}§7.`);
+  const f = new ActionFormData().title("§l§bMissões do Hacknd").body(`§7Missões concluídas: §e${c.rec.stats.missions ?? 0}§7.`);
   for (const m of ms) f.button(`${m.done ? "§a✔ " : ""}${m.title}\n§8${m.desc} (${Math.min(m.have, m.need)}/${m.need})`, I.missions);
   f.button("Voltar", I.back);
   const r = await show(player, f);
@@ -497,7 +497,7 @@ async function missionsMenu(player) {
 async function memoriesMenu(player) {
   const c = comp(player);
   const diary = (c.rec.diary ?? []).slice(-12).reverse().map((d) => `§7•§f ${d.msg}`).join("\n") || "§7(ainda sem memórias)";
-  const f = new ActionFormData().title("§l§bMemórias do DR-0N")
+  const f = new ActionFormData().title("§l§bMemórias do Hacknd")
     .body(`§bDiário:§f\n${diary}\n\n§bÁreas mapeadas:§f ${c.mem.explored.length}\n§bMissões concluídas:§f ${c.rec.stats.missions ?? 0}`)
     .button("Voltar", I.back);
   const r = await show(player, f);

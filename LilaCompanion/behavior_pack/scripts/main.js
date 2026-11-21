@@ -1,5 +1,5 @@
-// DR-0N Mega Drone — ponto de entrada (APIs estáveis: @minecraft/server 2.x + server-ui 2.x).
-// Nada aparece quando o jogador entra no mundo: tudo começa quando ele fabrica o Controle do DR-0N.
+// Hacknd — ponto de entrada (APIs estáveis: @minecraft/server 2.x + server-ui 2.x).
+// Nada aparece quando o jogador entra no mundo: tudo começa quando ele fabrica o Controle do Hacknd.
 import { ButtonState, CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus, EntityDamageCause, InputButton, Player, system, world } from "@minecraft/server";
 import { every, startScheduler } from "./core/scheduler.js";
 import { logError, logInfo } from "./core/log.js";
@@ -10,7 +10,7 @@ import { flushHud, resetWaypoint, updateHud } from "./lila/hud.js";
 import { riddenBy, rideTick } from "./lila/drone.js";
 import { fight, markAggro } from "./lila/combat.js";
 import { exitVehicle, formOf, formTick, isRideForm, primaryAttack, releaseRiders, riders } from "./lila/forms.js";
-import { endSwarm, isNanoItem, nanoBreak, nanoDropped, nanoHitBlock, nanoHitEntity, nanoProtects, nanoSwing, nanoUse, shieldOn, swarmTick } from "./lila/swarm.js";
+import { endSwarm, isCloud, isNanoItem, nanoBreak, nanoDropped, nanoHitBlock, nanoHitEntity, nanoProtects, nanoSwing, nanoUse, shieldOn, swarmTick } from "./lila/swarm.js";
 import { booting, offTick } from "./lila/power.js";
 import { armyActive, armyTick, ROBOT } from "./lila/army.js";
 import { particle, sound } from "./lila/anim.js";
@@ -26,10 +26,10 @@ system.beforeEvents.startup.subscribe((ev) => {
   try {
     const optional = [];
     for (let i = 1; i <= 8; i++) optional.push({ name: `p${i}`, type: CustomCommandParamType.String });
-    for (const def of SUMMONS.values()) {
+    for (const def of SUMMONS.values()) for (const cmdName of new Set([def.command ?? `lila:${def.key}`, "lila:hacknd"])) {
       ev.customCommandRegistry.registerCommand({
-        name: def.command ?? `lila:${def.key}`,
-        description: "Dá uma ordem para o DR-0N. Ex.: /drone vira helicóptero (sem texto: abre o menu)",
+        name: cmdName,
+        description: "Dá uma ordem para o enxame Hacknd. Ex.: /hacknd vira helicóptero (sem texto: abre o menu)",
         permissionLevel: CommandPermissionLevel.Any,
         cheatsRequired: false,
         optionalParameters: optional,
@@ -44,7 +44,7 @@ system.beforeEvents.startup.subscribe((ev) => {
             return;
           }
           if (!c.rec.summoned || (!c.alive() && !armyActive(c))) {
-            src.sendMessage(`${def.chatTag}Me invoque primeiro com o §lControle do DR-0N§r.`);
+            src.sendMessage(`${def.chatTag}Me invoque primeiro com o §lControle do Hacknd§r.`);
             return;
           }
           src.sendMessage(`§7Você » ${def.name}: §f${text}`);
@@ -86,6 +86,8 @@ world.afterEvents.worldLoad.subscribe(() => {
       }
       if (!c.owner() && !c.flags.test) continue; // dono offline: ele espera
       try {
+        // virou veículo/titã/torreta/exército, desligou ou sumiu: recolhe ferramentas, névoa e luz
+        if (c.flags.nanoActive && (!c.alive() || !isCloud(c))) endSwarm(c);
         if (armyActive(c)) {
           armyTick(c);
           continue;
@@ -98,8 +100,7 @@ world.afterEvents.worldLoad.subscribe(() => {
           formTick(c); // veículos e colosso: você pilota, o cérebro descansa
           continue;
         }
-        if (c.flags.nanoActive && (formOf(c) !== "swarm" || !c.alive())) endSwarm(c); // saiu do enxame: limpa ferramentas, névoa, luz
-        if (c.alive() && formOf(c) === "swarm") swarmTick(c); // enxame: poderes + o cérebro de sempre
+        if (c.alive() && isCloud(c)) swarmTick(c); // Hacknd: o enxame (forma normal) — poderes + o cérebro de sempre
         // carona no drone: o dono pilota; o cérebro espera e retoma quando ele descer
         if (c.def?.flying && c.alive()) {
           const rider = riddenBy(c);
@@ -161,7 +162,7 @@ world.afterEvents.worldLoad.subscribe(() => {
     }
   }, 11);
   startScheduler();
-  logInfo("boot", "DR-0N Mega Drone carregado");
+  logInfo("boot", "Hacknd carregado");
 });
 
 // ------------------------------------------------------------------ controle
@@ -176,7 +177,7 @@ world.afterEvents.itemUse.subscribe((ev) => {
 
 /** Companheiro do jogador que está na forma de enxame (ou undefined). */
 function swarmOf(player) {
-  for (const c of companionsOf(player.id)) if (c.alive() && formOf(c) === "swarm") return c;
+  for (const c of companionsOf(player.id)) if (c.alive() && isCloud(c)) return c;
   return undefined;
 }
 
@@ -214,7 +215,7 @@ world.afterEvents.playerInteractWithEntity.subscribe((ev) => {
   if (owner !== ev.player.id) {
     // outros jogadores podem pegar carona nos veículos/colosso (o assento é nativo)
     if (c && isRideForm(formOf(c))) ev.player.sendMessage(`${c.def.chatTag}Bem-vindo a bordo! Só o dono pilota. Agache para descer.`);
-    else ev.player.sendMessage(`${c?.def.chatTag ?? "§b[DR-0N]§r "}Oi! Eu sou o DR-0N de ${c?.rec.ownerName ?? "outra pessoa"}. Fabrique o seu controle para ter o seu!`);
+    else ev.player.sendMessage(`${c?.def.chatTag ?? "§b[Hacknd]§r "}Oi! Eu sou o Hacknd de ${c?.rec.ownerName ?? "outra pessoa"}. Fabrique o seu controle para ter o seu!`);
     return;
   }
   if (held !== CONTROLLER) return; // mão vazia = subir (assento nativo)
@@ -371,7 +372,7 @@ world.afterEvents.entityHurt.subscribe((ev) => {
   }
 });
 
-/** Você bateu no DR-0N: ele te dá uma "lição" de leve (3 tirinhos fracos). */
+/** Você bateu no Hacknd: ele te dá uma "lição" de leve (3 tirinhos fracos). */
 world.afterEvents.entityHitEntity.subscribe((ev) => {
   const p = ev.damagingEntity;
   const t = ev.hitEntity;

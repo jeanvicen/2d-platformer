@@ -1,4 +1,4 @@
-// Trabalho "à mão": o DR-0N voa até cada ponto e coloca/quebra bloco por bloco, como um jogador
+// Trabalho "à mão": o Hacknd voa até cada ponto e coloca/quebra bloco por bloco, como um jogador
 // (mas voando): mira, feixe de construção, som do material, poeira ao quebrar. Usado pelas
 // megaconstruções, biomas, aplainar o terreno e recolher itens do chão.
 //
@@ -152,7 +152,7 @@ export class Placer {
     if (this.n % this.sp.fx === 0) {
       for (let k = 1; k <= 3; k++) {
         const t = k / 4;
-        particle(dim, "lila:scan", { x: from.x + (at.x - from.x) * t, y: from.y + 0.3 + (at.y - from.y - 0.3) * t, z: from.z + (at.z - from.z) * t });
+        particle(dim, "lila:nano_point", { x: from.x + (at.x - from.x) * t, y: from.y + 0.9 + (at.y - from.y - 0.9) * t, z: from.z + (at.z - from.z) * t });
       }
       particle(dim, breaking ? "lila:dust" : "lila:build", at);
     }

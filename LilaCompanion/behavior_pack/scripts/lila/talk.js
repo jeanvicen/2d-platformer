@@ -39,7 +39,8 @@ export function pick(arr) {
 }
 
 export const LINES = {
-  summon: ["Cheguei! Pode contar comigo.", "Oi! Tava com saudade.", "Aqui! O que vamos aprontar hoje?", "Presente! Bora jogar."],
+  summon: ["Chegamos! Milhares de nanorrobôs às suas ordens.", "O enxame chegou. Pode contar com a gente!", "Aqui! O que vamos aprontar hoje?",
+    "Enxame online. Bora jogar!"],
   ack: ["Deixa comigo!", "Pode deixar!", "Beleza, já vou.", "Fechado!", "Tô indo!", "Ok, considera feito."],
   done: ["Pronto!", "Feito!", "Terminei!", "Missão cumprida!", "Prontinho."],
   idleChatter: [

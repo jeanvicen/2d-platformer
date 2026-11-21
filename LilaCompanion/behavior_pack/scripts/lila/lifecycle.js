@@ -11,6 +11,7 @@ import { release } from "./areas.js";
 import { DRONE } from "./registry.js";
 import { logError } from "../core/log.js";
 import { merge } from "./army.js";
+import { nanoArrive, nanoBurst } from "./nanofx.js";
 
 /** @typedef {import("./companion.js").Companion} Companion */
 
@@ -134,10 +135,9 @@ export function summon(c, player) {
 }
 
 function arrive(c, dim, loc, anim) {
-  particle(dim, "lila:sparkle", loc);
-  particle(dim, "lila:leaves", { x: loc.x, y: loc.y + 1.6, z: loc.z });
-  sound(c.entity, "beacon.activate", 0.6, 1.6);
-  sound(c.entity, "random.levelup", 0.3, 1.8);
+  // Hacknd: o enxame desce do céu em várias correntes, de lugares diferentes, até virar a nuvem
+  nanoArrive(dim, loc);
+  sound(c.entity, "random.levelup", 0.25, 1.9);
   if (anim) {
     setAction(c.entity, "summon");
     system.runTimeout(() => setAction(c.entity, "idle"), 22);
@@ -176,8 +176,8 @@ export function dismiss(c) {
   }
   const dim = c.dim();
   const loc = c.pos();
-  say(c, "Beleza, vou recarregar. É só me chamar no controle!", { force: true });
-  particle(dim, "lila:leaves", { x: loc.x, y: loc.y + 1, z: loc.z });
+  say(c, "Beleza, o enxame vai se espalhar. É só chamar no controle!", { force: true });
+  nanoBurst(dim, loc, 1.6);
   sound(c.entity, "beacon.deactivate", 0.6, 1.6);
   abortAll(c);
   removeWaypoint(c);

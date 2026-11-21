@@ -7,7 +7,7 @@ import { SpatialMemory } from "./world.js";
 import { DRONE, SUMMONS, summonByEntity } from "./registry.js";
 
 export const ENTITY_ID = DRONE.entity;
-/** Entidade é uma das companheiras (Lila, DR-0N...)? */
+/** Entidade é uma das companheiras (Lila, Hacknd...)? */
 export const isCompanionType = (typeId) => !!summonByEntity(typeId);
 export const OWNER_PROP = "lila:owner";
 
@@ -130,7 +130,7 @@ export function companionOf(player, kind = "drone") {
   return COMPANIONS.get(compKey(player.id, kind));
 }
 
-/** Todas as companheiras de um dono (Lila e/ou DR-0N). */
+/** Todas as companheiras de um dono (Lila e/ou Hacknd). */
 export function companionsOf(ownerId) {
   return [...COMPANIONS.values()].filter((c) => c.rec.ownerId === ownerId);
 }

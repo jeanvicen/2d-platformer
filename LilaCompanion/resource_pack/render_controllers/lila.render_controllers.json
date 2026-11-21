@@ -76,6 +76,11 @@
       "textures": [
         "Array.tex[q.property('lila:form')]"
       ],
+      "part_visibility": [
+        {
+          "*": "q.property('lila:form') != 0 && q.property('lila:form') != 9"
+        }
+      ],
       "is_hurt_color": {
         "r": "0.85",
         "g": "0.25",

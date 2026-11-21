@@ -93,12 +93,34 @@
         "stealth": "animation.lila.form.stealth",
         "swarm": "animation.lila.form.swarm",
         "swarm_fire": "animation.lila.form.swarm_fire",
+        "fx_swarm": "animation.lila.fx_swarm",
+        "fx_pile": "animation.lila.fx_pile",
+        "fx_aura_1": "animation.lila.fx_aura_1",
+        "fx_aura_2": "animation.lila.fx_aura_2",
+        "fx_aura_3": "animation.lila.fx_aura_3",
+        "fx_aura_4": "animation.lila.fx_aura_4",
+        "fx_aura_5": "animation.lila.fx_aura_5",
+        "fx_aura_6": "animation.lila.fx_aura_6",
+        "fx_aura_7": "animation.lila.fx_aura_7",
+        "fx_aura_8": "animation.lila.fx_aura_8",
+        "fx_aura_10": "animation.lila.fx_aura_10",
+        "fx_aura_11": "animation.lila.fx_aura_11",
+        "fx_aura_12": "animation.lila.fx_aura_12",
+        "fx_aura_13": "animation.lila.fx_aura_13",
+        "fx_aura_14": "animation.lila.fx_aura_14",
+        "fx_aura_15": "animation.lila.fx_aura_15",
+        "ctrl_swarmfx": "controller.animation.lila.swarmfx",
         "ctrl_move": "controller.animation.lila.drone.move",
         "ctrl_act": "controller.animation.lila.drone.action",
         "ctrl_form": "controller.animation.lila.form.action"
       },
       "particle_effects": {
-        "sparkle": "lila:sparkle"
+        "sparkle": "lila:sparkle",
+        "swarm": "lila:nano_swarm",
+        "haze": "lila:nano_haze",
+        "trail": "lila:nano_trail",
+        "pile": "lila:nano_pile",
+        "aura": "lila:nano_aura"
       },
       "scripts": {
         "initialize": [
@@ -245,7 +267,8 @@
           {
             "stealth": "v.form == 15"
           },
-          "ctrl_form"
+          "ctrl_form",
+          "ctrl_swarmfx"
         ]
       },
       "render_controllers": [

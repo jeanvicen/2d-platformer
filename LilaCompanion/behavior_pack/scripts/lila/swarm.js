@@ -1,4 +1,4 @@
-// Enxame de nanorrobôs (2.3): o DR-0N vira uma névoa de milhares de robozinhos. Em vez de ficar
+// Enxame de nanorrobôs (2.3): o Hacknd vira uma névoa de milhares de robozinhos. Em vez de ficar
 // orbitando você, eles se espalham pelo ar em volta (uma "atmosfera" sutil: pontinhos que brilham
 // e uma névoa levíssima) e agem SOZINHOS, sem precisar abrir o controle:
 //   - mão vazia e você começa a quebrar madeira → eles se juntam na sua mão e viram um MACHADO de
@@ -66,16 +66,18 @@ const flat = (yaw) => {
 };
 const right = (f) => ({ x: -f.z, z: f.x });
 
-export const modeOf = (c) => (c.rec.form === "swarm" ? c.flags.nanoMode ?? c.rec.settings.nanoMode ?? "auto" : "off");
+/** Hacknd: a forma normal JÁ É o enxame (e "swarm" é a mesma coisa). Desligado = poeira parada. */
+export const isCloud = (c) => (!c.rec.form || c.rec.form === "drone" || c.rec.form === "swarm") && !c.rec.off;
+export const modeOf = (c) => (isCloud(c) ? c.flags.nanoMode ?? c.rec.settings.nanoMode ?? "auto" : "off");
 /** Escudo total (main.js cancela qualquer dano no dono). */
-export const shieldOn = (c) => c.rec.form === "swarm" && c.alive() && modeOf(c) === "escudo";
+export const shieldOn = (c) => isCloud(c) && c.alive() && modeOf(c) === "escudo";
 
 /**
  * Dano que o enxame segura mesmo fora do modo escudo (lido no beforeEvent: só lê flags).
  * Queda (eles amortecem), e a explosão do próprio martelo perto de você.
  */
 export function nanoProtects(c, cause) {
-  if (c.rec.form !== "swarm" || !c.alive()) return false;
+  if (!isCloud(c) || !c.alive()) return false;
   if (cause === "fall" || cause === "flyIntoWall") return true;
   if ((cause === "entityExplosion" || cause === "blockExplosion") && system.currentTick < (c.flags.hammerSafe ?? 0)) return true;
   return false;
@@ -224,10 +226,8 @@ export function swarmTick(c) {
   if (!c.flags.nanoActive && owner) startSwarm(c, owner);
   const pass = (c.flags.swPass = (c.flags.swPass ?? 0) + 1);
   const dim = c.dim();
-  const p = c.pos();
-  // o núcleo: uma fumacinha escura com brilhos (leve: poucas partículas que duram mais)
-  if (pass % 6 === 0) particle(dim, "lila:nano_smoke", { x: p.x, y: p.y + 0.6, z: p.z });
-  if (pass % 14 === 7) particle(dim, "lila:nano_point", { x: p.x, y: p.y + 0.6, z: p.z });
+  // a nuvem em si (centenas de robozinhos em zigue-zague) roda no cliente, presa na entidade:
+  // o servidor não manda nada por tick para desenhar o enxame
   if (!owner || owner.dimension.id !== dim.id) return;
   const od = owner.dimension;
   const mode = modeOf(c);
@@ -1021,13 +1021,25 @@ function tempTick(c, force = false) {
   c.flags.temp = keep;
 }
 
-/** Desmancha tudo que o enxame montou (Cancelar). */
+/** Desmancha tudo que o enxame montou (Cancelar): formas, ferramentas na mão, modo volta ao inteligente. */
 export function clearSwarm(c) {
   tempTick(c, true);
   clearLight(c);
   c.flags.shape = undefined;
   c.flags.swarmTarget = undefined;
   c.flags.wingsUntil = 0;
+  c.flags.punch = undefined;
+  c.flags.breakQ = undefined;
+  if (c.flags.nanoMode && c.flags.nanoMode !== "auto") setNanoMode(c, "auto");
+  const ct = c.owner()?.getComponent("minecraft:inventory")?.container;
+  for (let i = 0; ct && i < ct.size; i++) {
+    try {
+      const id = ct.getItem(i)?.typeId;
+      if (isNanoItem(id) && id !== NANO_ITEMS.core && !(id === NANO_ITEMS.hammer && c.flags.hammer)) ct.setItem(i, undefined);
+    } catch {
+      /* ignore */
+    }
+  }
 }
 
 // ------------------------------------------------------------------ formas e pedidos
@@ -1066,7 +1078,7 @@ const TOOL_SHAPES = { espada: "sword", machado: "axe", picareta: "pickaxe", pa: 
  * @param {string} kind
  */
 export function doShape(c, kind, owner = c.owner()) {
-  if (!owner || !c.alive() || c.rec.form !== "swarm") return false;
+  if (!owner || !c.alive() || !isCloud(c)) return false;
   if (!c.flags.nanoActive) startSwarm(c, owner);
   if (MODE_SHAPES[kind]) {
     // "escudo" de novo com o escudo ligado: desliga (volta ao inteligente)

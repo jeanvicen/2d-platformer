@@ -1,6 +1,6 @@
-entity.lila:drone.name=DR-0N
-entity.lila:robot.name=DR-0N Soldier
-item.lila.drone_controller.name=DR-0N Remote
+entity.lila:drone.name=Hacknd
+entity.lila:robot.name=Hacknd Nanobot Soldier
+item.lila.drone_controller.name=Hacknd Remote
 action.interact.lila.ride=Get in
 action.interact.lila.talk=Talk
 item.lila.nano_sword.name=Nanobot Sword

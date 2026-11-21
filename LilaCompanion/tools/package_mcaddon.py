@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Empacota dist/DR-0N_Mega_Drone.mcaddon (BP + RP) e dist/DR-0N_Mega_Drone_source.zip.
+"""Empacota dist/Hacknd.mcaddon (BP + RP) e dist/Hacknd_source.zip.
 
 O .mcaddon é um zip com as duas pastas de pacote na raiz; no celular basta tocar no arquivo
 para o Minecraft importar os dois pacotes.
@@ -38,11 +38,11 @@ def sha(p):
 def main():
     os.makedirs(DIST, exist_ok=True)
     ver = ".".join(map(str, json.load(open(os.path.join(ROOT, "behavior_pack", "manifest.json")))["header"]["version"]))
-    addon = os.path.join(DIST, "DR-0N_Mega_Drone.mcaddon")
+    addon = os.path.join(DIST, "Hacknd.mcaddon")
     with zipfile.ZipFile(addon, "w") as z:
-        add_dir(z, os.path.join(ROOT, "behavior_pack"), "DR0N_Mega_Drone_BP")
-        add_dir(z, os.path.join(ROOT, "resource_pack"), "DR0N_Mega_Drone_RP")
-    src = os.path.join(DIST, "DR-0N_Mega_Drone_source.zip")
+        add_dir(z, os.path.join(ROOT, "behavior_pack"), "Hacknd_BP")
+        add_dir(z, os.path.join(ROOT, "resource_pack"), "Hacknd_RP")
+    src = os.path.join(DIST, "Hacknd_source.zip")
     with zipfile.ZipFile(src, "w") as z:
         for item in ("behavior_pack", "resource_pack", "tools", "tests", "research", "docs", "source"):
             p = os.path.join(ROOT, item)

@@ -1,4 +1,4 @@
-// Formas do DR-0N: veículos (helicóptero, carro, escavadeira, tanque, jato, moto, nave espacial,
+// Formas do Hacknd: veículos (helicóptero, carro, escavadeira, tanque, jato, moto, nave espacial,
 // disco voador, submarino, lancha, caminhão-monstro, caça furtivo), o robô gigante TITÃ e a torreta
 // gigante. É sempre a MESMA entidade (inventário, memórias e vida continuam): a forma troca grupos
 // de componentes (hitbox, gravidade, assentos, escala) e a geometria.
@@ -15,6 +15,7 @@ import { canAttack, findThreat, isHostile } from "./combat.js";
 import { clearLine, hover, land } from "./drone.js";
 import { say } from "./talk.js";
 import { logError } from "../core/log.js";
+import { FORM_SIZE, nanoAssemble, nanoBurst } from "./nanofx.js";
 
 /** @typedef {import("./companion.js").Companion} Companion */
 /** @typedef {import("@minecraft/server").Player} Player */
@@ -111,19 +112,10 @@ export function setForm(c, form, o = {}) {
     if (c.flags.transforming) return true;
     c.flags.transforming = form;
     setAction(e, "charge");
-    sound(e, "lila.servo", 0.8, 1.4);
+    sound(e, "mob.bee.loop", 1, 0.7);
     sound(e, "beacon.power", 0.6, 1.6);
-    for (let k = 0; k < 6; k++) {
-      system.runTimeout(() => {
-        if (!c.alive()) return;
-        const p = c.pos();
-        const r = 3.2 - k * 0.5;
-        for (let i = 0; i < 6; i++) {
-          const a = (i / 6) * Math.PI * 2 + k * 0.7;
-          particle(c.dim(), "lila:nano_point", { x: p.x + Math.cos(a) * r, y: p.y + 0.6 + k * 0.3, z: p.z + Math.sin(a) * r });
-        }
-      }, k * 2);
-    }
+    // o enxame se espalha num redemoinho do tamanho da forma nova, antes de compactar nela
+    nanoBurst(e.dimension, e.location, (FORM_SIZE[form] ?? 1) * 0.8);
     system.runTimeout(() => {
       c.flags.transforming = undefined;
       if (c.alive()) applyForm(c, form, o);
@@ -167,9 +159,10 @@ function applyForm(c, form, o = {}) {
   c.flags.formAt = system.currentTick;
   if (!o.quiet) {
     sound(e, "lila.transform", 1.0, form === "colossus" ? 0.8 : 1.0);
-    sound(e, "random.anvil_use", 0.35, 1.4);
-    burst(dim, at, "lila:sparkle", 10, form === "colossus" ? 4 : 1.6);
-    burst(dim, at, "lila:smoke", 6, form === "colossus" ? 5 : 1.4);
+    sound(e, "mob.bee.loop", 0.8, form === "colossus" ? 0.5 : 1.2);
+    // Hacknd: virar forma = o enxame converge e compacta; voltar ao normal = a forma vira poeira
+    if (form === "drone" || form === "swarm") nanoBurst(dim, at, FORM_SIZE[prev] ?? 1);
+    else nanoAssemble(dim, at, FORM_SIZE[form] ?? 1);
     particle(dim, "lila:shock", { x: at.x, y: at.y + 0.2, z: at.z }); // onda de luz no chão
     sound(e, "random.orb", 0.5, 0.8);
     if (form === "colossus") {
@@ -194,8 +187,8 @@ function applyForm(c, form, o = {}) {
   }
   if (prev !== form && !o.quiet) {
     const msgs = {
-      drone: "De volta à forma normal. Pronto pra próxima!",
-      colossus: "ROBÔ GIGANTE TITÃ! Você está em cima da cabeça: andar = mover · bater perto = soco · mirar longe e bater = raio do visor · pular = salto com pisão · agachar = sair.",
+      drone: "A forma se desfez em poeira: somos um enxame de novo. Pronto pra próxima!",
+      colossus: "TITÃ! Milhões de nanorrobôs viraram um robô gigante. Você está em cima da cabeça: andar = mover · bater perto = soco · mirar longe e bater = raio do visor · pular = salto com pisão · agachar = sair.",
       turret: "Torreta gigante armada e cravada no chão. Ninguém passa!",
       swarm: "ENXAME! Virei uma névoa de nanorrobôs em volta de você. Modo inteligente: de mão vazia, bata num bloco e eu viro a ferramenta certa (machado derruba a árvore toda), bata num bicho e viro espada, e te seguro nas quedas. Use o Núcleo do enxame (na sua barra) para trocar: escudo, asas, prancha, mãos gigantes, devorador. Peça também: martelo, ponte, muralha, cúpula, tornado.",
       sub: "Submarino! Olhe pra baixo e acelere pra mergulhar. Bater = torpedo. Você respira e enxerga debaixo d'água. Agachar = sair.",

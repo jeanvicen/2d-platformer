@@ -1,32 +1,44 @@
-# DR-0N Mega Drone — Minecraft Bedrock
+# Hacknd — Minecraft Bedrock
 
-**DR-0N** é um robô de peças flutuantes para Minecraft Bedrock (celular, PC e console) com **itens infinitos**
-(cabeça, tronco com núcleo de energia e duas mãos soltas presas por magnetismo, com animação de física
-de verdade — inércia, mola e quique; dá pra **desligar** — ele desmonta no chão — e **ligar** de novo,
-com as peças voando e encaixando com um estalo magnético).
-Ele vira **12 veículos** (helicóptero, carro, moto, caminhão-monstro, escavadeira, tanque, jato, caça
-furtivo, nave espacial, disco voador, lancha e submarino), vira uma **torreta gigante**, o **robô
-gigante TITÃ** (você vai em cima da cabeça, quase imortal), um **enxame de milhares de nanorrobôs**,
-**explode num exército de robôs**, constrói **cidades, castelos e montanhas-russas**, tem um
-**catálogo de 4851 construções mobiliadas** e **transforma biomas**.
+**Hacknd** é um **enxame de nanorrobôs** para Minecraft Bedrock (celular, PC e console), com **itens
+infinitos**. Não tem corpo de robô: é uma nuvem de robozinhos do tamanho de poeira, que se mexe como
+abelhas e mosquitos (zigue-zague turbulento). Quando você invoca, eles **descem do céu em várias
+correntes, de lugares diferentes**. Tudo é feito pelos nanorrobôs:
 
-> Criado por **0neajx**. Modelos, texturas, animações, sons e código são originais deste projeto
-> (veja `LICENSES_AND_ASSETS.md`). A versão 2.0 removeu a Lila: o add-on agora é só o DR-0N.
+- viram **12 veículos** (helicóptero, carro, moto, caminhão-monstro, escavadeira, tanque, jato, caça
+  furtivo, nave espacial, disco voador, lancha e submarino);
+- viram a **torreta gigante** e o **TITÃ** (robô gigante; você vai em cima da cabeça);
+- se dividem num **exército** de soldados de nanorrobôs;
+- viram **ferramentas na sua mão**, **asas**, **prancha voadora**, **mãos gigantes**, **escudo** e o
+  **devorador**;
+- constroem **cidades, castelos e montanhas-russas**, têm um **catálogo de 4851 construções
+  mobiliadas** e **transformam biomas**.
 
-![DR-0N](docs/img/portrait.png)
+Tudo que eles montam é **feito de nanorrobôs**: grafite granulado, com pontinhos ciano brilhando e
+robozinhos soltos deslizando pela superfície.
+
+> Criado por **0neajx**. Modelos, texturas, animações, partículas, sons e código são originais deste
+> projeto (veja `LICENSES_AND_ASSETS.md`). Hacknd é a versão 3 do antigo DR-0N Mega Drone: mesmo pacote,
+> então o mundo e o inventário do enxame continuam.
+
+**Sobre "milhões" de nanorrobôs:** nenhum jogo desenha bilhões de pontos. A nuvem tem centenas de
+robozinhos de verdade, desenhados no seu aparelho e presos ao enxame, mais uma névoa que dá a
+sensação de densidade. O servidor não manda nada por quadro para desenhar a nuvem, por isso não trava.
+
+![Hacknd](docs/img/portrait.png)
 
 ## 1. Instalar (Android)
 
-1. Baixe **`DR-0N_Mega_Drone.mcaddon`** (pasta `dist/` ou a página de download).
+1. Baixe **`Hacknd.mcaddon`** (pasta `dist/` ou a página de download).
 2. Toque no arquivo → abrir com **Minecraft**. Ele importa os dois pacotes.
-3. Editar mundo → **Pacotes de Comportamento** → ative **DR-0N Mega Drone (BP)**. Se o mundo tinha
+3. Editar mundo → **Pacotes de Comportamento** → ative **Hacknd (BP)** (é o mesmo pacote do DR-0N, versão nova). Se o mundo tinha
    a versão antiga (Lila Companion), desative ela antes.
 4. Não precisa de experimentos nem de cheats. Requisito: Bedrock **1.26.30+** (testado no
    servidor oficial 1.26.65.1).
 
 ## 2. Começando
 
-Ao entrar no mundo **nada aparece**. Fabrique o **Controle do DR-0N** (bancada):
+Ao entrar no mundo **nada aparece**. Fabrique o **Controle do Hacknd** (bancada):
 
 ```
 F V F     F = barra de ferro   V = vidro
@@ -34,18 +46,18 @@ R D R     R = pó de redstone   D = diamante
 F _ F
 ```
 
-Use o controle → **Invocar DR-0N**. Pelo chat: `/drone <ordem>` (ou `/drone` sozinho = menu).
+Use o controle → **Invocar o enxame Hacknd**: os nanorrobôs descem do céu. Pelo chat: `/hacknd <ordem>` (ou `/hacknd` sozinho = menu; `/drone` também funciona).
 
 **Cancelar tudo** (primeiro botão vermelho, ou "cancela" / "volta ao normal") larga qualquer tarefa
-e volta à forma normal: junta o exército, desfaz veículo, TITÃ, enxame e torreta.
+e volta a ser enxame: junta o exército, desfaz veículo, TITÃ e torreta.
 
-**Desligar / ligar** (botão no controle, ou "desliga" / "liga"): desligado, ele desmonta no chão com os
-brilhos apagados e fica quieto (não segue, não ataca). Ligando, as peças sobem girando e se montam.
+**Desligar / ligar** (botão no controle, ou "desliga" / "liga"): desligado, o campo cai e a poeira desce
+num montinho no chão (não segue, não ataca). Ligando, a poeira levanta e mais robozinhos descem do céu.
 
-**Luta:** ele alterna **socos fortes** (a mão voa no alvo e arremessa) com **tiros do núcleo** do
-peito, e protege você atacando primeiro.
+**Luta:** o enxame compacta num **punho de nanorrobôs** que voa até o alvo (soco forte que arremessa)
+e dispara **dardos de poeira**, protegendo você atacando primeiro.
 
-**No dia a dia ele passeia por perto** (4 a 9 blocos, do lado ou atrás, olhando em volta) em vez de
+**No dia a dia a nuvem passeia por perto** (4 a 9 blocos, do lado ou atrás, olhando em volta) em vez de
 ficar rodando em volta de você; quando você anda, ele acompanha.
 
 ## 3. Veículos
@@ -85,12 +97,11 @@ cabeça** (plataforma com corrimão baixo: visão 360°), onde você fica **quas
 Mais pessoas sobem nas ombreiras e na mochila. Se você sair sem cancelar, ele **continua TITÃ**
 (parado, pisando em monstros) até você mandar "Cancelar".
 
-## 4b. Enxame de nanorrobôs
+## 4b. Poderes do enxame
 
-"modo enxame" (ou menu **Modo ENXAME**). O DR-0N vira uma **névoa de nanorrobôs**: uma fumacinha
-escura com brilhos e, em volta de você, robozinhos minúsculos espalhados no ar (eles não ficam
-orbitando) com uma névoa levíssima no horizonte. Ele continua fazendo tudo que o robô faz e você
-**não precisa abrir o controle** — eles agem sozinhos:
+A forma normal **já é o enxame**: os poderes funcionam sempre (menu **Poderes do enxame…**, ou fale
+o nome). Em volta de você ficam robozinhos minúsculos espalhados no ar (sem orbitar) e uma névoa
+levíssima no horizonte. Você **não precisa abrir o controle** — eles agem sozinhos:
 
 - **Ferramentas na sua mão**: de mão vazia, bata num bloco e os nanorrobôs se juntam na sua mão:
   **machado** em madeira (derruba a árvore inteira), **picareta** em pedra/minério (veio inteiro ou
@@ -259,6 +270,6 @@ Resultados e o que **não** foi testado: `tests/CHECKLIST.md`.
 
 ```
 python3 tools/build_assets.py --previews   # modelos, texturas, animações, sons, partículas, entidades
-python3 tools/package_mcaddon.py           # dist/DR-0N_Mega_Drone.mcaddon + fonte
+python3 tools/package_mcaddon.py           # dist/Hacknd.mcaddon + fonte
 python3 tools/build_site.py                # site/index.html (página de download)
 ```

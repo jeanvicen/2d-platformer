@@ -1,4 +1,4 @@
-// Modo exército: o DR-0N sobe, explode num clarão e vira N robôs-soldado (padrão 10).
+// Modo exército: o Hacknd sobe, explode num clarão e vira N robôs-soldado (padrão 10).
 // Eles te seguem com a IA do próprio jogo (pulam, nadam, abrem portas), caçam monstros antes de
 // chegarem em você, revidam em quem te atacar (jogadores inclusive) e ficam de olho nas suas
 // necessidades: vida baixa, fome, sem armadura, escuro, debaixo d'água, fogo, queda.
@@ -17,6 +17,7 @@ import { buff, equipArmor, giveStacks, strengthKit } from "./creative.js";
 import { pickSite, planExtras, planStream, planVolume, unloadArea, verifyPlan } from "./mega.js";
 import { perm, UNBREAKABLE } from "./handwork.js";
 import { say } from "./talk.js";
+import { nanoAssemble, nanoBurst } from "./nanofx.js";
 import { logError } from "../core/log.js";
 
 /** @typedef {import("./companion.js").Companion} Companion */
@@ -107,17 +108,18 @@ export function* deploy(c, n = 10, style = "misto") {
     }
     c.rec.form = "drone";
   }
-  say(c, `Modo exército! Separando em ${n} robôs...`, { force: true });
+  say(c, `Modo exército! O enxame vai se dividir em ${n} soldados de nanorrobôs...`, { force: true });
   const up = { x: owner.location.x, y: owner.location.y + 9, z: owner.location.z };
   yield* flyTo(c, up, { reach: 1.5, yTol: 1.5, timeout: 60 });
   sound(c.entity, "lila.transform", 1.2, 1.2);
   yield 14;
   const dim = c.dim();
   const at = { ...c.pos() };
-  // clarão e estrondo (sem dano e sem quebrar nada)
+  // o enxame se abre numa explosão macia de poeira (sem dano e sem quebrar nada)
   sound(c.entity, "lila.split", 2, 1);
-  sound(c.entity, "random.explode", 1.2, 1.4);
-  for (const k of ["lila:shock", "lila:sparkle", "lila:smoke", "lila:muzzle"]) particle(dim, k, at);
+  sound(c.entity, "mob.bee.loop", 1.2, 0.6);
+  nanoBurst(dim, at, 2.6);
+  particle(dim, "lila:shock", at);
   try {
     dim.runCommand(`camerashake add @a[x=${Math.floor(at.x)},y=${Math.floor(at.y)},z=${Math.floor(at.z)},r=30] 0.3 0.5 positional`);
   } catch {
@@ -141,7 +143,7 @@ export function* deploy(c, n = 10, style = "misto") {
       const r = dim.spawnEntity(ROBOT, { x: at.x + Math.cos(a) * 0.6, y: at.y, z: at.z + Math.sin(a) * 0.6 });
       r.setDynamicProperty(OWNER_PROP, c.rec.ownerId);
       r.setProperty("lila:kind", kind);
-      r.nameTag = `${KIND_COLOR[kind]}DR-0N §7#${i + 1} ${KIND_NAMES[kind]}`;
+      r.nameTag = `${KIND_COLOR[kind]}Hacknd §7#${i + 1} ${KIND_NAMES[kind]}`;
       try {
         r.getComponent("minecraft:tameable")?.tame(owner);
         // ninja é rápido; artilheiro é pesado
@@ -152,6 +154,7 @@ export function* deploy(c, n = 10, style = "misto") {
       }
       r.applyImpulse({ x: Math.cos(a) * 0.9, y: 0.35, z: Math.sin(a) * 0.9 });
       setRobotAction(r, "spawn", 16);
+      nanoAssemble(dim, r.location, 0.75); // cada soldado compacta a partir da nuvem
       ids.push(r.id);
       count[kind]++;
     } catch (e) {
@@ -177,7 +180,7 @@ export function merge(c) {
   for (const r of rs) {
     try {
       const p = r.location;
-      for (let k = 0; k < 4; k++) particle(dim, "lila:scan", { x: p.x, y: p.y + k * 0.8, z: p.z });
+      nanoBurst(r.dimension, p, 0.75); // o soldado vira poeira e volta para a nuvem
       r.triggerEvent("lila:despawn");
     } catch {
       /* ignore */
@@ -202,7 +205,7 @@ export function merge(c) {
   c.rec.army = null;
   c.flags.armyCache = null;
   c.save();
-  if (c.alive()) say(c, "Todo mundo de volta! Sou um drone de novo.", { force: true });
+  if (c.alive()) say(c, "Todo mundo de volta! Somos um enxame de novo.", { force: true });
   return !!e;
 }
 

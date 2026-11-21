@@ -10,7 +10,7 @@ import { command, handleIntents, stats } from "../lila/brain.js";
 import { summon, dismiss, restoreBodyForTest, RESPAWN_TICKS } from "../lila/lifecycle.js";
 import { formOf, riders, setForm, turretGoal, primaryAttack, testDrive, tractor, jumpAction } from "../lila/forms.js";
 import { archPlan, catalogList, TOTAL } from "../lib/archgen.js";
-import { NANO_BLOCK, modeOf, nanoBreak, nanoHitBlock, nanoHitEntity, nanoUse, shieldOn } from "../lila/swarm.js";
+import { NANO_BLOCK, isCloud, modeOf, nanoBreak, nanoHitBlock, nanoHitEntity, nanoUse, shieldOn } from "../lila/swarm.js";
 import { megaBuild, biomeTransform, flatten, sweepGround } from "../lila/mega.js";
 import { armyActive, robotsOf } from "../lila/army.js";
 import { FORM_LIST } from "../lib/catalog.js";
@@ -712,10 +712,9 @@ async function ownerTests(dim, check) {
   owner.teleport({ x: 0.5, y: Y + 1, z: 6.5 }, { rotation: { x: 0, y: 0 } });
   await system.waitTicks(4);
   command(c, "modo enxame");
-  await waitUntil(() => formOf(c) === "swarm", 60);
-  await system.waitTicks(6);
-  check("'modo enxame': becomes the nano swarm (smart mode) and hands you the swarm core", formOf(c) === "swarm" && modeOf(c) === "auto" &&
-    pcount((id) => id === "lila:nano_core") === 1, `mode=${modeOf(c)} core=${pcount((id) => id === "lila:nano_core")}`);
+  await system.waitTicks(10);
+  check("Hacknd: the normal form IS the nano swarm (smart mode) and you hold the swarm core", isCloud(c) && modeOf(c) === "auto" &&
+    pcount((id) => id === "lila:nano_core") === 1, `form=${formOf(c)} mode=${modeOf(c)} core=${pcount((id) => id === "lila:nano_core")}`);
   const heldId = () => pinv()?.getItem(owner.selectedSlotIndex)?.typeId;
   pinv()?.setItem(owner.selectedSlotIndex, undefined);
   nanoHitBlock(c, owner, dim.getBlock({ x: 10, y: Y + 1, z: 10 }));
@@ -805,9 +804,9 @@ async function ownerTests(dim, check) {
   handleIntents(c, [{ type: "stop" }]);
   await system.waitTicks(10);
   const leftN = countBlocks(dim, NANO_BLOCK, -8, Y - 1, -9, 8, Y + 6, 40);
-  const nanoLeft = pcount((id) => id.startsWith("lila:nano_"));
-  check("cancel dissolves the swarm (shapes, nano tools, core) and returns to normal", formOf(c) === "drone" && leftN === 0 && nanoLeft === 0,
-    `blocks left=${leftN} nano items=${nanoLeft}`);
+  const nanoLeft = pcount((id) => id.startsWith("lila:nano_") && id !== "lila:nano_core");
+  check("cancel dissolves the swarm shapes and tools, back to the smart swarm", isCloud(c) && modeOf(c) === "auto" && leftN === 0 && nanoLeft === 0,
+    `blocks left=${leftN} nano tools=${nanoLeft}`);
   owner.teleport({ x: 0.5, y: Y + 1, z: 6.5 });
   await system.waitTicks(4);
 

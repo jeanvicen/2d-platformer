@@ -1,4 +1,4 @@
-// Modo criativo do DR-0N: itens infinitos (ele "materializa" qualquer item do jogo), kits
+// Modo criativo do Hacknd: itens infinitos (ele "materializa" qualquer item do jogo), kits
 // encantados que te deixam mais forte e efeitos de suporte. Tudo vira item real no inventário.
 import { EnchantmentType, ItemStack, ItemTypes } from "@minecraft/server";
 import { representative } from "../lib/recipes.js";

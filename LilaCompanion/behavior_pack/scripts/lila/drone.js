@@ -1,4 +1,4 @@
-// DR-0N — o drone-robô: voo, metralhadora, modo torreta, carona controlada pelo dono,
+// Hacknd — o drone-robô: voo, metralhadora, modo torreta, carona controlada pelo dono,
 // escaneamento do dono, memórias (diário) e missões. O resto (planejar, coletar, fabricar,
 // construir, plantar) é o mesmo cérebro da Lila.
 import { ButtonState, EntityDamageCause, InputButton, system } from "@minecraft/server";
@@ -9,6 +9,7 @@ import { canAttack, findThreat, isHostile } from "./combat.js";
 import { say } from "./talk.js";
 import * as inv from "./inventory.js";
 import { logError } from "../core/log.js";
+import { nanoFx, nanoStream } from "./nanofx.js";
 
 /** @typedef {import("./companion.js").Companion} Companion */
 /** @typedef {{x:number,y:number,z:number}} Vec */
@@ -250,13 +251,20 @@ export function shoot(c, target) {
   face(c, { x: to.x - 0.5, y: to.y, z: to.z - 0.5 });
   // na torreta continua montado (tripé/canhão); só em voo troca para a pose de tiro
   if (c.rec.mode !== "turret") setAction(e, "attack");
-  // rastro da bala
-  const n = Math.min(14, Math.ceil(dist / 1.4));
-  for (let i = 1; i <= n; i++) {
-    const t = i / (n + 1);
-    particle(dim, "lila:tracer", { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t, z: from.z + (to.z - from.z) * t });
+  const cloud = !c.rec.form || c.rec.form === "drone" || c.rec.form === "swarm";
+  if (cloud) {
+    // Hacknd: um dardo de nanorrobôs sai da nuvem e fura o alvo
+    nanoStream(dim, from, to, 7, 1.8);
+    particle(dim, "lila:nano_smoke", to);
+  } else {
+    // rastro da bala
+    const n = Math.min(14, Math.ceil(dist / 1.4));
+    for (let i = 1; i <= n; i++) {
+      const t = i / (n + 1);
+      particle(dim, "lila:tracer", { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t, z: from.z + (to.z - from.z) * t });
+    }
+    particle(dim, "lila:ping", to);
   }
-  particle(dim, "lila:ping", to);
   sound(e, "random.click", 0.6, 1.9);
   sound(e, "mob.blaze.shoot", 0.25, 1.9);
   try {
@@ -275,7 +283,18 @@ export function punch(c, target) {
   if (d3(e.location, { x: tl.x, y: tl.y + 0.8, z: tl.z }) > 3.8) return false;
   face(c, { x: tl.x - 0.5, y: tl.y + 1, z: tl.z - 0.5 });
   setAction(e, "punch");
-  sound(e, "lila.servo", 0.6, 1.6);
+  sound(e, "mob.bee.aggressive", 0.6, 0.8);
+  // Hacknd: o enxame compacta num punho e voa até o alvo (3 quadros: sai da nuvem, meio, impacto)
+  {
+    const a = e.location, yaw = (-Math.atan2(tl.x - a.x, tl.z - a.z) * 180) / Math.PI;
+    for (let k = 0; k < 3; k++) {
+      system.runTimeout(() => {
+        if (!c.alive() || !target.isValid) return;
+        const p = c.pos(), q = target.location, f = (k + 1) / 3;
+        nanoFx(c.dim(), "lila:nano_hand", { x: p.x + (q.x - p.x) * f, y: p.y + 1 + (q.y + 1 - p.y - 1) * f, z: p.z + (q.z - p.z) * f }, { yaw, size: 0.9 + k * 0.25 });
+      }, k);
+    }
+  }
   system.runTimeout(() => {
     if (!c.alive() || !target.isValid) return;
     const a = c.pos(), b = target.location;
@@ -495,7 +514,7 @@ export function mount(c, player) {
   try {
     if (hdist(e.location, player.location) > 4) e.teleport({ x: player.location.x + 1, y: player.location.y + 0.5, z: player.location.z }, { keepVelocity: false });
     const ok = e.getComponent("minecraft:rideable")?.addRider(player) ?? false;
-    if (ok) say(c, "Segura firme! Olhe para onde quer ir e ande pra frente. Pular = subir. Agachar = descer do drone.", { force: true });
+    if (ok) say(c, "Segura firme! Olhe para onde quer ir e ande pra frente. Pular = subir. Agachar = descer do enxame.", { force: true });
     return ok;
   } catch (err) {
     logError("drone.mount", err);
