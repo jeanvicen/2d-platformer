@@ -187,3 +187,24 @@ test("frases do jeito que o jogador escreve (gíria, sem acento, erros)", () => 
   assert.deepEqual(bad, []);
   assert.equal(parseCommands("quero comida")[0].forOwner, true);
 });
+
+// ---------------- Sistema de Raças (Roleta das Essências)
+test("raças: pesos somam 10000 e DEUS/TREVAS = 1% exatos; limites do sorteio", async () => {
+  const D = await import("../behavior_pack/scripts/race/data.js");
+  assert.deepEqual(D.validateWeights(), []);
+  assert.equal(D.pickRace(0), "vampire");
+  assert.equal(D.pickRace(2799), "vampire");
+  assert.equal(D.pickRace(2800), "giant");
+  assert.equal(D.pickRace(9799), "demon");
+  assert.equal(D.pickRace(9800), "god");
+  assert.equal(D.pickRace(9899), "god");
+  assert.equal(D.pickRace(9900), "dark");
+  assert.equal(D.pickRace(9999), "dark");
+});
+
+test("raças: 600 poderes (100 por raça), ids únicos, nenhum comportamento repetido", async () => {
+  const C = await import("../behavior_pack/scripts/race/catalog.js");
+  assert.equal(C.ABILITIES.length, 600);
+  for (const list of Object.values(C.BY_RACE)) assert.equal(list.length, 100);
+  assert.deepEqual(C.validateCatalog(), []);
+});

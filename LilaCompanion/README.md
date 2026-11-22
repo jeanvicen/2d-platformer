@@ -128,6 +128,46 @@ Também: **muralha, ponte** (40 blocos), **escada, cúpula** (se desmancham depo
 lâmina giratória, tornado, elevador, ataca** (o que você mira). "Cancelar" desmancha tudo e recolhe as
 ferramentas.
 
+## 4c. Roleta das Essências — raças
+
+Fabrique a **Roleta das Essências** (bancada):
+
+```
+A O A     A = fragmento de ametista   O = barra de ouro
+E D E     E = olho do fim             D = diamante
+A O A
+```
+
+**Use** a roleta. Uma roda 3D gira na sua frente e para na raça sorteada **pelo servidor**:
+
+| Raça | Chance | O que muda |
+|---|---|---|
+| Vampiro | 28% | corre 2× (5× na Rajada), regenera 2×, vira morcego, suga sangue segurando o botão, visão noturna automática · **o sol queima** (capacete ou morcego protegem) |
+| Gigante | 24% | ~8 blocos de altura (3 golens; câmera em 3ª pessoa), 3× força, 3× resistência, 3× velocidade, passos que tremem |
+| Anjo | 22% | auréola, asas que crescem com XP próprio (0→20, nunca encolhem), voo, regenera 5× |
+| Demônio | 24% | coroa e asas rubras, fogo e maldições, imune a fogo, voo, regenera 5× |
+| **DEUS** | **1%** | coroa de luz, asas enormes, regenera 10×, **Lâmina Divina** (30 de dano) |
+| **TREVAS** | **1%** | coroa negra, asas sombrias, resistência 20×, regenera 10× em pulsos, **Foice do Vazio** (35 de dano; o que ela quebra vira cinza) |
+
+Gasta 1 roleta por giro (no criativo não gasta). Se você já tem raça, ela pede confirmação, e cancelar
+não gasta nada.
+
+**Usar os poderes** — segure o **Núcleo da Raça** (você recebe ao virar a raça):
+
+- **bater** (tocar na tela): usa o **poder ativo**;
+- **usar**: painel com os **20 poderes da sua barra** (toque para usar e deixar ativo);
+- **agachar + usar**: **grimório** com os **100 poderes** da raça (categorias, busca, detalhes, montar a barra);
+- Vampiro: **segure usar** mirando numa criatura perto para sugar o sangue.
+
+Cada raça tem 100 poderes diferentes e todos ficam liberados. A lista completa e a tabela de
+equilíbrio estão em `docs/race-abilities.md`.
+
+**Limites do Bedrock** (equivalentes honestos ao que foi pedido):
+
+- add-ons não criam teclas nem botões clicáveis no HUD, então a barra de 20 abre com 1 toque no Núcleo;
+- o jogo não sobe a câmera de um jogador escalado: o gigante fica com o corpo e a hitbox gigantes, e a
+  câmera vai para a 3ª pessoa.
+
 ## 5. Torreta gigante
 
 "modo torreta": pousa, **crava no chão e fica parada** (não anda, não teleporta), abre as pernas e arma

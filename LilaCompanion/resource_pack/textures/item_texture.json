@@ -25,6 +25,18 @@
     },
     "lila_nano_core": {
       "textures": "textures/items/lila/nano_core"
+    },
+    "lila_race_roulette": {
+      "textures": "textures/items/lila/race_roulette"
+    },
+    "lila_divine_sword": {
+      "textures": "textures/items/lila/divine_sword"
+    },
+    "lila_void_scythe": {
+      "textures": "textures/items/lila/void_scythe"
+    },
+    "lila_race_core": {
+      "textures": "textures/items/lila/race_core"
     }
   }
 }

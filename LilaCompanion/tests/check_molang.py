@@ -39,6 +39,11 @@ def is_molang(path, s):
     return bool(re.search(r"[a-z]\.|[\d)][^\w]|^\-?\d", s)) or "math." in s
 
 
+# consultas usadas pelo arquivo OFICIAL do jogador (copiado de Mojang/bedrock-samples)
+VANILLA_PLAYER_QUERIES = {"has_head_gear", "is_alive", "main_hand_item_use_duration", "main_hand_item_max_duration", "is_riding_any_entity_of_type",
+                          "vertical_speed"}
+
+
 def main():
     exprs = []
     for d, _, fs in os.walk(ROOT):
@@ -72,7 +77,7 @@ def main():
             ns, name = m.group(1), m.group(2)
             if ns == "math" and name not in MATH:
                 errors.append(f"math.{name} desconhecido: {where}")
-            if ns in ("q", "query") and name not in QUERY:
+            if ns in ("q", "query") and name not in QUERY and name not in VANILLA_PLAYER_QUERIES:
                 errors.append(f"q.{name} desconhecido: {where}")
         for m in re.finditer(r"\b(?:v|variable)\.(\w+)\s*=(?!=)", body):
             written.add(m.group(1))
@@ -80,7 +85,9 @@ def main():
             read.setdefault(m.group(1), where)
         if re.search(r"\?\s*:|\?\s*$|::", body):
             errors.append(f"ternário quebrado: {where}")
-    builtin = {"particle_age", "particle_lifetime", "particle_random_1", "particle_random_2", "particle_random_3", "particle_random_4"}
+    builtin = {"particle_age", "particle_lifetime", "particle_random_1", "particle_random_2", "particle_random_3", "particle_random_4",
+               # variáveis que o próprio jogo preenche no jogador (arquivo oficial player.entity.json)
+               "attack_time", "gliding_speed_value", "player_x_rotation"}
     for name, where in sorted(read.items()):
         if name not in written and name not in builtin:
             errors.append(f"variável lida e nunca escrita: v.{name} ({where})")

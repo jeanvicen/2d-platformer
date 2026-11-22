@@ -1,0 +1,32 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.lila.roulette.spin": {
+      "loop": true,
+      "bones": {
+        "wheel": {
+          "rotation": [
+            0,
+            0,
+            "(1800 + 60 * q.property('lila:result')) * (1 - math.pow(1 - math.min(1, q.life_time / 4.6), 3))"
+          ]
+        },
+        "pointer": {
+          "rotation": [
+            0,
+            0,
+            "math.sin(q.life_time * 2400) * 14 * (1 - math.min(1, q.life_time / 4.6))"
+          ]
+        },
+        "root": {
+          "scale": "math.min(1, q.life_time * 3) + math.sin(math.min(1, q.life_time * 3) * 360) * 0.1 * (1 - math.min(1, q.life_time * 3))",
+          "position": [
+            0,
+            "math.sin(q.life_time * 90) * 0.6",
+            0
+          ]
+        }
+      }
+    }
+  }
+}

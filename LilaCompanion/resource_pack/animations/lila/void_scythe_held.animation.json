@@ -1,0 +1,47 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.lila.void_scythe.first": {
+      "loop": true,
+      "bones": {
+        "scythe": {
+          "rotation": [
+            62,
+            -8,
+            12
+          ],
+          "position": [
+            0,
+            1,
+            -2
+          ],
+          "scale": 0.75
+        }
+      }
+    },
+    "animation.lila.void_scythe.third": {
+      "loop": true,
+      "bones": {
+        "scythe": {
+          "rotation": [
+            76,
+            0,
+            0
+          ],
+          "position": [
+            0,
+            0,
+            -1
+          ],
+          "scale": 0.85
+        }
+      }
+    },
+    "animation.lila.void_scythe.idle": {
+      "loop": true,
+      "bones": {
+        "scythe": {}
+      }
+    }
+  }
+}

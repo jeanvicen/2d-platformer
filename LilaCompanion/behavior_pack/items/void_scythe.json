@@ -1,0 +1,43 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:item": {
+    "description": {
+      "identifier": "lila:void_scythe",
+      "menu_category": {
+        "category": "none"
+      }
+    },
+    "components": {
+      "minecraft:icon": "lila_void_scythe",
+      "minecraft:display_name": {
+        "value": "item.lila.void_scythe.name"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": true,
+      "minecraft:rarity": "epic",
+      "minecraft:glint": false,
+      "minecraft:tags": {
+        "tags": [
+          "lila:race",
+          "minecraft:is_tool",
+          "minecraft:netherite_tier"
+        ]
+      },
+      "minecraft:damage": {
+        "value": 7
+      },
+      "minecraft:can_destroy_in_creative": false,
+      "minecraft:digger": {
+        "use_efficiency": true,
+        "destroy_speeds": [
+          {
+            "block": {
+              "tags": "query.any_tag('stone', 'metal', 'wood', 'log', 'dirt', 'sand', 'gravel', 'grass', 'plant', 'minecraft:is_pickaxe_item_destructible', 'minecraft:is_axe_item_destructible', 'minecraft:is_shovel_item_destructible')"
+            },
+            "speed": 40
+          }
+        ]
+      }
+    }
+  }
+}

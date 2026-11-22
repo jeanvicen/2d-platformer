@@ -72,14 +72,18 @@ for p, j in jsons.items():
         ctrls.update(j["animation_controllers"])
 
 
+VANILLA_GEOS = {"geometry.humanoid.custom", "geometry.cape"}  # do jogo base (arquivo oficial do jogador)
+VANILLA_TEX = {"textures/entity/steve", "textures/entity/cape_invisible"}
+
+
 def tex_exists(rel):
-    return any(os.path.exists(os.path.join(RP, rel + e)) for e in (".png", ".tga")) or rel.startswith("textures/misc/")
+    return any(os.path.exists(os.path.join(RP, rel + e)) for e in (".png", ".tga")) or rel.startswith("textures/misc/") or rel in VANILLA_TEX
 
 
 def check_actor(desc, kind):
     ident = desc["identifier"]
     for g in desc.get("geometry", {}).values():
-        if g not in geos:
+        if g not in geos and g not in VANILLA_GEOS:
             errors.append(f"{kind} {ident}: geometria {g} não existe")
     for t in desc.get("textures", {}).values():
         if not tex_exists(t):
@@ -87,6 +91,8 @@ def check_actor(desc, kind):
     amap = desc.get("animations", {})
     bones = set().union(*[geos.get(g, set()) for g in desc.get("geometry", {}).values()]) if desc.get("geometry") else set()
     for short, full in amap.items():
+        if ident == "minecraft:player" and not short.startswith("lila_"):
+            continue  # animações/controladores do jogo base (arquivo oficial do jogador)
         if full.startswith("controller."):
             if full not in ctrls:
                 errors.append(f"{kind} {ident}: controlador {full} não existe")
@@ -230,6 +236,10 @@ for j in jsons.values():
         continue
     d = j["minecraft:client_entity"]["description"]
     for rcname in d.get("render_controllers", []):
+        if isinstance(rcname, dict):  # {"controller": "condição"}
+            rcname = list(rcname.keys())[0]
+        if rcname.startswith("controller.render.player."):
+            continue  # do jogo (arquivo oficial do jogador)
         rc = next((jj["render_controllers"][rcname] for jj in jsons.values() if jj and rcname in jj.get("render_controllers", {})), None)
         if rc is None:
             errors.append(f"{d['identifier']}: render controller {rcname} inexistente")
@@ -243,7 +253,7 @@ for j in jsons.values():
                 if t.split(".", 1)[1] not in d.get("textures", {}):
                     errors.append(f"{d['identifier']}: {t} não declarado")
     for k, g in d.get("geometry", {}).items():
-        if g not in geos:
+        if g not in geos and g not in VANILLA_GEOS:
             errors.append(f"{d['identifier']}: geometria {g} inexistente")
 
 # sons

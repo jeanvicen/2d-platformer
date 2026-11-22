@@ -1,0 +1,32 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:item": {
+    "description": {
+      "identifier": "lila:divine_sword",
+      "menu_category": {
+        "category": "none"
+      }
+    },
+    "components": {
+      "minecraft:icon": "lila_divine_sword",
+      "minecraft:display_name": {
+        "value": "item.lila.divine_sword.name"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": true,
+      "minecraft:rarity": "epic",
+      "minecraft:glint": false,
+      "minecraft:tags": {
+        "tags": [
+          "lila:race",
+          "minecraft:is_sword",
+          "minecraft:netherite_tier"
+        ]
+      },
+      "minecraft:damage": {
+        "value": 7
+      },
+      "minecraft:can_destroy_in_creative": false
+    }
+  }
+}

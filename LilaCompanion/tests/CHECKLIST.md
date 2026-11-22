@@ -1,4 +1,4 @@
-# Checklist de aceitação — Hacknd 3.0.0 (antigo DR-0N Mega Drone)
+# Checklist de aceitação — Hacknd 3.1.0 (com a Roleta das Essências)
 
 Legenda: **PASS** = verificado de verdade · **NOT TESTED** = não dá para testar neste ambiente
 (servidor sem tela, sem celular, sem som).
@@ -52,9 +52,26 @@ com jogadores simulados "Dono" e "Intruso" → `tests/last_bds_owner_run.log`.
 | **Exército constrói junto** (casa do catálogo mobiliada com portas, conferida no fim) | PASS |
 | Recolher itens, velocidade de construção, poço e cafeteria por texto | PASS |
 
+## Sistema de Raças (servidor oficial, `/scriptevent lila:selftest race`, jogador simulado) → `tests/last_bds_race_run.log`
+| Item | Resultado |
+|---|---|
+| Pesos somam exatamente 10 000 pontos-base; DEUS = TREVAS = 1%; limites do sorteio exatos; amostra de 200 mil giros bate com as chances | PASS |
+| 6 raças × 100 poderes = 600, ids únicos, metadados completos, toda forma/efeito com implementação, nenhum comportamento repetido | PASS |
+| Roleta: gasta exatamente 1; dá a raça sorteada pelo servidor; Núcleo + arma da raça uma vez só; propriedade sincronizada com o cliente | PASS |
+| Clique duplo travado; cancelar não gasta nada; trocar com confirmação gasta 1 e troca uma vez; sem roleta no lugar → não sorteia | PASS |
+| Raça persiste (dados salvos no jogador) e sobrevive à morte e ao renascer | PASS |
+| TREVAS: dano × 1/20; Foice = 35 de dano; bloco quebrado pela foice vira cinza sem drop; baú e blocos protegidos nunca viram cinza | PASS |
+| DEUS: chamar a Lâmina 3× deixa só 1; Lâmina = 30 de dano; arma largada volta ao dono; regeneração 10× | PASS |
+| ANJO: asas crescem até 20 com XP próprio, não encolhem ao gastar XP e não comem o seu XP; voo levanta; regeneração 5× | PASS |
+| GIGANTE: hitbox 2,6 × 8,1 no servidor; dano recebido × 1/3; soco × 3; velocidade 3× | PASS |
+| VAMPIRO: velocidade 2×; sol direto queima; capacete protege; forma de morcego imune ao sol e volta ao normal; dreno até o alvo morrer, curando | PASS |
+| **Os 600 poderes executam no servidor com efeito real** (dano/efeito no alvo, efeito em você ou ação em andamento) | PASS |
+
 ## Não testado (limite do ambiente)
 | Item | Resultado |
 |---|---|
+| Visual das raças na tela: asas/auréolas/coroas no corpo, morcego, gigante escalado, poses, roda girando, armas 3D na mão (posição na mão conferida só por arquivo) | NOT TESTED |
+| Câmera do gigante: o Bedrock não sobe a altura dos olhos de jogador escalado → câmera em 3ª pessoa automática | limite do jogo |
 | A nuvem do enxame na tela (centenas de pontinhos em zigue-zague, névoa, rastro), a chegada pelo céu, o montinho desligado e montar/desmanchar formas — tudo é partícula desenhada no aparelho; conferido por arquivo e por imagens geradas com a mesma matemática | NOT TESTED |
 | Desempenho da nuvem no celular (≈ 560 pontinhos + 22 manchas de névoa + 120 de rastro por enxame; a chegada pelo céu usa até 1000 por 2 s) | NOT TESTED |
 | Aparência no celular: robôs do exército, itens de nanorrobô, asas/mãos/prancha de partículas (conferidos por renderização do modelo e por cálculo; a partícula com orientação depende do cliente) | NOT TESTED |

@@ -26,6 +26,15 @@ system.afterEvents.scriptEventReceive.subscribe((ev) => {
         const t = world.getEntity(target);
         if (t) p.attackEntity(t);
       } else if (act === "remove") p.remove?.();
+      else if (act === "respawn") p.respawn();
+      else if (act === "break") {
+        const [x, y, z] = target.split(",").map(Number);
+        p.breakBlock({ x, y, z });
+      } else if (act === "look") {
+        const [x, y, z] = target.split(",").map(Number);
+        p.lookAtLocation({ x, y, z });
+      } else if (act === "use") p.useItemInSlot(p.selectedSlotIndex);
+      else if (act === "stopuse") p.stopUsingItem();
       else if (act === "sneak") {
         // agachar (o jogo desmonta de veículos assim)
         p.isSneaking = true;

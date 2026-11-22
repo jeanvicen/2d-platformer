@@ -1,0 +1,47 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.lila.divine_sword.first": {
+      "loop": true,
+      "bones": {
+        "sword": {
+          "rotation": [
+            62,
+            -8,
+            12
+          ],
+          "position": [
+            0,
+            1,
+            -2
+          ],
+          "scale": 0.9
+        }
+      }
+    },
+    "animation.lila.divine_sword.third": {
+      "loop": true,
+      "bones": {
+        "sword": {
+          "rotation": [
+            76,
+            0,
+            0
+          ],
+          "position": [
+            0,
+            0,
+            -1
+          ],
+          "scale": 1.0
+        }
+      }
+    },
+    "animation.lila.divine_sword.idle": {
+      "loop": true,
+      "bones": {
+        "sword": {}
+      }
+    }
+  }
+}

@@ -1,5 +1,55 @@
 # Changelog
 
+## 3.1.0 — Roleta das Essências (Sistema de Raças)
+- **Item novo: Roleta das Essências** (bancada: 4 ametistas, 2 ouros, 2 olhos do fim, 1 diamante; e no
+  inventário criativo). Use para sortear uma raça. Ela tem modelo 3D na mão, e uma **roda 3D gira na
+  sua frente**, desacelera e para no resultado, com o letreiro e os cliques sincronizados.
+- **Sorteio exato, no servidor** (pontos-base, soma 10 000): Vampiro 28%, Gigante 24%, Anjo 22%,
+  Demônio 24%, **DEUS 1%**, **TREVAS 1%**. As chances aparecem na roleta. Gasta exatamente 1 roleta
+  (no criativo não gasta). Se você já tem raça, ela pede confirmação, e cancelar não gasta nada.
+  Clique duplo é travado. Desconectar no meio não perde nem duplica nada.
+- **Transformação**: tela com a cor da raça, coluna de luz/vazio, partículas próprias, sons e título.
+  As asas e a auréola nascem crescendo com elástico.
+- **Visual no corpo do jogador** (modelos 3D desenhados com o próprio corpo, seguindo as animações do jogo):
+  - Vampiro: olhos vermelhos, presas, gola e capa que balança.
+  - Gigante: escala 4,5 (≈ 8 blocos, 3 golens), hitbox de verdade 2,6 × 8,1, armadura de bronze e
+    pedra, passos que tremem.
+  - Anjo: auréola dourada e asas brancas que crescem.
+  - Demônio: coroa rubra com espinhos e asas de membrana com garras.
+  - DEUS: coroa de luz e asas enormes com cristais.
+  - TREVAS: coroa negra e asas sombrias com cristais violeta.
+  - Asas: dobradas no chão, batendo no voo, planando na queda.
+  - Poses ao usar poderes: lançar, pisão, corte, dreno, rugido, prece, avanço.
+- **Vampiro**:
+  - O sol direto queima, mas capacete ou forma de morcego protegem.
+  - Vira um morcego de verdade, pequeno e voando.
+  - Dreno de sangue segurando o botão: para se o alvo fugir, sair da mira ou você soltar.
+  - Corre 2× (5× na Rajada); super pulo; visão noturna automática; regenera 2×.
+- **Gigante**: 3× força, 3× resistência, 3× velocidade, estilhaços grandes ao quebrar, impacto ao cair.
+- **Anjo/Demônio**:
+  - As asas crescem com XP próprio (0→20). Não gastam o seu XP e nunca encolhem.
+  - Voo e regeneração 5×.
+  - Pontos fracos opostos (o Anjo sofre com demônio/trevas; o Demônio, com o sagrado e com água/chuva).
+- **DEUS**: regeneração 10× e **Lâmina Divina** 3D (30 de dano, presa ao dono, sem duplicar).
+- **TREVAS**:
+  - Regeneração 10× em pulsos pesados e resistência 20× (10× no sol).
+  - **Foice do Vazio** 3D (35 de dano): o que ela quebra vira cinza, só onde o jogo deixou quebrar.
+    Nunca baú, cama, portal, comando ou rocha-mãe. Em outro jogador: 35 + sombra fragmentada, sem apagar nada.
+- **600 poderes de verdade (100 por raça)**:
+  - Feitos de 48 formas (projétil, raio, cone, onda, cruz, coluna, chuva, corrente, agarrar,
+    arremessar, meteoro, avanço, teleporte, gancho, lâminas girando, zonas, redemoinho, armadilha,
+    domo, muro, invocação, ponte...) combinadas com 48 efeitos.
+  - Nenhum dos 100 de uma raça repete o comportamento de outro (teste automático).
+  - Recarga e custo de recurso próprio (Sangue, Fúria, Graça, Energia Infernal, Energia Divina,
+    Vazio), tudo validado no servidor. A recarga não zera ao relogar.
+- **Controle pensado para celular**: item **Núcleo da Raça**.
+  - Bater = usa o poder ativo.
+  - Usar = painel com os 20 da sua barra (ícone, recarga e custo).
+  - Agachado + usar = grimório com os 100: categorias, busca e detalhes; montar a barra (trocar, subir,
+    descer, esvaziar).
+  - 600 ícones próprios, com selo do efeito principal.
+- O enxame Hacknd e os robôs continuam iguais.
+
 ## 3.0.0 — Hacknd
 - **O add-on agora se chama Hacknd** e é um **enxame de nanorrobôs**. O corpo de robô saiu: na forma
   normal existe só a nuvem de robozinhos do tamanho de poeira. Mesmo pacote (mesmos IDs), então o

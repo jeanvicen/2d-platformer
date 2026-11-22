@@ -26,6 +26,7 @@ sys.path.insert(0, HERE)
 from forge.anim import controller, controllers_file  # noqa: E402
 from forge.paint import NANO, bake  # noqa: E402
 from forge.swarm_art import swarm_image  # noqa: E402
+from forge.race_build import build_race  # noqa: E402
 from forge import drone_art  # noqa: E402
 from forge.drone_anims import DRONE_ACTIONS, drone_anims, drone_controllers, power_pose  # noqa: E402
 from forge.forms_art import FORMS as FORM_MODELS  # noqa: E402
@@ -38,7 +39,7 @@ from forge.render import render  # noqa: E402
 
 MOVES = ["none", "walk", "run", "swim", "climb", "fall", "sneak"]
 
-VERSION = [3, 0, 0]
+VERSION = [3, 1, 0]
 MIN_ENGINE = [1, 26, 30]
 SERVER_VERSION = "2.8.0"
 SERVER_UI_VERSION = "2.1.0"
@@ -1201,6 +1202,16 @@ def main():
     m, tex = build_drone(previews)
     build_robot(previews)
     build_nano(previews)
+    # Sistema de Raças (Roleta das Essências): material próprio (sem a pele de nanorrobô)
+    NANO["on"] = False
+    race_tex = {}
+    n_icons = build_race(BP, RP, wjson, wpng, bake, render, PREVIEW_DIR, previews, race_tex, LANGS)
+    NANO["on"] = True
+    itp = os.path.join(RP, "textures", "item_texture.json")
+    it = json.load(open(itp, encoding="utf-8"))
+    it["texture_data"].update(race_tex)
+    wjson(itp, it)
+    print("race icons", n_icons)
     build_render_controllers()
     build_particles()
     swarm_fx()

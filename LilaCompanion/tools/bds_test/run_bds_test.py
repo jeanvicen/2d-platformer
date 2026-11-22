@@ -95,11 +95,13 @@ def main():
     mode = "quick" if "quick" in sys.argv else ""
     if "owner" in sys.argv:
         mode = "owner"
+    if "race" in sys.argv:
+        mode = "race"
     setup(server)
     env = dict(os.environ, LD_LIBRARY_PATH=".")
     if os.environ.get("LILA_BDS_PRELOAD"):
         env["LD_PRELOAD"] = os.environ["LILA_BDS_PRELOAD"]
-    if mode == "owner":
+    if mode in ("owner", "race"):
         dst = os.path.join(server, "behavior_packs", "LilaTestHarness")
         shutil.rmtree(dst, ignore_errors=True)
         shutil.copytree(HARNESS, dst)

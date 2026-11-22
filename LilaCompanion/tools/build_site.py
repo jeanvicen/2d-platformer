@@ -25,7 +25,8 @@ def img(name, size, pixel=False):
 
 def tests_rows():
     rows = []
-    for log in (os.path.join(ROOT, "tests", "last_bds_run.log"), os.path.join(ROOT, "tests", "last_bds_owner_run.log")):
+    for log in (os.path.join(ROOT, "tests", "last_bds_run.log"), os.path.join(ROOT, "tests", "last_bds_owner_run.log"),
+                os.path.join(ROOT, "tests", "last_bds_race_run.log")):
         if not os.path.exists(log):
             continue
         for line in open(log, encoding="utf-8"):
@@ -52,6 +53,8 @@ def main():
         "%%F_TURRET%%": img("form_turret_g", 300), "%%R_OFF%%": img("robot_off", 300), "%%R_BOOT%%": img("robot_boot", 300), "%%ROBOT%%": img("robot", 260),
         **{f"%%RK_{k.upper()}%%": img(f"robot_{k}", 220) for k in ("soldado", "construtor", "artilheiro", "medico", "ninja")},
         "%%NANO_ITEMS%%": img("nano_items", 560, pixel=True),
+        "%%RC_ROULETTE%%": img("race_roulette", 360), "%%RC_WEAPONS%%": img("race_weapons", 560), "%%RC_PARTS%%": img("race_parts", 900),
+        "%%RC_ICONS%%": img("race_icons", 680, pixel=True),
         "%%TESTS%%": tests_rows(), "%%B64%%": base64.b64encode(addon).decode(),
         "%%SIZE%%": f"{len(addon) / 1024:.0f}", "%%SHA%%": hashlib.sha256(addon).hexdigest()[:16],
         "%%RAW%%": RAW, "%%VERSION%%": ver,

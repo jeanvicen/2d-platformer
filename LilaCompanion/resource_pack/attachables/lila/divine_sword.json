@@ -1,0 +1,38 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "lila:divine_sword",
+      "materials": {
+        "default": "entity_emissive_alpha",
+        "enchanted": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/lila/race/divine_sword_held",
+        "enchanted": "textures/misc/enchanted_item_glint"
+      },
+      "geometry": {
+        "default": "geometry.lila.divine_sword"
+      },
+      "animations": {
+        "first": "animation.lila.divine_sword.first",
+        "third": "animation.lila.divine_sword.third",
+        "idle": "animation.lila.divine_sword.idle"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "first": "c.is_first_person"
+          },
+          {
+            "third": "!c.is_first_person"
+          },
+          "idle"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.lila.item"
+      ]
+    }
+  }
+}
