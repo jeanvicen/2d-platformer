@@ -65,7 +65,8 @@ com jogadores simulados "Dono" e "Intruso" → `tests/last_bds_owner_run.log`.
 | ANJO: asas crescem até 20 com XP próprio, não encolhem ao gastar XP e não comem o seu XP; voo levanta; regeneração 5× | PASS |
 | GIGANTE: hitbox 2,6 × 8,1 no servidor; dano recebido × 1/3; soco × 3; velocidade 3× | PASS |
 | VAMPIRO: velocidade 2×; sol direto queima; capacete protege; forma de morcego imune ao sol e volta ao normal; dreno até o alvo morrer, curando | PASS |
-| **Os 600 poderes executam no servidor com efeito real** (dano/efeito no alvo, efeito em você ou ação em andamento) | PASS |
+| **Os 543 poderes ativos executam no servidor com efeito real** (dano/efeito no alvo, efeito em você ou ação em andamento); as 57 passivas são efeitos sempre ligados (regeneração, velocidade, sol, imunidades etc., cobertas pelos itens acima) | PASS |
+| Passivas sem teste próprio (visão noturna no escuro, esquiva, espinhos, golpes que queimam/murcham, aura de medo, impacto da queda do gigante) | NOT TESTED (só código) |
 
 ## Não testado (limite do ambiente)
 | Item | Resultado |

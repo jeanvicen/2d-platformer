@@ -259,8 +259,14 @@ export async function openInfo(player) {
   const pas = BY_RACE[s.race].filter((a) => a.passive).map((a) => `§f• ${a.name}§7 — ${a.desc.replace("Passiva: ", "")}`).join("\n");
   const f = new ActionFormData().title(`§l${R.name}`)
     .body(`${R.title}§r\n§f${R.blurb}\n\n§c⚠ Ponto fraco:§f ${R.weakness}\n\n§6Passivas (sempre ativas):\n${pas}\n\n§7Chances da roleta: ${oddsText()}`)
+    .button(`§lEfeitos reduzidos: ${s.tog.lowfx ? "§aLIGADO" : "§7desligado"}§r\n§8menos partículas (celular fraco / acessibilidade)`)
     .button("Voltar");
-  await show(player, f);
+  const r = await show(player, f);
+  if (r && !r.canceled && r.selection === 0) {
+    s.tog.lowfx = !s.tog.lowfx;
+    saveState(player);
+    return openInfo(player);
+  }
   return openQuick(player);
 }
 

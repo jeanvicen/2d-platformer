@@ -50,7 +50,9 @@ const flatDir = (d) => {
   return v3(d.x / l, 0, d.z / l);
 };
 
+let LOWFX = false; // "efeitos reduzidos" de quem está lançando: 1 de cada 3 partículas
 export function fx(dim, id, at, vars) {
+  if (LOWFX && Math.random() < 0.67) return;
   try {
     if (vars) {
       const m = new MolangVariableMap();
@@ -841,6 +843,7 @@ export function cast(player, id, o = {}) {
   if (s.res < a.cost && !o.force) return fail(`Falta ${RACES[s.race].resource} (${Math.floor(s.res)}/${a.cost})`);
   lastCast.set(player.id, tick);
   const dim = player.dimension;
+  LOWFX = !!s.tog.lowfx;
   const ctx = { player, a, s, race: s.race, head: player.getHeadLocation(), dir: player.getViewDirection(), hits: 0, touched: 0, msg: "" };
   let err;
   try {
@@ -888,6 +891,7 @@ export function engineTick() {
       continue;
     }
     let done = false;
+    LOWFX = !!o.ctx.s?.tog?.lowfx;
     try {
       done = STEP[o.k](o, tick);
     } catch {
@@ -895,6 +899,7 @@ export function engineTick() {
     }
     if (done) ACTIVE.splice(i, 1);
   }
+  LOWFX = false;
   if (tick % 20 === 0) dotTick(tick);
   if (tick % 10 === 0) revealTick(tick);
   if (tick % 20 === 5) tempTick(tick);

@@ -378,5 +378,5 @@ export async function raceTests(dim, check) {
     }
   }
   for (const t of TEMP_BLOCKS.splice(0)) cmd(dim, `setblock ${t.x} ${t.y} ${t.z} air`);
-  check("ALL 600 abilities execute server-side with a real effect", fails.length === 0, `${600 - 6 * 7 - fails.length} ok · falhas: ${fails.slice(0, 12).join(" | ")}`);
+  check("ALL 600 abilities execute server-side with a real effect", fails.length === 0, `${ABILITIES.filter((x) => !x.passive).length - fails.length} poderes ativos ok (as ${ABILITIES.filter((x) => x.passive).length} passivas são testadas pelos itens acima) · falhas: ${fails.slice(0, 12).join(" | ") || "nenhuma"}`);
 }
