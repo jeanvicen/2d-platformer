@@ -430,6 +430,14 @@
         }
       }
     },
+    "animation.lila.race.eyecam": {
+      "loop": true,
+      "bones": {
+        "head": {
+          "scale": 0
+        }
+      }
+    },
     "animation.lila.race.pose_transform": {
       "loop": "hold_on_last_frame",
       "bones": {

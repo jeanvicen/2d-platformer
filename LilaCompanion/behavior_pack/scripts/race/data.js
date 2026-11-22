@@ -45,7 +45,7 @@ export const BAL = {
   cooldownScale: 1.0,
   wingMax: 20, wingXpPer: 5,                          // +1 de asa a cada 5 de XP ganho (sem gastar o seu XP)
   drainRange: 3.5, drainDamage: 2, drainEvery: 10,    // dreno: 2 de dano a cada 0,5 s, cura o mesmo
-  quickSlots: 20,
+  quickSlots: 18,                                     // 2 páginas de 9 (a barra de itens escolhe)
 };
 
 /** Confere os pesos (o autoteste usa isto). */

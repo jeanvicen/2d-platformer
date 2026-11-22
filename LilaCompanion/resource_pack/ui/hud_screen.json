@@ -1,0 +1,112 @@
+{
+  "namespace": "hud",
+  "hud_title_text": {
+    "bindings": [
+      {
+        "binding_name": "#hud_title_text_string",
+        "binding_name_override": "#lila_raw",
+        "binding_type": "global"
+      },
+      {
+        "binding_type": "view",
+        "source_property_name": "(not (not ((#lila_raw - 'HKD:') = #lila_raw)))",
+        "target_property_name": "#visible"
+      }
+    ]
+  },
+  "lila_powers_panel": {
+    "type": "panel",
+    "anchor_from": "right_middle",
+    "anchor_to": "right_middle",
+    "size": [
+      128,
+      "100%c"
+    ],
+    "offset": [
+      -2,
+      -10
+    ],
+    "layer": 40,
+    "bindings": [
+      {
+        "binding_name": "#hud_title_text_string",
+        "binding_name_override": "#lila_raw",
+        "binding_type": "global"
+      },
+      {
+        "binding_type": "view",
+        "source_property_name": "((not ((#lila_raw - 'HKD:') = #lila_raw)) and (not ((#lila_raw - 'HKD:') = '')))",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "lila_bg": {
+          "type": "image",
+          "texture": "textures/ui/hud_tip_text_background",
+          "alpha": 0.5,
+          "size": [
+            "100%",
+            "100%c + 8px"
+          ],
+          "anchor_from": "top_left",
+          "anchor_to": "top_left",
+          "layer": 1,
+          "controls": [
+            {
+              "lila_txt": {
+                "type": "label",
+                "anchor_from": "top_left",
+                "anchor_to": "top_left",
+                "offset": [
+                  5,
+                  4
+                ],
+                "size": [
+                  "100% - 10px",
+                  "default"
+                ],
+                "text": "#lila_txt",
+                "color": [
+                  1,
+                  1,
+                  1
+                ],
+                "alpha": 0.95,
+                "shadow": true,
+                "localize": false,
+                "font_scale_factor": 0.8,
+                "layer": 2,
+                "bindings": [
+                  {
+                    "binding_name": "#hud_title_text_string",
+                    "binding_name_override": "#lila_raw",
+                    "binding_type": "global"
+                  },
+                  {
+                    "binding_type": "view",
+                    "source_property_name": "(#lila_raw - 'HKD:')",
+                    "target_property_name": "#lila_txt"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "root_panel": {
+    "modifications": [
+      {
+        "array_name": "controls",
+        "operation": "insert_back",
+        "value": [
+          {
+            "lila_powers@hud.lila_powers_panel": {}
+          }
+        ]
+      }
+    ]
+  }
+}

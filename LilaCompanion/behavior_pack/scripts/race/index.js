@@ -3,10 +3,14 @@
 import { system, world } from "@minecraft/server";
 import { forget, stateOf } from "./state.js";
 import { engineTick } from "./engine.js";
-import { afterHurt, applyBody, castActive, damageMods, draining, onKill, raceTick, startDrain, stopDrain } from "./passives.js";
+import { afterHurt, applyBody, castActive, damageMods, draining, onKill, raceTick, stopDrain } from "./passives.js";
 import { CORE, ROULETTE, ensureCore, itemSpawned, scytheBreak, weaponDamage, weaponHit, weaponPendingTick } from "./weapons.js";
 import { reveal, useRoulette } from "./roulette.js";
-import { openGrimoire, openQuick } from "./ui.js";
+import { openGrimoire } from "./ui.js";
+import { cast } from "./engine.js";
+import { sigForget } from "./signature.js";
+import { godHistory } from "./signature2.js";
+import { hudForget, hudRender, nextPage, selectedPower, setPowerMode } from "./hud.js";
 import { logError } from "../core/log.js";
 
 system.runInterval(() => {
@@ -20,6 +24,8 @@ system.runInterval(() => {
     try {
       raceTick(p, tick);
       if (tick % 40 === 7) weaponPendingTick(p);
+      if (tick % 10 === 3) hudRender(p);
+      if (tick % 10 === 0 && stateOf(p).race === "god") godHistory(p);
     } catch (e) {
       logError("race.tick", e);
     }
@@ -39,17 +45,74 @@ world.afterEvents.itemUse.subscribe((ev) => {
     p.onScreenDisplay.setActionBar("§7Você ainda não tem raça: use a Roleta das Essências.");
     return;
   }
-  if (s.race === "vampire" && !p.isSneaking && startDrain(p)) return; // segurar mirando = dreno
-  if (p.isSneaking) void openGrimoire(p);
-  else void openQuick(p);
+  if (p.isSneaking) void openGrimoire(p); // agachar + usar = grimório (montar a barra, ver tudo)
+  else setPowerMode(p, !s.pm);             // usar = liga/desliga o MODO PODER (painel na direita)
 });
 
 world.afterEvents.itemStopUse.subscribe((ev) => {
   if (ev.itemStack?.typeId === CORE && draining(ev.source)) stopDrain(ev.source);
 });
 
+// Modo poder: bater/quebrar/tocar usa o poder escolhido na barra de itens.
+const SWING_OK = new Set(["Attack", "Mine", "None"]);
+const lastTry = new Map(); // id → {id do poder, tick} (não repetir a mensagem de recarga ao segurar)
+const lastPage = new Map();
 world.afterEvents.playerSwingStart.subscribe((ev) => {
-  if (ev.heldItemStack?.typeId === CORE) castActive(ev.player);
+  const p = ev.player;
+  let s;
+  try {
+    s = stateOf(p);
+  } catch {
+    return;
+  }
+  if (s.race && s.pm) {
+    if (!SWING_OK.has(String(ev.swingSource))) return;
+    try {
+      if (p.getComponent("minecraft:riding")?.entityRidingOn) return; // pilotando veículo/TITÃ: a barra é dos poderes do veículo
+    } catch {
+      /* ignore */
+    }
+    if (draining(p)) return; // o dreno segue sozinho até o alvo morrer/escapar
+    const tick = system.currentTick;
+    if (p.isSneaking) {
+      if (tick - (lastPage.get(p.id) ?? -99) > 8) {
+        lastPage.set(p.id, tick);
+        nextPage(p);
+      }
+      return;
+    }
+    const sel = selectedPower(p);
+    if (!sel) {
+      p.onScreenDisplay.setActionBar("§7Lugar vazio — agache e use o Núcleo para montar a barra.");
+      return;
+    }
+    const prev = lastTry.get(p.id);
+    const quiet = !!prev && prev.id === sel.id && tick - prev.tick < 12;
+    lastTry.set(p.id, { id: sel.id, tick });
+    s.active = sel.i;
+    cast(p, sel.id, { quiet });
+    hudRender(p, true);
+    return;
+  }
+  if (ev.heldItemStack?.typeId === CORE) castActive(p);
+});
+
+world.afterEvents.playerHotbarSelectedSlotChange.subscribe((ev) => {
+  const p = ev.player;
+  const s = stateOf(p);
+  if (!s.race || !s.pm) return;
+  if (draining(p)) stopDrain(p);
+  hudRender(p, true);
+});
+
+// No modo poder bater não quebra bloco (vira poder).
+world.beforeEvents.playerBreakBlock.subscribe((ev) => {
+  try {
+    const s = stateOf(ev.player);
+    if (s.race && s.pm) ev.cancel = true;
+  } catch {
+    /* ignore */
+  }
 });
 
 world.beforeEvents.entityHurt.subscribe((ev) => {
@@ -111,7 +174,12 @@ world.afterEvents.playerSpawn.subscribe((ev) => {
     else applyBody(p);
     ensureCore(p);
     weaponPendingTick(p); // a arma que caiu na morte volta já
+    hudRender(p, true);
   }, 10);
 });
 
-world.afterEvents.playerLeave.subscribe((ev) => forget(ev.playerId));
+world.afterEvents.playerLeave.subscribe((ev) => {
+  forget(ev.playerId);
+  hudForget(ev.playerId);
+  sigForget(ev.playerId);
+});

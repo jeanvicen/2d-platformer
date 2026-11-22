@@ -1,0 +1,64 @@
+{
+  "format_version": "1.10.0",
+  "particle_effect": {
+    "description": {
+      "identifier": "lila:vfx_sigil_d",
+      "basic_render_parameters": {
+        "material": "particles_blend",
+        "texture": "textures/particle/lila/vfx/sigils"
+      }
+    },
+    "components": {
+      "minecraft:emitter_initialization": {
+        "creation_expression": "v.cr = v.cr ?? 1; v.cg = v.cg ?? 1; v.cb = v.cb ?? 1; v.dr = v.dr ?? 0; v.dg = v.dg ?? 0; v.db = v.db ?? 0; v.size = v.size ?? 1; v.life = v.life ?? 0.5; v.n = v.n ?? 12; v.rot = v.rot ?? 0; v.h = v.h ?? 6; v.race = v.race ?? 0; v.grav = v.grav ?? 4; v.out = v.out ?? 1;"
+      },
+      "minecraft:emitter_rate_instant": {
+        "num_particles": 1
+      },
+      "minecraft:emitter_lifetime_once": {
+        "active_time": 0.05
+      },
+      "minecraft:emitter_shape_point": {
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "minecraft:particle_lifetime_expression": {
+        "max_lifetime": "v.life"
+      },
+      "minecraft:particle_initial_spin": {
+        "rotation": "v.rot",
+        "rotation_rate": "v.out > 0 ? 50 : -50"
+      },
+      "minecraft:particle_appearance_billboard": {
+        "size": [
+          "v.size * math.min(1, (v.particle_age / v.particle_lifetime) * 7) * (1 + math.max(0, (v.particle_age / v.particle_lifetime) - 0.85) * 2)",
+          "v.size * math.min(1, (v.particle_age / v.particle_lifetime) * 7) * (1 + math.max(0, (v.particle_age / v.particle_lifetime) - 0.85) * 2)"
+        ],
+        "facing_camera_mode": "emitter_transform_xz",
+        "uv": {
+          "texture_width": 384,
+          "texture_height": 64,
+          "uv": [
+            "v.race * 64",
+            0
+          ],
+          "uv_size": [
+            64,
+            64
+          ]
+        }
+      },
+      "minecraft:particle_appearance_tinting": {
+        "color": [
+          "math.lerp(v.cr, 1, 0)",
+          "math.lerp(v.cg, 1, 0)",
+          "math.lerp(v.cb, 1, 0)",
+          "math.min(1, (1 - (v.particle_age / v.particle_lifetime)) * 5) * 0.9"
+        ]
+      }
+    }
+  }
+}

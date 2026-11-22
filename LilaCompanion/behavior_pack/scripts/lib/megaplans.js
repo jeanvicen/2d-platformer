@@ -497,7 +497,7 @@ export function farol() {
   for (let y = 1; y <= 30; y++) p.s(3, y, 0, "minecraft:ladder", { facing_direction: 4 });
   // quarto do faroleiro: cama, baú, mesa e lanterna
   p.s(-2, 1, 1, "minecraft:bed", { direction: 0, head_piece_bit: false }, [0, 0, 1, { direction: 0, head_piece_bit: true }]);
-  p.chest(-2, 1, -1, [["minecraft:cod", 8], ["minecraft:map", 1]]).s(0, 1, -2, "minecraft:lectern", { "minecraft:cardinal_direction": "south" }).s(0, 4, 0, "minecraft:lantern", { hanging: true });
+  p.chest(-2, 1, -1, [["minecraft:cod", 8], ["minecraft:empty_map", 1]]).s(0, 1, -2, "minecraft:lectern", { "minecraft:cardinal_direction": "south" }).s(0, 4, 0, "minecraft:lantern", { hanging: true });
   p.f(4, 1, -1, 4, 3, 1, "minecraft:air").f(4, 1, 0, 4, 2, 0, "minecraft:air");
   p.cyl(0, 0, 6, 31, 31, "minecraft:polished_andesite", false).cyl(0, 0, 6, 32, 32, "minecraft:iron_bars");
   p.cyl(0, 0, 3, 32, 35, "minecraft:glass");

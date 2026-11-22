@@ -1,0 +1,73 @@
+{
+  "format_version": "1.10.0",
+  "particle_effect": {
+    "description": {
+      "identifier": "lila:vfx_orb_d",
+      "basic_render_parameters": {
+        "material": "particles_blend",
+        "texture": "textures/particle/lila/vfx/glow"
+      }
+    },
+    "components": {
+      "minecraft:emitter_initialization": {
+        "creation_expression": "v.cr = v.cr ?? 1; v.cg = v.cg ?? 1; v.cb = v.cb ?? 1; v.dr = v.dr ?? 0; v.dg = v.dg ?? 0; v.db = v.db ?? 0; v.size = v.size ?? 1; v.life = v.life ?? 0.5; v.n = v.n ?? 12; v.rot = v.rot ?? 0; v.h = v.h ?? 6; v.race = v.race ?? 0; v.grav = v.grav ?? 4; v.out = v.out ?? 1;"
+      },
+      "minecraft:emitter_rate_instant": {
+        "num_particles": 3
+      },
+      "minecraft:emitter_lifetime_once": {
+        "active_time": 0.05
+      },
+      "minecraft:emitter_shape_point": {
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "minecraft:particle_lifetime_expression": {
+        "max_lifetime": "math.random(0.14, 0.22)"
+      },
+      "minecraft:particle_initial_speed": "math.random(0, 0.6)",
+      "minecraft:emitter_shape_sphere": {
+        "offset": [
+          0,
+          0,
+          0
+        ],
+        "radius": 0.05,
+        "direction": "outwards"
+      },
+      "minecraft:particle_motion_dynamic": {
+        "linear_drag_coefficient": 3
+      },
+      "minecraft:particle_appearance_billboard": {
+        "size": [
+          "v.size * (v.particle_random_1 < 0.34 ? 0.42 : 1.0) * (1 - (v.particle_age / v.particle_lifetime) * 0.5)",
+          "v.size * (v.particle_random_1 < 0.34 ? 0.42 : 1.0) * (1 - (v.particle_age / v.particle_lifetime) * 0.5)"
+        ],
+        "facing_camera_mode": "rotate_xyz",
+        "uv": {
+          "texture_width": 32,
+          "texture_height": 32,
+          "uv": [
+            0,
+            0
+          ],
+          "uv_size": [
+            32,
+            32
+          ]
+        }
+      },
+      "minecraft:particle_appearance_tinting": {
+        "color": [
+          "math.lerp(v.cr, v.dr, (v.particle_random_1 < 0.34 ? 1 : 0))",
+          "math.lerp(v.cg, v.dg, (v.particle_random_1 < 0.34 ? 1 : 0))",
+          "math.lerp(v.cb, v.db, (v.particle_random_1 < 0.34 ? 1 : 0))",
+          "(1 - (v.particle_age / v.particle_lifetime)) * 0.95"
+        ]
+      }
+    }
+  }
+}

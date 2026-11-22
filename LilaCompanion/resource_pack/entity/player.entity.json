@@ -85,6 +85,9 @@
             "lila_bat": "q.property('lila:bat')"
           },
           {
+            "lila_eyecam": "q.property('lila:eyecam') && q.is_local_player"
+          },
+          {
             "lila_pose_cast": "q.property('lila:pose') == 'cast'"
           },
           {
@@ -206,6 +209,7 @@
         "lila_pose_roar": "animation.lila.race.pose_roar",
         "lila_pose_pray": "animation.lila.race.pose_pray",
         "lila_pose_dash": "animation.lila.race.pose_dash",
+        "lila_eyecam": "animation.lila.race.eyecam",
         "lila_pose_transform": "animation.lila.race.pose_transform"
       },
       "render_controllers": [

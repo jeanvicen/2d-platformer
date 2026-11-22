@@ -143,7 +143,7 @@ A O A
 | Raça | Chance | O que muda |
 |---|---|---|
 | Vampiro | 28% | corre 2× (5× na Rajada), regenera 2×, vira morcego, suga sangue segurando o botão, visão noturna automática · **o sol queima** (capacete ou morcego protegem) |
-| Gigante | 24% | ~8 blocos de altura (3 golens; câmera em 3ª pessoa), 3× força, 3× resistência, 3× velocidade, passos que tremem |
+| Gigante | 24% | ~8 blocos de altura (3 golens; **câmera nos olhos do gigante, em 1ª pessoa**), 3× força, 3× resistência, 3× velocidade, passos que tremem |
 | Anjo | 22% | auréola, asas que crescem com XP próprio (0→20, nunca encolhem), voo, regenera 5× |
 | Demônio | 24% | coroa e asas rubras, fogo e maldições, imune a fogo, voo, regenera 5× |
 | **DEUS** | **1%** | coroa de luz, asas enormes, regenera 10×, **Lâmina Divina** (30 de dano) |
@@ -152,21 +152,28 @@ A O A
 Gasta 1 roleta por giro (no criativo não gasta). Se você já tem raça, ela pede confirmação, e cancelar
 não gasta nada.
 
-**Usar os poderes** — segure o **Núcleo da Raça** (você recebe ao virar a raça):
+**Usar os poderes** — com o **Núcleo da Raça** (você recebe ao virar a raça):
 
-- **bater** (tocar na tela): usa o **poder ativo**;
-- **usar**: painel com os **20 poderes da sua barra** (toque para usar e deixar ativo);
-- **agachar + usar**: **grimório** com os **100 poderes** da raça (categorias, busca, detalhes, montar a barra);
-- Vampiro: **segure usar** mirando numa criatura perto para sugar o sangue.
+- **usar o Núcleo** liga/desliga o **MODO PODER**: aparece o **painel no canto direito** (meio
+  transparente) com os poderes, a recarga e o seu recurso;
+- no modo poder, a **barra de itens (1–9) escolhe o poder** e **bater/tocar usa** (bater no bloco não
+  quebra enquanto o modo poder estiver ligado);
+- **agachar + bater**: troca a página do painel (poderes 1–9 / 10–18);
+- **agachar + usar o Núcleo**: **grimório** com os **100 poderes** (categorias, busca, detalhes, montar a
+  barra de 18) e "Sua raça e ajustes" (modo poder, câmera do gigante, efeitos reduzidos).
 
-Cada raça tem 100 poderes diferentes e todos ficam liberados. A lista completa e a tabela de
-equilíbrio estão em `docs/race-abilities.md`.
+Cada raça tem 100 poderes diferentes, todos liberados. Os **10 poderes assinatura** de cada raça
+(mecânica e visual próprios — Parar o Tempo, Buraco Negro, Olhar Hipnótico, Mão de Jötunn, Anjo da
+Guarda, Possessão...) já vêm na barra. A lista completa e a tabela de equilíbrio estão em
+`docs/race-abilities.md`.
 
 **Limites do Bedrock** (equivalentes honestos ao que foi pedido):
 
-- add-ons não criam teclas nem botões clicáveis no HUD, então a barra de 20 abre com 1 toque no Núcleo;
-- o jogo não sobe a câmera de um jogador escalado: o gigante fica com o corpo e a hitbox gigantes, e a
-  câmera vai para a 3ª pessoa.
+- add-ons não criam botões clicáveis novos no HUD: o painel da direita mostra os poderes e a escolha é
+  pela barra de itens (que já é tocável no celular);
+- o jogo não sobe sozinho a câmera de um jogador escalado: o gigante usa uma câmera própria
+  (`lila:giant_eye`) colada nos olhos dele. Se a altura não ficar certinha no seu aparelho, ajuste em
+  "Sua raça e ajustes".
 
 ## 5. Torreta gigante
 

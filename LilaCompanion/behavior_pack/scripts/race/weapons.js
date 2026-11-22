@@ -5,6 +5,7 @@
 // Cinzas da foice: SÓ depois que o jogo deixou quebrar o bloco (respeita proteções e modo de jogo),
 // nunca em blocos inquebráveis/contêineres/portais/comandos; em jogadores nunca apaga nada.
 import { ItemStack, system } from "@minecraft/server";
+import * as V from "./vfx.js";
 import { BAL } from "./data.js";
 import { saveState, stateOf } from "./state.js";
 import { BLOCK_OK, FX, SPECIAL_RUN, ashEntity, fx } from "./engine.js";
@@ -99,7 +100,8 @@ export function weaponHit(player, target) {
   if (!weaponValid(player, it) || !target?.isValid) return;
   const at = { x: target.location.x, y: target.location.y + 1, z: target.location.z };
   if (it.typeId === SWORD) {
-    fx(target.dimension, "lila:rc_god_burst", at);
+    V.impact(target.dimension, at, "god", 1.5);
+    V.slash(target.dimension, at, "god", 2.2);
     try {
       target.dimension.playSound("beacon.power", at, { volume: 0.6, pitch: 1.8 });
     } catch {
@@ -107,7 +109,8 @@ export function weaponHit(player, target) {
     }
     return;
   }
-  fx(target.dimension, "lila:rc_dark_burst", at);
+  V.slash(target.dimension, at, "dark", 2.6);
+  V.swirl(target.dimension, at, "dark", 1.4, true);
   try {
     target.dimension.playSound("mob.endermen.portal", at, { volume: 0.6, pitch: 0.6 });
   } catch {

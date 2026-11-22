@@ -50,6 +50,11 @@
           ],
           "default": "none",
           "client_sync": true
+        },
+        "lila:eyecam": {
+          "type": "bool",
+          "default": false,
+          "client_sync": true
         }
       }
     },
@@ -419,6 +424,15 @@
         "minecraft:scale": {
           "value": 0.32
         }
+      },
+      "lila:giant_mega": {
+        "minecraft:scale": {
+          "value": 6.3
+        },
+        "minecraft:collision_box": {
+          "width": 3.6,
+          "height": 11.3
+        }
       }
     },
     "events": {
@@ -463,14 +477,41 @@
         },
         "remove": {
           "component_groups": [
-            "lila:bat"
+            "lila:bat",
+            "lila:giant_mega"
           ]
         }
       },
       "lila:giant_off": {
         "remove": {
           "component_groups": [
+            "lila:giant",
+            "lila:giant_mega"
+          ]
+        }
+      },
+      "lila:mega_on": {
+        "add": {
+          "component_groups": [
+            "lila:giant_mega"
+          ]
+        },
+        "remove": {
+          "component_groups": [
+            "lila:giant",
+            "lila:bat"
+          ]
+        }
+      },
+      "lila:mega_off": {
+        "add": {
+          "component_groups": [
             "lila:giant"
+          ]
+        },
+        "remove": {
+          "component_groups": [
+            "lila:giant_mega"
           ]
         }
       },

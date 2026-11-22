@@ -1,0 +1,84 @@
+{
+  "format_version": "1.10.0",
+  "particle_effect": {
+    "description": {
+      "identifier": "lila:vfx_shards",
+      "basic_render_parameters": {
+        "material": "particles_blend",
+        "texture": "textures/particle/lila/vfx/shard"
+      }
+    },
+    "components": {
+      "minecraft:emitter_initialization": {
+        "creation_expression": "v.cr = v.cr ?? 1; v.cg = v.cg ?? 1; v.cb = v.cb ?? 1; v.dr = v.dr ?? 0; v.dg = v.dg ?? 0; v.db = v.db ?? 0; v.size = v.size ?? 1; v.life = v.life ?? 0.5; v.n = v.n ?? 12; v.rot = v.rot ?? 0; v.h = v.h ?? 6; v.race = v.race ?? 0; v.grav = v.grav ?? 4; v.out = v.out ?? 1;"
+      },
+      "minecraft:emitter_rate_instant": {
+        "num_particles": "v.n"
+      },
+      "minecraft:emitter_lifetime_once": {
+        "active_time": 0.05
+      },
+      "minecraft:emitter_shape_sphere": {
+        "offset": [
+          0,
+          0.2,
+          0
+        ],
+        "radius": "0.3 * v.size",
+        "direction": [
+          "math.random(-1, 1)",
+          "math.random(0.4, 1.4)",
+          "math.random(-1, 1)"
+        ]
+      },
+      "minecraft:particle_lifetime_expression": {
+        "max_lifetime": "math.random(0.8, 1.6)"
+      },
+      "minecraft:particle_initial_speed": "math.random(3, 8) * math.sqrt(v.size)",
+      "minecraft:particle_motion_dynamic": {
+        "linear_acceleration": [
+          0,
+          -18,
+          0
+        ],
+        "linear_drag_coefficient": 0.6
+      },
+      "minecraft:particle_motion_collision": {
+        "collision_drag": 4,
+        "coefficient_of_restitution": 0.35,
+        "collision_radius": 0.1
+      },
+      "minecraft:particle_initial_spin": {
+        "rotation": "math.random(0, 360)",
+        "rotation_rate": "math.random(-500, 500)"
+      },
+      "minecraft:particle_appearance_billboard": {
+        "size": [
+          "(0.1 + v.particle_random_3 * 0.2) * math.sqrt(v.size)",
+          "(0.1 + v.particle_random_3 * 0.2) * math.sqrt(v.size)"
+        ],
+        "facing_camera_mode": "rotate_xyz",
+        "uv": {
+          "texture_width": 16,
+          "texture_height": 16,
+          "uv": [
+            0,
+            0
+          ],
+          "uv_size": [
+            16,
+            16
+          ]
+        }
+      },
+      "minecraft:particle_appearance_tinting": {
+        "color": [
+          "v.cr * (0.65 + v.particle_random_2 * 0.35)",
+          "v.cg * (0.65 + v.particle_random_2 * 0.35)",
+          "v.cb * (0.65 + v.particle_random_2 * 0.35)",
+          "math.min(1, (1 - (v.particle_age / v.particle_lifetime)) * 4)"
+        ]
+      }
+    }
+  }
+}

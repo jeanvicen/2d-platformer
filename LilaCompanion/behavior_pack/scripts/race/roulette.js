@@ -3,6 +3,8 @@
 // sorteio NO SERVIDOR (pontos-base) e a roda 3D que gira e para no resultado (só visual).
 // O resultado é salvo na hora (desconectar no meio não duplica nem perde nada); a transformação
 // aparece quando a roda para.
+import { hudPause } from "./hud.js";
+import * as V from "./vfx.js";
 import { GameMode, system } from "@minecraft/server";
 import { MessageFormData } from "@minecraft/server-ui";
 import { BY_RACE } from "./catalog.js";
@@ -113,6 +115,10 @@ export function reveal(player) {
     /* ignore */
   }
   fx(dim, `lila:rc_${race}_zone`, at, { size: 4 });
+  V.sigil(dim, at, race, 5, 2.2);
+  V.pillar(dim, at, race, 16, 2, 1.2);
+  V.ring(dim, at, race, 8, 0.7);
+  V.shake(dim, at, 0.3, 0.6, 16);
   fx(dim, race === "dark" ? "lila:rc_pillar_void" : race === "god" || race === "angel" ? "lila:rc_pillar_light" : `lila:rc_${race}_burst`, at);
   if (race === "vampire") fx(dim, "lila:rc_bats", { x: at.x, y: at.y + 1, z: at.z });
   if (race === "giant") fx(dim, "lila:rc_debris", at);
@@ -127,13 +133,14 @@ export function reveal(player) {
     }
   }
   try {
+    hudPause(player, 100); // o painel de poderes espera a revelação acabar
     player.onScreenDisplay.setTitle(R.title, { subtitle: `§f${R.blurb}`, fadeInDuration: 6, stayDuration: 70, fadeOutDuration: 20 });
   } catch {
     /* ignore */
   }
   system.runTimeout(() => {
     if (!player.isValid) return;
-    player.sendMessage(`${R.color}§l✦ ${R.name}!§r §7${R.blurb}\n§7Ponto fraco: §f${R.weakness}\n§7Segure o §bNúcleo da Raça§7: bater = usa o poder ativo · usar = painel com 20 poderes · agachar + usar = grimório com os 100.`);
+    player.sendMessage(`${R.color}§l✦ ${R.name}!§r §7${R.blurb}\n§7Ponto fraco: §f${R.weakness}\n§7Use o §bNúcleo da Raça§7 para ligar o §lMODO PODER§r§7: os poderes aparecem no canto direito, a barra de itens (1-9) escolhe e §fbater usa§7 · agachar + bater = página 2 · agachar + usar o Núcleo = grimório com os 100.`);
   }, 30);
   if (race === "god" || race === "dark") {
     try {

@@ -1,135 +1,155 @@
 NO LOG FILE! - Failed to up file descriptor limit Operation not permitted
 NO LOG FILE! - setting up server logging...
-[2026-11-22 14:06:25:104 INFO] Starting Server
-[2026-11-22 14:06:25:104 INFO] Version: 1.26.65.1
-[2026-11-22 14:06:25:104 INFO] Session ID: 3d8a21ef-9664-4cd9-8783-a7e15b835ac7
-[2026-11-22 14:06:25:104 INFO] Build ID: 53624744
-[2026-11-22 14:06:25:104 INFO] Branch: r/26_u6
-[2026-11-22 14:06:25:104 INFO] Commit ID: cdafb75c90a160d7dd40adc9769f2485a4a76a05
-[2026-11-22 14:06:25:104 INFO] Configuration: Publish
-[2026-11-22 14:06:25:105 INFO] Contents of server.properties: {"allow-cheats":"true","allow-inbound-script-debugging":"false","allow-list":"false","allow-outbound-script-debugging":"false","block-network-ids-are-hashes":"true","chat-restriction":"None","client-side-chunk-generation-enabled":"true","compression-algorithm":"zlib","compression-threshold":"1","content-log-console-output-enabled":"true","content-log-file-enabled":"true","content-log-level":"info","default-player-permission-level":"member","difficulty":"easy","disable-custom-skins":"false","disable-persona":"false","disable-player-interaction":"false","enable-lan-visibility":"false","force-gamemode":"false","gamemode":"survival","level-name":"lila_test","max-players":"10","max-threads":"8","online-mode":"false","persistent-ticking-area-max-chunks":"100","persistent-ticking-area-max-count":"10","player-idle-timeout":"30","player-movement-action-direction-threshold":"0.85","player-position-acceptance-threshold":"0.5","script-debugger-auto-attach":"disabled","server-authoritative-block-breaking-pick-range-scalar":"1.5","server-authoritative-dismount-strict":"false","server-authoritative-entity-attack-range-tolerance":"0.5","server-authoritative-entity-attack-range-validation":"disabled","server-authoritative-entity-attack-request-validation":"disabled","server-authoritative-entity-interactions-strict":"false","server-authoritative-movement-strict":"false","server-build-radius-ratio":"Disabled","server-name":"Dedicated Server","server-port":"41234","server-portv6":"41235","server-udp-ports":"19132","texturepack-required":"false","tick-distance":"4","transient-ticking-area-max-chunks":"300","transport":"nethernet","view-distance":"32"}
-[2026-11-22 14:06:25:105 INFO] Level Name: lila_test
-[2026-11-22 14:06:25:105 INFO] Profiler config ('bootstrap.json') load result: success=1, errorMessage=(null)
-[2026-11-22 14:06:25:123 INFO] No CDN config file found at: cdn_config.json for dedicated server
-[2026-11-22 14:06:25:123 INFO] Game mode: 0 Survival
-[2026-11-22 14:06:25:123 INFO] Difficulty: 1 EASY
-[2026-11-22 14:06:25:126 INFO] Content logging to console is enabled.
-[2026-11-22 14:06:25:127 INFO] 
+[2026-11-22 15:50:04:005 INFO] Starting Server
+[2026-11-22 15:50:04:005 INFO] Version: 1.26.65.1
+[2026-11-22 15:50:04:005 INFO] Session ID: 123042df-ec6e-41f3-b89b-0faeaa5d5738
+[2026-11-22 15:50:04:005 INFO] Build ID: 53624744
+[2026-11-22 15:50:04:005 INFO] Branch: r/26_u6
+[2026-11-22 15:50:04:005 INFO] Commit ID: cdafb75c90a160d7dd40adc9769f2485a4a76a05
+[2026-11-22 15:50:04:005 INFO] Configuration: Publish
+[2026-11-22 15:50:04:005 INFO] Contents of server.properties: {"allow-cheats":"true","allow-inbound-script-debugging":"false","allow-list":"false","allow-outbound-script-debugging":"false","block-network-ids-are-hashes":"true","chat-restriction":"None","client-side-chunk-generation-enabled":"true","compression-algorithm":"zlib","compression-threshold":"1","content-log-console-output-enabled":"true","content-log-file-enabled":"true","content-log-level":"info","default-player-permission-level":"member","difficulty":"easy","disable-custom-skins":"false","disable-persona":"false","disable-player-interaction":"false","enable-lan-visibility":"false","force-gamemode":"false","gamemode":"survival","level-name":"lila_test","max-players":"10","max-threads":"8","online-mode":"false","persistent-ticking-area-max-chunks":"100","persistent-ticking-area-max-count":"10","player-idle-timeout":"30","player-movement-action-direction-threshold":"0.85","player-position-acceptance-threshold":"0.5","script-debugger-auto-attach":"disabled","server-authoritative-block-breaking-pick-range-scalar":"1.5","server-authoritative-dismount-strict":"false","server-authoritative-entity-attack-range-tolerance":"0.5","server-authoritative-entity-attack-range-validation":"disabled","server-authoritative-entity-attack-request-validation":"disabled","server-authoritative-entity-interactions-strict":"false","server-authoritative-movement-strict":"false","server-build-radius-ratio":"Disabled","server-name":"Dedicated Server","server-port":"41234","server-portv6":"41235","server-udp-ports":"19132","texturepack-required":"false","tick-distance":"4","transient-ticking-area-max-chunks":"300","transport":"nethernet","view-distance":"32"}
+[2026-11-22 15:50:04:005 INFO] Level Name: lila_test
+[2026-11-22 15:50:04:005 INFO] Profiler config ('bootstrap.json') load result: success=1, errorMessage=(null)
+[2026-11-22 15:50:04:037 INFO] No CDN config file found at: cdn_config.json for dedicated server
+[2026-11-22 15:50:04:037 INFO] Game mode: 0 Survival
+[2026-11-22 15:50:04:037 INFO] Difficulty: 1 EASY
+[2026-11-22 15:50:04:039 INFO] Content logging to console is enabled.
+[2026-11-22 15:50:04:040 INFO] 
 
 #####################################################
 #                                                   #
 #               LOADING VANILLA WORLD               #
 #                                                   #
 #####################################################
-[2026-11-22 14:06:25:533 INFO] Content logging to disk is enabled. Writing log to: ./ContentLog2026-11-22_14-06-25.txt
-[2026-11-22 14:06:25:534 INFO] Experiment(s) active: gtst
-[2026-11-22 14:06:25:534 INFO] Opening level 'worlds/lila_test/db'
-[2026-11-22 14:06:25:535 INFO] Accepting clients on 0.0.0.0:41234
-[2026-11-22 14:06:25:568 INFO] Pack Stack - [00] Hacknd (BP) (id: b461d112-57c7-4e8f-b4dc-395753b1764f, version: 3.1.0) @ behavior_packs/LilaCompanion_BP
-[2026-11-22 14:06:25:568 INFO] Pack Stack - [01] Lila Test Harness (somente testes) (id: 3622d7a5-68c8-4403-8bd4-af06c807551a, version: 1.0.0) @ behavior_packs/LilaTestHarness
-[2026-11-22 14:06:25:858 INFO] Signed in to signaling service successfully
-[2026-11-22 14:06:26:541 INFO] Server started.
-[2026-11-22 14:06:26:541 INFO] ================ TELEMETRY MESSAGE ===================
-[2026-11-22 14:06:26:541 INFO] Server Telemetry is currently not enabled. 
-[2026-11-22 14:06:26:541 INFO] Enabling this telemetry helps us improve the game.
-[2026-11-22 14:06:26:541 INFO] 
-[2026-11-22 14:06:26:541 INFO] To enable this feature, add the line 'emit-server-telemetry=true'
-[2026-11-22 14:06:26:541 INFO] to the server.properties file in the handheld/src-server directory
-[2026-11-22 14:06:26:541 INFO] ======================================================
-[2026-11-22 14:06:26:551 INFO] [Scripting] [Lila:boot] Hacknd carregado
+[2026-11-22 15:50:04:381 INFO] Content logging to disk is enabled. Writing log to: ./ContentLog2026-11-22_15-50-04.txt
+[2026-11-22 15:50:04:381 INFO] Experiment(s) active: gtst
+[2026-11-22 15:50:04:381 INFO] Opening level 'worlds/lila_test/db'
+[2026-11-22 15:50:04:382 INFO] Accepting clients on 0.0.0.0:41234
+[2026-11-22 15:50:04:415 INFO] Pack Stack - [00] Hacknd (BP) (id: b461d112-57c7-4e8f-b4dc-395753b1764f, version: 3.2.0) @ behavior_packs/LilaCompanion_BP
+[2026-11-22 15:50:04:415 INFO] Pack Stack - [01] Lila Test Harness (somente testes) (id: 3622d7a5-68c8-4403-8bd4-af06c807551a, version: 1.0.0) @ behavior_packs/LilaTestHarness
+[2026-11-22 15:50:04:784 INFO] Signed in to signaling service successfully
+[2026-11-22 15:50:05:565 INFO] Server started.
+[2026-11-22 15:50:05:566 INFO] ================ TELEMETRY MESSAGE ===================
+[2026-11-22 15:50:05:566 INFO] Server Telemetry is currently not enabled. 
+[2026-11-22 15:50:05:566 INFO] Enabling this telemetry helps us improve the game.
+[2026-11-22 15:50:05:566 INFO] 
+[2026-11-22 15:50:05:566 INFO] To enable this feature, add the line 'emit-server-telemetry=true'
+[2026-11-22 15:50:05:566 INFO] to the server.properties file in the handheld/src-server directory
+[2026-11-22 15:50:05:566 INFO] ======================================================
+[2026-11-22 15:50:05:575 INFO] [Scripting] [Lila:boot] Hacknd carregado
 
-[2026-11-22 14:06:31:670 INFO] Script event lila:selftest has been sent
-[2026-11-22 14:06:31:672 INFO] [Scripting] LILA-TEST START
+[2026-11-22 15:50:10:695 INFO] Script event lila:selftest has been sent
+[2026-11-22 15:50:10:697 INFO] [Scripting] LILA-TEST START
 
-[2026-11-22 14:06:33:015 INFO] [Scripting] LILA-TEST PASS arena chunks loaded
+[2026-11-22 15:50:11:991 INFO] [Scripting] LILA-TEST PASS arena chunks loaded
 
-[2026-11-22 14:06:33:566 INFO] [Scripting] LILA-TEST PASS race: weights total exactly 10000 bp, GOD = DARK = 1%
+[2026-11-22 15:50:12:518 INFO] [Scripting] LILA-TEST PASS race: weights total exactly 10000 bp, GOD = DARK = 1%
 
-[2026-11-22 14:06:33:566 INFO] [Scripting] LILA-TEST PASS race: weighted pick boundaries are exact
+[2026-11-22 15:50:12:518 INFO] [Scripting] LILA-TEST PASS race: weighted pick boundaries are exact
 
-[2026-11-22 14:06:33:693 INFO] [Scripting] LILA-TEST PASS race: 200k-roll sample matches the odds (statistical sanity) :: vampire=28.10% giant=23.82% angel=22.14% demon=23.94% god=0.97% dark=1.02%
+[2026-11-22 15:50:12:642 INFO] [Scripting] LILA-TEST PASS race: 200k-roll sample matches the odds (statistical sanity) :: vampire=28.02% giant=24.08% angel=21.91% demon=23.98% god=1.01% dark=1.01%
 
-[2026-11-22 14:06:33:695 INFO] [Scripting] LILA-TEST PASS race: 6 races × 100 unique abilities (600), metadata + handlers, no duplicate behavior
+[2026-11-22 15:50:12:644 INFO] [Scripting] LILA-TEST PASS race: 6 races × 100 unique abilities (600), metadata + handlers, no duplicate behavior
 
-[2026-11-22 14:06:33:695 INFO] [Scripting] LILA-TEST PASS race: total weight constant
+[2026-11-22 15:50:12:644 INFO] [Scripting] LILA-TEST PASS race: total weight constant
 
-[2026-11-22 14:06:33:697 INFO] Player Spawned: Dono xuid: , pfid: 
-[2026-11-22 14:06:33:697 INFO] [Scripting] LILA-HARNESS owner spawned -8589934591
+[2026-11-22 15:50:12:646 INFO] Player Spawned: Dono xuid: , pfid: 
+[2026-11-22 15:50:12:646 INFO] [Scripting] LILA-HARNESS owner spawned -8589934591
 
-[2026-11-22 14:06:33:701 INFO] [Scripting] LILA-TEST PASS race: simulated player joined
+[2026-11-22 15:50:12:650 INFO] [Scripting] LILA-TEST PASS race: simulated player joined
 
-[2026-11-22 14:06:34:102 INFO] [Scripting] LILA-TEST PASS roulette: first roll consumes exactly 1 and gives the server-picked race (GOD) :: left=2 race=god
+[2026-11-22 15:50:13:049 INFO] [Scripting] LILA-TEST PASS roulette: first roll consumes exactly 1 and gives the server-picked race (GOD) :: left=2 race=god
 
-[2026-11-22 14:06:34:102 INFO] [Scripting] LILA-TEST PASS roulette: Race Core + owner-bound Divine Blade given once :: core=1 sword=1
+[2026-11-22 15:50:13:050 INFO] [Scripting] LILA-TEST PASS roulette: Race Core + owner-bound Divine Blade given once :: core=1 sword=1
 
-[2026-11-22 14:06:34:102 INFO] [Scripting] LILA-TEST PASS race: player property lila:race synced to the client (GOD = 5) :: prop=5
+[2026-11-22 15:50:13:050 INFO] [Scripting] LILA-TEST PASS race: player property lila:race synced to the client (GOD = 5) :: prop=5
 
-[2026-11-22 14:06:34:103 INFO] [Scripting] LILA-TEST PASS roulette: double click is locked (second request ignored) and cancel consumes nothing :: a=cancel b=rolling left=2
+[2026-11-22 15:50:13:050 INFO] [Scripting] LILA-TEST PASS roulette: double click is locked (second request ignored) and cancel consumes nothing :: a=cancel b=rolling left=2
 
-[2026-11-22 14:06:34:501 INFO] [Scripting] LILA-TEST PASS roulette: confirmed reroll replaces the race exactly once (DARK) and consumes exactly 1 :: race=dark left=1
+[2026-11-22 15:50:13:449 INFO] [Scripting] LILA-TEST PASS roulette: confirmed reroll replaces the race exactly once (DARK) and consumes exactly 1 :: race=dark left=1
 
-[2026-11-22 14:06:34:502 INFO] [Scripting] LILA-TEST PASS weapons: old race weapon removed, Void Scythe given once :: sword=0 scythe=1
+[2026-11-22 15:50:13:450 INFO] [Scripting] LILA-TEST PASS weapons: old race weapon removed, Void Scythe given once :: sword=0 scythe=1
 
-[2026-11-22 14:06:34:701 INFO] [Scripting] LILA-TEST PASS roulette: no roulette item in the slot → no roll :: reason=noitem
+[2026-11-22 15:50:13:649 INFO] [Scripting] LILA-TEST PASS roulette: no roulette item in the slot → no roll :: reason=noitem
 
-[2026-11-22 14:06:34:701 INFO] [Scripting] LILA-TEST PASS race: state persists (reloaded from the player's saved data)
+[2026-11-22 15:50:13:649 INFO] [Scripting] LILA-TEST PASS race: state persists (reloaded from the player's saved data)
 
-[2026-11-22 14:06:36:001 INFO] [Scripting] LILA-TEST PASS race: survives death and respawn :: race=dark
+[2026-11-22 15:50:14:949 INFO] [Scripting] LILA-TEST PASS race: survives death and respawn :: race=dark
 
-[2026-11-22 14:06:36:201 INFO] [Scripting] LILA-TEST PASS DARK: 20× effective durability (damage × 1/20) :: mult=0.05 applied=0.6000000238418579 hp=19.399999618530273
+[2026-11-22 15:50:15:149 INFO] [Scripting] LILA-TEST PASS DARK: 20× effective durability (damage × 1/20) :: mult=0.05 applied=0.6000000238418579 hp=19.399999618530273
 
-[2026-11-22 14:06:36:601 INFO] [Scripting] LILA-TEST PASS DARK: Void Scythe base hit = 35 damage :: golem 100->65
+[2026-11-22 15:50:15:549 INFO] [Scripting] LILA-TEST PASS DARK: Void Scythe base hit = 35 damage :: golem 100->65
 
-[2026-11-22 14:06:37:101 INFO] [Scripting] LILA-TEST PASS DARK: blocks touched by the scythe turn to ash (no drop) after a legit break :: broke=true drops=0
+[2026-11-22 15:50:16:049 INFO] [Scripting] LILA-TEST PASS DARK: blocks touched by the scythe turn to ash (no drop) after a legit break :: broke=true drops=0
 
-[2026-11-22 14:06:37:301 INFO] [Scripting] LILA-TEST PASS DARK: ash never touches containers or protected blocks (chest stays, stone turns to ash) :: chest=minecraft:chest
+[2026-11-22 15:50:16:249 INFO] [Scripting] LILA-TEST PASS DARK: ash never touches containers or protected blocks (chest stays, stone turns to ash) :: chest=minecraft:chest
 
-[2026-11-22 14:06:37:801 INFO] [Scripting] LILA-TEST PASS GOD: became GOD
+[2026-11-22 15:50:16:749 INFO] [Scripting] LILA-TEST PASS GOD: became GOD
 
-[2026-11-22 14:06:37:803 INFO] [Scripting] LILA-TEST PASS GOD: summoning the blade 3× still leaves exactly 1 (no duplicates) :: swords=1
+[2026-11-22 15:50:16:752 INFO] [Scripting] LILA-TEST PASS GOD: summoning the blade 3× still leaves exactly 1 (no duplicates) :: swords=1
 
-[2026-11-22 14:06:38:201 INFO] [Scripting] LILA-TEST PASS GOD: Divine Blade base hit = 30 damage :: golem 100->70
+[2026-11-22 15:50:17:149 INFO] [Scripting] LILA-TEST PASS GOD: Divine Blade base hit = 30 damage :: golem 100->70
 
-[2026-11-22 14:06:38:702 INFO] [Scripting] LILA-TEST PASS GOD: a dropped blade returns to its owner (still exactly 1) :: swords=1
+[2026-11-22 15:50:17:649 INFO] [Scripting] LILA-TEST PASS GOD: a dropped blade returns to its owner (still exactly 1) :: swords=1
 
-[2026-11-22 14:06:40:801 INFO] [Scripting] LILA-TEST PASS GOD: 10× regeneration :: hp 6->10.5
+[2026-11-22 15:50:19:749 INFO] [Scripting] LILA-TEST PASS GOD: 10× regeneration :: hp 6->10.5
 
-[2026-11-22 14:06:41:301 INFO] [Scripting] LILA-TEST PASS ANGEL: became ANGEL (wings start small)
+[2026-11-22 15:50:20:248 INFO] [Scripting] LILA-TEST PASS ANGEL: became ANGEL (wings start small)
 
-[2026-11-22 14:06:43:801 INFO] [Scripting] LILA-TEST PASS ANGEL: wing XP grows to 20 (adult), never shrinks when you spend XP, and doesn't eat your XP :: wing=20->20 xp 0->204
+[2026-11-22 15:50:22:749 INFO] [Scripting] LILA-TEST PASS ANGEL: wing XP grows to 20 (adult), never shrinks when you spend XP, and doesn't eat your XP :: wing=20->20 xp 0->204
 
-[2026-11-22 14:06:44:402 INFO] [Scripting] LILA-TEST PASS ANGEL: flight lifts you (server-side) :: y 151.0->151.9
+[2026-11-22 15:50:23:349 INFO] [Scripting] LILA-TEST PASS ANGEL: flight lifts you (server-side) :: y 151.0->151.9
 
-[2026-11-22 14:06:47:251 INFO] [Scripting] LILA-TEST PASS ANGEL: 5× regeneration :: hp 8->10.0
+[2026-11-22 15:50:26:199 INFO] [Scripting] LILA-TEST PASS ANGEL: 5× regeneration :: hp 8->10.0
 
-[2026-11-22 14:06:47:751 INFO] [Scripting] LILA-TEST PASS GIANT: became GIANT
+[2026-11-22 15:50:26:699 INFO] [Scripting] LILA-TEST PASS GIANT: became GIANT
 
-[2026-11-22 14:06:48:052 INFO] [Scripting] LILA-TEST PASS GIANT: ~3 iron golems tall on the server (hitbox ≈ 8 blocks, scale ×4.5) :: aabb=2.60x8.10 scale=0 eye=1.52 movement,equippable,ender_inventory,cursor_inventory,inventory,player.exhaustion
+[2026-11-22 15:50:27:000 INFO] [Scripting] LILA-TEST PASS GIANT: ~3 iron golems tall on the server (hitbox ≈ 8 blocks, scale ×4.5) :: aabb=2.60x8.10 scale=0 eye=1.52 movement,equippable,ender_inventory,cursor_inventory,inventory,player.exhaustion
 
-[2026-11-22 14:06:48:151 INFO] [Scripting] LILA-TEST PASS GIANT: 3× durability (9 damage → 3) :: applied 3
+[2026-11-22 15:50:27:099 INFO] [Scripting] LILA-TEST PASS GIANT: 3× durability (9 damage → 3) :: applied 3
 
-[2026-11-22 14:06:48:551 INFO] [Scripting] LILA-TEST PASS GIANT: 3× melee strength (fist 1 → 3) :: golem 100->96.86499786376953
+[2026-11-22 15:50:27:099 INFO] [Scripting] LILA-TEST PASS GIANT: first-person camera at the giant's eye height (preset lila:giant_eye accepted by the server, own head hidden only for him) :: eyecam=true log=ok
 
-[2026-11-22 14:06:49:151 INFO] [Scripting] LILA-TEST PASS GIANT: 3× movement speed (Speed X) :: amp=9
+[2026-11-22 15:50:27:700 INFO] [Scripting] LILA-TEST PASS GIANT: Titanic Fury grows to ×6.3 and returns to ×4.5 :: mega=6.300000190734863 back=4.5
 
-[2026-11-22 14:06:49:651 INFO] [Scripting] LILA-TEST PASS VAMPIRE: became VAMPIRE
+[2026-11-22 15:50:28:101 INFO] [Scripting] LILA-TEST PASS GIANT: 3× melee strength (fist 1 → 3) :: golem 100->96.86499786376953
 
-[2026-11-22 14:06:50:251 INFO] [Scripting] LILA-TEST PASS VAMPIRE: 2× movement speed (Speed V) :: amp=4
+[2026-11-22 15:50:28:700 INFO] [Scripting] LILA-TEST PASS GIANT: 3× movement speed (Speed X) :: amp=9
 
-[2026-11-22 14:06:53:451 INFO] [Scripting] LILA-TEST PASS VAMPIRE: direct sunlight burns :: took 5.5
+[2026-11-22 15:50:29:200 INFO] [Scripting] LILA-TEST PASS VAMPIRE: became VAMPIRE
 
-[2026-11-22 14:06:56:851 INFO] [Scripting] LILA-TEST PASS VAMPIRE: a helmet protects from the sun :: hp 20->20
+[2026-11-22 15:50:29:800 INFO] [Scripting] LILA-TEST PASS VAMPIRE: 2× movement speed (Speed V) :: amp=4
 
-[2026-11-22 14:07:00:351 INFO] [Scripting] LILA-TEST PASS VAMPIRE: bat form (small, client property) is immune to the sun :: bat=true hp 20->20
+[2026-11-22 15:50:33:000 INFO] [Scripting] LILA-TEST PASS VAMPIRE: direct sunlight burns :: took 3.5
 
-[2026-11-22 14:07:00:651 INFO] [Scripting] LILA-TEST PASS VAMPIRE: leaving bat form restores the player
+[2026-11-22 15:50:36:401 INFO] [Scripting] LILA-TEST PASS VAMPIRE: a helmet protects from the sun :: hp 20->20 causes=override:150.0,entityAttack:0.6,entityAttack:3.0,fireTick:2.0,fireTick:1.0,fireTick:1.0,fireTick:1.0,fireTick:1.0
 
-[2026-11-22 14:07:03:102 INFO] [Scripting] LILA-TEST PASS VAMPIRE: blood drain (hold, in range, line of sight) drains until the target dies and heals you :: started=true pig=0 hp=20.0 stop=
+[2026-11-22 15:50:39:900 INFO] [Scripting] LILA-TEST PASS VAMPIRE: bat form (small, client property) is immune to the sun :: bat=true hp 20->20 causes=override:150.0,entityAttack:0.6,entityAttack:3.0,fireTick:2.0,fireTick:1.0,fireTick:1.0,fireTick:1.0,fireTick:1.0
 
-[2026-11-22 14:09:21:854 INFO] [Scripting] LILA-TEST PASS ALL 600 abilities execute server-side with a real effect :: 558 ok · falhas: 
+[2026-11-22 15:50:40:201 INFO] [Scripting] LILA-TEST PASS VAMPIRE: leaving bat form restores the player
 
-[2026-11-22 14:09:21:854 INFO] [Scripting] LILA-TEST DONE pass=42 fail=0
+[2026-11-22 15:50:42:651 INFO] [Scripting] LILA-TEST PASS VAMPIRE: blood drain (hold, in range, line of sight) drains until the target dies and heals you :: started=true pig=0 hp=20.0 stop=
 
-[2026-11-22 14:09:23:874 INFO] Server stop requested.
-[2026-11-22 14:09:23:920 INFO] Stopping server...
+[2026-11-22 15:50:42:800 INFO] [Scripting] LILA-TEST PASS POWER MODE: on; hotbar slot 4 selects power #4 and the right-side panel lists it (marker HKD:) :: pm=true sel=3 vampire:016 panel=§l§cVAMPIRO§r §7pág 1/2 / §4■■■■■■■■■■§8 §f100 / §8------------------ /   §71 §fForma de Morcego§r /   §72 §fDreno de Sangue§r /   §73 §fRajada Noturna§r / §c» §74 §l§cMordida Carmesim§r
+
+[2026-11-22 15:50:43:252 INFO] [Scripting] LILA-TEST PASS POWER MODE: attacking/tapping uses the selected power (no menu) :: cd=18157 power=Mordida Carmesim
+
+[2026-11-22 15:50:43:950 INFO] [Scripting] LILA-TEST PASS POWER MODE: breaking a block is blocked (the swing becomes the power) :: block=minecraft:stone
+
+[2026-11-22 15:50:44:250 INFO] [Scripting] LILA-TEST PASS POWER MODE: sneak + swing flips to page 2 (powers 10-18) :: page=1
+
+[2026-11-22 15:50:44:250 INFO] [Scripting] LILA-TEST PASS POWER MODE: using the Core again turns it off
+
+[2026-11-22 15:53:03:708 INFO] [Scripting] LILA-TEST PASS VFX: the new effects were emitted (orbs, rings, sigils, pillars...) :: 6941 emissões
+
+[2026-11-22 15:53:04:300 INFO] [Scripting] LILA-TEST PASS ANGEL: Protective Wings = no damage while covered :: hp 20 -> 20
+
+[2026-11-22 15:53:04:503 INFO] [Scripting] LILA-TEST PASS ANGEL: Guardian Angel cancels a lethal hit and restores full health :: hp=20 ward=false
+
+[2026-11-22 15:53:04:503 INFO] [Scripting] LILA-TEST PASS ALL 600 abilities execute server-side with a real effect :: 543 poderes ativos ok (as 57 passivas são testadas pelos itens acima) · falhas: nenhuma
+
+[2026-11-22 15:53:04:503 INFO] [Scripting] LILA-TEST DONE pass=52 fail=0
+
+[2026-11-22 15:53:06:542 INFO] Server stop requested.
+[2026-11-22 15:53:06:591 INFO] Stopping server...
 Quit correctly

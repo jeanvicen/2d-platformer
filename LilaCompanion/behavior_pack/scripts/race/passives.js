@@ -1,6 +1,8 @@
 // Passivas, pontos fracos e poderes únicos (morcego, dreno, rajada 5×, super pulo, voo) das raças.
 // Um laço por tick só sobre jogadores COM raça; o resto é por evento (dano, morte, renascer).
 import { EntityDamageCause, system, world } from "@minecraft/server";
+import * as V from "./vfx.js";
+import { SIG_HOOK, sigAfterHit, sigDamage, sigLethal } from "./signature.js";
 import { BY_RACE } from "./catalog.js";
 import { BAL, RACES } from "./data.js";
 import { saveState, stateOf } from "./state.js";
@@ -95,13 +97,50 @@ export function applyBody(player) {
   trigger(player, s.tog.bat && s.race === "vampire" ? "lila:bat_on" : "lila:bat_off");
   if (s.race !== "vampire") BAT_FORMS.delete(player.id);
   if (BAL.speedAmp[s.race] !== undefined) eff(player, "speed", 220, BAL.speedAmp[s.race]);
-  // gigante: o Bedrock não sobe a altura dos olhos de um jogador escalado → câmera em 3ª pessoa
-  try {
-    if (s.race === "giant") player.camera.setCamera("minecraft:third_person");
-    else if (s.tog.giantCam) player.camera.clear();
-    s.tog.giantCam = s.race === "giant";
-  } catch {
-    /* ignore */
+  giantCamera(player, s.race === "giant" && !s.tog.giantCamOff);
+}
+
+/**
+ * Câmera do GIGANTE em primeira pessoa na altura dos olhos dele (≈ 7,3 blocos do chão).
+ * O Bedrock não sobe a câmera de um jogador escalado, então usamos o preset "lila:giant_eye"
+ * (follow_orbit com raio mínimo 0,1 = praticamente dentro dos olhos) com o ponto de apoio
+ * levantado. A cabeça do próprio gigante some SÓ na tela dele (q.is_local_player no pacote de
+ * recursos), para ele não ver o lado de dentro da cabeça; os outros veem o gigante inteiro.
+ */
+export const GIANT_CAM = "lila:giant_eye";
+export const GIANT_EYE_BASE = 5.7; // acima do ponto do jogador (olhos normais 1,62 → olhos do gigante 7,3)
+export const CAM_LOG = [];
+export const MEGA_EYE_EXTRA = 2.9; // Fúria Titânica (escala 6,3): olhos ≈ 10,2 blocos
+SIG_HOOK.cam = (p) => {
+  const st = stateOf(p);
+  giantCamera(p, st.race === "giant" && !st.tog.giantCamOff);
+};
+export function giantCamera(player, on) {
+  const s = stateOf(player);
+  const y = GIANT_EYE_BASE + (s.eye || 0) + (s.tog.mega ? MEGA_EYE_EXTRA : 0);
+  if (on) {
+    try {
+      player.camera.setCamera(GIANT_CAM, { entityOffset: { x: 0, y, z: 0 } });
+    } catch (e) {
+      CAM_LOG.push(`preset: ${e}`);
+      try {
+        player.camera.setCamera("minecraft:follow_orbit", { entityOffset: { x: 0, y, z: 0 } });
+      } catch (e2) {
+        CAM_LOG.push(`follow_orbit: ${e2}`);
+      }
+    }
+    prop(player, "lila:eyecam", true);
+    s.tog.giantCam = true;
+  } else {
+    prop(player, "lila:eyecam", false);
+    if (s.tog.giantCam) {
+      try {
+        player.camera.clear();
+      } catch {
+        /* ignore */
+      }
+    }
+    s.tog.giantCam = false;
   }
 }
 
@@ -237,10 +276,14 @@ function drainTick(player, d, tick) {
   }
   heal(player, BAL.drainDamage);
   s.res = Math.min(BAL.resourceMax, s.res + 3);
-  for (let i = 1; i <= 5; i++) {
-    const k = i / 6;
-    fx(player.dimension, "lila:rc_vampire_trail", v3(to.x + (head.x - to.x) * k, to.y + (head.y - 0.3 - to.y) * k, to.z + (head.z - to.z) * k));
+  // fio de sangue do alvo até a boca: gotas grossas + brilho
+  for (let i = 1; i <= 7; i++) {
+    const k = i / 8;
+    const at = v3(to.x + (head.x - to.x) * k, to.y + (head.y - 0.3 - to.y) * k, to.z + (head.z - to.z) * k);
+    V.emit(player.dimension, "lila:vfx_dot_d", at, { c: [0.75, 0.02, 0.08], d: [0.25, 0, 0.02], size: 0.28, life: 0.5 });
+    if (i % 2) V.emit(player.dimension, "lila:vfx_dot", at, { c: [1, 0.2, 0.25], size: 0.12, life: 0.35 });
   }
+  V.emit(player.dimension, "lila:vfx_drops", to, { c: [0.7, 0.02, 0.06], n: 4, size: 0.6 });
   try {
     player.dimension.playSound("mob.vex.hurt", to, { volume: 0.4, pitch: 0.6 });
   } catch {
@@ -473,6 +516,12 @@ export function damageMods(ev) {
   const target = ev.hurtEntity;
   const src = ev.damageSource?.damagingEntity;
   const cause = ev.damageSource?.cause;
+  if (sigDamage(target, src) === 0) return 0;
+  const m = damageMult(ev, target, src, cause);
+  if (m > 0 && target?.typeId === "minecraft:player" && sigLethal(target, ev.damage * m)) return 0;
+  return m;
+}
+function damageMult(ev, target, src, cause) {
   let m = 1;
   // quem bate
   if (src?.typeId === "minecraft:player") {
@@ -530,6 +579,7 @@ export function afterHurt(ev) {
     const s = stateOf(src);
     const r = s.race;
     if (r) {
+      sigAfterHit(src, dmg);
       if (hasPass(r, "lifesteal")) heal(src, (dmg * passVal(r, "lifesteal")) / 100);
       if (hasPass(r, "burnhit")) try {
         target.setOnFire(passVal(r, "burnhit") || 3, true);

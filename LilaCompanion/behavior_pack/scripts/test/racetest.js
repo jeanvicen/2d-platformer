@@ -9,7 +9,11 @@ import { RACES, RACE_IDS, TOTAL_WEIGHT, pickRace, rollInt, validateWeights } fro
 import { forget, stateOf } from "../race/state.js";
 import { LAST, SILENCE, STUN, cast, clearActive, TEMP_BLOCKS } from "../race/engine.js";
 import { useRoulette } from "../race/roulette.js";
-import { DRAIN_STOP, TRIGGER_LOG, damageMods, startDrain } from "../race/passives.js";
+import { CAM_LOG, DRAIN_STOP, TRIGGER_LOG, damageMods, startDrain } from "../race/passives.js";
+import { BAL } from "../race/data.js";
+import { MARK, hudText, selectedPower, setPowerMode } from "../race/hud.js";
+import { INVULN, WARD, endMega } from "../race/signature.js";
+import { COUNT } from "../race/vfx.js";
 import { CORE, ROULETTE, SCYTHE, SWORD, giveWeapon } from "../race/weapons.js";
 
 const Y = 150;
@@ -37,11 +41,19 @@ const hp = (e) => {
 };
 
 let lastTaken = -1;
+const CAUSES = [];
 world.afterEvents.entityHurt.subscribe((ev) => {
-  if (ev.hurtEntity?.typeId === "minecraft:player") lastTaken = ev.damage;
+  if (ev.hurtEntity?.typeId === "minecraft:player") {
+    lastTaken = ev.damage;
+    CAUSES.push(`${ev.damageSource.cause}:${ev.damage.toFixed(1)}${ev.damageSource.damagingEntity ? `<${ev.damageSource.damagingEntity.typeId.replace("minecraft:", "")}` : ""}`);
+    if (CAUSES.length > 12) CAUSES.shift();
+  }
 });
 
 export async function raceTests(dim, check) {
+  // mundo de teste: sem monstros nascendo sozinhos (um zumbi da noite estragava as medições de vida)
+  cmd(dim, "gamerule domobspawning false");
+  cmd(dim, "kill @e[family=monster]");
   // ---------------- dados (sem jogador)
   check("race: weights total exactly 10000 bp, GOD = DARK = 1%", validateWeights().length === 0 && RACES.god.weight === 100 && RACES.dark.weight === 100,
     validateWeights().join("; "));
@@ -109,7 +121,7 @@ export async function raceTests(dim, check) {
   check("roulette: no roulette item in the slot → no roll", !rNo.ok && stateOf(p).race === "dark", `reason=${rNo.reason}`);
   // persistência: relê do disco (dynamic property) e após morrer/renascer
   forget(p.id);
-  check("race: state persists (reloaded from the player's saved data)", stateOf(p).race === "dark" && stateOf(p).slots.filter(Boolean).length === 20);
+  check("race: state persists (reloaded from the player's saved data)", stateOf(p).race === "dark" && stateOf(p).slots.filter(Boolean).length === BAL.quickSlots);
   p.applyDamage(5000, { cause: EntityDamageCause.override });
   await wait(10);
   cmd(dim, "scriptevent lilatest:act Dono respawn");
@@ -120,6 +132,7 @@ export async function raceTests(dim, check) {
 
   // helper: virar uma raça (pelo próprio caminho da roleta)
   const become = async (race) => {
+    cmd(dim, "kill @e[family=monster]");
     const roll = { vampire: 100, giant: 3000, angel: 6000, demon: 8000, god: 9850, dark: 9950 }[race];
     inv().setItem(8, new ItemStack(ROULETTE, 1));
     await useRoulette(p, 8, { fast: true, confirm: true, roll });
@@ -247,6 +260,39 @@ export async function raceTests(dim, check) {
   p.applyDamage(9, { cause: EntityDamageCause.entityAttack });
   await wait(2);
   check("GIANT: 3× durability (9 damage → 3)", Math.abs(lastTaken - 3) < 0.05, `applied ${lastTaken}`);
+  let eyecam = false;
+  try {
+    eyecam = !!p.getProperty("lila:eyecam");
+  } catch {
+    /* ignore */
+  }
+  check("GIANT: first-person camera at the giant's eye height (preset lila:giant_eye accepted by the server, own head hidden only for him)", eyecam && CAM_LOG.length === 0,
+    `eyecam=${eyecam} log=${CAM_LOG.join(" | ") || "ok"}`);
+  const titan = BY_RACE.giant.find((a) => a.special === "g_titan");
+  stateOf(p).cd[titan.id] = 0;
+  cast(p, titan.id, { force: true, quiet: true });
+  await wait(6);
+  let mega = 0;
+  try {
+    mega = Number(p.getComponent("minecraft:scale")?.value ?? 0);
+  } catch {
+    /* ignore */
+  }
+  endMega(p);
+  await wait(6);
+  let back = 0;
+  try {
+    back = Number(p.getComponent("minecraft:scale")?.value ?? 0);
+  } catch {
+    /* ignore */
+  }
+  check("GIANT: Titanic Fury grows to ×6.3 and returns to ×4.5", Math.abs(mega - 6.3) < 0.01 && Math.abs(back - 4.5) < 0.01, `mega=${mega} back=${back}`);
+  clearActive();
+  for (const n of ["strength", "resistance"]) try {
+    p.removeEffect(n); // não vazar os efeitos da suprema para os testes seguintes
+  } catch {
+    /* ignore */
+  }
   inv().setItem(p.selectedSlotIndex, undefined);
   g = golem(3);
   await wait(4);
@@ -295,7 +341,7 @@ export async function raceTests(dim, check) {
   await wait(4);
   h0 = hp(p);
   await wait(64);
-  check("VAMPIRE: a helmet protects from the sun", hp(p) >= h0 - 0.01, `hp ${h0}->${hp(p)}`);
+  check("VAMPIRE: a helmet protects from the sun", hp(p) >= h0 - 0.01, `hp ${h0}->${hp(p)} causes=${CAUSES.join(",")}`);
   p.getComponent("minecraft:equippable").setEquipment("Head", undefined);
   const bat = BY_RACE.vampire.find((a) => a.special === "bat");
   cast(p, bat.id, { force: true, quiet: true });
@@ -309,7 +355,7 @@ export async function raceTests(dim, check) {
   p.getComponent("minecraft:health").resetToMaxValue();
   h0 = hp(p);
   await wait(64);
-  check("VAMPIRE: bat form (small, client property) is immune to the sun", batProp && stateOf(p).tog.bat && hp(p) >= h0 - 0.01, `bat=${batProp} hp ${h0}->${hp(p)}`);
+  check("VAMPIRE: bat form (small, client property) is immune to the sun", batProp && stateOf(p).tog.bat && hp(p) >= h0 - 0.01, `bat=${batProp} hp ${h0}->${hp(p)} causes=${CAUSES.join(",")}`);
   cast(p, bat.id, { force: true, quiet: true });
   await wait(6);
   try {
@@ -338,6 +384,54 @@ export async function raceTests(dim, check) {
   system.clearRun(hold);
   check("VAMPIRE: blood drain (hold, in range, line of sight) drains until the target dies and heals you", started && (!pig.isValid || hp(pig) <= 0) && hp(p) > 10,
     `started=${started} pig=${pig.isValid ? hp(pig) : "dead"} hp=${hp(p).toFixed(1)} stop=${DRAIN_STOP.why}`);
+
+  // ---------------- MODO PODER: painel na direita, barra de itens escolhe, bater usa, quebrar bloqueado
+  {
+    const st = stateOf(p);
+    setPowerMode(p, true);
+    const pick = BY_RACE[st.race].find((a) => a.shape === "target" && !a.passive) ?? BY_RACE[st.race].find((a) => a.shape === "proj");
+    st.slots[3] = pick.id;
+    st.page = 0;
+    cmd(dim, "scriptevent lilatest:act Dono slot 3");
+    await wait(3);
+    const sel = selectedPower(p);
+    const txt = hudText(p);
+    check("POWER MODE: on; hotbar slot 4 selects power #4 and the right-side panel lists it (marker HKD:)", st.pm && sel?.i === 3 && sel?.id === pick.id && txt.includes(pick.name.slice(0, 10)) && MARK === "HKD:",
+      `pm=${st.pm} sel=${sel?.i} ${sel?.id} panel=${txt.split("\n").slice(0, 7).join(" / ")}`);
+    p.teleport({ x: 0.5, y: Y + 1, z: 0.5 }, { rotation: { x: 8, y: 0 } });
+    const g = golem(2);
+    await wait(3);
+    st.cd[pick.id] = 0;
+    st.res = 100;
+    cmd(dim, `scriptevent lilatest:act Dono look 0.5,${Y + 1.5},2.5`);
+    await wait(2);
+    cmd(dim, "scriptevent lilatest:act Dono swing");
+    await wait(4);
+    const used = (st.cd[pick.id] ?? 0) > 0;
+    check("POWER MODE: attacking/tapping uses the selected power (no menu)", used, `cd=${st.cd[pick.id] ?? 0} power=${pick.name}`);
+    try {
+      g.remove();
+    } catch {
+      /* ignore */
+    }
+    cmd(dim, `setblock 0 ${Y + 1} 3 stone`);
+    await wait(2);
+    cmd(dim, `scriptevent lilatest:act Dono break 0,${Y + 1},3`);
+    await wait(12);
+    const kept = dim.getBlock({ x: 0, y: Y + 1, z: 3 })?.typeId === "minecraft:stone";
+    check("POWER MODE: breaking a block is blocked (the swing becomes the power)", kept, `block=${dim.getBlock({ x: 0, y: Y + 1, z: 3 })?.typeId}`);
+    cmd(dim, `setblock 0 ${Y + 1} 3 air`);
+    cmd(dim, "scriptevent lilatest:act Dono sneak");
+    await wait(2);
+    cmd(dim, "scriptevent lilatest:act Dono swing");
+    await wait(4);
+    const page = st.page;
+    check("POWER MODE: sneak + swing flips to page 2 (powers 10-18)", page === 1, `page=${page}`);
+    st.page = 0;
+    setPowerMode(p, false);
+    check("POWER MODE: using the Core again turns it off", !st.pm);
+    await wait(14);
+  }
 
   // ---------------- os 600 poderes: cada um roda e produz efeito real
   const fails = [];
@@ -375,8 +469,33 @@ export async function raceTests(dim, check) {
         /* ignore */
       }
       clearActive();
+      for (const tb of TEMP_BLOCKS.splice(0)) cmd(dim, `setblock ${tb.x} ${tb.y} ${tb.z} air`); // muros/domos não atrapalham o próximo
     }
   }
   for (const t of TEMP_BLOCKS.splice(0)) cmd(dim, `setblock ${t.x} ${t.y} ${t.z} air`);
+  check("VFX: the new effects were emitted (orbs, rings, sigils, pillars...)", COUNT.n > 500, `${COUNT.n} emissões`);
+  // proteção: névoa/asas = invulnerável; Anjo da Guarda anula o golpe fatal
+  if (await become("angel")) {
+    for (const n of ["resistance", "absorption"]) try {
+      p.removeEffect(n);
+    } catch {
+      /* ignore */
+    }
+    INVULN.delete(p.id);
+    WARD.delete(p.id);
+    const wings = BY_RACE.angel.find((a) => a.special === "a_wings");
+    cast(p, wings.id, { force: true, quiet: true });
+    const h0 = hp(p);
+    p.applyDamage(6, { cause: EntityDamageCause.entityAttack });
+    await wait(2);
+    check("ANGEL: Protective Wings = no damage while covered", hp(p) >= h0 - 0.01, `hp ${h0} -> ${hp(p)}`);
+    INVULN.delete(p.id);
+    clearActive();
+    const guard = BY_RACE.angel.find((a) => a.special === "a_guardian");
+    cast(p, guard.id, { force: true, quiet: true });
+    p.applyDamage(500, { cause: EntityDamageCause.entityAttack });
+    await wait(4);
+    check("ANGEL: Guardian Angel cancels a lethal hit and restores full health", hp(p) > 15 && !WARD.has(p.id), `hp=${hp(p)} ward=${WARD.has(p.id)}`);
+  }
   check("ALL 600 abilities execute server-side with a real effect", fails.length === 0, `${ABILITIES.filter((x) => !x.passive).length - fails.length} poderes ativos ok (as ${ABILITIES.filter((x) => x.passive).length} passivas são testadas pelos itens acima) · falhas: ${fails.slice(0, 12).join(" | ") || "nenhuma"}`);
 }

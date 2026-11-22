@@ -208,3 +208,21 @@ test("raças: 600 poderes (100 por raça), ids únicos, nenhum comportamento rep
   for (const list of Object.values(C.BY_RACE)) assert.equal(list.length, 100);
   assert.deepEqual(C.validateCatalog(), []);
 });
+
+test("raças 3.2: 10 poderes assinatura por raça, com texto, e todos na barra padrão (18 lugares)", async () => {
+  const C = await import("../behavior_pack/scripts/race/catalog.js");
+  const D = await import("../behavior_pack/scripts/race/data.js");
+  const S = await import("../behavior_pack/scripts/race/sigtext.js");
+  assert.equal(D.BAL.quickSlots, 18);
+  assert.equal(S.SIG_KEYS.length, 60);
+  for (const [race, list] of Object.entries(C.BY_RACE)) {
+    const sig = list.filter((a) => a.sigpow);
+    assert.equal(sig.length, 10, race);
+    for (const a of sig) assert.ok(a.desc.length > 30 && !a.desc.startsWith(a.special), `${a.id} sem descrição`);
+    const bar = list.filter((a) => !a.passive).slice(0, D.BAL.quickSlots).map((a) => a.id);
+    for (const a of sig) assert.ok(bar.includes(a.id), `${a.name} fora da barra padrão de ${race}`);
+  }
+  // cada chave assinatura é usada por exatamente um poder
+  const used = C.ABILITIES.filter((a) => a.sigpow).map((a) => a.special);
+  assert.equal(new Set(used).size, 60);
+});

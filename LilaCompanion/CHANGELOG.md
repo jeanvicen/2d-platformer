@@ -1,5 +1,48 @@
 # Changelog
 
+## 3.2.0 — Painel de poderes, modo poder, gigante em 1ª pessoa e 60 poderes assinatura
+- **Painel de poderes no canto direito** (meio transparente): mostra a sua raça, a barra de recurso e os
+  9 poderes da página, com o escolhido destacado, a recarga em segundos e "×" quando falta recurso.
+  Nada de abrir menu para usar poder.
+- **Modo poder** (usar o Núcleo da Raça liga/desliga):
+  - a **barra de itens (1–9) escolhe o poder** (página 1 = lugares 1–9, página 2 = 10–18);
+  - **bater/tocar/quebrar usa o poder escolhido**, e bater no bloco **não quebra** no modo poder;
+  - agachar + bater troca a página; agachar + usar o Núcleo abre o grimório (montar a barra, ver os 100).
+  - A barra agora tem 18 lugares (2 páginas de 9). Quem já tinha raça ganha a barra nova automaticamente.
+- **Gigante em primeira pessoa de verdade**: a câmera fica nos olhos do gigante (~7,3 blocos do chão),
+  sem ir para a 3ª pessoa. A cabeça dele some só na tela dele (os outros veem o gigante inteiro).
+  Ajuste de altura dos olhos e opção de câmera normal em "Sua raça e ajustes".
+- **60 poderes assinatura** (10 por raça), com código e visual próprios, inspirados no folclore/mitologia:
+  - Vampiro: Forma de Névoa, Olhar Hipnótico (o monstro vira seu servo), Revoada de Morcegos,
+    Banquete Rubro, Lua de Sangue (a noite cai), Matilha Noturna (3 lobos domados), Garras Carmesins,
+    Passo da Noite, Sono do Caixão (escapa da morte) e Lança Hemática.
+  - Gigante: Terremoto de Ymir, Rocha Arrancada, Pisão Colossal, Mão de Jötunn (agarra e arremessa),
+    Muralha da Montanha (sobe camada por camada), Sopro de Hrímthurs (congela a água), Lâmina de
+    Muspel, Rugido Colossal, Fúria Titânica (cresce para 6,3×) e Espinhos da Terra.
+  - Anjo: Julgamento, Espada Flamejante do Querubim, Trombeta Celestial, Asas Protetoras (sem dano),
+    Anjo da Guarda (anula o golpe fatal), Santuário, Tempestade de Penas, Ascensão, Coro dos Serafins
+    e Sopro da Vida.
+  - Demônio: Pacto Infernal, Possessão, Correntes do Abismo, Portão do Inferno, Chuva de Enxofre,
+    Onda de Fogo Negro, Marca da Danação, Legião de Diabretes, Asas de Brasa e Coroa do Inferno.
+  - DEUS: Parar o Tempo (tudo congela, até flechas), Gênese, Ira dos Céus (raios de verdade), Palavra
+    Divina, Sol Nascente, Criação (templo de cristal), Coroa de Estrelas, Rebobinar (volta 5 s no
+    tempo), Juízo Final e Sopro Divino.
+  - TREVAS: Buraco Negro, Eclipse, Colheita de Almas, Passo do Vazio, Sombras Vivas, Entropia,
+    Fenda do Vazio, Pesadelo, Anular e Noite Sem Fim.
+  - Os 10 de cada raça já vêm na barra. Saíram 10 ataques genéricos por raça para continuar 100.
+- **Efeitos visuais refeitos**: 28 partículas novas coloridas pela raça (orbe de energia, clarão,
+  faíscas, onda de choque no chão, **selo mágico girando** (um desenho por raça), coluna de luz/trevas,
+  corte em meia-lua, feixe grosso, raio em zigue-zague, corrente de elos, rachadura no chão,
+  redemoinho, domo, runas, gotas de sangue, estilhaços de rocha, penas, brasas, estrelas e fumaça do
+  vazio). Cada forma de poder tem o seu visual, os impactos fortes tremem a tela e as supremas abrem
+  um selo enorme com coluna e onda. Ícones dos poderes assinatura com o selo da raça e moldura dourada.
+- **Erros corrigidos**: barra antiga apontando para poderes errados depois da mudança do catálogo
+  (agora é refeita); nomes repetidos entre poderes; a megaconstrução do farol usava `minecraft:map`
+  (que não existe no Bedrock) e agora usa mapa vazio; efeitos da suprema do gigante deixavam testes
+  instáveis; o autoteste de raças agora desliga o nascimento de monstros (um zumbi da noite
+  atrapalhava as medições).
+- Testes no servidor oficial 1.26.65.1: raças **52/52**, sem jogador **60/60**, com jogadores **45/45**.
+
 ## 3.1.0 — Roleta das Essências (Sistema de Raças)
 - **Item novo: Roleta das Essências** (bancada: 4 ametistas, 2 ouros, 2 olhos do fim, 1 diamante; e no
   inventário criativo). Use para sortear uma raça. Ela tem modelo 3D na mão, e uma **roda 3D gira na

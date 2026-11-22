@@ -7,6 +7,8 @@ import { BY_ID, BY_RACE, CATEGORIES } from "./catalog.js";
 import { BAL, RACES, oddsText } from "./data.js";
 import { now, saveState, stateOf } from "./state.js";
 import { cast } from "./engine.js";
+import { setPowerMode } from "./hud.js";
+import { giantCamera } from "./passives.js";
 
 export const icon = (a) => `textures/ui/race/${a.race}/${String(a.index + 1).padStart(3, "0")}`;
 const emblem = (race) => `textures/ui/race/emblem_${race}`;
@@ -29,10 +31,10 @@ function header(player) {
   const R = RACES[s.race];
   const wing = ["angel", "demon"].includes(s.race) ? `\n§7Asas: ${bar(s.wing, BAL.wingMax, "§f")} §7${s.wing}/${BAL.wingMax}${s.wing >= BAL.wingMax ? " §e(adultas)" : ""}` : "";
   const act = s.slots[s.active] ? BY_ID.get(s.slots[s.active]) : null;
-  return `${R.title}§r\n§7${R.resource}: ${bar(s.res, BAL.resourceMax, R.res)} §f${Math.floor(s.res)}§7/${BAL.resourceMax}${wing}\n§7Poder ativo (bater com o Núcleo): §f${act?.name ?? "—"}`;
+  return `${R.title}§r\n§7${R.resource}: ${bar(s.res, BAL.resourceMax, R.res)} §f${Math.floor(s.res)}§7/${BAL.resourceMax}${wing}\n§7Modo poder: ${s.pm ? "§aLIGADO" : "§7desligado"} §8(usar o Núcleo liga/desliga)\n§7Último poder: §f${act?.name ?? "—"}`;
 }
 
-/** Painel rápido: os 20 slots. */
+/** Painel rápido (menu): os lugares da barra. */
 export async function openQuick(player) {
   const s = stateOf(player);
   if (!s.race) {
@@ -70,9 +72,10 @@ export async function openGrimoire(player) {
   const list = BY_RACE[s.race];
   const cats = Object.keys(CATEGORIES).filter((c) => list.some((a) => a.cat === c));
   const f = new ActionFormData().title(`§l${RACES[s.race].color}Grimório — ${RACES[s.race].name}`)
-    .body(`${header(player)}\n\n§fTodos os §e100 poderes§f da sua raça estão liberados. Toque num para ver, usar ou pôr na barra (20 lugares).`);
+    .body(`${header(player)}\n\n§fTodos os §e100 poderes§f da sua raça estão liberados. Toque num para ver, usar ou pôr na barra (${BAL.quickSlots} lugares).`);
   f.button("§l🔎 Buscar poder§r\n§8pelo nome ou efeito", "textures/ui/magnifyingGlass");
-  f.button("§l⚙ Montar a barra (20)§r\n§8trocar, subir, descer, esvaziar", emblem(s.race));
+  f.button(`§l⚙ Montar a barra (${BAL.quickSlots})§r\n§8trocar, subir, descer, esvaziar`, emblem(s.race));
+  f.button("§l§6ℹ Sua raça e ajustes§r\n§8modo poder, câmera, efeitos, passivas", emblem(s.race));
   for (const c of cats) {
     const n = list.filter((a) => a.cat === c).length;
     const first = list.find((a) => a.cat === c);
@@ -82,7 +85,8 @@ export async function openGrimoire(player) {
   if (!r || r.canceled || r.selection === undefined) return;
   if (r.selection === 0) return openSearch(player);
   if (r.selection === 1) return openLoadout(player);
-  const cat = cats[r.selection - 2];
+  if (r.selection === 2) return openInfo(player);
+  const cat = cats[r.selection - 3];
   return openList(player, list.filter((a) => a.cat === cat), CATEGORIES[cat]);
 }
 
@@ -160,7 +164,7 @@ async function openDetail(player, a, back) {
 
 async function pickSlot(player, a, back) {
   const s = stateOf(player);
-  const f = new ActionFormData().title(`§lOnde pôr "${a.name}"?`).body("§7Escolha um dos 20 lugares da barra.");
+  const f = new ActionFormData().title(`§lOnde pôr "${a.name}"?`).body(`§7Escolha um dos ${BAL.quickSlots} lugares (1–9 = página 1, 10–18 = página 2 do painel).`);
   for (let i = 0; i < BAL.quickSlots; i++) {
     const cur = s.slots[i] ? BY_ID.get(s.slots[i]) : null;
     f.button(`§l${i + 1}.§r ${cur ? cur.name : "§8(vazio)"}`, cur ? icon(cur) : undefined);
@@ -179,7 +183,7 @@ async function pickSlot(player, a, back) {
 
 async function openLoadout(player, sel = -1) {
   const s = stateOf(player);
-  const f = new ActionFormData().title("§lMontar a barra (20)").body("§7Toque num lugar para trocar, subir, descer ou esvaziar.");
+  const f = new ActionFormData().title(`§lMontar a barra (${BAL.quickSlots})`).body("§7Toque num lugar para trocar, subir, descer ou esvaziar.");
   for (let i = 0; i < BAL.quickSlots; i++) {
     const a = s.slots[i] ? BY_ID.get(s.slots[i]) : null;
     f.button(`${i === s.active ? "§a▶ " : ""}§l${i + 1}.§r ${a ? a.name : "§8(vazio)"}`, a ? icon(a) : undefined);
@@ -258,16 +262,36 @@ export async function openInfo(player) {
   const R = RACES[s.race];
   const pas = BY_RACE[s.race].filter((a) => a.passive).map((a) => `§f• ${a.name}§7 — ${a.desc.replace("Passiva: ", "")}`).join("\n");
   const f = new ActionFormData().title(`§l${R.name}`)
-    .body(`${R.title}§r\n§f${R.blurb}\n\n§c⚠ Ponto fraco:§f ${R.weakness}\n\n§6Passivas (sempre ativas):\n${pas}\n\n§7Chances da roleta: ${oddsText()}`)
-    .button(`§lEfeitos reduzidos: ${s.tog.lowfx ? "§aLIGADO" : "§7desligado"}§r\n§8menos partículas (celular fraco / acessibilidade)`)
-    .button("Voltar");
-  const r = await show(player, f);
-  if (r && !r.canceled && r.selection === 0) {
-    s.tog.lowfx = !s.tog.lowfx;
-    saveState(player);
-    return openInfo(player);
+    .body(`${R.title}§r\n§f${R.blurb}\n\n§c⚠ Ponto fraco:§f ${R.weakness}\n\n§6Passivas (sempre ativas):\n${pas}\n\n§7Chances da roleta: ${oddsText()}`);
+  const opts = [];
+  f.button(`§lModo poder: ${s.pm ? "§aLIGADO" : "§7desligado"}§r\n§8painel na direita · barra escolhe · bater usa`);
+  opts.push("pm");
+  f.button(`§lEfeitos reduzidos: ${s.tog.lowfx ? "§aLIGADO" : "§7desligado"}§r\n§8menos partículas (celular fraco / acessibilidade)`);
+  opts.push("lowfx");
+  if (s.race === "giant") {
+    f.button(`§lCâmera do gigante: ${s.tog.giantCamOff ? "§7normal do jogo" : "§aolhos do gigante"}§r\n§8primeira pessoa lá no alto`);
+    opts.push("cam");
+    if (!s.tog.giantCamOff) {
+      f.button(`§l▲ Olhos mais alto§r\n§8ajuste agora: ${s.eye >= 0 ? "+" : ""}${s.eye} bloco(s)`);
+      opts.push("up");
+      f.button("§l▼ Olhos mais baixo");
+      opts.push("down");
+    }
   }
-  return openQuick(player);
+  f.button("Voltar");
+  opts.push("back");
+  const r = await show(player, f);
+  if (!r || r.canceled || r.selection === undefined) return;
+  const k = opts[r.selection];
+  if (k === "back") return openGrimoire(player);
+  if (k === "pm") setPowerMode(player, !s.pm);
+  if (k === "lowfx") s.tog.lowfx = !s.tog.lowfx;
+  if (k === "cam") s.tog.giantCamOff = !s.tog.giantCamOff;
+  if (k === "up") s.eye = Math.min(4, s.eye + 0.5);
+  if (k === "down") s.eye = Math.max(-4, s.eye - 0.5);
+  if (k === "cam" || k === "up" || k === "down") giantCamera(player, !s.tog.giantCamOff);
+  saveState(player);
+  return openInfo(player);
 }
 
 /** Informações da roleta (antes de girar). */

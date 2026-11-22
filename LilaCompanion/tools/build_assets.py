@@ -39,7 +39,7 @@ from forge.render import render  # noqa: E402
 
 MOVES = ["none", "walk", "run", "swim", "climb", "fall", "sneak"]
 
-VERSION = [3, 1, 0]
+VERSION = [3, 2, 0]
 MIN_ENGINE = [1, 26, 30]
 SERVER_VERSION = "2.8.0"
 SERVER_UI_VERSION = "2.1.0"
@@ -56,9 +56,9 @@ PREVIEW_DIR = os.path.join(ROOT, "docs", "img")
 ITEM_FORMAT = "1.21.90"
 ENTITY_FORMAT = "1.21.0"
 
-GENERATED_BP = ["entities", "items", "recipes", "texts"]
+GENERATED_BP = ["entities", "items", "recipes", "texts", "cameras"]
 GENERATED_RP = ["entity", "models", "animations", "animation_controllers", "render_controllers", "attachables",
-                "particles", "textures", "texts", "sounds", "fogs"]
+                "particles", "textures", "texts", "sounds", "fogs", "ui"]
 
 LANGS = {
     "en_US": {"entity.lila:drone.name": "Hacknd", "entity.lila:robot.name": "Hacknd Nanobot Soldier", "item.lila.drone_controller.name": "Hacknd Remote",

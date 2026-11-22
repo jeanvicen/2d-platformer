@@ -41,7 +41,7 @@ def is_molang(path, s):
 
 # consultas usadas pelo arquivo OFICIAL do jogador (copiado de Mojang/bedrock-samples)
 VANILLA_PLAYER_QUERIES = {"has_head_gear", "is_alive", "main_hand_item_use_duration", "main_hand_item_max_duration", "is_riding_any_entity_of_type",
-                          "vertical_speed"}
+                          "vertical_speed", "is_local_player"}
 
 
 def main():

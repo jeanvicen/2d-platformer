@@ -1,4 +1,4 @@
-# Checklist de aceitação — Hacknd 3.1.0 (com a Roleta das Essências)
+# Checklist de aceitação — Hacknd 3.2.0 (painel de poderes, modo poder, 60 poderes assinatura)
 
 Legenda: **PASS** = verificado de verdade · **NOT TESTED** = não dá para testar neste ambiente
 (servidor sem tela, sem celular, sem som).
@@ -15,7 +15,7 @@ com jogadores simulados "Dono" e "Intruso" → `tests/last_bds_owner_run.log`.
 | Todo `minecraft:*` usado existe no jogo (vanilla-data), inclusive as 4851 plantas do catálogo | PASS |
 | Referências cruzadas (18 geometrias, render controllers das 16 formas e dos 5 tipos de robô, animações, partículas, sons) | PASS |
 | Testes unitários (frases pt-BR antigas e novas, receitas, A*) | PASS |
-| Molang (751 expressões, inclusive a nuvem do enxame, chegada pelo céu, montar/desmanchar, asas/mãos/prancha): parênteses, funções conhecidas, toda variável lida é escrita | PASS |
+| Molang (836 expressões, inclusive a nuvem do enxame, chegada pelo céu, montar/desmanchar, asas/mãos/prancha): parênteses, funções conhecidas, toda variável lida é escrita | PASS |
 | Hacknd: corpo de robô escondido na forma normal (render controller); efeitos do enxame ligados por controlador de animação no cliente (nuvem / montinho desligado / robozinhos em cada forma) — referências conferidas | PASS |
 | As 4851 construções do catálogo geram sem erro (Node) e as megaconstruções mobiliadas geram (vila, cidade, castelo, casa tech, arranha-céu, pirâmide, farol) | PASS |
 
@@ -66,13 +66,23 @@ com jogadores simulados "Dono" e "Intruso" → `tests/last_bds_owner_run.log`.
 | GIGANTE: hitbox 2,6 × 8,1 no servidor; dano recebido × 1/3; soco × 3; velocidade 3× | PASS |
 | VAMPIRO: velocidade 2×; sol direto queima; capacete protege; forma de morcego imune ao sol e volta ao normal; dreno até o alvo morrer, curando | PASS |
 | **Os 543 poderes ativos executam no servidor com efeito real** (dano/efeito no alvo, efeito em você ou ação em andamento); as 57 passivas são efeitos sempre ligados (regeneração, velocidade, sol, imunidades etc., cobertas pelos itens acima) | PASS |
+| **3.2 MODO PODER**: liga pelo Núcleo; a barra de itens escolhe o poder (lugar 4 → poder 4); o painel da direita lista o poder (marcador HKD:) | PASS |
+| **3.2 MODO PODER**: bater (ataque do jogador simulado) usa o poder escolhido, sem menu | PASS |
+| **3.2 MODO PODER**: quebrar bloco fica bloqueado; agachar + bater troca para a página 2; usar o Núcleo desliga | PASS |
+| **3.2 GIGANTE**: câmera em 1ª pessoa nos olhos (preset `lila:giant_eye` aceito pelo servidor, propriedade que esconde a cabeça só para ele ligada) | PASS |
+| **3.2 GIGANTE**: Fúria Titânica cresce para 6,3× e volta para 4,5× | PASS |
+| **3.2**: 60 poderes assinatura (10 por raça) entram no catálogo com texto, ficam na barra padrão e executam com efeito real (dentro dos 543 ativos) | PASS |
+| **3.2 ANJO**: Asas Protetoras = sem dano; Anjo da Guarda anula golpe fatal e volta com a vida cheia | PASS |
+| **3.2**: efeitos visuais novos emitidos no servidor (7002 emissões durante o teste dos 600) | PASS |
 | Passivas sem teste próprio (visão noturna no escuro, esquiva, espinhos, golpes que queimam/murcham, aura de medo, impacto da queda do gigante) | NOT TESTED (só código) |
 
 ## Não testado (limite do ambiente)
 | Item | Resultado |
 |---|---|
 | Visual das raças na tela: asas/auréolas/coroas no corpo, morcego, gigante escalado, poses, roda girando, armas 3D na mão (posição na mão conferida só por arquivo) | NOT TESTED |
-| Câmera do gigante: o Bedrock não sobe a altura dos olhos de jogador escalado → câmera em 3ª pessoa automática | limite do jogo |
+| **Painel da direita na tela** (posição, transparência, cores, se o título normal some): é interface do cliente — conferido só por arquivo (`ui/hud_screen.json`) | NOT TESTED |
+| **Câmera do gigante vista na tela** (altura exata dos olhos, cabeça escondida para ele): o servidor aceita o preset, mas o desenho é do cliente; há ajuste de altura no menu | NOT TESTED |
+| Visual das partículas novas (selos, colunas, cortes, raios, correntes) e tremor de tela no celular | NOT TESTED |
 | A nuvem do enxame na tela (centenas de pontinhos em zigue-zague, névoa, rastro), a chegada pelo céu, o montinho desligado e montar/desmanchar formas — tudo é partícula desenhada no aparelho; conferido por arquivo e por imagens geradas com a mesma matemática | NOT TESTED |
 | Desempenho da nuvem no celular (≈ 560 pontinhos + 22 manchas de névoa + 120 de rastro por enxame; a chegada pelo céu usa até 1000 por 2 s) | NOT TESTED |
 | Aparência no celular: robôs do exército, itens de nanorrobô, asas/mãos/prancha de partículas (conferidos por renderização do modelo e por cálculo; a partícula com orientação depende do cliente) | NOT TESTED |

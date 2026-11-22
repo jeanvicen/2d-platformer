@@ -17,6 +17,7 @@ import subprocess
 from PIL import Image, ImageDraw, ImageFilter
 
 from .geom import Model, Paint
+from .race_vfx import build_vfx
 from .race_art import RACE_COLORS, RACE_ORDER, bat_model, crown, divine_sword, giant_overlay, roulette_held, roulette_model, vampire_overlay, void_scythe, wings
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -93,6 +94,8 @@ def player_animations():
                                                                    "head": {"rotation": [12, 0, 0]}})
     A["lila_pose_dash"] = _anim("animation.lila.race.pose_dash", {"rightArm": {"rotation": [40, 0, 12]}, "leftArm": {"rotation": [40, 0, -12]},
                                                                    "body": {"rotation": [18, 0, 0]}})
+    # gigante em 1ª pessoa no alto: a cabeça dele some SÓ na tela dele (a câmera fica dentro dela)
+    A["lila_eyecam"] = _anim("animation.lila.race.eyecam", {"head": {"scale": 0}})
     elastic = "math.min(1, q.anim_time * 1.6) + math.sin(math.min(1, q.anim_time * 1.6) * 540) * 0.12 * (1 - math.min(1, q.anim_time * 1.6))"
     A["lila_pose_transform"] = _anim("animation.lila.race.pose_transform", {
         "rightArm": {"rotation": k([(0, [0, 0, 0]), (0.5, [-160, 0, 25]), (1.8, [-150, 0, 30]), (2.3, [0, 0, 0])])},
@@ -113,11 +116,16 @@ def player_overrides(BP, RP, wjson):
         "lila:bat": {"type": "bool", "default": False, "client_sync": True},
         "lila:fly": {"type": "bool", "default": False, "client_sync": True},
         "lila:pose": {"type": "enum", "values": POSES, "default": "none", "client_sync": True},
+        "lila:eyecam": {"type": "bool", "default": False, "client_sync": True},
     }
     e["component_groups"]["lila:giant"] = {"minecraft:scale": {"value": 4.5}, "minecraft:collision_box": {"width": 2.6, "height": 8.1}}
     e["component_groups"]["lila:bat"] = {"minecraft:scale": {"value": 0.32}}
-    e["events"]["lila:giant_on"] = {"add": {"component_groups": ["lila:giant"]}, "remove": {"component_groups": ["lila:bat"]}}
-    e["events"]["lila:giant_off"] = {"remove": {"component_groups": ["lila:giant"]}}
+    # Fúria Titânica (suprema do gigante): 6,3× por alguns segundos
+    e["component_groups"]["lila:giant_mega"] = {"minecraft:scale": {"value": 6.3}, "minecraft:collision_box": {"width": 3.6, "height": 11.3}}
+    e["events"]["lila:giant_on"] = {"add": {"component_groups": ["lila:giant"]}, "remove": {"component_groups": ["lila:bat", "lila:giant_mega"]}}
+    e["events"]["lila:giant_off"] = {"remove": {"component_groups": ["lila:giant", "lila:giant_mega"]}}
+    e["events"]["lila:mega_on"] = {"add": {"component_groups": ["lila:giant_mega"]}, "remove": {"component_groups": ["lila:giant", "lila:bat"]}}
+    e["events"]["lila:mega_off"] = {"add": {"component_groups": ["lila:giant"]}, "remove": {"component_groups": ["lila:giant_mega"]}}
     e["events"]["lila:bat_on"] = {"add": {"component_groups": ["lila:bat"]}, "remove": {"component_groups": ["lila:giant"]}}
     e["events"]["lila:bat_off"] = {"remove": {"component_groups": ["lila:bat"]}}
     wjson(os.path.join(BP, "entities", "player.json"), bp)
@@ -138,7 +146,8 @@ def player_overrides(BP, RP, wjson):
              {"lila_wing_flap": f"{wings} && (q.property('lila:fly') || (!q.is_on_ground && q.vertical_speed > -0.2))"},
              {"lila_wing_glide": f"{wings} && !q.is_on_ground && !q.property('lila:fly') && q.vertical_speed <= -0.2"},
              {"lila_wing_grow": "q.property('lila:race') == 3 || q.property('lila:race') == 4"},
-             {"lila_halo": wings}, {"lila_cape": "q.property('lila:race') == 1"}, {"lila_bat": "q.property('lila:bat')"}]
+             {"lila_halo": wings}, {"lila_cape": "q.property('lila:race') == 1"}, {"lila_bat": "q.property('lila:bat')"},
+             {"lila_eyecam": "q.property('lila:eyecam') && q.is_local_player"}]
     for pose in POSES[1:]:
         anim.append({f"lila_pose_{pose}": f"q.property('lila:pose') == '{pose}'"})
     # some com o jogador na forma de morcego e mostra o morcego
@@ -155,6 +164,44 @@ def player_overrides(BP, RP, wjson):
     for key in list(ATTACH) + ["lila_vbat"]:
         rcs[f"controller.render.{key}"] = {"geometry": f"Geometry.{key}", "materials": [{"*": "Material.lila_glow"}], "textures": [f"Texture.{key}"]}
     wjson(os.path.join(RP, "render_controllers", "lila_race.render_controllers.json"), {"format_version": "1.8.0", "render_controllers": rcs})
+    giant_camera(BP, wjson)
+    hud_ui(RP, wjson)
+
+
+GIANT_EYE_BASE = 5.7  # igual a passives.js (olhos 1,62 → 7,3 no gigante de escala 4,5)
+
+
+def giant_camera(BP, wjson):
+    """Câmera do gigante: follow_orbit com o raio mínimo (0,1) = quase dentro dos olhos, apoio no alto."""
+    wjson(os.path.join(BP, "cameras", "presets", "lila_giant_eye.json"), {
+        "format_version": "1.21.50",
+        "minecraft:camera_preset": {"identifier": "lila:giant_eye", "inherit_from": "minecraft:follow_orbit", "radius": 0.1,
+                                    "entity_offset": [0, GIANT_EYE_BASE, 0], "view_offset": [0, 0], "player_effects": True, "listener": "player"}})
+
+
+HUD_MARK = "HKD:"
+
+
+def hud_ui(RP, wjson):
+    """Painel de poderes no canto direito (meio transparente). O texto vem pelo canal do título com o
+    marcador HKD:; com o marcador o título normal some e aparece o painel."""
+    raw = {"binding_name": "#hud_title_text_string", "binding_name_override": "#lila_raw", "binding_type": "global"}
+    has = f"(not ((#lila_raw - '{HUD_MARK}') = #lila_raw))"
+    wjson(os.path.join(RP, "ui", "hud_screen.json"), {
+        "namespace": "hud",
+        "hud_title_text": {"bindings": [raw, {"binding_type": "view", "source_property_name": f"(not {has})", "target_property_name": "#visible"}]},
+        "lila_powers_panel": {
+            "type": "panel", "anchor_from": "right_middle", "anchor_to": "right_middle", "size": [128, "100%c"], "offset": [-2, -10], "layer": 40,
+            "bindings": [raw, {"binding_type": "view", "source_property_name": f"({has} and (not ((#lila_raw - '{HUD_MARK}') = '')))", "target_property_name": "#visible"}],
+            "controls": [{"lila_bg": {
+                "type": "image", "texture": "textures/ui/hud_tip_text_background", "alpha": 0.5, "size": ["100%", "100%c + 8px"],
+                "anchor_from": "top_left", "anchor_to": "top_left", "layer": 1,
+                "controls": [{"lila_txt": {
+                    "type": "label", "anchor_from": "top_left", "anchor_to": "top_left", "offset": [5, 4], "size": ["100% - 10px", "default"],
+                    "text": "#lila_txt", "color": [1, 1, 1], "alpha": 0.95, "shadow": True, "localize": False, "font_scale_factor": 0.8, "layer": 2,
+                    "bindings": [raw, {"binding_type": "view", "source_property_name": f"(#lila_raw - '{HUD_MARK}')", "target_property_name": "#lila_txt"}]}}]}}]},
+        "root_panel": {"modifications": [{"array_name": "controls", "operation": "insert_back", "value": [{"lila_powers@hud.lila_powers_panel": {}}]}]},
+    })
 
 
 def build_models(RP, wjson, wpng, bake, render, preview_dir, previews):
@@ -544,7 +591,23 @@ def _badge(d, k, c, x, y, r):
         d.polygon([(x, y - r), (x + r * 0.3, y - r * 0.3), (x + r, y), (x + r * 0.3, y + r * 0.3), (x, y + r), (x - r * 0.3, y + r * 0.3), (x - r, y), (x - r * 0.3, y - r * 0.3)], fill=c)
 
 
-def build_icons(RP, wpng, preview_dir, previews):
+SIG_GLYPH = {
+    "v_mist": "vortex", "v_hypno": "mark", "v_bats": "summon", "v_feast": "nova", "v_bloodmoon": "aura", "v_wolves": "summon", "v_claws": "chain",
+    "v_shadowstep": "blink", "v_coffin": "dome", "v_lance": "proj",
+    "g_quake": "wave", "g_boulder": "lob", "g_stomp": "nova", "g_hurl": "throw", "g_wall": "wall", "g_frost": "cone", "g_muspel": "cross", "g_roar": "wave",
+    "g_titan": "aura", "g_spikes": "pillar",
+    "a_judgment": "pillar", "a_flamesword": "cone", "a_trumpet": "wave", "a_wings": "dome", "a_guardian": "aura", "a_sanctuary": "zone", "a_feathers": "volley",
+    "a_ascend": "leap", "a_choir": "orbit", "a_breath": "ally",
+    "d_pact": "aura", "d_possess": "mark", "d_chains": "chain", "d_hellgate": "zone", "d_brimstone": "rain", "d_hellfire": "wave", "d_damnation": "mark",
+    "d_legion": "summon", "d_wingdash": "dash", "d_archdemon": "nova",
+    "o_timestop": "vortex", "o_genesis": "bloom", "o_smite": "rain", "o_word": "nova", "o_sun": "light", "o_creation": "dome", "o_stars": "orbit",
+    "o_rewind": "recall", "o_doom": "rain", "o_breath": "ally",
+    "k_blackhole": "vortex", "k_eclipse": "aura", "k_harvest": "nova", "k_voidstep": "blink", "k_clones": "summon", "k_entropy": "mark", "k_rift": "beam",
+    "k_nightmare": "mark", "k_nullify": "zone", "k_endless": "dome",
+}
+
+
+def build_icons(RP, wpng, preview_dir, previews, atlas=None):
     data = catalog_dump()
     S = 128
     sheet = Image.new("RGBA", (20 * 34, 30 * 34), (0, 0, 0, 0))
@@ -559,10 +622,18 @@ def build_icons(RP, wpng, preview_dir, previews):
             col = tuple(int(dark[k] * (1 - t) + base[k] * 0.6 * t) for k in range(3))
             d.line([(6, y), (S - 7, y)], fill=col + (255,))
         cc = CAT_COL[a["cat"]]
-        d.rounded_rectangle((3, 3, S - 4, S - 4), radius=18, outline=cc + (255,), width=6)
+        key = a["shape"][8:] if a["shape"].startswith("special:") else ""
+        sigpow = key in SIG_GLYPH
+        if sigpow and atlas is not None:  # poder assinatura: selo da raça ao fundo + moldura dourada
+            k = RACE_ORDER.index(a["race"])
+            seal = atlas.crop((64 * k, 0, 64 * k + 64, 64)).resize((S - 12, S - 12), Image.LANCZOS)
+            tint = Image.new("RGBA", seal.size, hi + (255,))
+            tint.putalpha(seal.split()[3].point(lambda v: int(v * 0.5)))
+            img.alpha_composite(tint, (6, 6))
+        d.rounded_rectangle((3, 3, S - 4, S - 4), radius=18, outline=((255, 215, 90) if sigpow else cc) + (255,), width=8 if sigpow else 6)
         glyph = Image.new("RGBA", (S, S), (0, 0, 0, 0))
         gd = ImageDraw.Draw(glyph)
-        _glyph(gd, a["shape"], hi + (255,), S, rnd)
+        _glyph(gd, SIG_GLYPH.get(key, a["shape"]), hi + (255,), S, rnd)
         glow = glyph.filter(ImageFilter.GaussianBlur(5))
         img.alpha_composite(glow)
         img.alpha_composite(glyph)
@@ -610,4 +681,21 @@ def build_race(BP, RP, wjson, wpng, bake, render, preview_dir, previews, item_te
         wpng(os.path.join(preview_dir, "race_weapons.png"), w)
     build_items(BP, RP, wjson, wpng, bake, render, item_textures, langs)
     race_particles(RP, wjson, wpng)
-    return build_icons(RP, wpng, preview_dir, previews)
+    atlas, _ids = build_vfx(RP, wjson, wpng)
+    if previews:
+        wpng(os.path.join(preview_dir, "race_sigils.png"), _sigil_preview(atlas))
+    return build_icons(RP, wpng, preview_dir, previews, atlas)
+
+
+def _sigil_preview(atlas):
+    """Os 6 selos coloridos com a cor de cada raça sobre fundo escuro (imagem para a página)."""
+    cols = [(220, 20, 40), (190, 150, 105), (255, 230, 140), (255, 100, 20), (255, 215, 80), (150, 60, 245)]
+    out = Image.new("RGBA", (6 * 140, 150), (14, 12, 20, 255))
+    for i, c in enumerate(cols):
+        cell = atlas.crop((64 * i, 0, 64 * i + 64, 64)).resize((128, 128), Image.LANCZOS)
+        tint = Image.new("RGBA", cell.size, c + (255,))
+        tint.putalpha(cell.split()[3])
+        glow = tint.filter(ImageFilter.GaussianBlur(4))
+        out.alpha_composite(glow, (6 + 140 * i, 11))
+        out.alpha_composite(tint, (6 + 140 * i, 11))
+    return out

@@ -5,6 +5,7 @@ import { BlockPermutation, EntityDamageCause, GameMode, ItemStack, MolangVariabl
 import { BY_ID } from "./catalog.js";
 import { BAL, RACES } from "./data.js";
 import { now, saveState, stateOf } from "./state.js";
+import * as V from "./vfx.js";
 
 const ACTIVE = [];          // projéteis, zonas, órbitas, avanços, quedas... (lista curta, limitada)
 const MAX_ACTIVE = 160;
@@ -259,7 +260,7 @@ export function hitTarget(ctx, t, mult = 1) {
         try {
           if (h && !BOSSES.has(t.typeId) && h.currentValue / h.effectiveMax <= e.a / 100) {
             t.applyDamage(h.currentValue + 50, { cause: EntityDamageCause.entityAttack, damagingEntity: player });
-            fx(t.dimension, FX[race].burst, v3(t.location.x, t.location.y + 1, t.location.z));
+            V.impact(t.dimension, v3(t.location.x, t.location.y + 1, t.location.z), race, 1.6);
           }
         } catch {
           /* ignore */
@@ -285,7 +286,7 @@ export function hitTarget(ctx, t, mult = 1) {
     const steal = a.foe.find((e) => e.k === "steal") ?? a.self.find((e) => e.k === "steal");
     if (steal) heal(player, (dealt * steal.a) / 100);
     ctx.hits = (ctx.hits ?? 0) + 1;
-    fx(t.dimension, FX[race].burst, v3(t.location.x, t.location.y + 1, t.location.z));
+    V.impact(t.dimension, v3(t.location.x, t.location.y + 1, t.location.z), race, 0.8);
   } else ctx.touched = (ctx.touched ?? 0) + 1;
   return dealt;
 }
@@ -333,7 +334,8 @@ function selfEffects(ctx) {
 function impact(ctx, at, r) {
   const list = foesNear(ctx.player, at, r);
   for (const t of list) hitTarget(ctx, t);
-  fx(ctx.player.dimension, FX[ctx.race].burst, at);
+  V.impact(ctx.player.dimension, at, ctx.race, Math.min(2.2, 0.8 + r * 0.3));
+  if (r >= 2) V.ring(ctx.player.dimension, at, ctx.race, r, 0.4);
   return list.length;
 }
 function blastOf(a) {
@@ -358,7 +360,14 @@ export function ashEntity(player, t) {
 
 // ------------------------------------------------------------------ formas
 function pushActive(o) {
-  if (ACTIVE.length >= MAX_ACTIVE) ACTIVE.shift();
+  if (ACTIVE.length >= MAX_ACTIVE) {
+    const old = ACTIVE.shift();
+    try {
+      old?.cleanup?.();
+    } catch {
+      /* ignore */
+    }
+  }
   ACTIVE.push(o);
 }
 
@@ -367,7 +376,7 @@ const SHAPE = {
     const healing = ctx.a.foe.some((e) => e.k === "heal") && !ctx.a.foe.some((e) => e.k === "dmg");
     const t = aimEntity(ctx.player, ctx.a.p.r ?? 6, healing) ?? (healing ? ctx.player : undefined);
     if (!t) return "Mire numa criatura ao alcance.";
-    line(ctx.player.dimension, ctx.head, v3(t.location.x, t.location.y + 1, t.location.z), FX[ctx.race].trail, 1.5, 10);
+    V.trail(ctx.player.dimension, ctx.head, v3(t.location.x, t.location.y + 1, t.location.z), ctx.race);
     hitTarget(ctx, t);
   },
   mark(ctx) {
@@ -401,7 +410,7 @@ const SHAPE = {
     } catch {
       /* ignore */
     }
-    line(dim, ctx.head, end, FX[ctx.race].trail, 0.7, 40);
+    V.beam(dim, add(ctx.head, ctx.dir, 0.6), end, ctx.race, 0.45);
     const len = d3(ctx.head, end);
     const seen = new Set();
     for (let k = 1; k <= len; k += 1.5) {
@@ -411,7 +420,6 @@ const SHAPE = {
         hitTarget(ctx, t);
       }
     }
-    fx(dim, FX[ctx.race].burst, end);
   },
   cone(ctx) {
     const r = ctx.a.p.r ?? 6;
@@ -420,10 +428,9 @@ const SHAPE = {
       const to = flatDir(v3(t.location.x - ctx.player.location.x, 0, t.location.z - ctx.player.location.z));
       if (to.x * f.x + to.z * f.z > 0.6) hitTarget(ctx, t);
     }
-    for (let i = 1; i <= 4; i++) for (const ang of [-30, 0, 30]) {
-      const c = Math.cos((ang * Math.PI) / 180), s = Math.sin((ang * Math.PI) / 180);
-      fx(ctx.player.dimension, FX[ctx.race].trail, v3(ctx.player.location.x + (f.x * c - f.z * s) * i * r / 4, ctx.player.location.y + 1, ctx.player.location.z + (f.x * s + f.z * c) * i * r / 4));
-    }
+    const dim = ctx.player.dimension, o = ctx.player.location;
+    for (const [k, sz] of [[0.35, 1.4], [0.6, 2.0], [0.85, 2.6]]) V.slash(dim, v3(o.x + f.x * r * k, o.y + 1.1, o.z + f.z * r * k), ctx.race, sz * Math.max(1, r / 6), 200 + Math.random() * 40);
+    V.emit(dim, "lila:vfx_spark", v3(o.x + f.x * r * 0.5, o.y + 1, o.z + f.z * r * 0.5), { c: V.STYLE[ctx.race].g, n: 14, size: 1.2, grav: 2 });
   },
   pull(ctx) {
     return SHAPE.cone(ctx);
@@ -431,8 +438,11 @@ const SHAPE = {
   nova(ctx) {
     const r = ctx.a.p.r ?? 5;
     for (const t of foesNear(ctx.player, ctx.player.location, r)) hitTarget(ctx, t);
-    fx(ctx.player.dimension, FX[ctx.race].zone, ctx.player.location, { size: r });
-    fx(ctx.player.dimension, FX[ctx.race].burst, v3(ctx.player.location.x, ctx.player.location.y + 1, ctx.player.location.z));
+    const dim = ctx.player.dimension, o = ctx.player.location;
+    V.ring(dim, o, ctx.race, r, 0.5);
+    V.sigil(dim, o, ctx.race, r * 0.75, 0.7);
+    V.impact(dim, v3(o.x, o.y + 1, o.z), ctx.race, 1.5);
+    V.shake(dim, o, 0.15, 0.25, r + 6);
   },
   wave(ctx, dirOverride) {
     const f = dirOverride ?? flatDir(ctx.dir);
@@ -445,7 +455,7 @@ const SHAPE = {
   pillar(ctx) {
     const t = aimEntity(ctx.player, ctx.a.p.r ?? 16);
     const at = t ? v3(t.location.x, t.location.y, t.location.z) : aimPoint(ctx.player, ctx.a.p.r ?? 16);
-    fx(ctx.player.dimension, FX[ctx.race].zone, at, { size: 1.5 });
+    V.sigil(ctx.player.dimension, at, ctx.race, 1.8, 0.7);
     pushActive({ k: "delay", ctx, at, t: 10, r: 1.8, col: true });
   },
   rain(ctx) {
@@ -464,7 +474,9 @@ const SHAPE = {
     for (let i = 0; i < (ctx.a.p.n ?? 4) && cur; i++) {
       hit.add(cur.id);
       const to = v3(cur.location.x, cur.location.y + 1, cur.location.z);
-      line(ctx.player.dimension, from, to, FX[ctx.race].trail, 0.8, 14);
+      if (ctx.race === "demon") V.chain(ctx.player.dimension, from, to, ctx.race, 0.5);
+      else if (ctx.race === "vampire" || ctx.race === "giant" || ctx.race === "dark") V.trail(ctx.player.dimension, from, to, ctx.race, 0.5, 30);
+      else V.bolt(ctx.player.dimension, from, to, ctx.race);
       hitTarget(ctx, cur, 1 - i * 0.08);
       from = to;
       cur = foesNear(ctx.player, cur.location, 7).find((e) => !hit.has(e.id));
@@ -474,7 +486,7 @@ const SHAPE = {
     const t = aimEntity(ctx.player, ctx.a.p.r ?? 8);
     if (!t) return "Mire numa criatura para agarrar.";
     const p = ctx.player.location, f = flatDir(ctx.dir);
-    line(ctx.player.dimension, ctx.head, v3(t.location.x, t.location.y + 1, t.location.z), FX[ctx.race].trail, 0.8, 12);
+    V.chain(ctx.player.dimension, ctx.head, v3(t.location.x, t.location.y + 1, t.location.z), ctx.race, 0.35);
     try {
       t.teleport(v3(p.x + f.x * 1.6, p.y, p.z + f.z * 1.6));
     } catch {
@@ -487,6 +499,7 @@ const SHAPE = {
     if (!t) return "Ninguém perto para arremessar.";
     hitTarget(ctx, t);
     knock(t, flatDir(ctx.dir), 2.2, 1.0);
+    V.slash(ctx.player.dimension, v3(t.location.x, t.location.y + 1, t.location.z), ctx.race, 2.2, 300);
   },
   slam(ctx, big = false) {
     const f = flatDir(ctx.dir);
@@ -515,13 +528,16 @@ const SHAPE = {
       /* ignore */
     }
     const to = add(ctx.player.location, ctx.dir, dist);
-    fx(dim, FX[ctx.race].burst, v3(ctx.player.location.x, ctx.player.location.y + 1, ctx.player.location.z));
+    const from = v3(ctx.player.location.x, ctx.player.location.y + 1, ctx.player.location.z);
+    V.swirl(dim, from, ctx.race, 1.6, true);
+    V.flash(dim, from, ctx.race, 1);
     try {
       ctx.player.teleport(to, { keepVelocity: false });
     } catch {
       return "Sem espaço para teleportar.";
     }
-    fx(dim, FX[ctx.race].burst, v3(to.x, to.y + 1, to.z));
+    V.trail(dim, from, v3(to.x, to.y + 1, to.z), ctx.race, 0.6, 30);
+    V.impact(dim, v3(to.x, to.y + 1, to.z), ctx.race, 1.1);
     for (const t of foesNear(ctx.player, to, 2.5)) hitTarget(ctx, t);
   },
   swap(ctx) {
@@ -534,12 +550,12 @@ const SHAPE = {
     } catch {
       /* ignore */
     }
-    line(ctx.player.dimension, a, b, FX[ctx.race].trail, 1, 16);
+    V.bolt(ctx.player.dimension, v3(a.x, a.y + 1, a.z), v3(b.x, b.y + 1, b.z), ctx.race, 0.4);
     hitTarget(ctx, t);
   },
   tether(ctx) {
     const at = aimPoint(ctx.player, ctx.a.p.r ?? 20);
-    line(ctx.player.dimension, ctx.head, at, FX[ctx.race].trail, 1, 24);
+    V.chain(ctx.player.dimension, ctx.head, at, ctx.race, 0.8);
     const t = aimEntity(ctx.player, ctx.a.p.r ?? 20);
     if (t && ctx.a.foe.length) hitTarget(ctx, t);
     pushActive({ k: "tether", ctx, at, t: 30 });
@@ -559,7 +575,7 @@ const SHAPE = {
   trap(ctx) {
     const at = aimPoint(ctx.player, ctx.a.p.r ?? 12);
     pushActive({ k: "trap", ctx, at, until: system.currentTick + (ctx.a.p.dur ?? 200) });
-    fx(ctx.player.dimension, FX[ctx.race].zone, at, { size: 1.5 });
+    V.sigil(ctx.player.dimension, at, ctx.race, 1.3, 1);
   },
   dome(ctx) {
     const r = ctx.a.p.r ?? 3, dur = ctx.a.p.dur ?? 140;
@@ -570,6 +586,8 @@ const SHAPE = {
       if (d > r + 0.5 || d < r - 0.5) continue;
       placeTemp(dim, fxo + x, fyo + y, fzo + z, RACE_BLOCK[ctx.race], dur);
     }
+    V.dome(dim, o, ctx.race, r + 0.3);
+    V.ring(dim, o, ctx.race, r + 1, 0.5);
     for (const t of foesNear(ctx.player, o, r + 1)) hitTarget(ctx, t);
   },
   wall(ctx) {
@@ -578,6 +596,8 @@ const SHAPE = {
     for (let k = -r; k <= r; k++) for (let y = 0; y < 3; y++) {
       placeTemp(ctx.player.dimension, Math.floor(o.x + f.x * 3 + s.x * k), Math.floor(o.y) + y, Math.floor(o.z + f.z * 3 + s.z * k), RACE_BLOCK[ctx.race], dur);
     }
+    V.accent(ctx.player.dimension, add(o, f, 3), ctx.race, 14, 1.6);
+    V.ring(ctx.player.dimension, add(o, f, 3), ctx.race, r, 0.4);
     for (const t of foesNear(ctx.player, add(o, f, 3), r)) hitTarget(ctx, t);
   },
   aura(ctx) {
@@ -592,11 +612,13 @@ const SHAPE = {
     ctx.touched = n;
   },
   self(ctx) {
-    fx(ctx.player.dimension, FX[ctx.race].zone, ctx.player.location, { size: 1.2 });
+    V.sigil(ctx.player.dimension, ctx.player.location, ctx.race, 1.6, 0.9);
+    V.runes(ctx.player.dimension, ctx.player.location, ctx.race, 0.9);
   },
   ally(ctx) {
     for (const p of alliesNear(ctx.player, ctx.a.p.r ?? 8)) hitTarget({ ...ctx, a: { ...ctx.a, foe: ctx.a.foe.filter((e) => e.k !== "dmg") } }, p);
-    fx(ctx.player.dimension, FX[ctx.race].zone, ctx.player.location, { size: ctx.a.p.r ?? 8 });
+    V.ring(ctx.player.dimension, ctx.player.location, ctx.race, ctx.a.p.r ?? 8, 0.6);
+    V.runes(ctx.player.dimension, ctx.player.location, ctx.race, 1.4);
     ctx.touched = (ctx.touched ?? 0) + 1;
   },
   firetrail(ctx) {
@@ -678,7 +700,7 @@ const SHAPE = {
     }
     const dimension = sp ? sp.dimension : world.getDimension("overworld");
     const at = sp ? v3(sp.x + 0.5, sp.y, sp.z + 0.5) : world.getDefaultSpawnLocation();
-    fx(ctx.player.dimension, FX[ctx.race].burst, v3(ctx.player.location.x, ctx.player.location.y + 1, ctx.player.location.z));
+    V.pillar(ctx.player.dimension, ctx.player.location, ctx.race, 12, 1.4, 0.8);
     try {
       ctx.player.teleport(at.y > 300 ? v3(at.x, 100, at.z) : at, { dimension });
     } catch {
@@ -844,6 +866,7 @@ export function cast(player, id, o = {}) {
   lastCast.set(player.id, tick);
   const dim = player.dimension;
   LOWFX = !!s.tog.lowfx;
+  V.setLow(LOWFX);
   const ctx = { player, a, s, race: s.race, head: player.getHeadLocation(), dir: player.getViewDirection(), hits: 0, touched: 0, msg: "" };
   let err;
   try {
@@ -857,10 +880,10 @@ export function cast(player, id, o = {}) {
   s.res = Math.max(0, s.res - (o.force ? 0 : a.cost));
   s.cd[id] = t + Math.round(a.cd * 20 * BAL.cooldownScale);
   saveState(player);
-  setPose(player, poseOf(a), a.cat === "ult" ? 30 : 14);
+  setPose(player, ctx.pose ?? poseOf(a), a.cat === "ult" ? 30 : 14);
   snd(dim, FX[s.race].cast, player.location, a.cat === "ult" ? 1.2 : 0.7, a.cat === "ult" ? 0.7 : 1 + Math.random() * 0.2);
+  V.castFx(player, s.race, a.cat === "ult");
   if (a.cat === "ult") {
-    fx(dim, FX[s.race].zone, player.location, { size: 6 });
     try {
       player.camera.fade({ fadeColor: ULT_COLOR[s.race], fadeTime: { fadeInTime: 0.1, holdTime: 0.05, fadeOutTime: 0.4 } });
     } catch {
@@ -892,14 +915,23 @@ export function engineTick() {
     }
     let done = false;
     LOWFX = !!o.ctx.s?.tog?.lowfx;
+    V.setLow(LOWFX);
     try {
-      done = STEP[o.k](o, tick);
+      done = (STEP[o.k] ?? STEP_EXT[o.k])(o, tick);
     } catch {
       done = true;
     }
-    if (done) ACTIVE.splice(i, 1);
+    if (done) {
+      try {
+        o.cleanup?.();
+      } catch {
+        /* ignore */
+      }
+      ACTIVE.splice(i, 1);
+    }
   }
   LOWFX = false;
+  V.setLow(false);
   if (tick % 20 === 0) dotTick(tick);
   if (tick % 10 === 0) revealTick(tick);
   if (tick % 20 === 5) tempTick(tick);
@@ -927,7 +959,7 @@ const STEP = {
         }
         const blast = blastOf(o.ctx.a) || (o.grav ? 2.5 : 0);
         if (blast) impact(o.ctx, o.pos, blast);
-        else fx(dim, FX[o.ctx.race].burst, o.pos);
+        else V.impact(dim, o.pos, o.ctx.race, 1);
         snd(dim, FX[o.ctx.race].hit, o.pos, 0.6, 1.2);
         if (o.ret && !o.back && !blockHit && hits.length && o.dist < o.max) continue; // bumerangue atravessa
         if (o.ret && !o.back) {
@@ -947,13 +979,14 @@ const STEP = {
         o.vel = v3(((to.x - o.pos.x) / d) * sp, ((to.y - o.pos.y) / d) * sp, ((to.z - o.pos.z) / d) * sp);
       }
     }
-    fx(dim, FX[o.ctx.race].trail, o.pos);
+    V.orb(dim, o.pos, o.ctx.race, o.grav ? 0.6 : 0.42);
     return o.dist > o.max * 2.5;
   },
   wave(o) {
     o.pos = add(o.pos, o.dir, 1.5);
     o.dist += 1.5;
-    fx(o.ctx.player.dimension, FX[o.ctx.race].burst, o.pos);
+    V.ring(o.ctx.player.dimension, o.pos, o.ctx.race, 1.3, 0.3);
+    V.accent(o.ctx.player.dimension, o.pos, o.ctx.race, 3, 0.7);
     for (const t of foesNear(o.ctx.player, o.pos, 1.8)) {
       if (o.hit.has(t.id)) continue;
       o.hit.add(t.id);
@@ -962,11 +995,13 @@ const STEP = {
     return o.dist >= o.max;
   },
   delay(o) {
-    if (--o.t > 0) {
-      if (o.t % 3 === 0) fx(o.ctx.player.dimension, FX[o.ctx.race].trail, v3(o.at.x, o.at.y + 0.2, o.at.z));
-      return false;
+    if (!o.warned) {
+      o.warned = true;
+      V.sigil(o.ctx.player.dimension, o.at, o.ctx.race, o.r, o.t / 20 + 0.25);
     }
-    if (o.col) for (let y = 0; y < 5; y++) fx(o.ctx.player.dimension, FX[o.ctx.race].trail, v3(o.at.x, o.at.y + y, o.at.z));
+    if (--o.t > 0) return false;
+    if (o.col) V.pillar(o.ctx.player.dimension, o.at, o.ctx.race, 7, 1.1, 0.45);
+    else V.orb(o.ctx.player.dimension, v3(o.at.x, o.at.y + 0.5, o.at.z), o.ctx.race, 0.7);
     impact(o.ctx, o.at, o.r);
     snd(o.ctx.player.dimension, FX[o.ctx.race].hit, o.at, 0.7, 0.9);
     return true;
@@ -976,7 +1011,8 @@ const STEP = {
     if (tick - o.t0 > 6 && (p.isOnGround || tick - o.t0 > 60)) {
       const at = { ...p.location };
       impact(o.ctx, at, o.r);
-      fx(p.dimension, FX[o.ctx.race].zone, at, { size: o.r });
+      V.crack(p.dimension, at, o.r * 0.9);
+      V.emit(p.dimension, "lila:vfx_shards", at, { c: V.STYLE[o.ctx.race].c, n: 16, size: 1.2 });
       snd(p.dimension, "random.explode", at, 0.6, 1.3);
       try {
         p.dimension.runCommand(`camerashake add @a[x=${Math.floor(at.x)},y=${Math.floor(at.y)},z=${Math.floor(at.z)},r=12] 0.25 0.3 positional`);
@@ -989,7 +1025,8 @@ const STEP = {
   },
   dash(o) {
     const p = o.ctx.player;
-    fx(p.dimension, FX[o.ctx.race].trail, v3(p.location.x, p.location.y + 1, p.location.z));
+    V.orb(p.dimension, v3(p.location.x, p.location.y + 1, p.location.z), o.ctx.race, 0.7);
+    if (o.t % 3 === 0) V.slash(p.dimension, v3(p.location.x, p.location.y + 1, p.location.z), o.ctx.race, 1.4);
     for (const t of foesNear(p, p.location, 2.2)) {
       if (o.hit.has(t.id)) continue;
       o.hit.add(t.id);
@@ -1011,7 +1048,7 @@ const STEP = {
     const ang = tick * 0.35;
     for (let k = 0; k < 3; k++) {
       const a = ang + (k * Math.PI * 2) / 3;
-      fx(p.dimension, FX[o.ctx.race].trail, v3(p.location.x + Math.cos(a) * o.r, p.location.y + 1, p.location.z + Math.sin(a) * o.r));
+      V.orb(p.dimension, v3(p.location.x + Math.cos(a) * o.r, p.location.y + 1, p.location.z + Math.sin(a) * o.r), o.ctx.race, 0.36);
     }
     if (tick % 4 === 0) {
       for (const t of foesNear(p, p.location, o.r + 0.8)) {
@@ -1025,7 +1062,11 @@ const STEP = {
   zone(o, tick) {
     if (tick > o.until) return true;
     const p = o.ctx.player;
-    if (tick % 10 === 0) fx(p.dimension, FX[o.ctx.race].zone, o.at, { size: o.r });
+    if (tick % 20 === 0) V.sigil(p.dimension, o.at, o.ctx.race, o.r, 1.15, o.pullK ? 0 : 1);
+    if (tick % 10 === 5) {
+      if (o.pullK) V.swirl(p.dimension, v3(o.at.x, o.at.y + 0.8, o.at.z), o.ctx.race, o.r, true);
+      else V.accent(p.dimension, v3(o.at.x, o.at.y + 0.4, o.at.z), o.ctx.race, 4, o.r * 0.6);
+    }
     if (o.pullK && tick % 5 === 0) {
       for (const t of foesNear(p, o.at, o.r)) {
         const d = flatDir(v3(o.at.x - t.location.x, 0, o.at.z - t.location.z));
@@ -1041,11 +1082,11 @@ const STEP = {
   },
   trap(o, tick) {
     if (tick > o.until) return true;
-    if (tick % 15 === 0) fx(o.ctx.player.dimension, FX[o.ctx.race].trail, o.at);
+    if (tick % 20 === 0) V.sigil(o.ctx.player.dimension, o.at, o.ctx.race, 1.1, 1.05);
     const t = foesNear(o.ctx.player, o.at, 1.6)[0];
     if (!t) return false;
     hitTarget(o.ctx, t);
-    fx(o.ctx.player.dimension, FX[o.ctx.race].burst, o.at);
+    V.impact(o.ctx.player.dimension, v3(o.at.x, o.at.y + 0.5, o.at.z), o.ctx.race, 1.4);
     snd(o.ctx.player.dimension, "random.click", o.at, 0.8, 0.6);
     return true;
   },
@@ -1058,7 +1099,7 @@ const STEP = {
     const d = d3(o.pos, goal) || 1;
     const sp = Math.min(d, 0.9);
     o.pos = add(o.pos, v3((goal.x - o.pos.x) / d, (goal.y - o.pos.y) / d, (goal.z - o.pos.z) / d), sp);
-    if (tick % 2 === 0) fx(p.dimension, FX[o.ctx.race].trail, o.pos);
+    V.orb(p.dimension, o.pos, o.ctx.race, 0.5);
     if (tgt && d < 1.6 && tick >= o.cd) {
       o.cd = tick + 20;
       hitTarget(o.ctx, tgt);
@@ -1074,7 +1115,7 @@ const STEP = {
     }
     if (tick % 10 === 0) {
       for (const pt of o.pts) {
-        fx(p.dimension, FX[o.ctx.race].trail, v3(pt.x, pt.y + 0.2, pt.z));
+        V.accent(p.dimension, v3(pt.x, pt.y + 0.3, pt.z), o.ctx.race, 3, 0.5);
         for (const t of foesNear(p, pt, 1.6)) hitTarget(o.ctx, t);
       }
     }
@@ -1127,7 +1168,9 @@ function dotTick(tick) {
     }
     try {
       d.e.applyDamage(d.dmg, { cause: EntityDamageCause.magic, damagingEntity: d.owner?.isValid ? d.owner : undefined });
-      fx(d.e.dimension, d.kind === "bleed" ? "lila:rc_vampire_burst" : "lila:rc_dark_trail", v3(d.e.location.x, d.e.location.y + 1, d.e.location.z));
+      const at = v3(d.e.location.x, d.e.location.y + 1, d.e.location.z);
+      if (d.kind === "bleed") V.emit(d.e.dimension, "lila:vfx_drops", at, { c: [0.7, 0.02, 0.06], n: 5, size: 0.6 });
+      else V.emit(d.e.dimension, "lila:vfx_smoke", at, { c: [0.12, 0.05, 0.16], n: 3, size: 0.6 });
     } catch {
       DOTS.delete(id);
     }
@@ -1169,6 +1212,19 @@ function tempTick(tick) {
 
 /** Para o autoteste: quantas ações em andamento de um poder. */
 export const activeOf = (id) => ACTIVE.filter((x) => x.ctx?.a?.id === id).length;
-export const clearActive = () => ACTIVE.splice(0, ACTIVE.length);
+export const clearActive = () => {
+  for (const o of ACTIVE) {
+    try {
+      o.cleanup?.();
+    } catch {
+      /* ignore */
+    }
+  }
+  ACTIVE.splice(0, ACTIVE.length);
+};
+/** Passos extras (poderes assinatura registram aqui). */
+export const STEP_EXT = {};
+/** Ferramentas do motor para os poderes assinatura. */
+export const KIT = { foesNear, alliesNear, aimEntity, aimPoint, eff, knock, pushActive, placeTemp, snd, hp, isUndead, BOSSES, flatDir, add, d3, v3, selfEffects };
 export const BLOCK_OK = (id) => !UNBREAKABLE.test(id);
 export { BlockPermutation };

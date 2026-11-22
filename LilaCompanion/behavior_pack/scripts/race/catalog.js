@@ -40,6 +40,7 @@ import angel from "./kits/angel.js";
 import demon from "./kits/demon.js";
 import god from "./kits/god.js";
 import dark from "./kits/dark.js";
+import { SIG_KEYS, SIG_TEXT } from "./sigtext.js";
 
 export const RACE_KITS = { vampire, giant, angel, demon, god, dark };
 export const CATEGORIES = { pas: "Passiva", mov: "Movimento", off: "Ataque", def: "Defesa", uti: "Utilidade", sup: "Apoio", ctl: "Controle",
@@ -47,7 +48,7 @@ export const CATEGORIES = { pas: "Passiva", mov: "Movimento", off: "Ataque", def
 export const SHAPES = ["target", "proj", "volley", "lob", "boomerang", "beam", "cone", "nova", "wave", "cross", "pillar", "rain", "chain", "grab", "throw",
   "slam", "leapslam", "dash", "leap", "blink", "swap", "tether", "orbit", "zone", "vortex", "trap", "dome", "wall", "aura", "summon", "self", "ally",
   "mark", "firetrail", "scan", "orescan", "vacuum", "bridge", "platform", "light", "dig", "clear", "ashclear", "recall", "calm", "smelt", "trade", "bloom", "pull"];
-export const SPECIALS = ["bat", "drain", "sprint5x", "superjump", "flight", "weapon"];
+export const SPECIALS = ["bat", "drain", "sprint5x", "superjump", "flight", "weapon", ...SIG_KEYS];
 export const PASSIVES = ["nv", "nightdmg", "lifesteal", "killheal", "nofall", "dodge", "lowhpres", "sprint", "giantstep", "giantstr", "giantres", "giantmine",
   "fallslam", "kbres", "ragedmg", "critkb", "fireimm", "halo", "winggrowth", "regenrace", "dayregen", "holyhit", "poisonimm", "burnhit", "lavaswim",
   "witherhit", "fearaura"];
@@ -92,6 +93,7 @@ function build() {
       };
       a.special = shape.startsWith("special:") ? shape.slice(8) : null;
       a.passive = shape.startsWith("passive:") ? shape.slice(8) : null;
+      a.sigpow = !!a.special && !!SIG_TEXT[a.special]; // poder assinatura (código próprio)
       a.mode = a.passive ? "passiva" : a.p.toggle ? "alternar" : a.special === "drain" ? "segurar" : ["target", "grab", "throw", "swap", "mark", "chain"].includes(shape) ? "alvo"
         : ["zone", "orbit", "vortex", "aura", "summon", "trap", "dome", "wall"].includes(shape) ? "duração" : "instantâneo";
       // assinatura de comportamento: forma + efeitos (sem números) + marcas especiais
@@ -127,7 +129,7 @@ const SHAPE_WORDS = {
 
 function describe(a) {
   if (a.passive) return `Passiva: ${PASSIVE_TEXT[a.passive] ?? a.passive}.`;
-  if (a.special) return SPECIAL_TEXT[a.special] ?? a.special;
+  if (a.special) return SPECIAL_TEXT[a.special] ?? SIG_TEXT[a.special] ?? a.special;
   const parts = [...a.foe, ...a.self].filter((e) => FX_WORDS[e.k]).map((e) => FX_WORDS[e.k](e));
   const reach = a.p.r ? ` · ${a.p.r} blocos` : "";
   const n = a.p.n ? ` · ${a.p.n}×` : "";

@@ -33,7 +33,8 @@ system.afterEvents.scriptEventReceive.subscribe((ev) => {
       } else if (act === "look") {
         const [x, y, z] = target.split(",").map(Number);
         p.lookAtLocation({ x, y, z });
-      } else if (act === "use") p.useItemInSlot(p.selectedSlotIndex);
+      } else if (act === "slot") p.selectedSlotIndex = Number(target);
+      else if (act === "use") p.useItemInSlot(p.selectedSlotIndex);
       else if (act === "stopuse") p.stopUsingItem();
       else if (act === "sneak") {
         // agachar (o jogo desmonta de veículos assim)
