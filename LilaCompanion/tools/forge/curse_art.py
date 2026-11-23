@@ -281,3 +281,81 @@ def curse_icon():
     """Ícone do item Maldição: a cabeça com a boca de dentes e os tentáculos (só a cabeça)."""
     m = curse_model("geometry.lila.curse_icon")
     return m
+
+
+# ================================================================ SOLDADO DE SOMBRA (exército)
+# Mesmos ossos e pivôs do antigo robô-soldado (as animações de andar/golpear/curar continuam valendo),
+# mas o corpo é uma sombra: tronco magro e curvado, cabeça alongada com chifres de fumaça, boca com
+# dentes, olhos acesos na cor do tipo, braços compridos com garras e pernas que viram fumaça.
+SHADOW_KINDS = ["soldado", "construtor", "artilheiro", "medico", "ninja"]
+SHADOW_EYES = {
+    "soldado": ((255, 118, 36), (255, 214, 160)),
+    "construtor": ((255, 196, 50), (255, 244, 190)),
+    "artilheiro": ((255, 52, 44), (255, 196, 180)),
+    "medico": ((70, 255, 130), (210, 255, 225)),
+    "ninja": ((186, 76, 255), (240, 214, 255)),
+}
+
+
+def _glow(c, c2, seed):
+    return Paint("glow", c, c2, seed=seed, params={"no_nano": True})
+
+
+def shadow_soldier_model(kind="soldado"):
+    eye = _glow(*SHADOW_EYES[kind], 300)
+    m = Model("geometry.lila.robot", 128, 128, density=4, bounds=(2.4, 3.2, (0, 1.2, 0)))
+    root = m.bone("root", pivot=(0, 0, 0))
+    root.locators = {"muzzle": (-7, 8, -3)}
+    waist = m.bone("waist", "root", pivot=(0, 12, 0))
+    body = m.bone("body", "waist", pivot=(0, 24, 0))
+    body.box((0, 20, 0.6), (9, 10, 5), P(seed=301))                      # tronco
+    body.box((0, 24.6, 0.6), (11.5, 2, 5.4), P(RIDGE, RIDGE_HI, seed=302))  # ombros curvados
+    for k, y in enumerate((22.5, 20.5, 18.5)):                           # costelas
+        body.box((0, y, -2.0), (7 - k, 0.6, 0.7), P(RIDGE, RIDGE_HI, seed=303 + k))
+    for k, y in enumerate((23, 20, 17)):                                 # espinha
+        body.box((0, y, 3.4), (1.6, 1.6, 1.2), P(RIDGE, RIDGE_HI, seed=306 + k))
+    body.box((0, 14, 0.6), (6, 4, 4), P(SMOKE, SMOKE_HI, seed=309))      # cintura de fumaça
+    body.box((0, 21, -2.45), (1.6, 1.6, 0.3), eye)                       # brasa no peito
+    jet = m.bone("jet", "body", pivot=(0, 15, 4.5))                      # capa rasgada de fumaça
+    jet.box((-2, 12, 3.6), (3, 11, 0.8), P(SMOKE, SMOKE_HI, seed=310))
+    jet.box((2, 11, 3.6), (3, 13, 0.8), P(SMOKE, SMOKE_HI, seed=311))
+    head = m.bone("head", "body", pivot=(0, 25, 0))
+    head.box((0, 29.2, -0.6), (6, 7.4, 6.6), P(seed=312))                # crânio alongado
+    head.box((0, 33.4, 0.6), (4, 1.8, 5), P(RIDGE, RIDGE_HI, seed=313))  # crista
+    head.box((0, 27.1, -3.7), (5, 2.4, 0.6), mouth_paint())               # boca
+    head.box((0, 28.0, -4.05), (4.4, 0.8, 0.3), tooth_paint(314))         # dentes de cima
+    head.box((0, 26.3, -4.05), (4.0, 0.7, 0.3), tooth_paint(315))         # dentes de baixo
+    head.box((-1.6, 30.6, -3.95), (1.5, 0.7, 0.3), eye)                   # olhos acesos
+    head.box((1.6, 30.6, -3.95), (1.5, 0.7, 0.3), eye)
+    for s in (-1, 1):                                                    # chifres de fumaça
+        head.box((s * 1.6, 35.6, 0), (1.2, 4.2, 1.2), P(RIDGE, RIDGE_HI, seed=316), rotation=(0, 0, -s * 24), pivot=(s * 1.6, 33.6, 0))
+        head.box((s * 2.4, 34.2, 2.2), (1.0, 3.6, 1.0), P(seed=317), rotation=(-34, 0, -s * 14), pivot=(s * 2.4, 32.6, 2.2))
+    # acessórios (um por tipo; o render controller mostra só o do tipo)
+    hat = m.bone("hat", "head", pivot=(0, 33, 0))                        # construtor: coroa de chifres
+    hat.box((0, 33.4, -0.4), (7, 1.2, 7), P(RIDGE, RIDGE_HI, seed=318))
+    for x in (-2.6, 0, 2.6):
+        hat.box((x, 35.2, -3.4), (1, 2.6, 1), eye)
+    cannon = m.bone("cannon", "body", pivot=(4, 25, 1))                   # artilheiro: orbe de brasa no ombro
+    cannon.box((5.6, 27.6, 0.6), (3.6, 3.6, 3.6), P(SMOKE, SMOKE_HI, seed=319))
+    cannon.box((5.6, 27.6, -1.3), (1.8, 1.8, 0.4), eye)
+    medkit = m.bone("medkit", "body", pivot=(0, 22, 5))                   # médico: lanterna de alma nas costas
+    medkit.box((0, 22, 5.4), (3.4, 4.4, 2.6), P(RIDGE, RIDGE_HI, seed=320))
+    medkit.box((0, 22, 6.85), (2.2, 2.8, 0.4), eye)
+    katana = m.bone("katana", "body", pivot=(0, 22, 4))                   # ninja: lâmina negra nas costas
+    katana.box((0, 22, 5.2), (0.8, 16, 1.2), P(SMOKE, SMOKE_HI, seed=321), rotation=(0, 0, 38), pivot=(0, 22, 5.2))
+    katana.box((0, 22, 5.2), (0.3, 15, 1.3), eye, rotation=(0, 0, 38), pivot=(0, 22, 5.2))
+    for name, s, px in (("rightArm", -1, -6), ("leftArm", 1, 6)):         # braços compridos com garras
+        a = m.bone(name, "body", pivot=(px, 24, 0))
+        a.box((s * 7, 20, 0.2), (3, 8.4, 3), P(seed=322))
+        a.box((s * 7.3, 13, -0.4), (2.6, 7, 2.6), P(seed=323))
+        a.box((s * 7.3, 8.6, -0.8), (3.2, 2.4, 3.2), P(CLAW, CLAW_HI, seed=324))
+        for k, dx in enumerate((-1, 0, 1)):
+            a.box((s * 7.3 + dx, 6.4, -1.9 + abs(dx) * 0.2), (0.7, 2.6, 0.7), P(CLAW, CLAW_HI, seed=325 + k))
+    for name, x in (("rightLeg", -2.5), ("leftLeg", 2.5)):                # pernas virando fumaça
+        lg = m.bone(name, "waist", pivot=(x, 12, 0))
+        lg.box((x, 8.6, 0), (3.6, 7, 3.6), P(SMOKE, SMOKE_HI, seed=328))
+        lg.box((x, 3.4, 0.3), (2.8, 4.4, 2.8), P(SMOKE, SMOKE_HI, seed=329))
+        lg.box((x, 0.7, 0.6), (2, 1.4, 2), P(SMOKE, SMOKE_HI, seed=330))
+        lg.box((x + (1.9 if x > 0 else -1.9), 2.2, 1.0), (0.8, 0.8, 0.8), P(SMOKE, SMOKE_HI, seed=331))
+        lg.box((x + (1.2 if x > 0 else -1.2), 0.6, -1.4), (0.6, 0.6, 0.6), P(SMOKE, SMOKE_HI, seed=332))
+    return m

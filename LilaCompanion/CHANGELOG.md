@@ -1,5 +1,22 @@
 # Changelog
 
+## 3.3.1 — A Maldição aparece de verdade + caça de bugs
+- **Corrigido: a Maldição não aparecia, só a fumaça.** Uma regra antiga (dos nanorrobôs) escondia todo o corpo
+  na forma normal. Agora o modelo inteiro aparece: cabeça, tentáculos, boca, braços e a base de fumaça.
+- **Corrigido: fumaça infinita.** Os efeitos da Maldição criavam emissores que nunca acabavam: a cada 2 s
+  nascia uma nuvem nova e elas se acumulavam, cobrindo tudo e pesando o jogo. As brasas da forma de fumaça
+  também ficavam presas no chão para sempre. Agora cada efeito dura 2 s e é renovado, sem acumular.
+- **Desligar = adormecer**: ela afunda na terra e some; ao ligar, sai do chão devagar (antes era o
+  montinho de nanorrobôs).
+- **Exército de sombras de verdade**: os soldados não são mais robôs com chapéu. São sombras pretas,
+  com cabeça alongada, chifres de fumaça, boca com dentes, olhos acesos na cor do tipo, braços com garras
+  e pernas que viram fumaça. A Maldição se desfaz animada antes de virar soldados.
+- Sem zumbido de abelha (som dos nanorrobôs): agora é sopro de fumaça e grito fantasma.
+- Textos que ainda falavam de robô, drone, nanorrobô, laser e canhão foram trocados.
+- Caixa de visão maior (a gigante não some da tela quando você está em cima dela).
+- Validador novo: confere que toda forma aparece no jogo e que nenhum efeito fica infinito.
+- Testes no servidor oficial 1.26.65.1: %%TESTS%%.
+
 ## 3.3.0 — A MALDIÇÃO (o drone de nanorrobôs virou um espírito amaldiçoado de fumaça) + escolha livre da raça
 - **A Maldição**: modelo 3D novo feito a partir da sua folha de referência (voxel preto e cinza-escuro):
   - cabeça alongada com sulcos e 9 tentáculos;

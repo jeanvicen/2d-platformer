@@ -31,11 +31,11 @@ from forge import drone_art  # noqa: E402
 from forge.drone_anims import DRONE_ACTIONS, drone_anims, drone_controllers, power_pose  # noqa: E402
 from forge.forms_art import FORMS as FORM_MODELS  # noqa: E402
 from forge.forms_art2 import FORMS2  # noqa: E402
-from forge.colossus_art import ROBOT_KINDS, colossus_model, robot_model  # noqa: E402
+from forge.colossus_art import ROBOT_KINDS, colossus_model  # noqa: E402
 from forge.forms_anims import (FORM_IDS, INITIALIZE, PRE_ANIMATION, ROBOT_ACTIONS, form_anims, form_controllers,  # noqa: E402
                                robot_anims, robot_controllers)
 from forge.audio import build_sounds  # noqa: E402
-from forge.curse_art import curse_model  # noqa: E402
+from forge.curse_art import curse_model, shadow_soldier_model  # noqa: E402
 from forge.curse_anims import ACTIONS as CURSE_ACTIONS, action_anims, action_controller, life_anims, sample_pose  # noqa: E402
 from forge.curse_fx import curse_particles  # noqa: E402
 from forge.render import render  # noqa: E402
@@ -442,14 +442,15 @@ def build_drone(previews):
 
 # ============================================================ robô-soldado (modo exército)
 def build_robot(previews):
-    m = robot_model()
+    # 3.3.1: o exército é de SOMBRAS — mesmo esqueleto do antigo robô, corpo de fumaça (curse_art)
+    m = shadow_soldier_model()
     wjson(os.path.join(RP, "models", "entity", "lila", "robot.geo.json"), m.to_json())
     tex = bake(m)
     wpng(os.path.join(RP, "textures", "entity", "lila", "robot.png"), tex)
     kind_tex = {"soldado": tex}
     NANO["chroma"] = 0.42  # os 5 tipos continuam com a cor de cada um (feitos de nanorrobôs)
     for kind in ROBOT_KINDS[1:]:
-        mk = robot_model(kind)
+        mk = shadow_soldier_model(kind)
         assert [(c.origin, c.size) for b in mk.bones for c in b.cubes] == [(c.origin, c.size) for b in m.bones for c in b.cubes]
         kind_tex[kind] = bake(mk)
         wpng(os.path.join(RP, "textures", "entity", "lila", f"robot_{kind}.png"), kind_tex[kind])
@@ -536,7 +537,7 @@ def build_robot(previews):
         wpng(os.path.join(PREVIEW_DIR, "robot.png"), render(m, tex, size=420, yaw=-30, pitch=8, outline=True))
         acc = {"construtor": "hat", "artilheiro": "cannon", "medico": "medkit", "ninja": "katana"}
         for kind in ROBOT_KINDS:
-            mk = robot_model(kind)
+            mk = shadow_soldier_model(kind)
             bake(mk)  # atribui as UVs (mesmo layout da textura do tipo)
             hide = [b for b in ("hat", "cannon", "medkit", "katana") if b != acc.get(kind)]
             for b in mk.bones:
