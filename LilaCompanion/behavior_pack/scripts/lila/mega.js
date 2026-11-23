@@ -59,9 +59,9 @@ function perm(id, st) {
 function* fillBox(dim, a, b, p, filter) {
   for (let x = a.x; x <= b.x; x += 16) {
     for (let z = a.z; z <= b.z; z += 16) {
-      for (let y = a.y; y <= b.y; y += 8) {
+      for (let y = a.y; y <= b.y; y += 4) { // pedaços de 16×4×16: nenhum preenchimento sozinho trava o tick
         const lo = { x, y: Math.max(y, dim.heightRange.min), z };
-        const hi = { x: Math.min(b.x, x + 15), y: Math.min(b.y, y + 7, dim.heightRange.max - 1), z: Math.min(b.z, z + 15) };
+        const hi = { x: Math.min(b.x, x + 15), y: Math.min(b.y, y + 3, dim.heightRange.max - 1), z: Math.min(b.z, z + 15) };
         if (hi.y < lo.y) continue;
         try {
           dim.fillBlocks(new BlockVolume(lo, hi), p, filter ? { blockFilter: filter } : undefined);
