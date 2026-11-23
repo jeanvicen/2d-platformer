@@ -369,15 +369,15 @@ def _emerge():
     roar = _merge({"root": {"p": (0, 0, 0)}, "neck": {"r": (-20, 0, 0)}, "head": {"r": (-28, 0, 0)}, "jaw": {"r": (66, 0, 0)},
                    "chest": {"r": (-14, 0, 0), "s": 1.05}, "arm_r": {"r": (-30, 0, -60)}, "arm_l": {"r": (-30, 0, 60)}},
                   _fingers("r", -40, 20), _fingers("l", -40, 20), _tent_flare(1.8, 0.5))
-    keys = [(0.0, deep, "sm"), (1.1, hands, "out"), (1.7, grip, "snap"), (2.4, pull1, "out"), (3.1, pull2, "out"), (3.6, roar, "back"),
-            (4.4, roar, "sm"), (4.9, {}, "sm")]
-    anim = _build(keys, 4.9, extra=_combine(
-        {"particle_effects": {"0.00": [{"effect": "curse_ground"}, {"effect": "curse_ground_smoke"}], "0.60": [{"effect": "curse_ground"}, {"effect": "curse_ground_smoke"}], "1.20": [{"effect": "curse_ground"}, {"effect": "curse_ground_smoke"}],
-                              "1.70": [{"effect": "curse_ground"}, {"effect": "curse_ground_smoke"}], "2.40": [{"effect": "curse_ground"}, {"effect": "curse_ground_smoke"}], "3.10": [{"effect": "curse_ground"}, {"effect": "curse_ground_smoke"}],
-                              "3.60": {"effect": "curse_roar", "locator": "mouth"}, "4.00": {"effect": "curse_roar", "locator": "mouth"}}},
-        _snd([0.0], "mob.warden.emerge"), _snd([1.7, 2.4, 3.1], "dig.gravel"), _snd([3.55], "mob.warden.roar")))
-    anim["bones"].setdefault("root", {})["rotation"] = ["math.sin(q.anim_time * 1500) * 1.6 * (q.anim_time < 3.4)", 0,
-                                                        "math.cos(q.anim_time * 1300) * 1.6 * (q.anim_time < 3.4)"]
+    F = 1.35  # mais devagar: ela se arrasta para fora da terra
+    keys = [(0.0, deep, "sm"), (1.1 * F, hands, "out"), (1.7 * F, grip, "snap"), (2.4 * F, pull1, "out"), (3.1 * F, pull2, "out"),
+            (3.6 * F, roar, "back"), (4.4 * F, roar, "sm"), (4.9 * F, {}, "sm")]
+    anim = _build(keys, round(4.9 * F, 2), extra=_combine(
+        {"particle_effects": {f"{t * F:.2f}": [{"effect": "curse_ground"}, {"effect": "curse_ground_smoke"}] for t in (0.0, 0.6, 1.2, 1.7, 2.4, 3.1)}},
+        {"particle_effects": {f"{3.6 * F:.2f}": {"effect": "curse_roar", "locator": "mouth"}, f"{4.0 * F:.2f}": {"effect": "curse_roar", "locator": "mouth"}}},
+        _snd([0.0], "mob.warden.emerge"), _snd([1.7 * F, 2.4 * F, 3.1 * F], "dig.gravel"), _snd([3.55 * F], "mob.warden.roar")))
+    anim["bones"].setdefault("root", {})["rotation"] = [f"math.sin(q.anim_time * 1500) * 1.6 * (q.anim_time < {3.4 * F:.2f})", 0,
+                                                        f"math.cos(q.anim_time * 1300) * 1.6 * (q.anim_time < {3.4 * F:.2f})"]
     return anim
 
 
@@ -459,14 +459,87 @@ def _flurry():
 
 
 # ids de ação (propriedade lila:cact) — o script usa os mesmos números
+
+# ================================================================== 3.4: abraço, fúria, calma, esmagar, ordem
+def _hug():
+    """Abraça o dono por trás: braços envolvendo pela frente, cabeça por cima do ombro, tentáculos caindo
+    em volta como um manto. Fica segurando (o script mantém) e respira devagar."""
+    pose = _merge({"chest": {"r": (24, 0, 0)}, "neck": {"r": (26, 0, 0)}, "head": {"r": (18, 0, 0), "p": (0, -1, -2)},
+                   "jaw": {"r": (4, 0, 0)}, "body": {"p": (0, -2, -2)},
+                   "arm_r": {"r": (-78, -22, 34)}, "arm_l": {"r": (-78, 22, -34)}, "fore_r": {"r": (-58, 0, 26)}, "fore_l": {"r": (-58, 0, -26)},
+                   "hand_r": {"r": (-10, 0, 20)}, "hand_l": {"r": (-10, 0, -20)}},
+                  _fingers("r", 70, 0, 40), _fingers("l", 70, 0, 40), _tent_flare(-1.2, -0.8))
+    anim = _build([(0.0, {}, "sm"), (0.5, pose, "out"), (1.0, pose, "sm")], 1.0, extra={"loop": "hold_on_last_frame"})
+    return _combine(anim, _snd([0.1], "mob.warden.heartbeat"))
+
+
+def _rage():
+    """Fora de controle: grita, bate no chão com as duas mãos, chicoteia a cabeça e varre com as garras."""
+    scream = _merge({"neck": {"r": (-26, 0, 0)}, "head": {"r": (-34, 18, 0)}, "jaw": {"r": (76, 0, 0)}, "chest": {"r": (-22, 0, 0), "s": 1.08},
+                     "arm_r": {"r": (-150, 0, -40)}, "arm_l": {"r": (-150, 0, 40)}, "fore_r": {"r": (-20, 0, 0)}, "fore_l": {"r": (-20, 0, 0)}},
+                    _fingers("r", -45, 24, -20), _fingers("l", -45, 24, -20), _tent_flare(2.0, 0.6))
+    smash = _merge({"chest": {"r": (40, 0, 0)}, "neck": {"r": (20, 0, 0)}, "head": {"r": (-10, 0, 0)}, "jaw": {"r": (50, 0, 0)},
+                    "body": {"p": (0, -4, -3)}, "arm_r": {"r": (-40, 0, -10)}, "arm_l": {"r": (-40, 0, 10)}, "fore_r": {"r": (-10, 0, 0)},
+                    "fore_l": {"r": (-10, 0, 0)}}, _fingers("r", 110), _fingers("l", 110), _tent_flare(1.4))
+    whip = _merge({"neck": {"r": (-10, -30, 20)}, "head": {"r": (-20, -36, 24)}, "jaw": {"r": (64, 0, 0)}, "chest": {"r": (-6, -24, 10)},
+                   "arm_r": {"r": (-100, -40, 60)}, "arm_l": {"r": (-30, 30, 70)}}, _fingers("r", -40, 20), _tent_flare(1.8, 0.8))
+    sweep = _merge({"neck": {"r": (-6, 30, -18)}, "head": {"r": (-16, 34, -20)}, "jaw": {"r": (60, 0, 0)}, "chest": {"r": (8, 30, -10)},
+                    "arm_r": {"r": (-40, 40, 60)}, "arm_l": {"r": (-110, 30, -70)}}, _fingers("l", -40, 20), _tent_flare(1.6, -0.4))
+    keys = [(0.0, {}, "sm"), (0.3, scream, "back"), (0.75, scream, "sm"), (0.95, smash, "snap"), (1.15, smash, "sm"),
+            (1.45, whip, "out"), (1.8, sweep, "snap"), (2.1, scream, "out"), (2.4, {}, "sm")]
+    anim = _build(keys, 2.4, extra=_combine(_fx([0.3, 2.1], "curse_roar", "mouth"), _fx([0.95], ("curse_quake", "curse_ground_smoke")),
+                                             _fx([1.8], "curse_slash", "fist_l")))
+    anim["bones"].setdefault("head", {})["position"] = ["math.sin(q.anim_time * 2600) * 0.6", 0, 0]
+    return anim
+
+
+def _calm():
+    """Volta a se acalmar: solta o ar, ombros caem, cabeça inclina e os tentáculos assentam."""
+    slump = _merge({"chest": {"r": (18, 0, 0), "s": 0.97}, "neck": {"r": (14, 0, 8)}, "head": {"r": (12, 0, 16)}, "jaw": {"r": (20, 0, 0)},
+                    "arm_r": {"r": (8, 0, -6)}, "arm_l": {"r": (8, 0, 6)}, "fore_r": {"r": (-4, 0, 0)}, "fore_l": {"r": (-4, 0, 0)},
+                    "body": {"p": (0, -2, 0)}}, _fingers("r", 30), _fingers("l", 30), _tent_flare(-1.4, -1.0))
+    keys = [(0.0, {}, "sm"), (0.6, slump, "sm"), (1.1, slump, "sm"), (1.6, {}, "sm")]
+    return _build(keys, 1.6, extra=_snd([0.1], "mob.warden.sniff"))
+
+
+def _crush():
+    """Agarra com as duas mãos, ergue acima da cabeça, esmaga e joga no chão."""
+    reach = _merge({"arm_r": {"r": (-88, 10, 20)}, "arm_l": {"r": (-88, -10, -20)}, "fore_r": {"r": (-10, 0, 0)}, "fore_l": {"r": (-10, 0, 0)},
+                    "chest": {"r": (16, 0, 0)}, "body": {"p": (0, 0, -3)}, "jaw": {"r": (30, 0, 0)}},
+                   _fingers("r", -40, 18), _fingers("l", -40, 18))
+    lift = _merge({"arm_r": {"r": (-168, 0, 14)}, "arm_l": {"r": (-168, 0, -14)}, "fore_r": {"r": (-30, 0, 0)}, "fore_l": {"r": (-30, 0, 0)},
+                   "chest": {"r": (-14, 0, 0)}, "neck": {"r": (-20, 0, 0)}, "head": {"r": (-26, 0, 0)}, "jaw": {"r": (58, 0, 0)}},
+                  _fingers("r", 115, 0, 90), _fingers("l", 115, 0, 90), _tent_flare(1.6, 0.4))
+    squeeze = _merge(lift, {"chest": {"r": (-14, 0, 0), "s": 1.06}}, _fingers("r", 130, 0, 100), _fingers("l", 130, 0, 100))
+    slam = _merge({"arm_r": {"r": (-30, 0, 10)}, "arm_l": {"r": (-30, 0, -10)}, "chest": {"r": (42, 0, 0)}, "body": {"p": (0, -4, -4)},
+                   "head": {"r": (6, 0, 0)}, "jaw": {"r": (40, 0, 0)}}, _fingers("r", 60), _fingers("l", 60), _tent_flare(1.2))
+    keys = [(0.0, {}, "sm"), (0.3, reach, "out"), (0.7, lift, "out"), (1.0, squeeze, "snap"), (1.25, squeeze, "sm"), (1.45, slam, "snap"),
+            (1.8, {}, "sm")]
+    return _build(keys, 1.8, extra=_combine(_fx([1.0], ("curse_hit", "curse_spark"), "fist_r"), _fx([1.45], ("curse_quake", "curse_ground_smoke")),
+                                            _snd([0.95], "mob.irongolem.hit"), _snd([1.42], "random.explode")))
+
+
+def _command():
+    """Ordem amaldiçoada: se inclina sobre todos, pescoço esticado, boca escancarada e braços abertos."""
+    pose = _merge({"chest": {"r": (20, 0, 0), "s": 1.05}, "neck": {"r": (-34, 0, 0), "p": (0, 1, -2)}, "head": {"r": (-22, 0, 0)},
+                   "jaw": {"r": (80, 0, 0)}, "body": {"p": (0, 2, -2)},
+                   "arm_r": {"r": (-20, -30, -96)}, "arm_l": {"r": (-20, 30, 96)}, "fore_r": {"r": (-20, 0, 0)}, "fore_l": {"r": (-20, 0, 0)}},
+                  _fingers("r", -50, 26, -30), _fingers("l", -50, 26, -30), _tent_flare(2.2, 0.8))
+    keys = [(0.0, {}, "sm"), (0.35, pose, "back"), (1.1, pose, "sm"), (1.5, {}, "sm")]
+    anim = _build(keys, 1.5, extra=_combine(_fx([0.35, 0.7], "curse_roar", "mouth")))
+    # tremedeira da voz amaldiçoada (o pescoço vibra enquanto ela dá a ordem)
+    anim["bones"].setdefault("head", {})["position"] = ["math.sin(q.anim_time * 2200) * 0.5 * (q.anim_time > 0.35 && q.anim_time < 1.1)", 0, 0]
+    return anim
+
 ACTIONS = ["none", "punch_r", "punch_l", "claw", "slam", "grab", "bite", "roar", "guard", "emerge", "sink", "dissolve", "reform",
-           "uppercut", "throw", "devour", "flurry"]
+           "uppercut", "throw", "devour", "flurry", "hug", "rage", "calm", "crush", "command"]
 
 
 def action_anims():
     fns = {"punch_r": lambda: _punch("r"), "punch_l": lambda: _punch("l"), "claw": _claw, "slam": _slam, "grab": _grab, "bite": _bite,
            "roar": _roar, "guard": _guard, "emerge": _emerge, "sink": _sink, "dissolve": _dissolve, "reform": _reform,
-           "uppercut": _uppercut, "throw": _throw, "devour": _devour, "flurry": _flurry}
+           "uppercut": _uppercut, "throw": _throw, "devour": _devour, "flurry": _flurry,
+           "hug": _hug, "rage": _rage, "calm": _calm, "crush": _crush, "command": _command}
     return {f"ca_{k}": (f"animation.lila.curse.{k}", fns[k]()) for k in ACTIONS[1:]}
 
 

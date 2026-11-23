@@ -1,5 +1,6 @@
 // Menu do Controle do Hacknd: ordem por texto + botões (formas, colosso, torreta, exército,
 // megaconstruções, biomas, itens infinitos, kit de força...). "Cancelar" sempre volta ao normal.
+import { crushFoe, curseHealSolo, devastatingScream, hugNow, orderFall, orderFreeze, startRage, summonKatana } from "../lila/devotion.js";
 import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
 import { BLUEPRINTS } from "../lib/blueprints.js";
 import { BIOMES, CREATIVE_ITEMS, FORM_NAMES, MEGA, SWARM_SHAPES } from "../lib/catalog.js";
@@ -96,11 +97,19 @@ export async function openController(player) {
           ? `§7A maldição está se refazendo. Volta em §e${Math.ceil(c.rec.defeat.left / 20)}s§7.`
           : "§fA §5Maldição§f é um espírito de §8fumaça preta§f do tamanho de um wither, com uma boca cheia de dentes, braços longos com garras e tentáculos. Ela §csai do chão§f quando você invoca e §8afunda na terra§f quando vai embora. Luta §lsó no braço§r§f (socos, garras, pancadas, mordidas), te protege, te dá §8asas de fumaça§f, te transforma em §8fumaça§f (voa e atravessa tudo), cobre tudo de §8névoa§f, vira um §8exército de sombras§f, fica §5GIGANTE§f e ainda constrói §emais de 4800 construções§f.")
         .button("§l§5Invocar a Maldição", I.drone)
+        .button("§5§lKatana da Maldição§r\n§8sai da boca dela, sem invocar", I.protect)
+        .button("§5Virar fumaça§r\n§8voa e atravessa tudo (sem invocar)", I.swarm)
+        .button("§dCura da Maldição§r\n§8regenera você (recarga 60 s)", I.stay)
+        .button("§5«NÃO SE MEXAM»§r\n§8congela os monstros em volta", I.colossus)
         .button("Como funciona", I.info);
       const r = await show(player, f);
       if (!r || r.canceled) return;
       if (r.selection === 0) summon(c, player);
-      else if (r.selection === 1) await help(player);
+      else if (r.selection === 1) summonKatana(player);
+      else if (r.selection === 2) setSmokeForm(player, true);
+      else if (r.selection === 3) curseHealSolo(player);
+      else if (r.selection === 4) orderFreeze(undefined, player);
+      else if (r.selection === 5) await help(player);
       return;
     }
     if (c.rec.off) {
@@ -180,6 +189,12 @@ async function combatMenu(player) {
     ["§lRugido (medo em volta)", I.colossus, () => curseRoar(c)],
     ["§lDevorar (suga e engole)", I.sweep, () => curseDevour(c)],
     ["§lGuarda: me cobrir com os braços", I.stay, () => curseGuard(c, 100)],
+    ["§5§l«NÃO SE MEXAM»§r\n§8ordem amaldiçoada: congela tudo em volta", I.colossus, () => orderFreeze(c, player)],
+    ["§5§l«CAIAM»§r\n§8ordem amaldiçoada: esmaga tudo contra o chão", I.flatten, () => orderFall(c, player)],
+    ["§4§lGrito devastador§r\n§8um cone de energia sai da boca dela", I.protect, () => devastatingScream(c)],
+    ["§4§lEsmagar§r\n§8agarra, ergue, esmaga e joga no chão", I.protect, () => crushFoe(c)],
+    ["§d§lAbraço§r\n§8ela te abraça por trás e te cura", I.stay, () => hugNow(c, 10)],
+    ["§4§lFÚRIA§r\n§8fora de controle: cresce e destrói tudo em volta", I.colossus, () => startRage(c, 20)],
     ["Voltar", I.back, () => openController(player)],
   ];
   for (const [t, icon] of b) f.button(t, icon);

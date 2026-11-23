@@ -1,6 +1,7 @@
 entity.lila:drone.name=Maldição
 entity.lila:robot.name=Soldado de Sombra
 item.lila.drone_controller.name=Maldição (invocar / comandar)
+item.lila.curse_katana.name=§5Katana da Maldição
 action.interact.lila.ride=Subir
 action.interact.lila.talk=Conversar
 item.lila.nano_sword.name=Espada de Sombra

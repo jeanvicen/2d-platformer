@@ -39,7 +39,7 @@ export function clearLine(dim, a, b, slack = 1.5) {
 export function steer(c, to, speed) {
   const e = c.entity;
   if (!e?.isValid) return 0;
-  if ((c.flags.emergeUntil ?? 0) > system.currentTick || c.flags.sinking) {
+  if ((c.flags.emergeUntil ?? 0) > system.currentTick || c.flags.sinking || c.flags.hug) {
     try {
       e.clearVelocity(); // saindo do chão / afundando: não se mexe
     } catch {

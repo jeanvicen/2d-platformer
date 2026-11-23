@@ -25,6 +25,9 @@
     },
     "lila_nano_core": {
       "textures": "textures/items/lila/nano_core"
+    },
+    "lila_curse_katana": {
+      "textures": "textures/items/lila/curse_katana"
     }
   }
 }

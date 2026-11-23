@@ -10,6 +10,7 @@ import { flushHud, resetWaypoint, updateHud } from "./lila/hud.js";
 import { riddenBy, rideTick } from "./lila/drone.js";
 import { fight, markAggro } from "./lila/combat.js";
 import { curseAtmosphereTick, inSmokeForm, setSmokeForm } from "./lila/curse.js";
+import { devotionTick } from "./lila/devotion.js";
 import { exitVehicle, formOf, formTick, isRideForm, primaryAttack, releaseRiders, riders } from "./lila/forms.js";
 import { endSwarm, isCloud, isNanoItem, nanoBreak, nanoDropped, nanoHitBlock, nanoHitEntity, nanoProtects, nanoSwing, nanoUse, shieldOn, swarmTick } from "./lila/swarm.js";
 import { booting, offTick } from "./lila/power.js";
@@ -93,7 +94,10 @@ world.afterEvents.worldLoad.subscribe(() => {
       if (!c.owner() && !c.flags.test) continue; // dono offline: ele espera
       try {
         // MALDIÇÃO: cinzas no ar / névoa gigante / faíscas / forma de fumaça do dono
-        if (c.rec.summoned && system.currentTick % 2 === 0) curseAtmosphereTick(c, system.currentTick);
+        if (c.rec.summoned && system.currentTick % 2 === 0) {
+          curseAtmosphereTick(c, system.currentTick);
+          devotionTick(c, system.currentTick); // abraço quando você está quase morrendo, fúria, frases raras
+        }
         // virou veículo/titã/torreta/exército, desligou ou sumiu: recolhe ferramentas, névoa e luz
         if (c.flags.nanoActive && (!c.alive() || !isCloud(c))) endSwarm(c);
         if (armyActive(c)) {

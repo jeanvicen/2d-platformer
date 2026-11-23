@@ -90,14 +90,14 @@ def _arm(m, side):
     """side = -1 (direita, -X) ou +1 (esquerda, +X)."""
     s = "r" if side < 0 else "l"
     sx = side * SHOULDER
-    up = m.bone(f"arm_{s}", "chest", (sx, SHOULDER_Y, -1.5), rotation=(-22, 0, side * 24))
+    up = m.bone(f"arm_{s}", "chest", (sx, SHOULDER_Y, -1.5), rotation=(-14, 0, side * 40))  # 3.4: braços soltos, longe do corpo
     # deltoide enorme (ombro curvado alto) + braço grosso
     up.cube((sx - 4.4, SHOULDER_Y - 3.8, -5.9), (8.8, 8.2, 8.8), P(seed=60 + side), inflate=0.2)
     up.cube((sx - 3.6, SHOULDER_Y + 3.6, -5.0), (7.2, 1.6, 7.0), P(RIDGE, RIDGE_HI, seed=64 + side))
     up.cube((sx - 2.6, SHOULDER_Y - UPPER, -4.1), (5.2, UPPER - 2.0, 5.2), P(seed=62 + side))
     up.cube((sx - 2.9, SHOULDER_Y - UPPER * 0.6, -4.4), (5.8, 2.0, 5.8), P(RIDGE, RIDGE_HI, seed=63 + side))  # tendão
     elbow_y = SHOULDER_Y - UPPER
-    fo = m.bone(f"fore_{s}", f"arm_{s}", (sx, elbow_y, -1.5), rotation=(-10, 0, -side * 16))
+    fo = m.bone(f"fore_{s}", f"arm_{s}", (sx, elbow_y, -1.5), rotation=(-22, 0, -side * 20))
     fo.cube((sx - 3.0, elbow_y - FORE, -4.6), (6.0, FORE + 0.6, 6.2), P(seed=66 + side))
     fo.cube((sx - 3.2, elbow_y - 2.8, -4.8), (6.4, 2.6, 6.6), P(RIDGE, RIDGE_HI, seed=67 + side))          # cotovelo
     fo.cube((sx - side * 3.1 - 0.6, elbow_y - FORE * 0.8, -3.6), (1.2, FORE * 0.65, 4.0), P(RIDGE, RIDGE_HI, seed=68 + side))  # crista

@@ -104,6 +104,11 @@
         "ca_throw": "animation.lila.curse.throw",
         "ca_devour": "animation.lila.curse.devour",
         "ca_flurry": "animation.lila.curse.flurry",
+        "ca_hug": "animation.lila.curse.hug",
+        "ca_rage": "animation.lila.curse.rage",
+        "ca_calm": "animation.lila.curse.calm",
+        "ca_crush": "animation.lila.curse.crush",
+        "ca_command": "animation.lila.curse.command",
         "ctrl_swarmfx": "controller.animation.lila.swarmfx",
         "ctrl_form": "controller.animation.lila.form.action",
         "ctrl_curse": "controller.animation.lila.curse.action"
@@ -156,7 +161,9 @@
         "cs_mob_warden_dig": "mob.warden.dig",
         "cs_mob_wither_ambient": "mob.wither.ambient",
         "cs_mob_wither_break_block": "mob.wither.break_block",
-        "cs_mob_warden_sonic_charge": "mob.warden.sonic_charge"
+        "cs_mob_warden_sonic_charge": "mob.warden.sonic_charge",
+        "cs_mob_warden_heartbeat": "mob.warden.heartbeat",
+        "cs_mob_warden_sniff": "mob.warden.sniff"
       },
       "scripts": {
         "initialize": [

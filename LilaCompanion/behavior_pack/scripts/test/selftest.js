@@ -708,7 +708,7 @@ async function ownerTests(dim, check) {
   } catch {
     /* ignore */
   }
-  await system.waitTicks(105);
+  await system.waitTicks(145);
   let settled = -1;
   try {
     settled = /** @type {number} */ (c.entity?.getProperty("lila:cact") ?? -1);
@@ -717,6 +717,29 @@ async function ownerTests(dim, check) {
   }
   check("CURSE: comes out of the ground when summoned (emerge animation) and then settles", emerging === 9 && settled === 0, `start=${emerging} after=${settled}`);
   {
+    {
+      // 3.4: dono quase morrendo → ela vem pelas costas, abraça e cura; katana sem invocar
+      const { devotionTick, summonKatana } = await import("../lila/devotion.js");
+      owner.getComponent("minecraft:health")?.setCurrentValue(4);
+      for (let i = 0; i < 40; i++) {
+        devotionTick(c, system.currentTick);
+        await system.waitTicks(2);
+      }
+      const hpAfter = owner.getComponent("minecraft:health")?.currentValue ?? 0;
+      const hugAct = c.entity?.getProperty("lila:cact");
+      check("DEVOTION: owner almost dying → she hugs from behind and heals", hpAfter > 8 && (hugAct === 17 || hpAfter >= 17),
+        `hp 4->${hpAfter} cact=${hugAct}`);
+      owner.getComponent("minecraft:health")?.setCurrentValue(20);
+      for (let i = 0; i < 6; i++) {
+        devotionTick(c, system.currentTick);
+        await system.waitTicks(2);
+      }
+      const inv = owner.getComponent("minecraft:inventory")?.container;
+      summonKatana(owner);
+      let kat = false;
+      for (let i = 0; inv && i < inv.size; i++) if (inv.getItem(i)?.typeId === "lila:curse_katana") kat = true;
+      check("KATANA: the curse katana comes out without summoning", kat);
+    }
     const { setSmokeForm, setFog } = await import("../lila/curse.js");
     const gm0 = owner.getGameMode();
     setSmokeForm(owner, true);

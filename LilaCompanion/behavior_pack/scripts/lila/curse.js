@@ -12,22 +12,23 @@ import { ButtonState, EntityDamageCause, GameMode, InputButton, MolangVariableMa
 import { logError } from "../core/log.js";
 
 export const CACT = ["none", "punch_r", "punch_l", "claw", "slam", "grab", "bite", "roar", "guard", "emerge", "sink", "dissolve", "reform",
-  "uppercut", "throw", "devour", "flurry"];
+  "uppercut", "throw", "devour", "flurry", "hug", "rage", "calm", "crush", "command"];
 /** Duração de cada ação em ticks (igual às animações). */
-export const CACT_LEN = { punch_r: 13, punch_l: 13, claw: 15, slam: 20, grab: 27, bite: 15, roar: 35, guard: 0, emerge: 98, sink: 56, dissolve: 26,
-  reform: 26, uppercut: 15, throw: 19, devour: 32, flurry: 24 };
-export const SCALE = 3.4; // maldição gigante (mesma escala da forma colossus no pacote)
+export const CACT_LEN = { punch_r: 13, punch_l: 13, claw: 15, slam: 20, grab: 27, bite: 15, roar: 35, guard: 0, emerge: 133, sink: 56, dissolve: 26,
+  reform: 26, uppercut: 15, throw: 19, devour: 32, flurry: 24, hug: 0, rage: 48, calm: 32, crush: 36, command: 30 };
+export const SCALE = 4.8; // maldição gigante (mesma escala da forma colossus no pacote)
+export const BASE_SCALE = 1.8; // 3.4: a maldição normal é 1,8× (uns 8 blocos)
 
 const d3 = (a, b) => Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
 const hd = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 
 /** A forma atual é a Maldição (normal ou gigante)? */
 export const isCurseForm = (c) => !c.rec.form || c.rec.form === "drone" || c.rec.form === "colossus";
-export const curseScale = (c) => (c.rec.form === "colossus" ? SCALE : 1);
+export const curseScale = (c) => (c.rec.form === "colossus" ? SCALE : BASE_SCALE);
 
 /** Ações que não podem ser cortadas por golpes (o corpo está entrando/saindo da terra ou desfeito). */
-const LOCKED = new Set([9, 10, 11, 12]); // surgir, afundar, desfazer, remontar
-const FREE = new Set(["none", "emerge", "sink", "dissolve", "reform"]);
+const LOCKED = new Set([9, 10, 11, 12, 17]); // surgir, afundar, desfazer, remontar, abraço
+const FREE = new Set(["none", "emerge", "sink", "dissolve", "reform", "calm", "hug"]);
 /** O que está tocando agora em cada entidade: {idx, until} (until = tick em que termina). */
 const PLAYING = new Map();
 
@@ -48,6 +49,17 @@ export function cact(e, name, ticks = CACT_LEN[name]) {
     const cur = /** @type {number} */ (e.getProperty("lila:cact") ?? 0);
     if (busy && LOCKED.has(cur) && !FREE.has(name)) return;
     if (busy && pl.idx === idx && cur === idx) return;
+    if (!pl && cur === idx && name === "emerge") {
+      PLAYING.set(e.id, { idx, until: now + ticks + 1 });
+      system.runTimeout(() => {
+        try {
+          if (e.isValid && e.getProperty("lila:cact") === idx) e.setProperty("lila:cact", 0);
+        } catch {
+          /* ignore */
+        }
+      }, ticks + 1);
+      return;
+    }
     if (cur === idx && idx !== 0) {
       // repetir de propósito (já terminou): solta e reaplica no tick seguinte para recomeçar
       e.setProperty("lila:cact", 0);
@@ -116,7 +128,7 @@ export function fx(dim, id, at, vars) {
     /* fora da área carregada */
   }
 }
-function snd(dim, id, at, volume = 1, pitch = 1) {
+export function snd(dim, id, at, volume = 1, pitch = 1) {
   try {
     dim.playSound(id, at, { volume, pitch });
   } catch {
@@ -202,7 +214,7 @@ export function curseStrike(c, target, prefer) {
     for (const v of victims) {
       try {
         const p = e.location, dx = v.location.x - p.x, dz = v.location.z - p.z, l = Math.hypot(dx, dz) || 1;
-        v.applyDamage(M.dmg * dmgMul * (c.def?.strength ? c.def.strength / 8 : 1) * (k > 1 ? 3.2 : 1),
+        v.applyDamage(M.dmg * dmgMul * (c.def?.strength ? c.def.strength / 8 : 1) * (k >= 3 ? 3.2 : 1.3),
           { cause: EntityDamageCause.entityAttack, damagingEntity: e });
         v.applyKnockback({ x: (dx / l) * M.kb * Math.sqrt(k), z: (dz / l) * M.kb * Math.sqrt(k) }, M.up);
         if (M.bleed) v.addEffect("wither", 40, { amplifier: 0 });
@@ -234,7 +246,7 @@ export function curseStrike(c, target, prefer) {
   return true;
 }
 
-function areaFoes(c, at, r) {
+export function areaFoes(c, at, r) {
   const out = [];
   try {
     for (const t of c.dim().getEntities({ location: at, maxDistance: r })) {
@@ -269,7 +281,7 @@ export function faceTo(e, to) {
 export function emergeFx(c, dim, loc) {
   const e = c.entity;
   if (e?.isValid) cact(e, "emerge");
-  c.flags.emergeUntil = system.currentTick + 92;
+  c.flags.emergeUntil = system.currentTick + 126;
   const ground = { x: loc.x, y: Math.floor(loc.y) + 0.05, z: loc.z };
   for (let k = 0; k < 6; k++) {
     system.runTimeout(() => {
@@ -277,11 +289,11 @@ export function emergeFx(c, dim, loc) {
       fx(dim, "lila:curse_ground_smoke", ground);
       if (k % 2 === 0) fx(dim, "lila:vfx_crack", ground, { cr: 0.09, cg: 0.07, cb: 0.06, size: 2.2 + k * 0.5, life: 4 });
       shakeNear(dim, ground, 0.12 + k * 0.03, 0.5, 18);
-    }, k * 14);
+    }, k * 19);
   }
   snd(dim, "mob.warden.emerge", ground, 1.2, 0.8);
   snd(dim, "ambient.cave", ground, 1, 0.6);
-  system.runTimeout(() => snd(dim, "mob.warden.roar", ground, 1.2, 0.7), 72);
+  system.runTimeout(() => snd(dim, "mob.warden.roar", ground, 1.2, 0.7), 97);
   const o = c.owner();
   if (o) c.flags.embersUntil = system.currentTick + 260; // atmosfera cheia de faíscas logo ao invocar
 }

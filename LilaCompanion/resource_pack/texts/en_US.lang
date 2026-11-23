@@ -1,6 +1,7 @@
 entity.lila:drone.name=Curse
 entity.lila:robot.name=Shadow Soldier
 item.lila.drone_controller.name=Curse (summon / command)
+item.lila.curse_katana.name=§5Curse Katana
 action.interact.lila.ride=Climb on
 action.interact.lila.talk=Talk
 item.lila.nano_sword.name=Shadow Sword

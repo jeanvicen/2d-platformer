@@ -49,7 +49,7 @@ export const SPEC = {
   sub: { mode: "sub", speed: 0.8, k: 0.08, sound: "lila.engine", every: 25, vol: 0.6, pitch: 0.4 },
   colossus: { mode: "ground", speed: 0.6, accel: 0.2, colossus: true },
 };
-const SCALE = 3.4; // escala do colosso (igual ao pacote)
+const SCALE = 4.8; // escala do colosso (igual ao pacote)
 
 const yawDir = (yaw) => {
   const r = (yaw * Math.PI) / 180;

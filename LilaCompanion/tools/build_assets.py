@@ -42,7 +42,7 @@ from forge.render import render  # noqa: E402
 
 MOVES = ["none", "walk", "run", "swim", "climb", "fall", "sneak"]
 
-VERSION = [3, 3, 4]
+VERSION = [3, 4, 0]
 MIN_ENGINE = [1, 26, 30]
 SERVER_VERSION = "2.8.0"
 SERVER_UI_VERSION = "2.1.0"
@@ -64,9 +64,9 @@ GENERATED_RP = ["entity", "models", "animations", "animation_controllers", "rend
                 "particles", "textures", "texts", "sounds", "fogs", "ui"]
 
 LANGS = {
-    "en_US": {"entity.lila:drone.name": "Curse", "entity.lila:robot.name": "Shadow Soldier", "item.lila.drone_controller.name": "Curse (summon / command)",
+    "en_US": {"entity.lila:drone.name": "Curse", "entity.lila:robot.name": "Shadow Soldier", "item.lila.drone_controller.name": "Curse (summon / command)", "item.lila.curse_katana.name": "§5Curse Katana",
               "action.interact.lila.ride": "Climb on", "action.interact.lila.talk": "Talk"},
-    "pt_BR": {"entity.lila:drone.name": "Maldição", "entity.lila:robot.name": "Soldado de Sombra", "item.lila.drone_controller.name": "Maldição (invocar / comandar)",
+    "pt_BR": {"entity.lila:drone.name": "Maldição", "entity.lila:robot.name": "Soldado de Sombra", "item.lila.drone_controller.name": "Maldição (invocar / comandar)", "item.lila.curse_katana.name": "§5Katana da Maldição",
               "action.interact.lila.ride": "Subir", "action.interact.lila.talk": "Conversar"},
 }
 NANO_NAMES = {
@@ -187,7 +187,7 @@ GEO_KEY = {"drone": "default", "turret": "turret_g"}
 assert [FORM_IDS[k] for k in FORM_ORDER] == list(range(len(FORM_ORDER)))
 
 # assentos (blocos, espaço da entidade). O colosso tem escala 3.4: os assentos são em blocos reais.
-COL_SCALE = 3.4
+COL_SCALE = 4.8  # 3.4: a gigante cresceu junto com a normal
 SEATS = {
     "drone": [[0, 4.2, 0.55]],
     "heli": [[-0.4, 0.98, -1.06], [0.4, 0.98, -1.06], [-0.4, 0.98, 0.25], [0.4, 0.98, 0.25]],
@@ -207,14 +207,14 @@ SEATS = {
 }
 FORM_PHYS = {
     # (largura, altura, gravidade, escala, vida). Submarino e lancha: gravidade feita pelo script (boiam).
-    "drone": (1.6, 4.2, False, 1.0, 300),   # Maldição (~4,5 blocos, do tamanho de um wither)
+    "drone": (2.6, 7.4, False, 1.8, 400),   # Maldição (~4,5 blocos, do tamanho de um wither)
     "heli": (2.6, 2.4, False, 1.0, 400),
     "car": (2.2, 1.4, True, 1.0, 400),
     "excavator": (2.6, 3.0, True, 1.0, 500),
     "tank": (3.2, 2.2, True, 1.0, 900),
     "jet": (3.0, 1.6, False, 1.0, 400),
     "moto": (0.9, 1.3, True, 1.0, 300),
-    "colossus": (2.6, 7.6, True, COL_SCALE, 4000),
+    "colossus": (3.6, 10.6, True, COL_SCALE, 4000),
     "turret": (2.2, 3.4, True, 1.7, 1500),
     "swarm": (0.8, 0.8, False, 1.0, 300),
     "ship": (3.0, 1.6, False, 1.0, 600),
@@ -248,6 +248,11 @@ def drone_bp_entity():
               "minecraft:entity_spawned": {"add": {"component_groups": ["lila:f_drone"]}}}
     for name in FORM_ORDER:
         groups[f"lila:f_{name}"] = form_group(name)
+    # 3.4: fúria (pouca vida) — ela cresce; ao acabar, a forma normal é reaplicada (volta ao tamanho de antes)
+    groups["lila:enraged"] = {"minecraft:scale": {"value": 2.6}}
+    events["lila:enrage"] = {"add": {"component_groups": ["lila:enraged"]}}
+    events["lila:enrage_end"] = {"remove": {"component_groups": ["lila:enraged", "lila:f_drone"]}}
+    events["lila:enrage_reset"] = {"add": {"component_groups": ["lila:f_drone"]}}
     for name in FORM_ORDER:
         events[f"lila:form_{name}"] = {
             "add": {"component_groups": [f"lila:f_{name}"]},
@@ -705,6 +710,43 @@ def nano_icon(rows, seed):
     return img
 
 
+def katana_icon():
+    """Katana 32×32 em pixel art: lâmina negra com fio violeta brilhando, guarda escura com brasa e cabo
+    trançado vermelho-escuro, na diagonal (cabo embaixo à esquerda)."""
+    n = 32
+    img = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    px = img.load()
+
+    def put(x, y, c):
+        if 0 <= x < n and 0 <= y < n:
+            px[x, y] = c
+    # lâmina: de (11,20) até (29,2), levemente curva
+    for t in range(0, 19):
+        x, y = 11 + t, 20 - t
+        bend = 1 if 6 < t < 16 else 0
+        put(x, y - bend, (24, 20, 34, 255))
+        put(x + 1, y - bend, (44, 38, 60, 255))
+        put(x, y - 1 - bend, (170, 90, 255, 255) if t % 3 else (230, 190, 255, 255))   # fio
+        if t > 2:
+            put(x + 1, y + 1 - bend, (14, 12, 20, 255))
+    put(29, 1, (240, 220, 255, 255))
+    put(30, 1, (170, 90, 255, 255))
+    # guarda (tsuba) com brasa
+    for dx, dy in ((-1, -1), (0, 0), (1, 1), (-2, 0), (0, 2), (1, -1), (-1, 1), (2, 0), (0, -2)):
+        put(10 + dx, 21 + dy, (30, 26, 38, 255))
+    put(10, 21, (255, 120, 40, 255))
+    put(11, 22, (120, 60, 30, 255))
+    # cabo trançado
+    for t in range(0, 8):
+        x, y = 8 - t, 23 + t
+        put(x, y, (90, 18, 28, 255) if t % 2 else (40, 10, 16, 255))
+        put(x + 1, y, (40, 10, 16, 255) if t % 2 else (130, 30, 40, 255))
+        put(x, y + 1, (20, 6, 10, 255))
+    put(0, 31, (60, 52, 70, 255))
+    put(1, 30, (60, 52, 70, 255))
+    return img
+
+
 def build_nano(previews):
     tex = {"lila_drone_controller": {"textures": "textures/items/lila/drone_controller"}}
     digs = {
@@ -743,6 +785,18 @@ def build_nano(previews):
         wjson(os.path.join(BP, "items", f"nano_{key}.json"), {
             "format_version": ITEM_FORMAT,
             "minecraft:item": {"description": {"identifier": f"lila:nano_{key}", "menu_category": {"category": "none"}}, "components": comps}})
+    # 3.4: KATANA DA MALDIÇÃO — sai da boca da Maldição (dá para pegar sem invocar ela)
+    wpng(os.path.join(RP, "textures", "items", "lila", "curse_katana.png"), katana_icon())
+    tex["lila_curse_katana"] = {"textures": "textures/items/lila/curse_katana"}
+    wjson(os.path.join(BP, "items", "curse_katana.json"), {
+        "format_version": ITEM_FORMAT,
+        "minecraft:item": {"description": {"identifier": "lila:curse_katana", "menu_category": {"category": "equipment", "group": "minecraft:itemGroup.name.sword"}},
+                           "components": {"minecraft:icon": "lila_curse_katana", "minecraft:display_name": {"value": "item.lila.curse_katana.name"},
+                                          "minecraft:max_stack_size": 1, "minecraft:hand_equipped": True, "minecraft:glint": True,
+                                          "minecraft:rarity": "epic", "minecraft:damage": {"value": 15},
+                                          "minecraft:can_destroy_in_creative": False,
+                                          "minecraft:enchantable": {"slot": "sword", "value": 22},
+                                          "minecraft:tags": {"tags": ["minecraft:is_sword", "minecraft:netherite_tier", "lila:curse"]}}}})
     wjson(os.path.join(RP, "textures", "item_texture.json"), {"resource_pack_name": "lila", "texture_name": "atlas.items", "texture_data": tex})
     # névoa levíssima do enxame (só um tom ciano no horizonte: não atrapalha a visão)
     wjson(os.path.join(RP, "fogs", "nano_fog.json"), {

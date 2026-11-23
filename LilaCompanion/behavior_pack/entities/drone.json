@@ -77,7 +77,7 @@
           "type": "int",
           "range": [
             0,
-            16
+            21
           ],
           "default": 9,
           "client_sync": true
@@ -92,19 +92,19 @@
       },
       "lila:f_drone": {
         "minecraft:collision_box": {
-          "width": 1.6,
-          "height": 4.2
+          "width": 2.6,
+          "height": 7.4
         },
         "minecraft:physics": {
           "has_gravity": false,
           "has_collision": true
         },
         "minecraft:scale": {
-          "value": 1.0
+          "value": 1.8
         },
         "minecraft:health": {
-          "value": 300,
-          "max": 300
+          "value": 400,
+          "max": 400
         },
         "minecraft:rideable": {
           "seat_count": 1,
@@ -421,15 +421,15 @@
       },
       "lila:f_colossus": {
         "minecraft:collision_box": {
-          "width": 2.6,
-          "height": 7.6
+          "width": 3.6,
+          "height": 10.6
         },
         "minecraft:physics": {
           "has_gravity": true,
           "has_collision": true
         },
         "minecraft:scale": {
-          "value": 3.4
+          "value": 4.8
         },
         "minecraft:health": {
           "value": 4000,
@@ -809,6 +809,11 @@
             }
           ]
         }
+      },
+      "lila:enraged": {
+        "minecraft:scale": {
+          "value": 2.6
+        }
       }
     },
     "components": {
@@ -956,6 +961,28 @@
         }
       },
       "minecraft:entity_spawned": {
+        "add": {
+          "component_groups": [
+            "lila:f_drone"
+          ]
+        }
+      },
+      "lila:enrage": {
+        "add": {
+          "component_groups": [
+            "lila:enraged"
+          ]
+        }
+      },
+      "lila:enrage_end": {
+        "remove": {
+          "component_groups": [
+            "lila:enraged",
+            "lila:f_drone"
+          ]
+        }
+      },
+      "lila:enrage_reset": {
         "add": {
           "component_groups": [
             "lila:f_drone"

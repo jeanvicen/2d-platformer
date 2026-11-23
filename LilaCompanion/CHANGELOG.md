@@ -1,5 +1,32 @@
 # Changelog
 
+## 3.4.0 — A Maldição protetora: maior, mais solta, abraço que cura, fúria e poderes novos
+- **Maior**: a Maldição normal agora tem 1,8× o tamanho (uns 8 blocos). A gigante cresceu junto.
+- **Braços soltos**: os braços saem do corpo abertos (antes ficavam grudados no tronco).
+- **Sair do chão de verdade**: o surgir ficou 35% mais lento (6,6 s), e o servidor não reinicia mais a
+  animação logo depois de ela nascer (era isso que fazia ela "aparecer" inteira por um instante).
+- **Abraço protetor**: quando você está quase morrendo (30% de vida), ela vem pelas suas costas, te
+  abraça e te regenera. Enquanto te segura, fica fora de controle com tudo em volta: gritos, tremores,
+  monstros arremessados, plantas arrancadas. Nunca destrói construção. Quando você se recupera, ela se
+  acalma.
+- **Fúria**: quando ela fica com pouca vida, cresce, dá um rugido enorme, recupera parte da vida e
+  destrói tudo em volta por 20 s.
+- **Frases especiais raras** (no máximo uma a cada 2 minutos): "NÃO TOCA EM QUEM É MEU!!", "SAI DE
+  PERTO!!!", "...fica comigo.".
+- **Poderes novos** (menu Combate), inspirados num espírito protetor de anime, sem copiar:
+  - **«NÃO SE MEXAM»**: ordem amaldiçoada, congela todos os monstros em volta;
+  - **«CAIAM»**: ordem amaldiçoada, esmaga todos contra o chão;
+  - **Grito devastador**: um cone de energia sai da boca dela e arrasa o que estiver na frente;
+  - **Esmagar**: agarra o inimigo, ergue acima da cabeça, esmaga e joga no chão;
+  - **Abraço** (cura) e **FÚRIA** quando você quiser.
+- **Sem invocar** (só com o item, a cabeça dela):
+  - **Katana da Maldição**: lâmina negra com fio violeta, dano 15;
+  - **Virar fumaça**;
+  - **Cura da Maldição**;
+  - **«NÃO SE MEXAM»**.
+- 5 animações novas: abraço, fúria, acalmar, esmagar e ordem amaldiçoada.
+- Testes no servidor oficial 1.26.65.1: %%TESTS%%.
+
 ## 3.3.4 — Animações reconstruídas, bote antes do golpe e raças removidas
 - **Animações da Maldição refeitas no formato que o celular aceita.** O arquivo antigo tinha 341 KB numa
   linha só, com mais de 13 mil quadros-chave: o jogo recusava o arquivo inteiro e ela ficava sem NENHUMA
