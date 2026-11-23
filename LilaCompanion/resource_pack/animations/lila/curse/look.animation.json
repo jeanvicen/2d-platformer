@@ -1,0 +1,24 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.lila.curse.look": {
+      "loop": true,
+      "bones": {
+        "head": {
+          "rotation": [
+            "math.clamp(q.target_x_rotation, -35, 35) * 0.6",
+            "math.clamp(q.target_y_rotation, -60, 60) * 0.6",
+            0
+          ]
+        },
+        "neck": {
+          "rotation": [
+            0,
+            "math.clamp(q.target_y_rotation, -60, 60) * 0.3",
+            0
+          ]
+        }
+      }
+    }
+  }
+}

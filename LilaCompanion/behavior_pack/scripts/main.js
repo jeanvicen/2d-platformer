@@ -19,7 +19,6 @@ import { say } from "./lila/talk.js";
 import { openController } from "./ui/controller.js";
 import { runSelfTest } from "./test/selftest.js";
 import { DRONE, SUMMONS } from "./lila/registry.js";
-import "./race/index.js"; // Sistema de Raças (Roleta das Essências) — independente do enxame
 
 const CONTROLLER = DRONE.controller;
 

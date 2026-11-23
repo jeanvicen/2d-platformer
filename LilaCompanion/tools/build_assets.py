@@ -26,7 +26,6 @@ sys.path.insert(0, HERE)
 from forge.anim import controller, controllers_file  # noqa: E402
 from forge.paint import NANO, bake  # noqa: E402
 from forge.swarm_art import swarm_image  # noqa: E402
-from forge.race_build import build_race  # noqa: E402
 from forge import drone_art  # noqa: E402
 from forge.drone_anims import DRONE_ACTIONS, drone_anims, drone_controllers, power_pose  # noqa: E402
 from forge.forms_art import FORMS as FORM_MODELS  # noqa: E402
@@ -35,6 +34,7 @@ from forge.colossus_art import ROBOT_KINDS, colossus_model  # noqa: E402
 from forge.forms_anims import (FORM_IDS, INITIALIZE, PRE_ANIMATION, ROBOT_ACTIONS, form_anims, form_controllers,  # noqa: E402
                                robot_anims, robot_controllers)
 from forge.audio import build_sounds  # noqa: E402
+from forge.race_vfx import build_vfx  # noqa: E402
 from forge.curse_art import curse_model, shadow_soldier_model  # noqa: E402
 from forge.curse_anims import ACTIONS as CURSE_ACTIONS, action_anims, action_controller, life_anims, sample_pose  # noqa: E402
 from forge.curse_fx import curse_particles  # noqa: E402
@@ -42,7 +42,7 @@ from forge.render import render  # noqa: E402
 
 MOVES = ["none", "walk", "run", "swim", "climb", "fall", "sneak"]
 
-VERSION = [3, 3, 3]
+VERSION = [3, 3, 4]
 MIN_ENGINE = [1, 26, 30]
 SERVER_VERSION = "2.8.0"
 SERVER_UI_VERSION = "2.1.0"
@@ -88,10 +88,7 @@ LANGS["es_ES"] = {"entity.lila:drone.name": "Hacknd", "entity.lila:robot.name": 
 def wjson(path, data):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
-        if path.endswith("curse.animation.json"):  # animação amostrada: compacta (arquivo 4× menor)
-            json.dump(data, f, separators=(",", ":"), ensure_ascii=False)
-        else:
-            json.dump(data, f, indent=2, ensure_ascii=False)
+        json.dump(data, f, indent=2, ensure_ascii=False)
         f.write("\n")
 
 
@@ -329,8 +326,16 @@ def build_drone(previews):
             key = "cs_" + ev["effect"].replace(".", "_")
             curse_sounds[key] = ev["effect"]
             ev["effect"] = key
-    wjson(os.path.join(RP, "animations", "lila", "curse.animation.json"),
-          {"format_version": "1.10.0", "animations": {name: data for _, (name, data) in CA.items()}})
+    # 3.3.4: UM arquivo por animação (legível, poucos quadros-chave). Antes era um arquivo único de 341 KB
+    # numa linha só, com 13 mil quadros — o celular recusava e a Maldição ficava sem NENHUMA animação.
+    old = os.path.join(RP, "animations", "lila", "curse.animation.json")
+    if os.path.exists(old):
+        os.remove(old)
+    cdir = os.path.join(RP, "animations", "lila", "curse")
+    if os.path.isdir(cdir):
+        shutil.rmtree(cdir)
+    for _, (name, data) in CA.items():
+        wjson(os.path.join(cdir, name.split(".")[-1] + ".animation.json"), {"format_version": "1.10.0", "animations": {name: data}})
     wjson(os.path.join(RP, "animations", "lila", "forms.animation.json"),
           {"format_version": "1.10.0", "animations": {name: data for _, (name, data) in F.items()}})
     # Hacknd: efeitos do enxame no cliente (nuvem, montinho desligado, robozinhos nas formas)
@@ -1259,16 +1264,9 @@ def main():
     m, tex = build_drone(previews)
     build_robot(previews)
     build_nano(previews)
-    # Sistema de Raças (Roleta das Essências): material próprio (sem a pele de nanorrobô)
-    NANO["on"] = False
-    race_tex = {}
-    n_icons = build_race(BP, RP, wjson, wpng, bake, render, PREVIEW_DIR, previews, race_tex, LANGS)
-    NANO["on"] = True
-    itp = os.path.join(RP, "textures", "item_texture.json")
-    it = json.load(open(itp, encoding="utf-8"))
-    it["texture_data"].update(race_tex)
-    wjson(itp, it)
-    print("race icons", n_icons)
+    # 3.3.4: o Sistema de Raças foi REMOVIDO a pedido do dono do mod (nada de roleta/raças no pacote).
+    # Só ficam as texturas/partículas de efeito genéricas (rachadura, fumaça, brilho) que a Maldição usa.
+    build_vfx(RP, wjson, wpng)
     build_render_controllers()
     build_particles()
     swarm_fx()

@@ -155,6 +155,20 @@ export function curseStrike(c, target, prefer) {
   const k = curseScale(c);
   const tl = target.location;
   if (hd(e.location, tl) > reachOf(c) || Math.abs(tl.y - e.location.y) > 4.5 * k) return false;
+  // bote: ela avança e cola no alvo antes de bater (nada de "acertar de longe")
+  const near = 1.9 * k;
+  const d0 = hd(e.location, tl);
+  if (d0 > near + 0.3) {
+    const ux = (tl.x - e.location.x) / d0, uz = (tl.z - e.location.z) / d0;
+    const to = { x: tl.x - ux * near, y: Math.max(e.location.y, tl.y - 0.2), z: tl.z - uz * near };
+    try {
+      fx(e.dimension, "lila:curse_burst", { x: e.location.x, y: e.location.y + 1.5 * k, z: e.location.z });
+      e.teleport(to, { facingLocation: tl, keepVelocity: false });
+      fx(e.dimension, "lila:curse_ground_smoke", to);
+    } catch {
+      /* caminho fechado: bate de onde está */
+    }
+  }
   faceTo(e, tl);
   const dim = c.dim();
   const n = (c.flags.combo = (c.flags.combo ?? 0) + 1);

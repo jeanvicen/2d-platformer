@@ -97,15 +97,24 @@ def _build(keys, length, loop=False, extra=None):
     anim = {"animation_length": round(length, 3), "bones": {}}
     if loop:
         anim["loop"] = True
-    steps = int(round(length / DT))
+    # tempos amostrados: cada pose-chave + 3 pontos no meio de cada trecho (a curva de aceleração fica
+    # fiel com interpolação linear) — poucos quadros, como uma animação feita à mão no Blockbench
+    times = []
+    for j in range(len(keys) - 1):
+        t0, t1 = keys[j][0], keys[j + 1][0]
+        for f in (0, 0.25, 0.5, 0.75):
+            times.append(round(t0 + (t1 - t0) * f, 2))
+    times.append(round(keys[-1][0], 2))
+    if keys[-1][0] < length - 1e-6:
+        times.append(round(length, 2))
+    times = sorted(set(min(t, length) for t in times))
     for b in sorted(bones):
         chans = {}
         for c in ("r", "p", "s"):
             if not any(c in pz.get(b, {}) for _, pz, _ in keys):
                 continue
             frames = {}
-            for n in range(steps + 1):
-                t = n * DT
+            for t in times:
                 # segmento atual
                 for j in range(len(keys) - 1):
                     t0, p0, _ = keys[j]

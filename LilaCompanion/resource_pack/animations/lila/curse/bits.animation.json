@@ -1,0 +1,166 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.lila.curse.bits": {
+      "loop": true,
+      "bones": {
+        "bit0": {
+          "position": [
+            "math.sin(0) * math.mod(q.life_time * 0.220 + 0.00, 1) * 3",
+            "math.mod(q.life_time * 0.220 + 0.00, 1) * 13",
+            "math.cos(0) * math.mod(q.life_time * 0.220 + 0.00, 1) * 3"
+          ],
+          "rotation": [
+            "q.life_time * 60",
+            "q.life_time * 80",
+            0
+          ],
+          "scale": "math.clamp(1.2 - math.mod(q.life_time * 0.220 + 0.00, 1) * 1.25, 0, 1.2) * math.clamp(math.mod(q.life_time * 0.220 + 0.00, 1) * 8, 0, 1)"
+        },
+        "bit1": {
+          "position": [
+            "math.sin(30) * math.mod(q.life_time * 0.255 + 0.37, 1) * 3",
+            "math.mod(q.life_time * 0.255 + 0.37, 1) * 13",
+            "math.cos(30) * math.mod(q.life_time * 0.255 + 0.37, 1) * 3"
+          ],
+          "rotation": [
+            "q.life_time * 69",
+            "q.life_time * 87",
+            0
+          ],
+          "scale": "math.clamp(1.2 - math.mod(q.life_time * 0.255 + 0.37, 1) * 1.25, 0, 1.2) * math.clamp(math.mod(q.life_time * 0.255 + 0.37, 1) * 8, 0, 1)"
+        },
+        "bit2": {
+          "position": [
+            "math.sin(60) * math.mod(q.life_time * 0.290 + 0.74, 1) * 3",
+            "math.mod(q.life_time * 0.290 + 0.74, 1) * 13",
+            "math.cos(60) * math.mod(q.life_time * 0.290 + 0.74, 1) * 3"
+          ],
+          "rotation": [
+            "q.life_time * 78",
+            "q.life_time * 94",
+            0
+          ],
+          "scale": "math.clamp(1.2 - math.mod(q.life_time * 0.290 + 0.74, 1) * 1.25, 0, 1.2) * math.clamp(math.mod(q.life_time * 0.290 + 0.74, 1) * 8, 0, 1)"
+        },
+        "bit3": {
+          "position": [
+            "math.sin(90) * math.mod(q.life_time * 0.325 + 0.11, 1) * 3",
+            "math.mod(q.life_time * 0.325 + 0.11, 1) * 13",
+            "math.cos(90) * math.mod(q.life_time * 0.325 + 0.11, 1) * 3"
+          ],
+          "rotation": [
+            "q.life_time * 87",
+            "q.life_time * 101",
+            0
+          ],
+          "scale": "math.clamp(1.2 - math.mod(q.life_time * 0.325 + 0.11, 1) * 1.25, 0, 1.2) * math.clamp(math.mod(q.life_time * 0.325 + 0.11, 1) * 8, 0, 1)"
+        },
+        "bit4": {
+          "position": [
+            "math.sin(120) * math.mod(q.life_time * 0.360 + 0.48, 1) * 3",
+            "math.mod(q.life_time * 0.360 + 0.48, 1) * 13",
+            "math.cos(120) * math.mod(q.life_time * 0.360 + 0.48, 1) * 3"
+          ],
+          "rotation": [
+            "q.life_time * 96",
+            "q.life_time * 108",
+            0
+          ],
+          "scale": "math.clamp(1.2 - math.mod(q.life_time * 0.360 + 0.48, 1) * 1.25, 0, 1.2) * math.clamp(math.mod(q.life_time * 0.360 + 0.48, 1) * 8, 0, 1)"
+        },
+        "bit5": {
+          "position": [
+            "math.sin(150) * math.mod(q.life_time * 0.220 + 0.85, 1) * 3",
+            "math.mod(q.life_time * 0.220 + 0.85, 1) * 13",
+            "math.cos(150) * math.mod(q.life_time * 0.220 + 0.85, 1) * 3"
+          ],
+          "rotation": [
+            "q.life_time * 105",
+            "q.life_time * 115",
+            0
+          ],
+          "scale": "math.clamp(1.2 - math.mod(q.life_time * 0.220 + 0.85, 1) * 1.25, 0, 1.2) * math.clamp(math.mod(q.life_time * 0.220 + 0.85, 1) * 8, 0, 1)"
+        },
+        "bit6": {
+          "position": [
+            "math.sin(180) * math.mod(q.life_time * 0.255 + 0.22, 1) * 3",
+            "math.mod(q.life_time * 0.255 + 0.22, 1) * 13",
+            "math.cos(180) * math.mod(q.life_time * 0.255 + 0.22, 1) * 3"
+          ],
+          "rotation": [
+            "q.life_time * 114",
+            "q.life_time * 122",
+            0
+          ],
+          "scale": "math.clamp(1.2 - math.mod(q.life_time * 0.255 + 0.22, 1) * 1.25, 0, 1.2) * math.clamp(math.mod(q.life_time * 0.255 + 0.22, 1) * 8, 0, 1)"
+        },
+        "bit7": {
+          "position": [
+            "math.sin(210) * math.mod(q.life_time * 0.290 + 0.59, 1) * 3",
+            "math.mod(q.life_time * 0.290 + 0.59, 1) * 13",
+            "math.cos(210) * math.mod(q.life_time * 0.290 + 0.59, 1) * 3"
+          ],
+          "rotation": [
+            "q.life_time * 123",
+            "q.life_time * 129",
+            0
+          ],
+          "scale": "math.clamp(1.2 - math.mod(q.life_time * 0.290 + 0.59, 1) * 1.25, 0, 1.2) * math.clamp(math.mod(q.life_time * 0.290 + 0.59, 1) * 8, 0, 1)"
+        },
+        "bit8": {
+          "position": [
+            "math.sin(240) * math.mod(q.life_time * 0.325 + 0.96, 1) * 3",
+            "math.mod(q.life_time * 0.325 + 0.96, 1) * 13",
+            "math.cos(240) * math.mod(q.life_time * 0.325 + 0.96, 1) * 3"
+          ],
+          "rotation": [
+            "q.life_time * 132",
+            "q.life_time * 136",
+            0
+          ],
+          "scale": "math.clamp(1.2 - math.mod(q.life_time * 0.325 + 0.96, 1) * 1.25, 0, 1.2) * math.clamp(math.mod(q.life_time * 0.325 + 0.96, 1) * 8, 0, 1)"
+        },
+        "bit9": {
+          "position": [
+            "math.sin(270) * math.mod(q.life_time * 0.360 + 0.33, 1) * 3",
+            "math.mod(q.life_time * 0.360 + 0.33, 1) * 13",
+            "math.cos(270) * math.mod(q.life_time * 0.360 + 0.33, 1) * 3"
+          ],
+          "rotation": [
+            "q.life_time * 141",
+            "q.life_time * 143",
+            0
+          ],
+          "scale": "math.clamp(1.2 - math.mod(q.life_time * 0.360 + 0.33, 1) * 1.25, 0, 1.2) * math.clamp(math.mod(q.life_time * 0.360 + 0.33, 1) * 8, 0, 1)"
+        },
+        "bit10": {
+          "position": [
+            "math.sin(300) * math.mod(q.life_time * 0.220 + 0.70, 1) * 3",
+            "math.mod(q.life_time * 0.220 + 0.70, 1) * 13",
+            "math.cos(300) * math.mod(q.life_time * 0.220 + 0.70, 1) * 3"
+          ],
+          "rotation": [
+            "q.life_time * 150",
+            "q.life_time * 150",
+            0
+          ],
+          "scale": "math.clamp(1.2 - math.mod(q.life_time * 0.220 + 0.70, 1) * 1.25, 0, 1.2) * math.clamp(math.mod(q.life_time * 0.220 + 0.70, 1) * 8, 0, 1)"
+        },
+        "bit11": {
+          "position": [
+            "math.sin(330) * math.mod(q.life_time * 0.255 + 0.07, 1) * 3",
+            "math.mod(q.life_time * 0.255 + 0.07, 1) * 13",
+            "math.cos(330) * math.mod(q.life_time * 0.255 + 0.07, 1) * 3"
+          ],
+          "rotation": [
+            "q.life_time * 159",
+            "q.life_time * 157",
+            0
+          ],
+          "scale": "math.clamp(1.2 - math.mod(q.life_time * 0.255 + 0.07, 1) * 1.25, 0, 1.2) * math.clamp(math.mod(q.life_time * 0.255 + 0.07, 1) * 8, 0, 1)"
+        }
+      }
+    }
+  }
+}

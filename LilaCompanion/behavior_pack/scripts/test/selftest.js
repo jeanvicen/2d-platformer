@@ -15,7 +15,6 @@ import { megaBuild, biomeTransform, flatten, sweepGround } from "../lila/mega.js
 import { armyActive, robotsOf } from "../lila/army.js";
 import { FORM_LIST } from "../lib/catalog.js";
 import { logError } from "../core/log.js";
-import { raceTests } from "./racetest.js";
 
 const Y = 150;
 const OWNER = "selftest-owner";
@@ -1046,8 +1045,7 @@ export async function runSelfTest(mode = "") {
     check("arena chunks loaded", dim.isChunkLoaded({ x: 0, y: Y, z: 0 }));
     await buildArena(dim);
     await system.waitTicks(10);
-    if (mode.includes("race")) await raceTests(dim, check);
-    else if (mode.includes("owner")) await ownerTests(dim, check);
+    if (mode.includes("owner")) await ownerTests(dim, check);
     else await soloTests(dim, check);
   } catch (e) {
     log(`FAIL exception :: ${e}${e?.stack ? " " + String(e.stack).split("\n").slice(0, 3).join(" | ") : ""}`);

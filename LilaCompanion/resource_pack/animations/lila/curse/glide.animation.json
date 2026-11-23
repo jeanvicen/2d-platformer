@@ -1,0 +1,288 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.lila.curse.glide": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "rotation": [
+            "v.cmove * 32",
+            0,
+            "v.cmove * math.sin(q.life_time * 120) * 6"
+          ],
+          "position": [
+            0,
+            "v.cmove * math.sin(q.life_time * 240) * 1.2",
+            0
+          ]
+        },
+        "chest": {
+          "rotation": [
+            "v.cmove * 12",
+            0,
+            0
+          ]
+        },
+        "neck": {
+          "rotation": [
+            "-v.cmove * 16",
+            0,
+            0
+          ]
+        },
+        "head": {
+          "rotation": [
+            "-v.cmove * 22",
+            0,
+            0
+          ]
+        },
+        "jaw": {
+          "rotation": [
+            "v.cmove * 14",
+            0,
+            0
+          ]
+        },
+        "smoke_hi": {
+          "rotation": [
+            "-v.cmove * 26",
+            0,
+            0
+          ]
+        },
+        "smoke_mid": {
+          "rotation": [
+            "-v.cmove * 30",
+            0,
+            "v.cmove * math.sin(q.life_time * 200) * 10"
+          ]
+        },
+        "smoke_lo": {
+          "rotation": [
+            "-v.cmove * 34",
+            0,
+            "v.cmove * math.sin(q.life_time * 200 - 60) * 14"
+          ]
+        },
+        "arm_r": {
+          "rotation": [
+            "v.cmove * (42 + math.sin(q.life_time * 200 + 0) * 14)",
+            0,
+            "v.cmove * -14"
+          ]
+        },
+        "fore_r": {
+          "rotation": [
+            "v.cmove * 18",
+            0,
+            0
+          ]
+        },
+        "arm_l": {
+          "rotation": [
+            "v.cmove * (42 + math.sin(q.life_time * 200 + 180) * 14)",
+            0,
+            "v.cmove * 14"
+          ]
+        },
+        "fore_l": {
+          "rotation": [
+            "v.cmove * 18",
+            0,
+            0
+          ]
+        },
+        "tent0_0": {
+          "rotation": [
+            "-v.cmove * 30",
+            0,
+            0
+          ]
+        },
+        "tent0_1": {
+          "rotation": [
+            "-v.cmove * 12",
+            0,
+            0
+          ]
+        },
+        "tent0_2": {
+          "rotation": [
+            "-v.cmove * 14",
+            0,
+            0
+          ]
+        },
+        "tent1_0": {
+          "rotation": [
+            "-v.cmove * 30",
+            0,
+            0
+          ]
+        },
+        "tent1_1": {
+          "rotation": [
+            "-v.cmove * 12",
+            0,
+            0
+          ]
+        },
+        "tent1_2": {
+          "rotation": [
+            "-v.cmove * 14",
+            0,
+            0
+          ]
+        },
+        "tent2_0": {
+          "rotation": [
+            "-v.cmove * 30",
+            0,
+            0
+          ]
+        },
+        "tent2_1": {
+          "rotation": [
+            "-v.cmove * 12",
+            0,
+            0
+          ]
+        },
+        "tent2_2": {
+          "rotation": [
+            "-v.cmove * 14",
+            0,
+            0
+          ]
+        },
+        "tent3_0": {
+          "rotation": [
+            "-v.cmove * 30",
+            0,
+            0
+          ]
+        },
+        "tent3_1": {
+          "rotation": [
+            "-v.cmove * 12",
+            0,
+            0
+          ]
+        },
+        "tent3_2": {
+          "rotation": [
+            "-v.cmove * 14",
+            0,
+            0
+          ]
+        },
+        "tent4_0": {
+          "rotation": [
+            "-v.cmove * 30",
+            0,
+            0
+          ]
+        },
+        "tent4_1": {
+          "rotation": [
+            "-v.cmove * 12",
+            0,
+            0
+          ]
+        },
+        "tent4_2": {
+          "rotation": [
+            "-v.cmove * 14",
+            0,
+            0
+          ]
+        },
+        "tent5_0": {
+          "rotation": [
+            "-v.cmove * 30",
+            0,
+            0
+          ]
+        },
+        "tent5_1": {
+          "rotation": [
+            "-v.cmove * 12",
+            0,
+            0
+          ]
+        },
+        "tent5_2": {
+          "rotation": [
+            "-v.cmove * 14",
+            0,
+            0
+          ]
+        },
+        "tent6_0": {
+          "rotation": [
+            "-v.cmove * 30",
+            0,
+            0
+          ]
+        },
+        "tent6_1": {
+          "rotation": [
+            "-v.cmove * 12",
+            0,
+            0
+          ]
+        },
+        "tent6_2": {
+          "rotation": [
+            "-v.cmove * 14",
+            0,
+            0
+          ]
+        },
+        "tent7_0": {
+          "rotation": [
+            "-v.cmove * 30",
+            0,
+            0
+          ]
+        },
+        "tent7_1": {
+          "rotation": [
+            "-v.cmove * 12",
+            0,
+            0
+          ]
+        },
+        "tent7_2": {
+          "rotation": [
+            "-v.cmove * 14",
+            0,
+            0
+          ]
+        },
+        "tent8_0": {
+          "rotation": [
+            "-v.cmove * 30",
+            0,
+            0
+          ]
+        },
+        "tent8_1": {
+          "rotation": [
+            "-v.cmove * 12",
+            0,
+            0
+          ]
+        },
+        "tent8_2": {
+          "rotation": [
+            "-v.cmove * 14",
+            0,
+            0
+          ]
+        }
+      }
+    }
+  }
+}

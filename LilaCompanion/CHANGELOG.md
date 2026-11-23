@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.3.4 — Animações reconstruídas, bote antes do golpe e raças removidas
+- **Animações da Maldição refeitas no formato que o celular aceita.** O arquivo antigo tinha 341 KB numa
+  linha só, com mais de 13 mil quadros-chave: o jogo recusava o arquivo inteiro e ela ficava sem NENHUMA
+  animação (as partículas, que ficam em outro arquivo, funcionavam — por isso só a fumaça mexia). Agora
+  cada animação tem o seu próprio arquivo normal, com poucas poses-chave e passagens suaves entre elas.
+  Se uma der problema, as outras continuam.
+- **Ela vai até o alvo antes de bater**: dá um bote com rastro de fumaça e cola no inimigo; nada de
+  acertar de 4 blocos de distância.
+- **Sistema de raças removido por completo** (roleta, núcleo, armas de raça, poderes de raça, mudanças no
+  corpo do jogador e a câmera do gigante). Os efeitos visuais genéricos que a Maldição usa continuam.
+- Testes no servidor oficial 1.26.65.1: %%TESTS%%.
+
 ## 3.3.3 — Maldição com vida, voltar da fumaça pelo celular, poderes no corpo dela
 - **Voltar da forma de fumaça (funciona no celular)**: olhe para o CHÃO por 1 segundo, ou segure o
   botão de DESCER, ou digite `/hacknd`. Ao virar fumaça aparece um título grande explicando, e a barra de
