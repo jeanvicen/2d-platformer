@@ -1,49 +1,52 @@
-[2026-11-22 15:44:20:902 INFO] [Scripting] [Lila:boot] Hacknd carregado
-[2026-11-22 15:44:26:062 INFO] [Scripting] LILA-TEST START
-[2026-11-22 15:44:27:407 INFO] [Scripting] LILA-TEST PASS arena chunks loaded
-[2026-11-22 15:44:28:238 INFO] [Scripting] LILA-TEST PASS simulated owner joined
-[2026-11-22 15:44:28:240 INFO] [Scripting] LILA-TEST PASS summon in front of owner
-[2026-11-22 15:44:29:989 INFO] [Scripting] LILA-TEST PASS 'me dá 64 diamantes' (infinite items)
-[2026-11-22 15:44:30:241 INFO] [Scripting] LILA-TEST PASS 'me fortalece' equips enchanted netherite :: totem=1
-[2026-11-22 15:44:31:238 INFO] [Scripting] LILA-TEST PASS 'vira helicóptero' puts the owner at the controls
-[2026-11-22 15:44:31:539 INFO] [Scripting] LILA-TEST PASS attack button fires the heli gun :: cd=213
-[2026-11-22 15:44:31:789 INFO] [Scripting] LILA-TEST PASS sneak = get out of the vehicle
-[2026-11-22 15:44:31:789 INFO] [Scripting] LILA-TEST PASS leaving a vehicle turns it back into the drone
-[2026-11-22 15:44:33:588 INFO] [Scripting] LILA-TEST PASS tank: owner drives, cannon fires
-[2026-11-22 15:44:34:089 INFO] [Scripting] LILA-TEST PASS 'cancelar' reverts the vehicle
-[2026-11-22 15:44:36:589 INFO] [Scripting] LILA-TEST PASS TITAN: owner rides ON TOP of the head (~26 blocks up) :: pilot height=26.3 blocks
-[2026-11-22 15:44:36:688 INFO] [Scripting] LILA-TEST PASS colossus: pilot is (almost) immortal :: hp 20->20
-[2026-11-22 15:44:36:889 INFO] [Scripting] LILA-TEST PASS TITAN: attack button = punch (near) / visor beam (far) :: punch=335 beam=0
-[2026-11-22 15:44:38:889 INFO] [Scripting] LILA-TEST PASS colossus stays when you get out (until cancel)
-[2026-11-22 15:44:39:388 INFO] [Scripting] LILA-TEST PASS cancel turns the colossus back into the drone
-[2026-11-22 15:44:40:689 INFO] [Scripting] LILA-TEST PASS 'vira nave espacial': owner flies it, lasers fire
-[2026-11-22 15:44:41:889 INFO] [Scripting] LILA-TEST PASS Hacknd: the normal form IS the nano swarm (smart mode) and you hold the swarm core :: form=drone mode=auto core=1
-[2026-11-22 15:44:42:139 INFO] [Scripting] LILA-TEST PASS smart swarm: empty hand on wood -> nanobot axe forms in your hand :: held=lila:nano_axe
-[2026-11-22 15:44:43:139 INFO] [Scripting] LILA-TEST PASS nanobot axe fells the whole tree :: logs left=0
-[2026-11-22 15:44:43:889 INFO] [Scripting] LILA-TEST PASS smart swarm: empty hand hitting a mob -> nanobot sword :: held=lila:nano_sword
-[2026-11-22 15:44:46:990 INFO] [Scripting] LILA-TEST PASS nanobot hammer: thrown, explodes, flies back to your hand
-[2026-11-22 15:44:47:189 INFO] [Scripting] LILA-TEST PASS shield mode on
-[2026-11-22 15:44:47:289 INFO] [Scripting] LILA-TEST PASS swarm shield: owner takes no damage :: hp 20->20
-[2026-11-22 15:44:47:538 INFO] [Scripting] LILA-TEST PASS swarm shield: arrows near you are destroyed
-[2026-11-22 15:44:49:238 INFO] [Scripting] LILA-TEST PASS hover board lifts you and holds the height :: y 151.00->152.47
-[2026-11-22 15:44:52:739 INFO] [Scripting] LILA-TEST PASS devourer mode eats everything around you :: stone left=0
-[2026-11-22 15:44:54:189 INFO] [Scripting] LILA-TEST PASS swarm stings monsters near you to death
-[2026-11-22 15:44:55:497 INFO] [Scripting] LILA-TEST PASS swarm shape: wall of nanobots :: blocks=65
-[2026-11-22 15:44:57:290 INFO] [Scripting] LILA-TEST PASS swarm shape: bridge over the void where you look :: blocks=27
-[2026-11-22 15:44:57:882 INFO] [Scripting] LILA-TEST PASS cancel dissolves the swarm shapes and tools, back to the smart swarm :: blocks left=0 nano tools=0
-[2026-11-22 15:44:58:740 INFO] [Scripting] LILA-TEST PASS a player who hits you gets attacked by the drone :: intruder hp 20->15.5 aggro=true urgent=defend job=follow paused=false mode=guard form=drone ridden=false alive=true off=false act=shoot d=9.8 dy=1.1
-[2026-11-22 15:44:59:739 INFO] [Scripting] LILA-TEST PASS hitting the drone yourself = a light lesson :: hp 20->19.56800079345703
-[2026-11-22 15:45:02:238 INFO] [Scripting] LILA-TEST PASS protect mode attacks first (zombie 20 blocks away, before it reaches you) :: ticks=50 owner hp 20->20 urgent=defend paused=false mode=guard
-[2026-11-22 15:45:03:740 INFO] [Scripting] LILA-TEST PASS army: drone bursts into 10 robots :: robots=10
-[2026-11-22 15:45:05:740 INFO] [Scripting] LILA-TEST PASS army: robots take down monsters
-[2026-11-22 15:45:06:740 INFO] [Scripting] LILA-TEST PASS army: brings what you need (low health -> golden apples)
-[2026-11-22 15:45:06:740 INFO] [Scripting] LILA-TEST PASS army: mixed squad (soldiers, builders, artillery, medics, ninjas) :: kinds=0,2,4,3,1
-[2026-11-22 15:45:09:514 INFO] [Scripting] LILA-TEST PASS army builds together (furnished catalog house with doors) :: ticks=45 door blocks=2
-[2026-11-22 15:45:09:939 INFO] [Scripting] LILA-TEST PASS cancel merges the army back into the drone :: robots=0
-[2026-11-22 15:45:15:689 INFO] [Scripting] LILA-TEST PASS 'recolhe os itens do chão' (drone sweeps the ground) :: emeralds with drone=15
-[2026-11-22 15:45:15:692 INFO] [Scripting] LILA-TEST PASS 'constrói na hora' / 'constrói devagar' change the build speed
-[2026-11-22 15:45:56:190 INFO] [Scripting] LILA-TEST PASS 'constrói um poço aqui' (mega builder by text)
-[2026-11-22 15:45:56:439 INFO] [Scripting] LILA-TEST PASS 'faz uma cafeteria pequena estilo colorido' (catalog by text)
-[2026-11-22 15:45:56:439 INFO] [Scripting] LILA-TEST PASS player build untouched
-[2026-11-22 15:45:56:439 INFO] [Scripting] LILA-TEST DONE pass=45 fail=0
-[2026-11-22 15:44:20:902 INFO] [Scripting] [Lila:boot] Hacknd carregado
+[2026-11-23 11:34:32:678 INFO] [Scripting] [Lila:boot] Hacknd carregado
+[2026-11-23 11:34:37:797 INFO] [Scripting] LILA-TEST START
+[2026-11-23 11:34:39:292 INFO] [Scripting] LILA-TEST PASS arena chunks loaded
+[2026-11-23 11:34:40:106 INFO] [Scripting] LILA-TEST PASS simulated owner joined
+[2026-11-23 11:34:40:108 INFO] [Scripting] LILA-TEST PASS summon in front of owner
+[2026-11-23 11:34:45:355 INFO] [Scripting] LILA-TEST PASS CURSE: comes out of the ground when summoned (emerge animation) and then settles :: start=9 after=0
+[2026-11-23 11:34:45:656 INFO] [Scripting] LILA-TEST PASS CURSE: turn into smoke (fly and pass through everything) and come back to the body :: smoke=true back=Survival (was Survival)
+[2026-11-23 11:34:45:656 INFO] [Scripting] LILA-TEST PASS CURSE: giant fog power turns on and off
+[2026-11-23 11:34:46:406 INFO] [Scripting] LILA-TEST PASS 'me dá 64 diamantes' (infinite items)
+[2026-11-23 11:34:46:656 INFO] [Scripting] LILA-TEST PASS 'me fortalece' equips enchanted netherite :: totem=1
+[2026-11-23 11:34:47:658 INFO] [Scripting] LILA-TEST PASS 'vira helicóptero' puts the owner at the controls
+[2026-11-23 11:34:47:956 INFO] [Scripting] LILA-TEST PASS attack button fires the heli gun :: cd=307
+[2026-11-23 11:34:48:206 INFO] [Scripting] LILA-TEST PASS sneak = get out of the vehicle
+[2026-11-23 11:34:48:206 INFO] [Scripting] LILA-TEST PASS leaving a vehicle turns it back into the drone
+[2026-11-23 11:34:50:006 INFO] [Scripting] LILA-TEST PASS tank: owner drives, cannon fires
+[2026-11-23 11:34:50:506 INFO] [Scripting] LILA-TEST PASS 'cancelar' reverts the vehicle
+[2026-11-23 11:34:53:006 INFO] [Scripting] LILA-TEST PASS GIANT CURSE: owner rides ON TOP of the head (~14 blocks up) :: pilot height=13.7 blocks
+[2026-11-23 11:34:53:115 INFO] [Scripting] LILA-TEST PASS colossus: pilot is (almost) immortal :: hp 20->20
+[2026-11-23 11:34:53:307 INFO] [Scripting] LILA-TEST PASS GIANT CURSE: attack button = punch where you aim (no beam) :: punch=427 beam=0
+[2026-11-23 11:34:55:306 INFO] [Scripting] LILA-TEST PASS colossus stays when you get out (until cancel)
+[2026-11-23 11:34:55:808 INFO] [Scripting] LILA-TEST PASS cancel turns the colossus back into the drone
+[2026-11-23 11:34:57:106 INFO] [Scripting] LILA-TEST PASS 'vira nave espacial': owner flies it, lasers fire
+[2026-11-23 11:34:58:308 INFO] [Scripting] LILA-TEST PASS Hacknd: the normal form IS the nano swarm (smart mode) and you hold the swarm core :: form=drone mode=auto core=1
+[2026-11-23 11:34:58:557 INFO] [Scripting] LILA-TEST PASS smart swarm: empty hand on wood -> nanobot axe forms in your hand :: held=lila:nano_axe
+[2026-11-23 11:34:59:556 INFO] [Scripting] LILA-TEST PASS nanobot axe fells the whole tree :: logs left=0
+[2026-11-23 11:35:00:307 INFO] [Scripting] LILA-TEST PASS smart swarm: empty hand hitting a mob -> nanobot sword :: held=lila:nano_sword
+[2026-11-23 11:35:03:407 INFO] [Scripting] LILA-TEST PASS nanobot hammer: thrown, explodes, flies back to your hand
+[2026-11-23 11:35:03:607 INFO] [Scripting] LILA-TEST PASS shield mode on
+[2026-11-23 11:35:03:706 INFO] [Scripting] LILA-TEST PASS swarm shield: owner takes no damage :: hp 20->20
+[2026-11-23 11:35:03:957 INFO] [Scripting] LILA-TEST PASS swarm shield: arrows near you are destroyed
+[2026-11-23 11:35:05:656 INFO] [Scripting] LILA-TEST PASS hover board lifts you and holds the height :: y 151.00->152.47
+[2026-11-23 11:35:09:157 INFO] [Scripting] LILA-TEST PASS devourer mode eats everything around you :: stone left=0
+[2026-11-23 11:35:11:106 INFO] [Scripting] LILA-TEST PASS swarm stings monsters near you to death
+[2026-11-23 11:35:12:413 INFO] [Scripting] LILA-TEST PASS swarm shape: wall of nanobots :: blocks=65
+[2026-11-23 11:35:14:207 INFO] [Scripting] LILA-TEST PASS swarm shape: bridge over the void where you look :: blocks=27
+[2026-11-23 11:35:14:782 INFO] [Scripting] LILA-TEST PASS cancel dissolves the swarm shapes and tools, back to the smart swarm :: blocks left=0 nano tools=0
+[2026-11-23 11:35:15:656 INFO] [Scripting] LILA-TEST PASS a player who hits you gets attacked by the drone :: intruder hp 20->16 aggro=true urgent=defend job=follow paused=false mode=guard form=drone ridden=false alive=true off=false act=shoot d=9.1 dy=-0.6
+[2026-11-23 11:35:17:156 INFO] [Scripting] LILA-TEST PASS hitting the drone yourself = a light lesson :: hp 19.9550724029541->19.56800079345703
+[2026-11-23 11:35:19:156 INFO] [Scripting] LILA-TEST PASS protect mode attacks first (zombie 20 blocks away, before it reaches you) :: ticks=40 owner hp 20->20 urgent=defend paused=false mode=guard
+[2026-11-23 11:35:21:410 INFO] [Scripting] LILA-TEST PASS army: drone bursts into 10 robots :: robots=10
+[2026-11-23 11:35:22:656 INFO] [Scripting] LILA-TEST PASS army: robots take down monsters
+[2026-11-23 11:35:24:657 INFO] [Scripting] LILA-TEST PASS army: brings what you need (low health -> golden apples)
+[2026-11-23 11:35:24:658 INFO] [Scripting] LILA-TEST PASS army: mixed squad (soldiers, builders, artillery, medics, ninjas) :: kinds=0,2,4,3,1
+[2026-11-23 11:35:27:430 INFO] [Scripting] LILA-TEST PASS army builds together (furnished catalog house with doors) :: ticks=45 door blocks=2
+[2026-11-23 11:35:27:856 INFO] [Scripting] LILA-TEST PASS cancel merges the army back into the drone :: robots=0
+[2026-11-23 11:35:28:857 INFO] [Scripting] LILA-TEST PASS 'recolhe os itens do chão' (drone sweeps the ground) :: emeralds with drone=15
+[2026-11-23 11:35:28:860 INFO] [Scripting] LILA-TEST PASS 'constrói na hora' / 'constrói devagar' change the build speed
+[2026-11-23 11:36:16:106 INFO] [Scripting] LILA-TEST PASS 'constrói um poço aqui' (mega builder by text)
+[2026-11-23 11:36:16:356 INFO] [Scripting] LILA-TEST PASS 'faz uma cafeteria pequena estilo colorido' (catalog by text)
+[2026-11-23 11:36:16:356 INFO] [Scripting] LILA-TEST PASS player build untouched
+[2026-11-23 11:36:16:357 INFO] [Scripting] LILA-TEST DONE pass=48 fail=0
+[2026-11-23 11:34:32:678 INFO] [Scripting] [Lila:boot] Hacknd carregado
