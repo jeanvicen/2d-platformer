@@ -12,7 +12,7 @@
 - **Poderes feitos pelo corpo dela**: no Escudo ela cobre você com os braços; nas Mãos da maldição ela
   soca junto, virada para onde você bateu; na Boca devoradora ela abre a bocona e engole.
 - Ao invocar, ela mostra a versão no chat (`Hacknd v3.3.3`) para você conferir que o pacote novo entrou.
-- Testes no servidor oficial 1.26.65.1: %%TESTS%%.
+- Testes no servidor oficial 1.26.65.1: com jogadores **48/48** (inclui virar fumaça e voltar ao corpo), sem jogador **60/61** (a falha é um pico de tempo de 100 ms numa megaconstrução instantânea de teste).
 
 ## 3.3.2 — Animações vivas, forma de fumaça que volta e voo
 - **Animações não ficam mais duras**: a Maldição respira, flutua, torce o tronco, vira e inclina a
