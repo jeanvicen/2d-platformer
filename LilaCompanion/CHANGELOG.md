@@ -48,7 +48,12 @@
   - na primeira vez, um menu deixa escolher qualquer uma das 6 raças, sem roleta e sem gastar nada;
   - ele abre ao entrar no mundo ou ao usar uma roleta antes de ter raça;
   - depois disso, trocar de raça é só pela Roleta das Essências.
-- Testes no servidor oficial 1.26.65.1: sem jogador **61/61**.
+- **Correções**:
+  - poderes de raio, piscar, dreno e alguns poderes assinatura paravam numa flor ou grama alta na sua
+    frente (por exemplo, as flores da Gênese). Agora o raio passa por plantas e água;
+  - a conferência final das megaconstruções olha o relógio mais vezes e não dá engasgo;
+  - virar fumaça não fica preso se a maldição for mandada embora: a volta ao corpo funciona sozinha.
+- Testes no servidor oficial 1.26.65.1: raças **53/53** (sem jogador e com jogadores rodando de novo).
 
 ## 3.2.0 — Painel de poderes, modo poder, gigante em 1ª pessoa e 60 poderes assinatura
 - **Painel de poderes no canto direito** (meio transparente): mostra a sua raça, a barra de recurso e os
