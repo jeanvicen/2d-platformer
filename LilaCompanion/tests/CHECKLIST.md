@@ -6,6 +6,7 @@ Legenda: **PASS** = verificado de verdade · **NOT TESTED** = não dá para test
 Ambiente: Bedrock Dedicated Server **1.26.65.1** oficial (Linux). Autoteste dentro do mundo:
 `/scriptevent lila:selftest` (sem jogador) → `tests/last_bds_run.log`, e `/scriptevent lila:selftest owner`
 com jogadores simulados "Dono" e "Intruso" → `tests/last_bds_owner_run.log`.
+Resultado final 3.3.0: raças **53/53**, sem jogador **61/61**, com jogadores **48/48** (`tests/last_bds_race_run.log`).
 
 ## Qualidade estática
 | Item | Resultado |
@@ -31,6 +32,8 @@ com jogadores simulados "Dono" e "Intruso" → `tests/last_bds_owner_run.log`.
 | Maldição GIGANTE: dono em cima da cabeça (~14 blocos), golpe no botão de ataque | PASS |
 | Exército de sombras: soldados atacam corpo a corpo e, quando todos caem, a maldição se remonta | PASS (testes do exército) |
 | Escolha livre da raça na 1ª vez (sem gastar a roleta) e a 2ª escolha livre recusada (só roleta) | PASS |
+| Raios dos poderes (raio, piscar, dreno, assinatura) passam por flores/grama e água — antes uma flor da Gênese na frente travava o poder | PASS (raças 53/53) |
+| Megaconstruções e catálogo sem engasgo (passo mais lento 51 ms e 18 ms, limite 60 ms) | PASS |
 
 ## Sem jogador (servidor oficial)
 | Item | Resultado |
