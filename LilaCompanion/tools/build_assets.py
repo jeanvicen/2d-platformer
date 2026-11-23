@@ -42,7 +42,7 @@ from forge.render import render  # noqa: E402
 
 MOVES = ["none", "walk", "run", "swim", "climb", "fall", "sneak"]
 
-VERSION = [3, 3, 0]
+VERSION = [3, 3, 1]
 MIN_ENGINE = [1, 26, 30]
 SERVER_VERSION = "2.8.0"
 SERVER_UI_VERSION = "2.1.0"
