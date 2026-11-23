@@ -42,7 +42,7 @@ from forge.render import render  # noqa: E402
 
 MOVES = ["none", "walk", "run", "swim", "climb", "fall", "sneak"]
 
-VERSION = [3, 3, 1]
+VERSION = [3, 3, 2]
 MIN_ENGINE = [1, 26, 30]
 SERVER_VERSION = "2.8.0"
 SERVER_UI_VERSION = "2.1.0"
@@ -383,7 +383,7 @@ def build_drone(previews):
                                  **{f"curse_{k}": f"lila:curse_{k}" for k in CURSE_FX}},
             "sound_effects": curse_sounds,
             "scripts": {"initialize": [INITIALIZE[0] + " v.cmove = 0;"], "pre_animation": PRE_ANIMATION + [
-                "v.cmove = math.lerp(v.cmove, math.clamp(q.ground_speed / 5, 0, 1), 0.12);"], "animate": animate},
+                "v.cmove = math.lerp(v.cmove, math.clamp(q.ground_speed / 4 + math.abs(q.vertical_speed) / 6, 0, 1), 0.1);"], "animate": animate},
             "render_controllers": ["controller.render.lila.forms"],
         }}})
     wjson(os.path.join(BP, "entities", "drone.json"), drone_bp_entity())

@@ -1,6 +1,7 @@
 // O cérebro: executa objetivos (generators), atende ordens, trata necessidades (perigo, fome,
 // sono) e, quando ninguém pede nada, decide sozinha o que fazer como uma jogadora de verdade
 // (IA por utilidade: cada opção recebe uma nota conforme a situação e a melhor vence).
+import { inSmokeForm, setSmokeForm } from "./curse.js";
 import { system, world } from "@minecraft/server";
 import { parseCommands, describe, swarmShapeOf } from "../lib/intent.js";
 import { ORES, TIER_RANK } from "../lib/items.js";
@@ -393,6 +394,8 @@ const GOAL_TYPES = new Set(["gather", "craft", "build", "farm", "food", "give", 
 
 /** "Cancelar": larga tudo e volta a ser o drone normal (junta o exército, desfaz veículo/colosso/torreta). */
 export function backToNormal(c, quiet = false) {
+  const own = c.owner();
+  if (own && inSmokeForm(own)) setSmokeForm(own, false); // "volta ao normal" também tira da forma de fumaça
   abortAll(c);
   clearSwarm(c);
   if (armyActive(c)) merge(c);

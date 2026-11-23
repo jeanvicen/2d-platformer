@@ -176,34 +176,47 @@ def _combine(*dicts):
 # ================================================================== camadas contínuas
 def life_anims():
     A = {}
+    # espasmo: um tranco curto de vez em quando (pico estreito de um seno lento) — dá o ar de criatura viva
+    tw = lambda sp, ph=0: f"math.pow(math.max(0, math.sin({T} * {sp} + {ph})), 24)"  # noqa: E731
     bones = {
-        "body": {"position": [0, f"math.sin({T} * 95) * 0.45", 0], "rotation": [f"math.sin({T} * 95 + 40) * 1.2", f"math.sin({T} * 37) * 3", 0]},
-        "chest": {"rotation": [f"math.sin({T} * 95) * 2.2", f"math.sin({T} * 41 + 20) * 2.5", f"math.sin({T} * 53) * 1.4"],
-                  "scale": f"1 + math.sin({T} * 95) * 0.012"},
-        "neck": {"rotation": [f"math.sin({T} * 61 + 70) * 3", f"math.sin({T} * 29) * 5", 0]},
-        "head": {"rotation": [f"math.sin({T} * 73) * 2.5", f"math.sin({T} * 23 + 60) * 4", f"math.sin({T} * 31) * 4"]},
-        # boca respirando devagar + espasmo de vez em quando
-        "jaw": {"rotation": [f"math.sin({T} * 80) * 4 + 3 + math.pow(math.max(0, math.sin({T} * 37)), 18) * 16", 0, 0]},
-        "smoke_hi": {"rotation": [f"math.sin({T} * 82) * 2.5", f"math.sin({T} * 33) * 6", f"math.cos({T} * 82) * 3.5"]},
-        "smoke_mid": {"rotation": [f"math.sin({T} * 82 - 60) * 4", 0, f"math.cos({T} * 82 - 60) * 5.5"]},
-        "smoke_lo": {"rotation": [f"math.sin({T} * 82 - 120) * 5", 0, f"math.cos({T} * 82 - 120) * 7"],
-                     "scale": f"1 + math.sin({T} * 140) * 0.04"},
-        "smoke_pool": {"rotation": [0, f"{T} * 18", 0], "scale": f"1 + math.sin({T} * 120) * 0.07"},
+        # flutua respirando: sobe/desce, balança e torce o tronco
+        "body": {"position": [f"math.sin({T} * 48) * 0.8", f"math.sin({T} * 110) * 1.8", 0],
+                 "rotation": [f"math.sin({T} * 110 + 40) * 4", f"math.sin({T} * 42) * 10", f"math.sin({T} * 55) * 3.5"]},
+        "chest": {"rotation": [f"math.sin({T} * 110) * 6 + {tw(31)} * 10", f"math.sin({T} * 47 + 20) * 7", f"math.sin({T} * 61) * 4"],
+                  "scale": f"1 + math.sin({T} * 110) * 0.035"},
+        "neck": {"rotation": [f"math.sin({T} * 73 + 70) * 6", f"math.sin({T} * 34) * 12", f"math.sin({T} * 39) * 5"]},
+        # cabeça: olha em volta devagar, inclina de lado (sinistro) e dá trancos
+        "head": {"rotation": [f"math.sin({T} * 83) * 7 - {tw(29, 50)} * 14", f"math.sin({T} * 27 + 60) * 16 + {tw(23, 120)} * 22",
+                              f"math.sin({T} * 35) * 12 + {tw(19, 200)} * 18"]},
+        # boca: respira abrindo e fechando + estalo de dentes
+        "jaw": {"rotation": [f"8 + math.sin({T} * 110) * 8 + {tw(37)} * 30 + {tw(71, 90)} * 14", 0, 0]},
+        # fumaça de baixo: ondula como cauda, cada gomo atrasado em relação ao de cima, torce e pulsa
+        "smoke_hi": {"rotation": [f"math.sin({T} * 90) * 7", f"math.sin({T} * 38) * 14", f"math.cos({T} * 90) * 8"],
+                     "scale": f"1 + math.sin({T} * 150) * 0.05"},
+        "smoke_mid": {"rotation": [f"math.sin({T} * 90 - 70) * 12", f"math.sin({T} * 38 - 60) * 18", f"math.cos({T} * 90 - 70) * 13"],
+                      "scale": f"1 + math.sin({T} * 150 - 70) * 0.08"},
+        "smoke_lo": {"rotation": [f"math.sin({T} * 90 - 140) * 17", f"math.sin({T} * 38 - 120) * 24", f"math.cos({T} * 90 - 140) * 19"],
+                     "scale": f"1 + math.sin({T} * 150 - 140) * 0.12"},
+        "smoke_pool": {"rotation": [0, f"{T} * 40", 0], "scale": f"1 + math.sin({T} * 120) * 0.16"},
     }
     for side, sg in (("r", -1), ("l", 1)):
-        ph = 0 if side == "r" else 90
-        bones[f"arm_{side}"] = {"rotation": [f"math.sin({T} * 70 + {ph}) * 3.5", 0, f"{sg} * (math.sin({T} * 55 + {ph}) * 2.5)"]}
-        bones[f"fore_{side}"] = {"rotation": [f"math.sin({T} * 70 + {ph} - 50) * 4", 0, 0]}
-        bones[f"hand_{side}"] = {"rotation": [f"math.sin({T} * 70 + {ph} - 100) * 5", 0, f"{sg} * math.sin({T} * 47) * 4"]}
+        ph = 0 if side == "r" else 110
+        # braços pendurados balançando, abrindo um pouco para fora; mãos girando e dedos que coçam o ar
+        bones[f"arm_{side}"] = {"rotation": [f"math.sin({T} * 70 + {ph}) * 11 - 4", f"{sg} * math.sin({T} * 41 + {ph}) * 6",
+                                             f"{sg} * (5 + math.sin({T} * 55 + {ph}) * 7)"]}
+        bones[f"fore_{side}"] = {"rotation": [f"-8 + math.sin({T} * 70 + {ph} - 50) * 13", 0, 0]}
+        bones[f"hand_{side}"] = {"rotation": [f"math.sin({T} * 70 + {ph} - 100) * 14", f"{sg} * math.sin({T} * 43) * 12",
+                                              f"{sg} * math.sin({T} * 47) * 10"]}
         for k in FINGERS:
-            bones[f"fing_{side}{k}_0"] = {"rotation": [f"math.sin({T} * 160 + {k * 47 + ph}) * 4 - 2", 0, 0]}
-            bones[f"fing_{side}{k}_1"] = {"rotation": [f"math.sin({T} * 160 + {k * 47 + ph} - 60) * 6 - 3", 0, 0]}
+            bones[f"fing_{side}{k}_0"] = {"rotation": [f"math.sin({T} * 150 + {k * 47 + ph}) * 16 - 10", 0, 0]}
+            bones[f"fing_{side}{k}_1"] = {"rotation": [f"math.sin({T} * 150 + {k * 47 + ph} - 60) * 20 - 14", 0, 0]}
     for i in TENTS:
-        sp = 100 + (i * 13) % 40
+        sp = 120 + (i * 17) % 60
         for k in SEGS:
-            amp = 2.5 + k * 2.6
-            ph = i * 47 + k * 52
-            bones[f"tent{i}_{k}"] = {"rotation": [f"math.sin({T} * {sp} - {ph}) * {amp:.1f}", 0, f"math.cos({T} * {sp * 0.8:.0f} - {ph}) * {amp * 0.8:.1f}"]}
+            amp = 6 + k * 5.2           # a ponta mexe bem mais que a base (chicote)
+            ph = i * 47 + k * 55
+            bones[f"tent{i}_{k}"] = {"rotation": [f"math.sin({T} * {sp} - {ph}) * {amp:.1f}", f"math.sin({T} * {sp * 0.6:.0f} - {ph}) * {amp * 0.5:.1f}",
+                                                  f"math.cos({T} * {sp * 0.8:.0f} - {ph}) * {amp * 0.9:.1f}"]}
     A["life"] = ("animation.lila.curse.life", {"loop": True, "bones": bones})
 
     # cubinhos soltos: sobem, giram, se afastam e encolhem até sumir (fumaça que se desfaz)
@@ -220,22 +233,26 @@ def life_anims():
         }
     A["bits"] = ("animation.lila.curse.bits", {"loop": True, "bones": bits})
 
-    # deslizar: peso da velocidade (v.cmove vai de 0 a 1)
+    # voar/deslizar: peso da velocidade (v.cmove vai de 0 a 1) — deita para frente como quem voa,
+    # braços e tentáculos arrastam para trás e a fumaça vira um rastro
     mv = "v.cmove"
     glide = {
-        "body": {"rotation": [f"{mv} * 12", 0, 0], "position": [0, f"{mv} * math.sin({T} * 240) * 0.5", 0]},
-        "chest": {"rotation": [f"{mv} * 8", 0, 0]},
-        "head": {"rotation": [f"-{mv} * 14", 0, 0]},
-        "smoke_hi": {"rotation": [f"-{mv} * 16", 0, 0]},
-        "smoke_mid": {"rotation": [f"-{mv} * 14", 0, 0]},
-        "smoke_lo": {"rotation": [f"-{mv} * 12", 0, 0]},
+        "body": {"rotation": [f"{mv} * 32", 0, f"{mv} * math.sin({T} * 120) * 6"], "position": [0, f"{mv} * math.sin({T} * 240) * 1.2", 0]},
+        "chest": {"rotation": [f"{mv} * 12", 0, 0]},
+        "neck": {"rotation": [f"-{mv} * 16", 0, 0]},
+        "head": {"rotation": [f"-{mv} * 22", 0, 0]},
+        "jaw": {"rotation": [f"{mv} * 14", 0, 0]},
+        "smoke_hi": {"rotation": [f"-{mv} * 26", 0, 0]},
+        "smoke_mid": {"rotation": [f"-{mv} * 30", 0, f"{mv} * math.sin({T} * 200) * 10"]},
+        "smoke_lo": {"rotation": [f"-{mv} * 34", 0, f"{mv} * math.sin({T} * 200 - 60) * 14"]},
     }
     for side, ph in (("r", 0), ("l", 180)):
-        glide[f"arm_{side}"] = {"rotation": [f"{mv} * (18 + math.sin({T} * 240 + {ph}) * 16)", 0, 0]}
-        glide[f"fore_{side}"] = {"rotation": [f"{mv} * 10", 0, 0]}
+        glide[f"arm_{side}"] = {"rotation": [f"{mv} * (42 + math.sin({T} * 200 + {ph}) * 14)", 0, f"{mv} * {(-14 if side == 'r' else 14)}"]}
+        glide[f"fore_{side}"] = {"rotation": [f"{mv} * 18", 0, 0]}
     for i in TENTS:
-        glide[f"tent{i}_0"] = {"rotation": [f"-{mv} * 16", 0, 0]}
-        glide[f"tent{i}_2"] = {"rotation": [f"-{mv} * 8", 0, 0]}
+        glide[f"tent{i}_0"] = {"rotation": [f"-{mv} * 30", 0, 0]}
+        glide[f"tent{i}_1"] = {"rotation": [f"-{mv} * 12", 0, 0]}
+        glide[f"tent{i}_2"] = {"rotation": [f"-{mv} * 14", 0, 0]}
     A["glide"] = ("animation.lila.curse.glide", {"loop": True, "bones": glide})
     # olhar o alvo (a cabeça vira, o pescoço ajuda)
     A["look"] = ("animation.lila.curse.look", {"loop": True, "bones": {

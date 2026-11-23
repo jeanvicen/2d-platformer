@@ -64,7 +64,9 @@ function* fillBox(dim, a, b, p, filter) {
         const hi = { x: Math.min(b.x, x + 15), y: Math.min(b.y, y + 3, dim.heightRange.max - 1), z: Math.min(b.z, z + 15) };
         if (hi.y < lo.y) continue;
         try {
+          const t0 = Date.now();
           dim.fillBlocks(new BlockVolume(lo, hi), p, filter ? { blockFilter: filter } : undefined);
+          if (Date.now() - t0 > 30) logError("mega.slow", `fill ${Date.now() - t0} ms ${filter ? "com filtro" : ""}`);
         } catch (e) {
           if (!String(e).includes("unloaded")) logError("mega.fill", e);
         }
@@ -223,6 +225,7 @@ export function* megaBuild(c, key, o = {}) {
       for (const op of plan.ops) {
         if (!c.alive()) return false;
         done++;
+        const t0 = Date.now();
         try {
           if (op[0] === "f") {
             const p = perm(op[7], op[8]);
@@ -245,6 +248,7 @@ export function* megaBuild(c, key, o = {}) {
         } catch (e) {
           logError("mega.op", `${op[0]} ${op[op[0] === "f" ? 7 : 4]}: ${e}`);
         }
+        if (Date.now() - t0 > 30) logError("mega.slow", `op ${op[0]} ${op[op[0] === "f" ? 7 : 4]} ${Date.now() - t0} ms`);
         if (done % 12 === 0) beamFx(c, { x: cx + (op[1] ?? 0), y: y0 + (op[2] ?? 0) + 1, z: cz + (op[3] ?? 0) });
         const pct = Math.floor((done / total) * 4) * 25;
         if (pct > lastPct && pct < 100) {

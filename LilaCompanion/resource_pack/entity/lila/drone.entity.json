@@ -235,7 +235,7 @@
           "v.jpitch = math.lerp(v.jpitch, math.clamp(-q.vertical_speed * 2.2, -28, 28), 0.1);",
           "v.aims = v.aims + (math.mod(v.aim - v.aims + 540, 360) - 180) * 0.2;",
           "v.pits = math.lerp(v.pits, q.property('lila:pitch'), 0.2);",
-          "v.cmove = math.lerp(v.cmove, math.clamp(q.ground_speed / 5, 0, 1), 0.12);"
+          "v.cmove = math.lerp(v.cmove, math.clamp(q.ground_speed / 4 + math.abs(q.vertical_speed) / 6, 0, 1), 0.1);"
         ],
         "animate": [
           {

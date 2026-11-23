@@ -1,5 +1,22 @@
 # Changelog
 
+## 3.3.2 — Animações vivas, forma de fumaça que volta e voo
+- **Animações não ficam mais duras**: a Maldição respira, flutua, torce o tronco, vira e inclina a
+  cabeça com trancos, chicoteia os tentáculos, balança os braços, mexe os dedos, abre e estala a boca.
+  Os movimentos antes eram de 1 a 4 graus (parecia estátua); agora são de verdade.
+- **Corrigido: golpes travados**: a ação era reiniciada a cada tick enquanto ela trabalhava/lutava e a
+  animação ficava presa no primeiro quadro. Agora cada golpe toca até o fim.
+- **Corrigido: sair do chão bugado**: qualquer ação logo depois de invocar cortava a animação de surgir
+  e o corpo pulava para fora da terra. Surgir, afundar, desfazer e remontar não são mais interrompidos.
+- **Fumaça de baixo**: os três gomos ondulam como cauda, torcem e pulsam; a poça gira.
+- **Voo**: quando ela se move (inclusive subindo/descendo) deita para frente, os braços e tentáculos
+  arrastam para trás e a fumaça vira rastro.
+- **Corrigido: não dava para sair da forma de fumaça.** No modo espectador o jogo não marca "agachado".
+  Agora o botão de agachar é lido direto (segure 1,5 s, com barra de progresso), e também funcionam
+  `/hacknd volta` (ou só `/hacknd`) e "volta ao normal". Se o script recarregar com você de fumaça, ele
+  reconecta e você consegue voltar.
+- Testes no servidor oficial 1.26.65.1: %%TESTS%%.
+
 ## 3.3.1 — A Maldição aparece de verdade + caça de bugs
 - **Corrigido: a Maldição não aparecia, só a fumaça.** Uma regra antiga (dos nanorrobôs) escondia todo o corpo
   na forma normal. Agora o modelo inteiro aparece: cabeça, tentáculos, boca, braços e a base de fumaça.
@@ -15,7 +32,7 @@
 - Textos que ainda falavam de robô, drone, nanorrobô, laser e canhão foram trocados.
 - Caixa de visão maior (a gigante não some da tela quando você está em cima dela).
 - Validador novo: confere que toda forma aparece no jogo e que nenhum efeito fica infinito.
-- Testes no servidor oficial 1.26.65.1: %%TESTS%%.
+- Testes no servidor oficial 1.26.65.1: com jogadores **48/48**, raças **53/53**, sem jogador **60/61**.
 
 ## 3.3.0 — A MALDIÇÃO (o drone de nanorrobôs virou um espírito amaldiçoado de fumaça) + escolha livre da raça
 - **A Maldição**: modelo 3D novo feito a partir da sua folha de referência (voxel preto e cinza-escuro):

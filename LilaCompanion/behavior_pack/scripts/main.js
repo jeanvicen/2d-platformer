@@ -9,7 +9,7 @@ import { backupInventory, defeat, tickDefeat } from "./lila/lifecycle.js";
 import { flushHud, resetWaypoint, updateHud } from "./lila/hud.js";
 import { riddenBy, rideTick } from "./lila/drone.js";
 import { fight, markAggro } from "./lila/combat.js";
-import { curseAtmosphereTick } from "./lila/curse.js";
+import { curseAtmosphereTick, inSmokeForm, setSmokeForm } from "./lila/curse.js";
 import { exitVehicle, formOf, formTick, isRideForm, primaryAttack, releaseRiders, riders } from "./lila/forms.js";
 import { endSwarm, isCloud, isNanoItem, nanoBreak, nanoDropped, nanoHitBlock, nanoHitEntity, nanoProtects, nanoSwing, nanoUse, shieldOn, swarmTick } from "./lila/swarm.js";
 import { booting, offTick } from "./lila/power.js";
@@ -40,6 +40,11 @@ system.beforeEvents.startup.subscribe((ev) => {
         if (!(src instanceof Player)) return { status: CustomCommandStatus.Failure, message: "Só jogadores podem usar este comando." };
         const text = args.filter((x) => typeof x === "string" && x.length).join(" ");
         system.run(() => {
+          // de fumaça: "/hacknd volta" (ou sem texto) volta ao corpo na hora, com ou sem a maldição invocada
+          if (inSmokeForm(src) && (!text || /^(volta|voltar|corpo|sai|sair|normal|para)/i.test(text.trim()))) {
+            setSmokeForm(src, false);
+            return;
+          }
           const c = loadCompanion(src, def.key);
           if (!text) {
             openController(src);

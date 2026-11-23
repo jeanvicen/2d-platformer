@@ -8,7 +8,7 @@
 //   • surgir do chão / afundar na terra;
 //   • a ATMOSFERA (faíscas ao invocar, cinzas no ar, névoa gigante só quando você liga);
 //   • os poderes do jogador: VIRAR FUMAÇA (voa e atravessa tudo, como espectador) e NÉVOA.
-import { EntityDamageCause, GameMode, MolangVariableMap, system, world } from "@minecraft/server";
+import { ButtonState, EntityDamageCause, GameMode, InputButton, MolangVariableMap, system, world } from "@minecraft/server";
 import { logError } from "../core/log.js";
 
 export const CACT = ["none", "punch_r", "punch_l", "claw", "slam", "grab", "bite", "roar", "guard", "emerge", "sink", "dissolve", "reform",
@@ -25,15 +25,31 @@ const hd = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 export const isCurseForm = (c) => !c.rec.form || c.rec.form === "drone" || c.rec.form === "colossus";
 export const curseScale = (c) => (c.rec.form === "colossus" ? SCALE : 1);
 
-/** Toca uma ação animada. Volta para "nenhuma" sozinha no fim (guarda fica até mandar parar). */
+/** Ações que não podem ser cortadas por golpes (o corpo está entrando/saindo da terra ou desfeito). */
+const LOCKED = new Set([9, 10, 11, 12]); // surgir, afundar, desfazer, remontar
+const FREE = new Set(["none", "emerge", "sink", "dissolve", "reform"]);
+/** O que está tocando agora em cada entidade: {idx, until} (until = tick em que termina). */
+const PLAYING = new Map();
+
+/**
+ * Toca uma ação animada. Volta para "nenhuma" sozinha no fim (ticks = 0: fica até outra ação).
+ * - a mesma ação NÃO reinicia enquanto ainda está tocando (o cérebro chama a cada tick: antes isso
+ *   recomeçava a animação todo tick e ela ficava tremendo travada no primeiro quadro);
+ * - surgir/afundar/desfazer/remontar não são interrompidos por golpes.
+ */
 export function cact(e, name, ticks = CACT_LEN[name]) {
   if (!e?.isValid) return;
   const idx = CACT.indexOf(name);
   if (idx < 0) return;
+  const now = system.currentTick;
+  const pl = PLAYING.get(e.id);
+  const busy = pl && pl.until > now;
   try {
-    const cur = e.getProperty("lila:cact");
-    if (cur === idx && idx !== 8) {
-      // a mesma ação de novo (dois socos seguidos): solta e reaplica no tick seguinte
+    const cur = /** @type {number} */ (e.getProperty("lila:cact") ?? 0);
+    if (busy && LOCKED.has(cur) && !FREE.has(name)) return;
+    if (busy && pl.idx === idx && cur === idx) return;
+    if (cur === idx && idx !== 0) {
+      // repetir de propósito (já terminou): solta e reaplica no tick seguinte para recomeçar
       e.setProperty("lila:cact", 0);
       system.run(() => {
         try {
@@ -47,10 +63,13 @@ export function cact(e, name, ticks = CACT_LEN[name]) {
     logError("curse.cact", err);
     return;
   }
+  PLAYING.set(e.id, { idx, until: ticks > 0 ? now + ticks + 1 : idx === 0 ? now : Infinity });
   if (ticks > 0) {
     system.runTimeout(() => {
       try {
         if (e.isValid && e.getProperty("lila:cact") === idx) e.setProperty("lila:cact", 0);
+        const q = PLAYING.get(e.id);
+        if (q && q.idx === idx && q.until <= system.currentTick) PLAYING.delete(e.id);
       } catch {
         /* ignore */
       }
@@ -316,7 +335,7 @@ export function setSmokeForm(player, on) {
       player.setGameMode(GameMode.Spectator);
       fx(player.dimension, "lila:curse_burst", { x: player.location.x, y: player.location.y + 1, z: player.location.z });
       snd(player.dimension, "mob.phantom.flap", player.location, 1, 0.5);
-      player.onScreenDisplay.setActionBar("§5§lVOCÊ É FUMAÇA§r §7— voe e atravesse tudo · §fsegure AGACHAR 2 s§7 para voltar ao corpo");
+      player.onScreenDisplay.setActionBar("§5§lVOCÊ É FUMAÇA§r §7— voe e atravesse tudo · §fsegure AGACHAR 1,5 s§7 ou diga «volta» no chat para voltar ao corpo");
       return true;
     }
     const st = SMOKE_FORM.get(player.id);
@@ -350,10 +369,23 @@ world.afterEvents.playerSpawn.subscribe((ev) => {
 
 /** Forma de fumaça: roda sozinha (não depende da maldição estar invocada — ninguém fica preso). */
 system.runInterval(() => {
+  // script recarregado (/reload) com alguém ainda de fumaça: reconecta para ele conseguir voltar
+  if (system.currentTick % 40 === 0) {
+    for (const p of world.getPlayers()) {
+      try {
+        if (!SMOKE_FORM.has(p.id) && typeof p.getDynamicProperty("lila:prevgm") === "string") {
+          if (p.getGameMode() === GameMode.Spectator) SMOKE_FORM.set(p.id, { prev: /** @type {any} */ (p.getDynamicProperty("lila:prevgm")), hold: 0 });
+          else p.setDynamicProperty("lila:prevgm", undefined);
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+  }
   if (!SMOKE_FORM.size) return;
   const tick = system.currentTick;
   for (const [id, sf] of SMOKE_FORM) {
-    const p = world.getEntity(id);
+    const p = /** @type {import("@minecraft/server").Player | undefined} */ (world.getEntity(id));
     if (!p?.isValid) {
       SMOKE_FORM.delete(id);
       continue;
@@ -361,8 +393,15 @@ system.runInterval(() => {
     try {
       fx(p.dimension, "lila:curse_form", p.location);
       if (tick % 6 === 0) fx(p.dimension, "lila:curse_embers", p.location);
-      sf.hold = /** @type {any} */ (p).isSneaking ? sf.hold + 2 : 0;
-      if (sf.hold >= 40) setSmokeForm(p, false);
+      let sneak = !!(/** @type {any} */ (p).isSneaking);
+      try {
+        sneak = sneak || p.inputInfo.getButtonState(InputButton.Sneak) === ButtonState.Pressed;
+      } catch {
+        /* versão sem inputInfo */
+      }
+      sf.hold = sneak ? sf.hold + 2 : 0;
+      if (sf.hold > 0 && sf.hold < 30) p.onScreenDisplay.setActionBar(`§5Voltando ao corpo... §f${"■".repeat(Math.ceil(sf.hold / 6))}§8${"■".repeat(5 - Math.ceil(sf.hold / 6))}`);
+      if (sf.hold >= 30) setSmokeForm(p, false);
     } catch {
       /* ignore */
     }
