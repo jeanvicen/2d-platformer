@@ -15,7 +15,7 @@
   Agora o botão de agachar é lido direto (segure 1,5 s, com barra de progresso), e também funcionam
   `/hacknd volta` (ou só `/hacknd`) e "volta ao normal". Se o script recarregar com você de fumaça, ele
   reconecta e você consegue voltar.
-- Testes no servidor oficial 1.26.65.1: %%TESTS%%.
+- Testes no servidor oficial 1.26.65.1: com jogadores **48/48** (inclui virar fumaça e voltar), desligar/ligar (afunda e sai do chão) ok.
 
 ## 3.3.1 — A Maldição aparece de verdade + caça de bugs
 - **Corrigido: a Maldição não aparecia, só a fumaça.** Uma regra antiga (dos nanorrobôs) escondia todo o corpo

@@ -376,7 +376,16 @@ async function soloTests(dim, check) {
   for (const [key, x] of builds) {
     if (key === "cidade") await area(dim, "lila_test_build", x - 72, 6, x + 72, 150);
     else await area(dim, "lila_test_build", x - 50, -10, x + 50, 110);
-    c.entity?.teleport({ x: x + 0.5, y: Y + 1, z: 0.5 }, { rotation: { x: 0, y: 0 } });
+    for (let k = 0; k < 8 && !c.entity?.isValid; k++) {
+      await system.waitTicks(10);
+      const again = findEntityFor(c);
+      if (again) c.entity = again;
+    }
+    try {
+      c.entity?.teleport({ x: x + 0.5, y: Y + 1, z: 0.5 }, { rotation: { x: 0, y: 0 } });
+    } catch {
+      /* ignore */
+    }
     await system.waitTicks(4);
     const b0 = c.rec.stats.built;
     const res = await runGen(megaBuild(c, key, { here: false }), key === "cidade" ? 9000 : 5000);
@@ -394,8 +403,15 @@ async function soloTests(dim, check) {
       const carts = dim.getEntities({ type: "minecraft:minecart", location: { x: lb.cx, y: lb.y0, z: lb.cz }, maxDistance: 60 }).length;
       check("roller coaster has a full closed track + cart", rails >= 100 && carts >= 1, `rails=${rails} carts=${carts}`);
     }
-    c.entity?.teleport({ x: 0.5, y: Y + 2, z: 0.5 }); // volta pra arena antes de descarregar a área da obra
-    await system.waitTicks(2);
+    for (let k = 0; k < 6 && c.entity?.isValid; k++) { // volta pra arena (e confere) antes de descarregar a área da obra
+      try {
+        c.entity.teleport({ x: 0.5, y: Y + 2, z: 0.5 });
+      } catch {
+        /* ignore */
+      }
+      await system.waitTicks(3);
+      if (c.entity?.isValid && Math.abs(c.entity.location.x) < 20) break;
+    }
     dropArea("lila_test_build");
   }
   check("mega builds never freeze the game (step < 60 ms)", stats.maxStepMs < 60, `maxStep=${stats.maxStepMs}ms`);
@@ -651,8 +667,16 @@ async function catalogTests(c, dim, check) {
     const isHouse = kind !== "fonte";
     const ok = r.ok && c.rec.stats.built === b0 + 1 && (!isHouse || (doorsLo >= 1 && doorsLo === doorsUp && furn >= 4)) && bedHead === bedFoot;
     check(`catalog build: ${plan.name} [${speed}]`, ok, `ticks=${r.ticks} doors=${doorsLo}/${doorsUp} beds=${bedFoot}/${bedHead} furniture=${furn} ${r.err ?? ""}`);
-    if (c.entity?.isValid) c.entity.teleport({ x: 0.5, y: Y + 2, z: 0.5 });
-    await system.waitTicks(2);
+    // volta para a arena e CONFERE que chegou antes de descarregar a área da obra (senão ela fica presa lá)
+    for (let k = 0; k < 6 && c.entity?.isValid; k++) {
+      try {
+        c.entity.teleport({ x: 0.5, y: Y + 2, z: 0.5 });
+      } catch {
+        /* ignore */
+      }
+      await system.waitTicks(3);
+      if (c.entity?.isValid && Math.abs(c.entity.location.x) < 20) break;
+    }
     dropArea("lila_test_arch");
     x += 100;
   }
