@@ -603,12 +603,29 @@ async function catalogTests(c, dim, check) {
     await area(dim, "lila_test_arch", x - 40, -20, x + 40, 70);
     // mundo de teste: a entidade às vezes é descarregada na troca de área (ticking area recriada) —
     // reencontra o corpo antes de continuar, em vez de falhar o teste por causa do carregamento
-    if (!c.entity?.isValid) {
+    for (let k = 0; k < 8 && !c.entity?.isValid; k++) {
       await system.waitTicks(10);
       const again = findEntityFor(c);
       if (again) c.entity = again;
     }
-    c.entity?.teleport({ x: x + 0.5, y: Y + 1, z: 0.5 }, { rotation: { x: 0, y: 0 } });
+    try {
+      c.entity?.teleport({ x: x + 0.5, y: Y + 1, z: 0.5 }, { rotation: { x: 0, y: 0 } });
+    } catch {
+      /* descarregou de novo no mesmo tick: a próxima espera reencontra */
+    }
+    await system.waitTicks(2);
+    for (let k = 0; k < 8 && !c.entity?.isValid; k++) {
+      await system.waitTicks(10);
+      const again = findEntityFor(c);
+      if (again) {
+        c.entity = again;
+        try {
+          again.teleport({ x: x + 0.5, y: Y + 1, z: 0.5 }, { rotation: { x: 0, y: 0 } });
+        } catch {
+          /* ignore */
+        }
+      }
+    }
     cmd(dim, `fill ${x - 30} ${Y - 2} -10 ${x + 30} ${Y - 1} 60 dirt`);
     cmd(dim, `fill ${x - 30} ${Y} -10 ${x + 30} ${Y} 60 grass_block`);
     await system.waitTicks(4);
