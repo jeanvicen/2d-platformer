@@ -33,7 +33,7 @@ export function nanoStream(dim, a, b, max = 8, step = 1.6) {
 export function nanoArrive(dim, at) {
   nanoFx(dim, "lila:nano_arrive", at);
   try {
-    dim.playSound("mob.bee.loop", at, { volume: 1, pitch: 0.6 });
+    dim.playSound("mob.blaze.breathe", at, { volume: 1, pitch: 0.6 });
     dim.playSound("beacon.activate", at, { volume: 0.5, pitch: 1.8 });
   } catch {
     /* ignore */
@@ -45,7 +45,7 @@ export function nanoCollapse(dim, at) {
   nanoFx(dim, "lila:nano_collapse", at);
   try {
     dim.playSound("beacon.deactivate", at, { volume: 0.7, pitch: 1.2 });
-    dim.playSound("mob.bee.loop", at, { volume: 0.5, pitch: 0.5 });
+    dim.playSound("mob.blaze.breathe", at, { volume: 0.5, pitch: 0.5 });
   } catch {
     /* ignore */
   }

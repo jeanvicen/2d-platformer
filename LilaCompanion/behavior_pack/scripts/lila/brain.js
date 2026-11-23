@@ -408,7 +408,7 @@ export function handleIntents(c, intents, raw = "") {
   const newGoals = [];
   // desligado: só aceita ligar (ou dispensar / status)
   if (c.rec.off && !intents.some((i) => ["power", "dismiss", "status", "inventory"].includes(i.type))) {
-    say(c, "Estou desligado. Diga \"liga\" ou use o controle (Ligar o robô).", { force: true });
+    say(c, "Estou adormecida debaixo da terra. Diga \"liga\" ou use a Maldição (Acordar a maldição).", { force: true });
     return;
   }
   for (const it of intents) {
@@ -421,7 +421,7 @@ export function handleIntents(c, intents, raw = "") {
           break;
         }
         backToNormal(c);
-        say(c, it.type === "normal" ? "Voltei ao normal! Drone de novo." : "Cancelei tudo e voltei ao normal. O que você quer agora?", { force: true });
+        say(c, it.type === "normal" ? "Voltei ao normal! A maldição de novo." : "Cancelei tudo e voltei ao normal. O que você quer agora?", { force: true });
         break;
       case "form": {
         if (armyActive(c)) merge(c);

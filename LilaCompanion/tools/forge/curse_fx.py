@@ -32,7 +32,9 @@ def _rgba(r, g, b, a):
     return {"color": [str(r), str(g), str(b), a]}
 
 
-LOOP = lambda t=2.0: {"minecraft:emitter_lifetime_looping": {"active_time": t}}  # noqa: E731
+# emissor com duração FIXA: a animação de efeitos reinicia a cada 2 s e cria um novo; um emissor "looping"
+# nunca morre e eles se acumulavam (nuvem de fumaça crescendo sem parar + brasas eternas no chão)
+LOOP = lambda t=2.0: {"minecraft:emitter_lifetime_once": {"active_time": t}}  # noqa: E731
 ONCE = {"minecraft:emitter_lifetime_once": {"active_time": 0.08}}
 INIT = {"minecraft:emitter_initialization": {"creation_expression":
                                              "v.yaw = v.yaw ?? 0; v.flap = v.flap ?? 0; v.span = v.span ?? 3.4; v.size = v.size ?? 1;"}}

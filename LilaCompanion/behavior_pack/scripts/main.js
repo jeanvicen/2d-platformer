@@ -31,7 +31,7 @@ system.beforeEvents.startup.subscribe((ev) => {
     for (const def of SUMMONS.values()) for (const cmdName of new Set([def.command ?? `lila:${def.key}`, "lila:hacknd"])) {
       ev.customCommandRegistry.registerCommand({
         name: cmdName,
-        description: "Dá uma ordem para o enxame Hacknd. Ex.: /hacknd vira helicóptero (sem texto: abre o menu)",
+        description: "Dá uma ordem para a sua Maldição. Ex.: /hacknd vira helicóptero (sem texto: abre o menu)",
         permissionLevel: CommandPermissionLevel.Any,
         cheatsRequired: false,
         optionalParameters: optional,

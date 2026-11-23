@@ -289,6 +289,72 @@ for v in re.findall(r': "([a-z_]+)"', amap.group(1) if amap else ""):
     if v not in dvals:
         errors.append(f"actionMap usa '{v}' que não existe no enum do drone")
 
+# ---------------------------------------------------------------- o que só o CLIENTE desenha (o servidor de teste não vê)
+# 1) toda forma com corpo aparece: avalia o part_visibility do controlador das formas para lila:form = 0..15.
+#    (3.3.0 saiu com a forma 0 — a Maldição — escondida por uma regra antiga: no jogo só aparecia a fumaça)
+rc_forms = next((jj["render_controllers"]["controller.render.lila.forms"] for jj in jsons.values()
+                 if jj and "controller.render.lila.forms" in jj.get("render_controllers", {})), None)
+
+
+def _molang_bool(expr, env):
+    py = expr.replace("&&", " and ").replace("||", " or ")
+    py = re.sub(r"!(?!=)", " not ", py)
+    for k, v in env.items():
+        py = py.replace(k, repr(v))
+    # depois das trocas só podem sobrar números, True/False, and/or/not, comparações e parênteses;
+    # qualquer outra coisa (variável nova, função) é recusada antes de avaliar
+    if re.sub(r"\b(True|False|and|or|not)\b|[0-9.]+|[\s()<>=!]", "", py):
+        raise ValueError(f"variável/função desconhecida em {expr!r}")
+    return bool(eval(py, {"__builtins__": {}}))  # noqa: S307 — texto já reduzido a literais e operadores
+
+
+if rc_forms:
+    NO_BODY = {9}  # enxame: nuvem de fumaça, sem corpo
+    for vis in rc_forms.get("part_visibility", []):
+        for part, expr in vis.items():
+            if part != "*":
+                continue
+            try:
+                for f in range(16):
+                    awake = _molang_bool(expr, {"q.property('lila:form')": f, "q.property('lila:off')": False, "v.ot": 9})
+                    sinking = _molang_bool(expr, {"q.property('lila:form')": f, "q.property('lila:off')": True, "v.ot": 0.5})
+                    if f in NO_BODY and awake:
+                        errors.append(f"render: forma {f} (enxame) não devia mostrar corpo")
+                    if f not in NO_BODY and not awake:
+                        errors.append(f"render: forma {f} fica INVISÍVEL no jogo (part_visibility {expr!r})")
+                    if f == 0 and not sinking:
+                        errors.append("render: a Maldição some antes de terminar de afundar ao desligar")
+            except Exception as ex:  # noqa: BLE001
+                errors.append(f"render: não consegui avaliar part_visibility: {ex}")
+
+# 2) emissor "looping" nunca morre: se for criado por animação que repete ou por script, eles se acumulam sem fim
+ptcl = {}
+for p, jj in jsons.items():
+    if jj and "particle_effect" in jj:
+        ptcl[jj["particle_effect"]["description"]["identifier"]] = jj["particle_effect"]["components"]
+short_to_full = {}
+for jj in jsons.values():
+    if jj and "minecraft:client_entity" in jj:
+        for s_, f_ in jj["minecraft:client_entity"]["description"].get("particle_effects", {}).items():
+            short_to_full.setdefault(s_, set()).add(f_)
+for jj in jsons.values():
+    for name, a in ((jj or {}).get("animations") or {}).items():
+        if not a.get("loop") or not a.get("particle_effects"):
+            continue
+        for lst in a["particle_effects"].values():
+            for ef in (lst if isinstance(lst, list) else [lst]):
+                for full in short_to_full.get(ef.get("effect"), ()):
+                    if "minecraft:emitter_lifetime_looping" in ptcl.get(full, {}):
+                        errors.append(f"partícula {full}: emissor infinito disparado pela animação em loop {name} (acumula)")
+js_all = ""
+for dp, _, fs in os.walk(os.path.join(BP, "scripts")):
+    for fn in fs:
+        if fn.endswith(".js"):
+            js_all += open(os.path.join(dp, fn), encoding="utf-8").read()
+for full, comp in ptcl.items():
+    if "minecraft:emitter_lifetime_looping" in comp and f'"{full}"' in js_all:
+        errors.append(f"partícula {full}: emissor infinito criado por script (fica no mundo para sempre)")
+
 print(f"arquivos JSON: {len(jsons)} · geometrias: {len(geos)} · animações: {len(anims)} · controladores: {len(ctrls)}")
 for e in errors:
     print("ERRO", e)

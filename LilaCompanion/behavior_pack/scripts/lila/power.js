@@ -1,12 +1,11 @@
-// Desligar / ligar o Hacknd (2.2). Desligado, o robô desmonta no chão (cabeça, mãos, tronco e
-// engrenagens caem; brilhos apagam — animação "power" do pacote de recursos pela propriedade
-// lila:off) e fica parado, sem seguir nem atacar. Ao ligar, as peças sobem voando, se encaixam,
-// os olhos acendem piscando e ele volta ao que fazia.
+// Desligar / ligar a Maldição. Desligada, ela adormece: afunda na terra (ação "sink"), o corpo some no
+// cliente (render controller: lila:off + 2,9 s) e fica parada, sem seguir nem atacar. Ao ligar, ela sai
+// do chão devagar (a mesma animação de quando é invocada) e volta ao que fazia.
 import { system } from "@minecraft/server";
-import { particle, setAction, setMove, sound } from "./anim.js";
+import { setAction, setMove, sound } from "./anim.js";
 import { formOf, setForm } from "./forms.js";
 import { abortAll } from "./lifecycle.js";
-import { nanoArrive, nanoCollapse } from "./nanofx.js";
+import { emergeFx, sinkThen } from "./curse.js";
 import { say } from "./talk.js";
 import { logError } from "../core/log.js";
 
@@ -72,10 +71,9 @@ export function powerOff(c, quiet = false) {
   setMove(e, "none");
   setProp(c, false);
   c.save();
-  // Hacknd: o campo do enxame cai e a poeira de nanorrobôs desce num montinho no chão
-  nanoCollapse(dim, at);
-  system.runTimeout(() => c.entity?.isValid && sound(c.entity, "dig.sand", 0.4, 1.6), 14);
-  if (!quiet) say(c, "Desligando... (use o controle ou diga \"liga\" para me ligar de novo)", { force: true });
+  // 3.3: a maldição adormece — afunda na terra e fica escondida (o corpo some no cliente depois de 2,9 s)
+  sinkThen(c, () => {});
+  if (!quiet) say(c, "A maldição adormeceu debaixo da terra... (use a Maldição ou diga \"liga\" para acordar)", { force: true });
   return true;
 }
 
@@ -93,10 +91,9 @@ export function powerOn(c, quiet = false) {
   setProp(c, true);
   c.save();
   const e = c.entity;
-  // Hacknd: a poeira levanta do chão e mais nanorrobôs descem do céu até formar a nuvem
-  nanoArrive(c.dim(), c.pos());
+  // 3.3: acorda saindo do chão, devagar (a mesma animação de quando é invocada)
+  emergeFx(c, c.dim(), c.pos());
   sound(e, "lila.transform", 0.6, 1.5);
-  system.runTimeout(() => c.alive() && sound(c.entity, "lila.split", 0.5, 1.8), 30);
   if (!quiet) system.runTimeout(() => c.alive() && say(c, "A maldição acordou. Ninguém toca em você.", { force: true }), BOOT_TICKS);
   return true;
 }

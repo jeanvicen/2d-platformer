@@ -19,7 +19,7 @@ import { perm, UNBREAKABLE } from "./handwork.js";
 import { say } from "./talk.js";
 import { nanoAssemble, nanoBurst } from "./nanofx.js";
 import { logError } from "../core/log.js";
-import { cact } from "./curse.js";
+import { CACT_LEN, cact } from "./curse.js";
 
 /** @typedef {import("./companion.js").Companion} Companion */
 
@@ -113,12 +113,13 @@ export function* deploy(c, n = 10, style = "misto") {
   const up = { x: owner.location.x, y: owner.location.y + 9, z: owner.location.z };
   yield* flyTo(c, up, { reach: 1.5, yTol: 1.5, timeout: 60 });
   sound(c.entity, "lila.transform", 1.2, 1.2);
-  yield 14;
+  cact(c.entity, "dissolve"); // o corpo encolhe e vira fumaça antes de se dividir
+  yield CACT_LEN.dissolve;
   const dim = c.dim();
   const at = { ...c.pos() };
   // o enxame se abre numa explosão macia de poeira (sem dano e sem quebrar nada)
   sound(c.entity, "lila.split", 2, 1);
-  sound(c.entity, "mob.bee.loop", 1.2, 0.6);
+  sound(c.entity, "mob.blaze.breathe", 1.2, 0.6);
   nanoBurst(dim, at, 2.6);
   particle(dim, "lila:shock", at);
   try {
@@ -144,7 +145,7 @@ export function* deploy(c, n = 10, style = "misto") {
       const r = dim.spawnEntity(ROBOT, { x: at.x + Math.cos(a) * 0.6, y: at.y, z: at.z + Math.sin(a) * 0.6 });
       r.setDynamicProperty(OWNER_PROP, c.rec.ownerId);
       r.setProperty("lila:kind", kind);
-      r.nameTag = `${KIND_COLOR[kind]}Hacknd §7#${i + 1} ${KIND_NAMES[kind]}`;
+      r.nameTag = `${KIND_COLOR[kind]}Sombra §7#${i + 1} ${KIND_NAMES[kind]}`;
       try {
         r.getComponent("minecraft:tameable")?.tame(owner);
         // ninja é rápido; artilheiro é pesado
@@ -573,7 +574,7 @@ export function armyBuild(c, job) {
     }
   }
   const crew = rs.filter((r) => kindOf(r) === 1).length;
-  say(c, `Exército, obra nova: ${job.label} (~${Math.round(planVolume(job.plan) / 1000)} mil blocos)! ${rs.length} robôs trabalhando${crew ? `, ${crew} construtor${crew > 1 ? "es" : ""} na frente` : ""}.`, { force: true });
+  say(c, `Exército, obra nova: ${job.label} (~${Math.round(planVolume(job.plan) / 1000)} mil blocos)! ${rs.length} sombras trabalhando${crew ? `, ${crew} construtor${crew > 1 ? "es" : ""} na frente` : ""}.`, { force: true });
   return true;
 }
 

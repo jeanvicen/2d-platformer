@@ -55,13 +55,13 @@ const EXAMPLES = [
   "— escolha um exemplo —",
   "vira helicóptero",
   "modo colosso",
-  "modo enxame",
-  "enxame faz uma ponte",
+  "asas de fumaça",
+  "a fumaça faz uma ponte",
   "vira submarino",
   "vira nave espacial",
   "constrói uma padaria pequena estilo medieval",
   "constrói uma casa moderna grande",
-  "modo exército com 10 robôs",
+  "exército de sombras com 10 soldados",
   "constrói um castelo aqui",
   "faz uma cidade inteira",
   "faz uma montanha russa",
@@ -105,7 +105,7 @@ export async function openController(player) {
     }
     if (c.rec.off) {
       // desligado: desmontado no chão
-      const f = new ActionFormData().title("§l§5Maldição").body("§7A maldição está §8adormecida§7 (um monte de cinzas no chão).");
+      const f = new ActionFormData().title("§l§5Maldição").body("§7A maldição está §8adormecida§7 debaixo da terra.");
       /** @type {[string, string, () => any][]} */
       const b = [["§5§l⏻ ACORDAR a maldição", I.drone, () => powerOn(c)], ["Inventário e status", I.info, () => infoMenu(player)],
         ["Configurações", I.settings, () => settingsMenu(player)], ["§8Mandar de volta para a terra", I.dismiss, () => dismiss(c)]];
@@ -360,7 +360,7 @@ async function armyMenu(player) {
     ["§c✖ Juntar e voltar ao normal", I.cancel, () => (stopBuild(c, true), handleIntents(c, [{ type: "normal" }]))],
   ];
   const mix = kinds.map((k, i) => (k ? `${k} ${KIND_NAMES[i]}` : "")).filter(Boolean).join(" · ");
-  const f = new ActionFormData().title("§l§aExército Hacknd").body(`§f${rs.length} robôs: §7${mix || "—"}\n§7Soldados atiram laser, artilheiros usam canhão de longe, ninjas teleportam e cortam, médicos curam você e os robôs, construtores erguem obras rápido. Todos trazem o que você precisar.${job ? `\n§6Obra em andamento: ${job.label}` : ""}`);
+  const f = new ActionFormData().title("§l§5Exército de Sombras").body(`§f${rs.length} sombras: §7${mix || "—"}\n§7Todos lutam corpo a corpo: somem em fumaça e reaparecem colados no alvo com garras; médicos curam você e as sombras, construtores erguem obras rápido. Todos trazem o que você precisar.${job ? `\n§6Obra em andamento: ${job.label}` : ""}`);
   for (const [t, icon] of b) f.button(t, icon);
   f.button("Voltar", I.back);
   const r = await show(player, f);
@@ -498,7 +498,7 @@ async function settingsMenu(player) {
     .title("§lConfigurações do Hacknd")
     .dropdown("§fIndicador de posição (HUD)", ["Automático", "Sempre visível", "Desligado"], { defaultValueIndex: Math.max(0, hud.indexOf(st.hud)) })
     .dropdown("§fConversa no chat", ["Normal", "Pouca", "Só respostas"], { defaultValueIndex: Math.max(0, chat.indexOf(st.chat)) })
-    .slider("§fRobôs no modo exército", 1, 24, { valueStep: 1, defaultValue: st.army ?? 10 })
+    .slider("§fSoldados de sombra no exército", 1, 24, { valueStep: 1, defaultValue: st.army ?? 10 })
     .dropdown("§fVelocidade de construção", ["À mão, bloco por bloco (devagar, como jogador)", "Normal", "Rápido", "Instantâneo (tudo de uma vez)"],
       { defaultValueIndex: Math.max(0, SPEED_KEYS.indexOf(st.buildSpeed ?? "humano")) })
     .toggle("§fArmas quebram blocos (colosso, canhão, mísseis)", { defaultValue: st.destroy !== false })
@@ -520,13 +520,13 @@ async function help(player) {
   const f = new ActionFormData()
     .title("§lComo funciona")
     .body([
-      "§bControle:§f use para abrir o menu. Toque na nuvem segurando o controle para falar com o enxame; de mão vazia ele te carrega.",
-      "§bOrdens em texto:§f \"vira helicóptero\", \"modo colosso\", \"modo exército\", \"constrói um castelo\", \"faz uma cidade\", \"transforma aqui em neve\", \"me dá um élitro\", \"me fortalece\", \"me protege\", \"volta ao normal\".",
-      "§bPelo chat:§f /drone vira tanque",
-      "§bDesligar:§f botão Desligar (ou \"desliga\"): ele desmonta no chão e fica quieto. Ligar: botão Ligar (ou \"liga\").",
-      "§bCancelar tudo:§f larga o que estiver fazendo e volta a ser o enxame (junta o exército, desfaz veículo/titã/torreta).",
-      "§bProteção:§f no modo proteger ele ataca primeiro. Quem bater em você ou nele vira alvo, até outro jogador.",
-      "§bDerrota:§f se cair, volta em 20 segundos.",
+      "§5Maldição (item):§f use para abrir o menu. Toque nela segurando o item para conversar; de mão vazia ela te carrega.",
+      "§5Ordens em texto:§f \"vira helicóptero\", \"maldição gigante\", \"modo exército\", \"constrói um castelo\", \"faz uma cidade\", \"transforma aqui em neve\", \"me dá um élitro\", \"me fortalece\", \"me protege\", \"volta ao normal\".",
+      "§5Pelo chat:§f /hacknd vira tanque",
+      "§5Adormecer:§f botão Desligar (ou \"desliga\"): ela afunda na terra e fica quieta. Acordar: botão Acordar (ou \"liga\") e ela sai do chão.",
+      "§5Cancelar tudo:§f larga o que estiver fazendo e volta a ser a Maldição (junta o exército, desfaz veículo e gigante).",
+      "§5Proteção:§f no modo proteger ela ataca primeiro, no soco. Quem bater em você ou nela vira alvo, até outro jogador.",
+      "§5Derrota:§f se cair, ela se desfaz em fumaça e volta em 20 segundos.",
     ].join("\n\n"))
     .button("Entendi!");
   await show(player, f);

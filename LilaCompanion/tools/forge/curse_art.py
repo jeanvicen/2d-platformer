@@ -262,7 +262,7 @@ def _smoke(m):
 
 
 def curse_model(identifier="geometry.lila.curse"):
-    m = Model(identifier, 128, 128, density=4, bounds=(8, 7, (0, 3, 0)))
+    m = Model(identifier, 128, 128, density=4, bounds=(11, 9, (0, 3.5, 0)))
     m.bone("root", None, (0, 0, 0))
     body, chest = _torso(m)
     _head(m)

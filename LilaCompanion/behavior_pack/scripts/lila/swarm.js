@@ -203,11 +203,11 @@ export function setNanoMode(c, mode, owner = c.owner()) {
     particle(dim, "lila:nano_form", { x: owner.location.x, y: owner.location.y + 1.2, z: owner.location.z });
     try {
       dim.playSound("lila.split", owner.location, { volume: 0.5, pitch: 1.7 });
-      dim.playSound("mob.bee.loop", owner.location, { volume: 0.4, pitch: 1.5 });
+      dim.playSound("mob.blaze.breathe", owner.location, { volume: 0.4, pitch: 1.5 });
     } catch {
       /* ignore */
     }
-    bar(owner, `§b⬢ Enxame: §l${MODE_NAMES[mode]}§r §7— ${MODE_HELP[mode]}`);
+    bar(owner, `§5⬢ Fumaça: §l${MODE_NAMES[mode]}§r §7— ${MODE_HELP[mode]}`);
   }
   if (c.entity?.isValid) setAction(c.entity, mode === "escudo" ? "scan" : "idle");
   c.save();
@@ -232,9 +232,7 @@ export function swarmTick(c) {
   if (!owner || owner.dimension.id !== dim.id) return;
   const od = owner.dimension;
   const mode = modeOf(c);
-  // a atmosfera: nanorrobôs minúsculos espalhados no ar em volta (não orbitam)
-  if (pass % 20 === 0) particle(od, "lila:nano_air", owner.location);
-  if (pass % 80 === 0) sound(e, "mob.bee.loop", 0.22, 1.9);
+  // a atmosfera (cinzas, brasas e a névoa) fica com curseAtmosphereTick — aqui não solta nada por tick
   try {
     if (mode === "escudo") {
       if (pass % 2 === 0) barrierTick(c, owner);
@@ -451,7 +449,7 @@ function stingTick(c, owner) {
       /* ignore */
     }
   }
-  if (now % 20 < 10) sound(c.entity, "mob.bee.aggressive", 0.6, 1.4);
+  if (now % 20 < 10) sound(c.entity, "mob.vex.charge", 0.6, 1.4);
 }
 
 // ------------------------------------------------------------------ asas e prancha
@@ -518,7 +516,7 @@ function boardTick(c, owner, pass) {
   const vy = Math.max(-0.5, Math.min(0.6, (c.flags.boardY - o.y) * 0.35)) + 0.08;
   try {
     owner.applyKnockback({ x: hx, z: hz }, vy);
-    if (pass % 30 === 0) dim.playSound("mob.bee.loop", o, { volume: 0.3, pitch: 2 });
+    if (pass % 30 === 0) dim.playSound("mob.blaze.breathe", o, { volume: 0.3, pitch: 2 });
   } catch {
     /* ignore */
   }
@@ -573,7 +571,7 @@ export function nanoSwing(c, owner) {
   c.flags.punchSide = -(c.flags.punchSide ?? 1);
   c.flags.punch = { side: c.flags.punchSide, t0: system.currentTick, to, dir, hit: false };
   try {
-    owner.dimension.playSound("mob.bee.aggressive", owner.location, { volume: 0.6, pitch: 0.7 });
+    owner.dimension.playSound("mob.vex.charge", owner.location, { volume: 0.6, pitch: 0.7 });
   } catch {
     /* ignore */
   }
@@ -691,7 +689,7 @@ export function formTool(c, owner, kind, why = "") {
   particle(dim, "lila:nano_form", hp);
   try {
     dim.playSound("lila.split", hp, { volume: 0.45, pitch: 1.9 });
-    dim.playSound("mob.bee.loop", hp, { volume: 0.5, pitch: 1.4 });
+    dim.playSound("mob.blaze.breathe", hp, { volume: 0.5, pitch: 1.4 });
   } catch {
     /* ignore */
   }
@@ -705,7 +703,7 @@ export function formTool(c, owner, kind, why = "") {
       (c.flags.nanoHeld ??= {})[id] = system.currentTick;
       particle(dim, "lila:nano_point", handPos(owner));
       dim.playSound("random.anvil_land", owner.location, { volume: 0.12, pitch: 2 });
-      bar(owner, `§b⬢ ${TOOL_NAMES[kind]} de nanorrobôs${kind === "hammer" ? " §7(use para arremessar)" : ""}`);
+      bar(owner, `§5⬢ ${TOOL_NAMES[kind]} de sombra${kind === "hammer" ? " §7(use para arremessar)" : ""}`);
     } catch {
       /* ignore */
     }
@@ -859,7 +857,7 @@ function heldTick(c, owner, pass) {
   if (held && isNanoItem(held.typeId)) {
     H[held.typeId] = now;
     if (held.typeId !== NANO_ITEMS.core) particle(owner.dimension, "lila:nano_point", handPos(owner));
-    else if (pass % 20 === 2) bar(owner, `§b⬢ Enxame: §l${MODE_NAMES[modeOf(c)]}§r §7— use para trocar (agachado volta)`);
+    else if (pass % 20 === 2) bar(owner, `§5⬢ Fumaça: §l${MODE_NAMES[modeOf(c)]}§r §7— use para trocar (agachado volta)`);
   }
   if (pass % 20 !== 2) return;
   for (let i = 0; i < ct.size; i++) {
@@ -1096,7 +1094,7 @@ export function doShape(c, kind, owner = c.owner()) {
   const side = right(f);
   const now = system.currentTick;
   const fx = Math.floor(o.x), fy = Math.floor(o.y), fz = Math.floor(o.z);
-  sound(c.entity, "mob.bee.aggressive", 1, 1.2);
+  sound(c.entity, "mob.vex.charge", 1, 1.2);
   sound(c.entity, "lila.split", 0.6, 1.6);
   switch (kind) {
     case "muralha": {
@@ -1264,7 +1262,7 @@ function shapeTick(c, pass) {
       } catch {
         /* ignore */
       }
-      if (t % 20 === 0) sound(c.entity, "mob.bee.aggressive", 1.2, 0.8);
+      if (t % 20 === 0) sound(c.entity, "mob.vex.charge", 1.2, 0.8);
     }
   }
 }

@@ -78,7 +78,7 @@
       ],
       "part_visibility": [
         {
-          "*": "q.property('lila:form') != 0 && q.property('lila:form') != 9"
+          "*": "q.property('lila:form') != 9 && !(q.property('lila:off') && v.ot > 2.9)"
         }
       ],
       "is_hurt_color": {

@@ -768,8 +768,9 @@ def build_render_controllers():
                 "geometry": "Array.geo[q.property('lila:form')]",
                 "materials": [{"*": "Material.default"}],
                 "textures": ["Array.tex[q.property('lila:form')]"],
-                # Hacknd: na forma normal (e no enxame) não existe corpo — só os nanorrobôs (partículas)
-                "part_visibility": [{"*": "q.property('lila:form') != 0 && q.property('lila:form') != 9"}],
+                # 3.3: a forma 0 É a Maldição (corpo inteiro). Só some no enxame (9, nuvem de fumaça) e quando está
+                # desligada/adormecida, depois de afundar na terra (v.ot = segundos desde que desligou)
+                "part_visibility": [{"*": "q.property('lila:form') != 9 && !(q.property('lila:off') && v.ot > 2.9)"}],
                 "is_hurt_color": {"r": "0.85", "g": "0.25", "b": "0.25", "a": "0.25"},
             },
             # soldados do exército: 5 tipos (textura + acessório visível por lila:kind)

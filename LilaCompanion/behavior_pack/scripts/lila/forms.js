@@ -113,7 +113,7 @@ export function setForm(c, form, o = {}) {
     if (c.flags.transforming) return true;
     c.flags.transforming = form;
     setAction(e, "charge");
-    sound(e, "mob.bee.loop", 1, 0.7);
+    sound(e, "mob.blaze.breathe", 1, 0.7);
     sound(e, "beacon.power", 0.6, 1.6);
     // o enxame se espalha num redemoinho do tamanho da forma nova, antes de compactar nela
     nanoBurst(e.dimension, e.location, (FORM_SIZE[form] ?? 1) * 0.8);
@@ -162,7 +162,7 @@ function applyForm(c, form, o = {}) {
   c.flags.formAt = system.currentTick;
   if (!o.quiet) {
     sound(e, "lila.transform", 1.0, form === "colossus" ? 0.8 : 1.0);
-    sound(e, "mob.bee.loop", 0.8, form === "colossus" ? 0.5 : 1.2);
+    sound(e, "mob.blaze.breathe", 0.8, form === "colossus" ? 0.5 : 1.2);
     // Hacknd: virar forma = o enxame converge e compacta; voltar ao normal = a forma vira poeira
     if (form === "drone" || form === "swarm") nanoBurst(dim, at, FORM_SIZE[prev] ?? 1);
     else nanoAssemble(dim, at, FORM_SIZE[form] ?? 1);

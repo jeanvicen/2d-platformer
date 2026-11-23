@@ -232,13 +232,18 @@ async function soloTests(dim, check) {
     await system.waitTicks(30);
     const offY = c.pos().y;
     const offProp = c.entity?.getProperty("lila:off") === true;
-    check("power off: robot drops to the ground and stays off", offProp && !!c.rec.off && Math.abs(offY - (Y + 1)) < 0.6, `y=${(offY - Y).toFixed(2)} prop=${offProp}`);
+    const offAct = c.entity?.getProperty("lila:cact");
+    check("power off: the curse sinks into the ground and stays asleep (sink held)", offProp && !!c.rec.off && Math.abs(offY - (Y + 1)) < 0.6 && offAct === 10,
+      `y=${(offY - Y).toFixed(2)} prop=${offProp} cact=${offAct}`);
     command(c, "vira tanque");
     await system.waitTicks(4);
     check("while off it ignores orders (until 'liga')", formOf(c) === "drone" && !!c.rec.off);
     command(c, "liga");
-    await system.waitTicks(BOOT_TICKS + 6);
-    check("power on: assembles and is back online", !c.rec.off && c.entity?.getProperty("lila:off") === false);
+    await system.waitTicks(2);
+    const wakeAct = c.entity?.getProperty("lila:cact");
+    await system.waitTicks(BOOT_TICKS + 4);
+    check("power on: rises out of the ground (emerge) and is back online", !c.rec.off && c.entity?.getProperty("lila:off") === false && wakeAct === 9,
+      `cact=${wakeAct}`);
     // soco forte quando o alvo está perto
     c.entity?.teleport({ x: 0.5, y: Y + 1.2, z: 0.5 }, { keepVelocity: false });
     const pz = dim.spawnEntity("minecraft:zombie", { x: 0.5, y: Y + 1, z: 2.5 });

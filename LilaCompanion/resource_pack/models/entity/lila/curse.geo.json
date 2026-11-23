@@ -6,11 +6,11 @@
         "identifier": "geometry.lila.curse",
         "texture_width": 128,
         "texture_height": 512,
-        "visible_bounds_width": 8,
-        "visible_bounds_height": 7,
+        "visible_bounds_width": 11,
+        "visible_bounds_height": 9,
         "visible_bounds_offset": [
           0,
-          3,
+          3.5,
           0
         ]
       },
