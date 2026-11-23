@@ -321,7 +321,7 @@ export function* verifyPlan(c, dim, plan, cx, cz, y0, o = {}) {
     } catch {
       continue;
     }
-    if (++checked % 300 === 0) yield* breathe(6);
+    if (++checked % 32 === 0) yield* breathe(6); // olha o relógio sempre: consertar bloco custa caro
     if (!b || b.typeId === id || UNBREAKABLE.has(b.typeId)) continue;
     const pm = perm(id, st);
     if (!pm) continue;
@@ -332,6 +332,7 @@ export function* verifyPlan(c, dim, plan, cx, cz, y0, o = {}) {
         if (q) dim.getBlock({ x: cx + x + pair[0], y: y0 + y + pair[1], z: cz + z + pair[2] })?.setPermutation(q);
       }
       fixed++;
+      yield* breathe(6);
       if (fixed % 8 === 1) {
         particle(dim, "lila:build", { x: cx + x + 0.5, y: y0 + y + 0.5, z: cz + z + 0.5 });
         fx({ x: cx + x, y: y0 + y + 1, z: cz + z });
