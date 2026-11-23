@@ -3,7 +3,7 @@
 // torreta, megaconstruções, bioma, derrota). Com "owner": usa jogadores simulados (Dono e Intruso)
 // para testar pilotagem, imortalidade no colosso, revide contra jogador, exército e entregas.
 import { BlockPermutation, ItemStack, system, world } from "@minecraft/server";
-import { COMPANIONS, Companion, ENTITY_ID, OWNER_PROP, adopt, compKey, loadCompanion, newRecord } from "../lila/companion.js";
+import { COMPANIONS, Companion, ENTITY_ID, OWNER_PROP, adopt, compKey, findEntityFor, loadCompanion, newRecord } from "../lila/companion.js";
 import * as inv from "../lila/inventory.js";
 import { obtain } from "../lila/planner.js";
 import { command, handleIntents, stats } from "../lila/brain.js";
@@ -596,6 +596,13 @@ async function catalogTests(c, dim, check) {
   stats.maxStepMs = 0;
   for (const [kind, style, size, speed] of samples) {
     await area(dim, "lila_test_arch", x - 40, -20, x + 40, 70);
+    // mundo de teste: a entidade às vezes é descarregada na troca de área (ticking area recriada) —
+    // reencontra o corpo antes de continuar, em vez de falhar o teste por causa do carregamento
+    if (!c.entity?.isValid) {
+      await system.waitTicks(10);
+      const again = findEntityFor(c);
+      if (again) c.entity = again;
+    }
     c.entity?.teleport({ x: x + 0.5, y: Y + 1, z: 0.5 }, { rotation: { x: 0, y: 0 } });
     cmd(dim, `fill ${x - 30} ${Y - 2} -10 ${x + 30} ${Y - 1} 60 dirt`);
     cmd(dim, `fill ${x - 30} ${Y} -10 ${x + 30} ${Y} 60 grass_block`);
@@ -622,7 +629,7 @@ async function catalogTests(c, dim, check) {
     const isHouse = kind !== "fonte";
     const ok = r.ok && c.rec.stats.built === b0 + 1 && (!isHouse || (doorsLo >= 1 && doorsLo === doorsUp && furn >= 4)) && bedHead === bedFoot;
     check(`catalog build: ${plan.name} [${speed}]`, ok, `ticks=${r.ticks} doors=${doorsLo}/${doorsUp} beds=${bedFoot}/${bedHead} furniture=${furn} ${r.err ?? ""}`);
-    c.entity?.teleport({ x: 0.5, y: Y + 2, z: 0.5 });
+    if (c.entity?.isValid) c.entity.teleport({ x: 0.5, y: Y + 2, z: 0.5 });
     await system.waitTicks(2);
     dropArea("lila_test_arch");
     x += 100;

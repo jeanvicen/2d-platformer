@@ -65,7 +65,7 @@ function safeAhead(player, dist) {
   const head = player.getHeadLocation(), dir = player.getViewDirection();
   let d = dist;
   try {
-    const hb = player.dimension.getBlockFromRay(head, dir, { maxDistance: dist });
+    const hb = player.dimension.getBlockFromRay(head, dir, { maxDistance: dist, includePassableBlocks: false, includeLiquidBlocks: false });
     if (hb) d = Math.max(0, d3(head, hb.block.location) - 1.4);
   } catch {
     /* ignore */

@@ -478,7 +478,17 @@ export async function raceTests(dim, check) {
       await wait(3);
       const o = LAST.outcome;
       const real = r.ok && o && (o.hits > 0 || o.touched > 0 || o.self || o.queued > 0);
-      if (!real) fails.push(`${a.id} ${a.name}: ${r.msg ?? "sem efeito"}`);
+      if (!real) {
+        let ray = "";
+        try {
+          const hb = dim.getBlockFromRay(p.getHeadLocation(), p.getViewDirection(), { maxDistance: 30 });
+          ray = hb ? ` raio→${hb.block.typeId.replace("minecraft:", "")}@${Math.hypot(hb.block.location.x - p.location.x, hb.block.location.z - p.location.z).toFixed(1)}` : " raio→nada";
+          ray += ` golems=${targets.filter((t) => t.isValid).length} gm=${p.getGameMode()}`;
+        } catch (e) {
+          ray = ` raio? ${e}`;
+        }
+        fails.push(`${a.id} ${a.name}: ${r.msg ?? "sem efeito"}${ray}`);
+      }
       // desfaz toggles (morcego/voo/auras) para o próximo
       if (a.special === "bat" || a.special === "flight" || a.shape === "aura") cast(p, a.id, { force: true, quiet: true });
       for (const t of targets) try {

@@ -264,7 +264,7 @@ function drainTick(player, d, tick) {
   const dl = Math.hypot(dx, dy, dz) || 1;
   if ((dx * vd.x + dy * vd.y + dz * vd.z) / dl < 0.75) return stop(`mira ${((dx * vd.x + dy * vd.y + dz * vd.z) / dl).toFixed(2)}`);
   try {
-    const hb = player.dimension.getBlockFromRay(head, { x: dx / dl, y: dy / dl, z: dz / dl }, { maxDistance: dl });
+    const hb = player.dimension.getBlockFromRay(head, { x: dx / dl, y: dy / dl, z: dz / dl }, { maxDistance: dl, includePassableBlocks: false, includeLiquidBlocks: false });
     if (hb && hb.block.isSolid && Math.hypot(hb.block.location.x + 0.5 - head.x, hb.block.location.z + 0.5 - head.z) < Math.hypot(dx, dz) - 0.8) return stop("bloco");
   } catch {
     /* ignore */

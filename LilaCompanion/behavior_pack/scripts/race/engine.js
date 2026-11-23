@@ -405,7 +405,7 @@ const SHAPE = {
     const dim = ctx.player.dimension;
     let end = add(ctx.head, ctx.dir, r);
     try {
-      const hb = dim.getBlockFromRay(ctx.head, ctx.dir, { maxDistance: r });
+      const hb = dim.getBlockFromRay(ctx.head, ctx.dir, { maxDistance: r, includePassableBlocks: false, includeLiquidBlocks: false });
       if (hb) end = v3(hb.block.location.x + 0.5, hb.block.location.y + 0.5, hb.block.location.z + 0.5);
     } catch {
       /* ignore */
@@ -522,7 +522,7 @@ const SHAPE = {
     const dim = ctx.player.dimension;
     let dist = r;
     try {
-      const hb = dim.getBlockFromRay(ctx.head, ctx.dir, { maxDistance: r });
+      const hb = dim.getBlockFromRay(ctx.head, ctx.dir, { maxDistance: r, includePassableBlocks: false, includeLiquidBlocks: false });
       if (hb) dist = Math.max(0, d3(ctx.head, hb.block.location) - 1.5);
     } catch {
       /* ignore */
