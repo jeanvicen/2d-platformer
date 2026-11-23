@@ -25,7 +25,7 @@
   - **Cura da Maldição**;
   - **«NÃO SE MEXAM»**.
 - 5 animações novas: abraço, fúria, acalmar, esmagar e ordem amaldiçoada.
-- Testes no servidor oficial 1.26.65.1: com jogadores **50/50** (inclui o abraço que cura de 4 para 20 de vida e a katana sem invocar).
+- Testes no servidor oficial 1.26.65.1: com jogadores **50/50** (inclui o abraço que cura de 4 para 20 de vida e a katana sem invocar), sem jogador **60/61** (a falha: um passo de megaconstrução de teste levou 62 ms; o limite é 60).
 
 ## 3.3.4 — Animações reconstruídas, bote antes do golpe e raças removidas
 - **Animações da Maldição refeitas no formato que o celular aceita.** O arquivo antigo tinha 341 KB numa
