@@ -11,7 +11,7 @@ import { release } from "./areas.js";
 import { DRONE } from "./registry.js";
 import { logError } from "../core/log.js";
 import { merge } from "./army.js";
-import { nanoArrive, nanoBurst } from "./nanofx.js";
+import { emergeFx, fx, sinkThen } from "./curse.js";
 
 /** @typedef {import("./companion.js").Companion} Companion */
 
@@ -135,13 +135,9 @@ export function summon(c, player) {
 }
 
 function arrive(c, dim, loc, anim) {
-  // Hacknd: o enxame desce do céu em várias correntes, de lugares diferentes, até virar a nuvem
-  nanoArrive(dim, loc);
-  sound(c.entity, "random.levelup", 0.25, 1.9);
-  if (anim) {
-    setAction(c.entity, "summon");
-    system.runTimeout(() => setAction(c.entity, "idle"), 22);
-  }
+  // MALDIÇÃO: ela sai do chão, devagar e assustadora (terra estourando, rachaduras, tremor, rugido)
+  emergeFx(c, dim, loc);
+  if (anim) system.runTimeout(() => setAction(c.entity, "idle"), 96);
 }
 
 /** Só para o autoteste: restaura o corpo salvo pelo "dispensar" sem um jogador. */
@@ -157,7 +153,13 @@ export function restoreBodyForTest(c, dim, loc) {
 }
 
 /** Dispensa: guarda o corpo com tudo e some (pode ser invocada de novo depois). */
-export function dismiss(c) {
+export function dismiss(c, o = {}) {
+  // MALDIÇÃO: na forma normal ela afunda na terra antes de sumir
+  if (!o.now && c.alive() && (!c.rec.form || c.rec.form === "drone") && !c.rec.off) {
+    say(c, "Volto para debaixo da terra... é só me chamar.", { force: true });
+    sinkThen(c, () => dismiss(c, { now: true }));
+    return;
+  }
   if (c.rec.form === "army") {
     merge(c);
   } else if (c.alive() && c.rec.form && c.rec.form !== "drone") {
@@ -176,8 +178,7 @@ export function dismiss(c) {
   }
   const dim = c.dim();
   const loc = c.pos();
-  say(c, "Beleza, o enxame vai se espalhar. É só chamar no controle!", { force: true });
-  nanoBurst(dim, loc, 1.6);
+  fx(dim, "lila:curse_ground_smoke", loc);
   sound(c.entity, "beacon.deactivate", 0.6, 1.6);
   abortAll(c);
   removeWaypoint(c);

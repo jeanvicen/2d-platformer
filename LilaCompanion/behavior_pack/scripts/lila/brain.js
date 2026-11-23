@@ -466,7 +466,7 @@ export function handleIntents(c, intents, raw = "") {
         if (!wasSwarm) {
           if (c.rec.mode === "turret") c.rec.mode = "follow";
           setForm(c, "drone");
-        } else if (!it.shape) say(c, "Nós já somos o enxame! Peça um poder: escudo, asas, prancha, mãos gigantes, devorador, martelo...", { force: true });
+        } else if (!it.shape) say(c, "Já estou aqui! Peça um poder: asas de fumaça, escudo, nuvem voadora, mãos da maldição, boca devoradora, martelo...", { force: true });
         // vindo de outra forma, espera a transformação terminar para usar o poder pedido
         if (it.shape && wasSwarm) doShape(c, it.shape, o);
         else if (it.shape) system.runTimeout(() => (formOf(c) === "swarm" || formOf(c) === "drone") && c.alive() && doShape(c, it.shape, c.owner() ?? o), 20);

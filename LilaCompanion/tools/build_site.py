@@ -44,7 +44,8 @@ def main():
     addon = open(os.path.join(ROOT, "dist", "Hacknd.mcaddon"), "rb").read()
     ver = ".".join(map(str, json.load(open(os.path.join(ROOT, "behavior_pack", "manifest.json")))["header"]["version"]))
     rep = {
-        "%%PORTRAIT%%": img("portrait", 440),
+        "%%PORTRAIT%%": img("portrait", 440), "%%CURSE_FRONT%%": img("curse_front", 440), "%%CURSE_SIDE%%": img("curse_side", 440),
+        "%%CURSE_POSES%%": img("curse_poses", 900),
         "%%DRONE0%%": img("drone_view_0", 300), "%%DRONECTL%%": img("drone_controller", 220),
         **{f"%%F_{k.upper()}%%": img(f"form_{k}", 420 if k == "colossus" else 300) for k in ("heli", "car", "excavator", "tank", "jet", "moto", "colossus",
                                                                                                  "ship", "ufo", "sub", "boat", "truck", "stealth", "swarm")},

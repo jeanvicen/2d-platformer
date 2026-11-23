@@ -35,11 +35,14 @@ from forge.colossus_art import ROBOT_KINDS, colossus_model, robot_model  # noqa:
 from forge.forms_anims import (FORM_IDS, INITIALIZE, PRE_ANIMATION, ROBOT_ACTIONS, form_anims, form_controllers,  # noqa: E402
                                robot_anims, robot_controllers)
 from forge.audio import build_sounds  # noqa: E402
+from forge.curse_art import curse_model  # noqa: E402
+from forge.curse_anims import ACTIONS as CURSE_ACTIONS, action_anims, action_controller, life_anims, sample_pose  # noqa: E402
+from forge.curse_fx import curse_particles  # noqa: E402
 from forge.render import render  # noqa: E402
 
 MOVES = ["none", "walk", "run", "swim", "climb", "fall", "sneak"]
 
-VERSION = [3, 2, 0]
+VERSION = [3, 3, 0]
 MIN_ENGINE = [1, 26, 30]
 SERVER_VERSION = "2.8.0"
 SERVER_UI_VERSION = "2.1.0"
@@ -61,18 +64,18 @@ GENERATED_RP = ["entity", "models", "animations", "animation_controllers", "rend
                 "particles", "textures", "texts", "sounds", "fogs", "ui"]
 
 LANGS = {
-    "en_US": {"entity.lila:drone.name": "Hacknd", "entity.lila:robot.name": "Hacknd Nanobot Soldier", "item.lila.drone_controller.name": "Hacknd Remote",
-              "action.interact.lila.ride": "Get in", "action.interact.lila.talk": "Talk"},
-    "pt_BR": {"entity.lila:drone.name": "Hacknd", "entity.lila:robot.name": "Soldado de nanorrobôs Hacknd", "item.lila.drone_controller.name": "Controle do Hacknd",
-              "action.interact.lila.ride": "Entrar", "action.interact.lila.talk": "Conversar"},
+    "en_US": {"entity.lila:drone.name": "Curse", "entity.lila:robot.name": "Shadow Soldier", "item.lila.drone_controller.name": "Curse (summon / command)",
+              "action.interact.lila.ride": "Climb on", "action.interact.lila.talk": "Talk"},
+    "pt_BR": {"entity.lila:drone.name": "Maldição", "entity.lila:robot.name": "Soldado de Sombra", "item.lila.drone_controller.name": "Maldição (invocar / comandar)",
+              "action.interact.lila.ride": "Subir", "action.interact.lila.talk": "Conversar"},
 }
 NANO_NAMES = {
-    "en_US": {"sword": "Nanobot Sword", "pickaxe": "Nanobot Pickaxe", "axe": "Nanobot Axe", "shovel": "Nanobot Shovel", "hoe": "Nanobot Hoe",
-              "hammer": "Nanobot Hammer (use to throw)", "core": "Swarm Core (use to switch mode)"},
-    "pt_BR": {"sword": "Espada de Nanorrobôs", "pickaxe": "Picareta de Nanorrobôs", "axe": "Machado de Nanorrobôs", "shovel": "Pá de Nanorrobôs",
-              "hoe": "Enxada de Nanorrobôs", "hammer": "Martelo de Nanorrobôs (use para arremessar)", "core": "Núcleo do Enxame (use para trocar o modo)"},
-    "es_ES": {"sword": "Espada de Nanobots", "pickaxe": "Pico de Nanobots", "axe": "Hacha de Nanobots", "shovel": "Pala de Nanobots",
-              "hoe": "Azada de Nanobots", "hammer": "Martillo de Nanobots (úsalo para lanzar)", "core": "Núcleo del Enjambre (úsalo para cambiar el modo)"},
+    "en_US": {"sword": "Shadow Sword", "pickaxe": "Shadow Pickaxe", "axe": "Shadow Axe", "shovel": "Shadow Shovel", "hoe": "Shadow Hoe",
+              "hammer": "Shadow Hammer (use to throw)", "core": "Curse Smoke (use to switch power)"},
+    "pt_BR": {"sword": "Espada de Sombra", "pickaxe": "Picareta de Sombra", "axe": "Machado de Sombra", "shovel": "Pá de Sombra",
+              "hoe": "Enxada de Sombra", "hammer": "Martelo de Sombra (use para arremessar)", "core": "Fumaça da Maldição (use para trocar o poder)"},
+    "es_ES": {"sword": "Espada de Sombra", "pickaxe": "Pico de Sombra", "axe": "Hacha de Sombra", "shovel": "Pala de Sombra",
+              "hoe": "Azada de Sombra", "hammer": "Martillo de Sombra (úsalo para lanzar)", "core": "Humo de la Maldición (úsalo para cambiar el poder)"},
 }
 for _lg, _names in NANO_NAMES.items():
     LANGS.setdefault(_lg, {}).update({f"item.lila.nano_{k}.name": v for k, v in _names.items()})
@@ -85,7 +88,10 @@ LANGS["es_ES"] = {"entity.lila:drone.name": "Hacknd", "entity.lila:robot.name": 
 def wjson(path, data):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+        if path.endswith("curse.animation.json"):  # animação amostrada: compacta (arquivo 4× menor)
+            json.dump(data, f, separators=(",", ":"), ensure_ascii=False)
+        else:
+            json.dump(data, f, indent=2, ensure_ascii=False)
         f.write("\n")
 
 
@@ -183,15 +189,15 @@ assert [FORM_IDS[k] for k in FORM_ORDER] == list(range(len(FORM_ORDER)))
 # assentos (blocos, espaço da entidade). O colosso tem escala 3.4: os assentos são em blocos reais.
 COL_SCALE = 3.4
 SEATS = {
-    "drone": [[0, 2.35, 0]],
+    "drone": [[0, 4.2, 0.55]],
     "heli": [[-0.4, 0.98, -1.06], [0.4, 0.98, -1.06], [-0.4, 0.98, 0.25], [0.4, 0.98, 0.25]],
     "car": [[-0.45, 0.72, -0.06], [0.45, 0.72, -0.06], [-0.45, 0.72, 0.94], [0.45, 0.72, 0.94]],
     "excavator": [[-0.5, 1.05, -0.25], [0.5, 1.6, 0.6]],
     "tank": [[0.5, 1.55, 0.6], [-0.5, 1.55, 0.6], [0, 1.05, 1.9]],
     "jet": [[0, 1.1, -1.94], [0, 1.05, -1.2]],
     "moto": [[0, 0.82, 0.35], [0, 0.88, 0.95]],
-    # piloto EM CIMA da cabeça (visão 360°), ombreiras e topo da mochila (em blocos sem escala)
-    "colossus": [[0, 7.85, -0.06], [-1.85, 7.06, 0], [1.85, 7.06, 0], [-0.5, 6.76, 1.12], [0.5, 6.76, 1.12]],
+    # Maldição gigante: piloto EM CIMA da cabeça, os outros nos ombros e na corcunda (em blocos sem escala)
+    "colossus": [[0, 4.15, 0.6], [-0.75, 3.62, 0.35], [0.75, 3.62, 0.35], [-0.3, 3.45, -0.25], [0.3, 3.45, -0.25]],
     "ship": [[0, 0.92, -0.875], [0, 0.92, 0.25]],
     "ufo": [[0, 0.92, -0.375], [-0.56, 0.92, 0.44], [0.56, 0.92, 0.44]],
     "sub": [[0, 1.07, -0.75], [-0.31, 1.08, 0.875], [0.31, 1.08, 1.5]],
@@ -201,7 +207,7 @@ SEATS = {
 }
 FORM_PHYS = {
     # (largura, altura, gravidade, escala, vida). Submarino e lancha: gravidade feita pelo script (boiam).
-    "drone": (1.4, 2.2, False, 1.0, 300),
+    "drone": (1.6, 4.2, False, 1.0, 300),   # Maldição (~4,5 blocos, do tamanho de um wither)
     "heli": (2.6, 2.4, False, 1.0, 400),
     "car": (2.2, 1.4, True, 1.0, 400),
     "excavator": (2.6, 3.0, True, 1.0, 500),
@@ -257,7 +263,8 @@ def drone_bp_entity():
                 "lila:form": {"type": "int", "range": [0, len(FORM_ORDER) - 1], "default": 0, "client_sync": True},
                 "lila:aim": {"type": "int", "range": [-180, 180], "default": 0, "client_sync": True},
                 "lila:pitch": {"type": "int", "range": [-60, 60], "default": 0, "client_sync": True},
-                "lila:off": {"type": "bool", "default": False, "client_sync": True}}},
+                "lila:off": {"type": "bool", "default": False, "client_sync": True},
+                "lila:cact": {"type": "int", "range": [0, len(CURSE_ACTIONS) - 1], "default": 9, "client_sync": True}}},
             "component_groups": groups,
             "components": {
                 "minecraft:type_family": {"family": ["lila_drone", "lila_companion", "npc", "mob"]},
@@ -284,16 +291,22 @@ def drone_bp_entity():
         }}
 
 
+CURSE_FX = ["smoke", "cubes", "wisps", "embers", "hit", "spark", "slash", "quake", "roar", "ground", "ground_smoke", "burst", "inhale"]
+
+
 def build_drone(previews):
     m = drone_art.drone_model()
-    wjson(os.path.join(RP, "models", "entity", "lila", "drone.geo.json"), m.to_json())
+    m.to_json()
     tex = bake(m)
-    wpng(os.path.join(RP, "textures", "entity", "lila", "drone.png"), tex)
-    geos = {"default": "geometry.lila.drone"}
-    texs = {"default": "textures/entity/lila/drone"}
-    models = {"drone": (m, tex)}
+    # MALDIÇÃO: a forma normal E a forma gigante (no lugar do robô TITÃ) usam o mesmo modelo
+    cm = curse_model()
+    wjson(os.path.join(RP, "models", "entity", "lila", "curse.geo.json"), cm.to_json())
+    ctex = bake(cm)
+    wpng(os.path.join(RP, "textures", "entity", "lila", "curse.png"), ctex)
+    geos = {"default": "geometry.lila.curse", "colossus": "geometry.lila.curse"}
+    texs = {"default": "textures/entity/lila/curse", "colossus": "textures/entity/lila/curse"}
+    models = {"drone": (cm, ctex), "colossus": (cm, ctex)}
     builders = dict(FORM_MODELS)
-    builders["colossus"] = colossus_model
     builders.update(FORMS2)
     for key, fn in builders.items():
         fm = fn()
@@ -304,14 +317,21 @@ def build_drone(previews):
         geos[key] = fm.identifier
         texs[key] = f"textures/entity/lila/{key}"
         models[key] = (fm, ftex)
-    A = drone_anims()
-    F = form_anims()
-    wjson(os.path.join(RP, "animations", "lila", "drone.animation.json"),
-          {"format_version": "1.10.0", "animations": {name: data for _, (name, data) in A.items()}})
+    A = {}  # o drone-robô antigo não existe mais (a forma normal é a Maldição)
+    F = {k: v for k, v in form_anims().items() if not k.startswith("col_") and k != "intro_colossus"}
+    CA = {**{f"c_{k}": v for k, v in life_anims().items()}, **action_anims()}
+    curse_sounds = {}
+    for _, (_, data) in CA.items():  # sons das animações: nome curto → som do jogo
+        for t, ev in data.get("sound_effects", {}).items():
+            key = "cs_" + ev["effect"].replace(".", "_")
+            curse_sounds[key] = ev["effect"]
+            ev["effect"] = key
+    wjson(os.path.join(RP, "animations", "lila", "curse.animation.json"),
+          {"format_version": "1.10.0", "animations": {name: data for _, (name, data) in CA.items()}})
     wjson(os.path.join(RP, "animations", "lila", "forms.animation.json"),
           {"format_version": "1.10.0", "animations": {name: data for _, (name, data) in F.items()}})
     # Hacknd: efeitos do enxame no cliente (nuvem, montinho desligado, robozinhos nas formas)
-    AURA = {1: (1.8, 0.9), 2: (1.4, 0.6), 3: (1.5, 1.0), 4: (1.7, 0.8), 5: (2.2, 0.7), 6: (0.9, 0.6), 7: (3.6, 13.0), 8: (1.5, 1.6),
+    AURA = {1: (1.8, 0.9), 2: (1.4, 0.6), 3: (1.5, 1.0), 4: (1.7, 0.8), 5: (2.2, 0.7), 6: (0.9, 0.6), 8: (1.5, 1.6),
             10: (2.1, 0.8), 11: (2.2, 0.6), 12: (1.8, 1.0), 13: (1.5, 0.6), 14: (1.7, 1.1), 15: (2.5, 0.5)}
     FXA = {"fx_swarm": {"loop": True, "animation_length": 2.0,
                         "particle_effects": {"0.0": [{"effect": "swarm"}, {"effect": "haze"}, {"effect": "trail"}]}},
@@ -319,30 +339,35 @@ def build_drone(previews):
     for fid, (hx, hy) in AURA.items():
         FXA[f"fx_aura_{fid}"] = {"loop": True, "animation_length": 2.0, "particle_effects": {
             "0.0": {"effect": "aura", "pre_effect_script": f"v.sx = {hx}; v.sy = {hy}; v.sz = {hx};"}}}
+    # Maldição: fumaça saindo da base, cubinhos, fiapos pela coluna e brasas no ar (só nas formas 0 e 7)
+    FXA["fx_curse"] = {"loop": True, "animation_length": 2.0, "particle_effects": {"0.0": [
+        {"effect": "c_smoke", "locator": "smoke_base"}, {"effect": "c_cubes", "locator": "smoke_base"},
+        {"effect": "c_wisps", "locator": "smoke_top"}, {"effect": "c_embers"}]}}
     wjson(os.path.join(RP, "animations", "lila", "swarmfx.animation.json"),
           {"format_version": "1.10.0", "animations": {f"animation.lila.{k}": v for k, v in FXA.items()}})
     off = "q.property('lila:off')"
-    conds = {"cloud": f"(v.form == 0 || v.form == 9) && !{off}", "pile": off}
+    conds = {"curse": f"(v.form == 0 || v.form == 7) && !{off}", "cloud": f"v.form == 9 && !{off}", "pile": off}
     for fid in AURA:
         conds[f"aura_{fid}"] = f"v.form == {fid} && !{off}"
     fx_states = {"default": {"transitions": [{k: c} for k, c in conds.items()]}}
     for st, cnd in conds.items():
-        anim = "fx_swarm" if st == "cloud" else "fx_pile" if st == "pile" else f"fx_aura_{st[5:]}"
+        anim = "fx_curse" if st == "curse" else "fx_swarm" if st == "cloud" else "fx_pile" if st == "pile" else f"fx_aura_{st[5:]}"
         fx_states[st] = {"animations": [anim], "transitions": [{k: c} for k, c in conds.items() if k != st] + [{"default": f"!({cnd})"}]}
     wjson(os.path.join(RP, "animation_controllers", "lila", "drone.ac.json"),
-          controllers_file(drone_controllers() + form_controllers() + [controller("controller.animation.lila.swarmfx", fx_states)]))
+          controllers_file(form_controllers() + [controller("controller.animation.lila.swarmfx", fx_states),
+                                                 controller("controller.animation.lila.curse.action", action_controller()["states"])]))
     amap = {k: name for k, (name, _) in A.items()}
     amap.update({k: name for k, (name, _) in F.items()})
     amap.update({k: f"animation.lila.{k}" for k in FXA})
+    amap.update({k: name for k, (name, _) in CA.items()})
     amap["ctrl_swarmfx"] = "controller.animation.lila.swarmfx"
-    amap["ctrl_move"] = "controller.animation.lila.drone.move"
-    amap["ctrl_act"] = "controller.animation.lila.drone.action"
     amap["ctrl_form"] = "controller.animation.lila.form.action"
-    animate = [{"base": "v.form == 0"}, {"power": "v.form == 0"},
-               {"ctrl_move": "v.form == 0 && v.offp < 0.5"}, {"ctrl_act": "v.form == 0 && v.offp < 0.5"},
-               {"intro": "v.form != 7"}, {"intro_colossus": "v.form == 7"},
+    amap["ctrl_curse"] = "controller.animation.lila.curse.action"
+    cur = "(v.form == 0 || v.form == 7)"
+    animate = [{"c_life": cur}, {"c_bits": cur}, {"c_glide": cur}, {"c_look": cur}, {"ctrl_curse": cur},
+               {"intro": "v.form != 7 && v.form != 0"},
                {"heli": "v.form == 1"}, {"car": "v.form == 2"}, {"excavator": "v.form == 3"}, {"tank": "v.form == 4"},
-               {"jet": "v.form == 5"}, {"moto": "v.form == 6"}, {"col_idle": "v.form == 7"}, {"col_walk": "v.form == 7"},
+               {"jet": "v.form == 5"}, {"moto": "v.form == 6"},
                {"turret_g": "v.form == 8"}, {"swarm": "v.form == 9"}, {"ship": "v.form == 10"}, {"ufo": "v.form == 11"},
                {"sub": "v.form == 12"}, {"boat": "v.form == 13"}, {"truck": "v.form == 14"}, {"stealth": "v.form == 15"}, "ctrl_form", "ctrl_swarmfx"]
     wjson(os.path.join(RP, "entity", "lila", "drone.entity.json"), {
@@ -354,46 +379,29 @@ def build_drone(previews):
             "geometry": {GEO_KEY.get(k, k): v for k, v in ((("drone" if k == "default" else k), v) for k, v in geos.items())},
             "animations": amap,
             "particle_effects": {"sparkle": "lila:sparkle", "swarm": "lila:nano_swarm", "haze": "lila:nano_haze", "trail": "lila:nano_trail",
-                                 "pile": "lila:nano_pile", "aura": "lila:nano_aura"},
-            "scripts": {"initialize": INITIALIZE, "pre_animation": PRE_ANIMATION, "animate": animate},
+                                 "pile": "lila:nano_pile", "aura": "lila:nano_aura", **{f"c_{k}": f"lila:curse_{k}" for k in CURSE_FX},
+                                 **{f"curse_{k}": f"lila:curse_{k}" for k in CURSE_FX}},
+            "sound_effects": curse_sounds,
+            "scripts": {"initialize": [INITIALIZE[0] + " v.cmove = 0;"], "pre_animation": PRE_ANIMATION + [
+                "v.cmove = math.lerp(v.cmove, math.clamp(q.ground_speed / 5, 0, 1), 0.12);"], "animate": animate},
             "render_controllers": ["controller.render.lila.forms"],
         }}})
     wjson(os.path.join(BP, "entities", "drone.json"), drone_bp_entity())
     # controle do drone
-    im = drone_art.remote_icon()
-    itex = bake(im)
-    im.to_json()
-    wpng(os.path.join(RP, "textures", "items", "lila", "drone_controller.png"), render(im, itex, size=64, yaw=-20, pitch=20, ssaa=4))
+    # MALDIÇÃO: o ícone do item é a cabeça dela (boca de dentes e tentáculos); na mão aparece o ícone
+    big = render(cm, ctex, size=384, yaw=-18, pitch=6, outline=True, ssaa=3)
+    icon = big.crop((96, 0, 288, 192)).resize((64, 64), Image.LANCZOS)
+    wpng(os.path.join(RP, "textures", "items", "lila", "drone_controller.png"), icon)
     wjson(os.path.join(RP, "textures", "item_texture.json"), {
         "resource_pack_name": "lila", "texture_name": "atlas.items",
         "texture_data": {"lila_drone_controller": {"textures": "textures/items/lila/drone_controller"}}})
-    hm = drone_art.remote_held()
-    wjson(os.path.join(RP, "models", "entity", "lila", "drone_remote_held.geo.json"), hm.to_json())
-    wpng(os.path.join(RP, "textures", "entity", "lila", "drone_remote_held.png"), bake(hm))
-    wjson(os.path.join(RP, "animations", "lila", "controller.animation.json"), {"format_version": "1.10.0", "animations": {
-        "animation.lila.controller.first": {"loop": True, "bones": {"pad": {"rotation": [0, 0, 0]}}},
-        "animation.lila.controller.third": {"loop": True, "bones": {"pad": {"rotation": [0, 0, 0]}}},
-        "animation.lila.controller.idle": {"loop": True, "bones": {"pad": {"position": [0, "math.sin(q.life_time * 120) * 0.08", 0]}}},
-    }})
-    wjson(os.path.join(RP, "attachables", "lila", "drone_controller.json"), {
-        "format_version": "1.10.0",
-        "minecraft:attachable": {"description": {
-            "identifier": "lila:drone_controller",
-            "materials": {"default": "entity_emissive_alpha", "enchanted": "entity_emissive_alpha"},
-            "textures": {"default": "textures/entity/lila/drone_remote_held", "enchanted": "textures/misc/enchanted_item_glint"},
-            "geometry": {"default": "geometry.lila.drone_remote_held"},
-            "animations": {"first": "animation.lila.controller.first", "third": "animation.lila.controller.third",
-                           "idle": "animation.lila.controller.idle"},
-            "scripts": {"animate": [{"first": "c.is_first_person"}, {"third": "!c.is_first_person"}, "idle"]},
-            "render_controllers": ["controller.render.lila.item"],
-        }}})
     wjson(os.path.join(BP, "items", "drone_controller.json"), {
         "format_version": ITEM_FORMAT,
         "minecraft:item": {
             "description": {"identifier": "lila:drone_controller", "menu_category": {"category": "equipment"}},
             "components": {"minecraft:icon": "lila_drone_controller", "minecraft:display_name": {"value": "item.lila.drone_controller.name"},
                            "minecraft:max_stack_size": 1, "minecraft:hand_equipped": False, "minecraft:allow_off_hand": True,
-                           "minecraft:rarity": "epic", "minecraft:tags": {"tags": ["lila:controller"]}}}})
+                           "minecraft:rarity": "epic", "minecraft:tags": {"tags": ["lila:controller"]}, "minecraft:glint": True}}})
     wjson(os.path.join(BP, "recipes", "drone_controller.json"), {
         "format_version": "1.20.10",
         "minecraft:recipe_shaped": {
@@ -416,7 +424,19 @@ def build_drone(previews):
                 continue
             wpng(os.path.join(PREVIEW_DIR, f"form_{key}.png"), render(fm, ftex, size=520, yaw=-35 if key != "colossus" else -30,
                                                                       pitch=18 if key != "colossus" else 10, outline=True))
-        wpng(os.path.join(PREVIEW_DIR, "drone_controller.png"), render(im, itex, size=360, yaw=-20, pitch=20, ssaa=3))
+        wpng(os.path.join(PREVIEW_DIR, "drone_controller.png"), icon.resize((360, 360), Image.LANCZOS))
+        wpng(os.path.join(PREVIEW_DIR, "curse_front.png"), render(cm, ctex, size=620, yaw=-14, pitch=6, outline=True))
+        wpng(os.path.join(PREVIEW_DIR, "curse_side.png"), render(cm, ctex, size=620, yaw=-80, pitch=6, outline=True))
+        acts = action_anims()
+        shots = [("punch_r", 0.27, -35, "soco"), ("claw", 0.22, -35, "garra"), ("slam", 0.5, -60, "pancada"), ("roar", 0.6, -25, "rugido"),
+                 ("bite", 0.22, -80, "mordida"), ("emerge", 1.8, -30, "saindo do chão"), ("guard", 0.5, -30, "guarda"), ("devour", 0.6, -60, "devorar")]
+        sheet = Image.new("RGBA", (260 * 4, 290 * 2), (0, 0, 0, 0))
+        dr = ImageDraw.Draw(sheet)
+        for i, (a, t, yaw, label) in enumerate(shots):
+            im = render(cm, ctex, size=260, yaw=yaw, pitch=8, outline=True, pose=sample_pose(acts["ca_" + a][1], t))
+            sheet.alpha_composite(im, (260 * (i % 4), 290 * (i // 4)))
+            dr.text((260 * (i % 4) + 10, 290 * (i // 4) + 266), label, fill=(225, 220, 235, 255))
+        wpng(os.path.join(PREVIEW_DIR, "curse_poses.png"), sheet)
     return m, tex
 
 
@@ -435,6 +455,8 @@ def build_robot(previews):
         wpng(os.path.join(RP, "textures", "entity", "lila", f"robot_{kind}.png"), kind_tex[kind])
     NANO["chroma"] = 0.2
     A = robot_anims()
+    A["shadowfx"] = ("animation.lila.robot.shadowfx", {"loop": True, "animation_length": 2.0, "particle_effects": {"0.0": [
+        {"effect": "c_smoke"}, {"effect": "c_wisps"}]}})
     wjson(os.path.join(RP, "animations", "lila", "robot.animation.json"),
           {"format_version": "1.10.0", "animations": {name: data for _, (name, data) in A.items()}})
     wjson(os.path.join(RP, "animation_controllers", "lila", "robot.ac.json"), controllers_file(robot_controllers()))
@@ -448,7 +470,9 @@ def build_robot(previews):
             "textures": {"default": "textures/entity/lila/robot", **{k: f"textures/entity/lila/robot_{k}" for k in ROBOT_KINDS[1:]}},
             "geometry": {"default": "geometry.lila.robot"},
             "animations": amap,
-            "scripts": {"animate": ["look", {"idle": "q.ground_speed < 0.6"}, "ctrl"]},
+            # soldado de SOMBRA: fumaça escorrendo do corpo, cubinhos e brasas (feito da fumaça da maldição)
+            "particle_effects": {"c_smoke": "lila:curse_smoke", "c_wisps": "lila:curse_wisps"},
+            "scripts": {"animate": ["look", {"idle": "q.ground_speed < 0.6"}, "ctrl", "shadowfx"]},
             "render_controllers": ["controller.render.lila.robot"],
         }}})
     follow = {"minecraft:behavior.follow_owner": {"priority": 4, "speed_multiplier": 1.4, "start_distance": 7, "stop_distance": 3,
@@ -717,8 +741,8 @@ def build_nano(previews):
         "minecraft:fog_settings": {
             "description": {"identifier": "lila:nano_fog"},
             "distance": {
-                "air": {"fog_start": 0.78, "fog_end": 1.0, "fog_color": "#8FB7C4", "render_distance_type": "render"},
-                "water": {"fog_start": 0.0, "fog_end": 60.0, "fog_color": "#2A5A78", "render_distance_type": "fixed"},
+                "air": {"fog_start": 0.72, "fog_end": 1.0, "fog_color": "#16131C", "render_distance_type": "render"},
+                "water": {"fog_start": 0.0, "fog_end": 40.0, "fog_color": "#120E18", "render_distance_type": "fixed"},
             },
         }})
     if previews:
@@ -823,13 +847,16 @@ def soft_texture(size=16):
 
 
 def nano_texture(size=8):
-    """Nanorrobô: quadradinho com borda clara (de longe vira um pontinho cintilante)."""
+    """Maldição: floco de cinza/fumaça em bloquinho (quadrado com cantos comidos, miolo mais claro)."""
     img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     px = img.load()
-    for y in range(1, size - 1):
-        for x in range(1, size - 1):
-            edge = x in (1, size - 2) or y in (1, size - 2)
-            px[x, y] = (255, 255, 255, 255) if edge else (200, 200, 200, 255)
+    for y in range(size):
+        for x in range(size):
+            corner = (x in (0, size - 1)) and (y in (0, size - 1))
+            if corner:
+                continue
+            core = 2 <= x <= size - 3 and 2 <= y <= size - 3
+            px[x, y] = (255, 255, 255, 255) if core else (190, 190, 190, 220)
     return img
 
 
@@ -918,12 +945,12 @@ def _base_fx(ident, texture, comps):
 
 
 # cor dos nanorrobôs: grafite quase preto; ~1 em 6 pisca ciano; entra e sai suave (sem "estalo")
-NANO_TINT = {"color": [
-    "v.particle_random_4 > 0.83 ? 0.55 + 0.45 * math.sin(v.particle_age * 900 + v.particle_random_1 * 360) : 0.12",
-    "v.particle_random_4 > 0.83 ? 0.92 : 0.15",
-    "v.particle_random_4 > 0.83 ? 1.0 : 0.19",
+NANO_TINT = {"color": [  # Maldição: cinzas pretas com uma brasa laranja de vez em quando
+    "v.particle_random_4 > 0.9 ? 1.0 : 0.06 + v.particle_random_2 * 0.05",
+    "v.particle_random_4 > 0.9 ? 0.42 + 0.3 * math.sin(v.particle_age * 900 + v.particle_random_1 * 360) : 0.055 + v.particle_random_2 * 0.045",
+    "v.particle_random_4 > 0.9 ? 0.1 : 0.075 + v.particle_random_2 * 0.06",
     "math.clamp(math.min(v.particle_age * 5, (v.particle_lifetime - v.particle_age) * 4), 0, 1) * 0.95"]}
-NANO_BB = {"size": ["0.028 + v.particle_random_3 * 0.022", "0.028 + v.particle_random_3 * 0.022"], "facing_camera_mode": "rotate_xyz",
+NANO_BB = {"size": ["0.035 + v.particle_random_3 * 0.04", "0.035 + v.particle_random_3 * 0.04"], "facing_camera_mode": "rotate_xyz",
            "uv": {"texture_width": 8, "texture_height": 8, "uv": [0, 0], "uv_size": [8, 8]}}
 
 
@@ -1082,7 +1109,31 @@ def swarm_fx():
         "minecraft:particle_appearance_tinting": NANO_TINT,
     })
     for fname, data in fx.items():
-        wjson(os.path.join(RP, "particles", fname), data)
+        wjson(os.path.join(RP, "particles", fname), smokify(data))
+
+
+def smokify(data):
+    """Maldição: as cores das partículas do antigo enxame de nanorrobôs viram fumaça/cinza escura;
+    os pontos muito claros viram brasa laranja."""
+    def conv(hx):
+        a, r, g, b = int(hx[1:3], 16), int(hx[3:5], 16), int(hx[5:7], 16), int(hx[7:9], 16)
+        L = 0.3 * r + 0.59 * g + 0.11 * b
+        if L > 205:
+            r, g, b = 255, int(110 + (L - 205) * 0.9), 40
+        else:
+            v = 10 + L * 0.3
+            r, g, b = int(v), int(v * 0.94), int(min(255, v * 1.18))
+        return f"#{a:02X}{r:02X}{g:02X}{b:02X}"
+
+    def walk(o):
+        if isinstance(o, dict):
+            return {k: walk(v) for k, v in o.items()}
+        if isinstance(o, list):
+            return [walk(v) for v in o]
+        if isinstance(o, str) and len(o) == 9 and o.startswith("#"):
+            return conv(o)
+        return o
+    return walk(data)
 
 
 def build_particles():
@@ -1147,8 +1198,9 @@ def build_particles():
     fx["lila_nano_ring.json"]["particle_effect"]["components"]["minecraft:particle_lifetime_expression"]["max_lifetime"] = "math.random(0.7, 1.0)"
     fx["lila_nano_ball.json"]["particle_effect"]["components"]["minecraft:particle_lifetime_expression"]["max_lifetime"] = "math.random(0.08, 0.12)"
     nano_fx(fx, nano_grad)
+    curse_particles(RP, wjson)
     for fname, data in fx.items():
-        wjson(os.path.join(RP, "particles", fname), data)
+        wjson(os.path.join(RP, "particles", fname), smokify(data) if "nano" in fname or "swarm" in fname else data)
     wpng(os.path.join(RP, "textures", "particle", "lila", "nano.png"), nano_texture())
     wpng(os.path.join(RP, "textures", "particle", "lila", "sparkle.png"), star_texture())
     wpng(os.path.join(RP, "textures", "particle", "lila", "leaf.png"), leaf_texture())

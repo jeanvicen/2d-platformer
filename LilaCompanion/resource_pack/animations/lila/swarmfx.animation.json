@@ -87,16 +87,6 @@
         }
       }
     },
-    "animation.lila.fx_aura_7": {
-      "loop": true,
-      "animation_length": 2.0,
-      "particle_effects": {
-        "0.0": {
-          "effect": "aura",
-          "pre_effect_script": "v.sx = 3.6; v.sy = 13.0; v.sz = 3.6;"
-        }
-      }
-    },
     "animation.lila.fx_aura_8": {
       "loop": true,
       "animation_length": 2.0,
@@ -165,6 +155,29 @@
           "effect": "aura",
           "pre_effect_script": "v.sx = 2.5; v.sy = 0.5; v.sz = 2.5;"
         }
+      }
+    },
+    "animation.lila.fx_curse": {
+      "loop": true,
+      "animation_length": 2.0,
+      "particle_effects": {
+        "0.0": [
+          {
+            "effect": "c_smoke",
+            "locator": "smoke_base"
+          },
+          {
+            "effect": "c_cubes",
+            "locator": "smoke_base"
+          },
+          {
+            "effect": "c_wisps",
+            "locator": "smoke_top"
+          },
+          {
+            "effect": "c_embers"
+          }
+        ]
       }
     }
   }

@@ -430,6 +430,20 @@
         }
       },
       "loop": true
+    },
+    "animation.lila.robot.shadowfx": {
+      "loop": true,
+      "animation_length": 2.0,
+      "particle_effects": {
+        "0.0": [
+          {
+            "effect": "c_smoke"
+          },
+          {
+            "effect": "c_wisps"
+          }
+        ]
+      }
     }
   }
 }

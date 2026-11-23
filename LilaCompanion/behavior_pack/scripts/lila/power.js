@@ -97,7 +97,7 @@ export function powerOn(c, quiet = false) {
   nanoArrive(c.dim(), c.pos());
   sound(e, "lila.transform", 0.6, 1.5);
   system.runTimeout(() => c.alive() && sound(c.entity, "lila.split", 0.5, 1.8), 30);
-  if (!quiet) system.runTimeout(() => c.alive() && say(c, "Enxame online! Pronto pra te proteger.", { force: true }), BOOT_TICKS);
+  if (!quiet) system.runTimeout(() => c.alive() && say(c, "A maldição acordou. Ninguém toca em você.", { force: true }), BOOT_TICKS);
   return true;
 }
 

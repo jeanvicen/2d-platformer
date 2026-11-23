@@ -7,6 +7,7 @@
 //   andar = acelerar/ré · olhar = direção (voadores sobem/descem para onde você olha)
 //   pular = o veículo pula (terrestres/lancha) · sobe (voadores) · turbo (jatos) · salto com pisão (TITÃ)
 //   bater (botão de ataque) = arma da forma · AGACHAR = sair · usar o controle = painel do piloto
+import { cact, curseDevour, faceTo } from "./curse.js";
 import { BlockVolume, ButtonState, EntityDamageCause, InputButton, InputPermissionCategory, system } from "@minecraft/server";
 import { FORM_LIST, FORM_NAMES } from "../lib/catalog.js";
 import { blockAt } from "./world.js";
@@ -149,6 +150,8 @@ function applyForm(c, form, o = {}) {
   c.save();
   setAction(e, "idle");
   setMove(e, "none");
+  // a maldição se remonta da fumaça (voltando de veículo) ou cresce até virar a gigante
+  if ((form === "drone" || form === "colossus") && prev !== form) cact(e, "reform");
   try {
     e.setProperty("lila:aim", 0);
     e.setProperty("lila:pitch", 0);
@@ -187,10 +190,10 @@ function applyForm(c, form, o = {}) {
   }
   if (prev !== form && !o.quiet) {
     const msgs = {
-      drone: "A forma se desfez em poeira: somos um enxame de novo. Pronto pra próxima!",
-      colossus: "TITÃ! Milhões de nanorrobôs viraram um robô gigante. Você está em cima da cabeça: andar = mover · bater perto = soco · mirar longe e bater = raio do visor · pular = salto com pisão · agachar = sair.",
+      drone: "A forma se desfez em fumaça: sou a maldição de novo.",
+      colossus: "MALDIÇÃO GIGANTE! Você está em cima da minha cabeça: andar = mover · a barra escolhe o golpe (1 soco · 2 garra · 3 pancada · 4 salto · 5 rugido · 6 devorar) · bater = golpe ONDE VOCÊ MIRA · agachar = sair.",
       turret: "Torreta gigante armada e cravada no chão. Ninguém passa!",
-      swarm: "ENXAME! Virei uma névoa de nanorrobôs em volta de você. Modo inteligente: de mão vazia, bata num bloco e eu viro a ferramenta certa (machado derruba a árvore toda), bata num bicho e viro espada, e te seguro nas quedas. Use o Núcleo do enxame (na sua barra) para trocar: escudo, asas, prancha, mãos gigantes, devorador. Peça também: martelo, ponte, muralha, cúpula, tornado.",
+      swarm: "Virei uma nuvem de fumaça em volta de você. De mão vazia, bata num bloco e eu viro a ferramenta de sombra certa (machado derruba a árvore toda), bata num bicho e viro espada, e te seguro nas quedas. Use a Fumaça da Maldição (na sua barra) para trocar: escudo, asas de fumaça, nuvem voadora, mãos da maldição, boca devoradora. Peça também: martelo, ponte, muralha, cúpula, tornado.",
       sub: "Submarino! Olhe pra baixo e acelere pra mergulhar. Bater = torpedo. Você respira e enxerga debaixo d'água. Agachar = sair.",
       boat: "Lancha! Na água ela voa. Pular = salto nas ondas, bater = turbo. Agachar = sair.",
       ufo: "Disco voador! Bater = raio desintegrador · olhando pra baixo = raio trator (abduz quem estiver embaixo). Agachar = sair.",
@@ -671,7 +674,8 @@ function crush(c, hs) {
 // ------------------------------------------------------------------ armas (botão de ataque)
 /** Poderes de cada forma: o SLOT da barra de itens escolhe (1, 2, 3...), o botão de ataque usa. */
 export const WEAPONS = {
-  colossus: [["Soco", "punch"], ["Raio do visor", "beam"], ["Salto com pisão", "jump"], ["Onda de choque", "stomp"], ["Pose de poder", "roar"]],
+  // Maldição gigante: só corpo a corpo (o golpe vai ONDE VOCÊ MIRA, até o alcance do braço)
+  colossus: [["Soco", "punch"], ["Garra", "claw"], ["Pancada no chão", "stomp"], ["Salto", "jump"], ["Rugido", "roar"], ["Devorar", "devour"]],
   heli: [["Metralhadora", "gun"], ["Mísseis", "missiles"]],
   jet: [["Mísseis", "missiles"], ["Metralhadora", "gun"]],
   stealth: [["Mísseis", "missiles"], ["Metralhadora", "gun"]],
@@ -723,7 +727,9 @@ export function primaryAttack(c, owner) {
   if (!w) return false;
   if (owner?.onScreenDisplay) weaponHud(c, owner, f);
   switch (w[1]) {
-    case "punch": return cd("cdPunch", 16) && punch(c, owner);
+    case "punch": return cd("cdPunch", 14) && punch(c, owner);
+    case "claw": return cd("cdPunch", 16) && punch(c, owner, "claw");
+    case "devour": return cd("cdDevour", 50) && (curseDevour(c), true);
     case "beam":
       if (now < (c.flags.cdBeam ?? 0)) return false;
       beam(c, owner);
@@ -1102,30 +1108,35 @@ function colossusFront(c, dist, up) {
   return { x: e.location.x + fwd.x * dist, y: e.location.y + up, z: e.location.z + fwd.z * dist };
 }
 
-function punch(c, owner) {
+function punch(c, owner, move) {
   const e = c.entity;
-  setAction(e, "work");
-  sound(e, "lila.servo", 1, 0.6);
+  // MIRA: o golpe vai para onde o piloto está olhando (bloco ou criatura), até o alcance do braço
+  const p = c.pos();
+  const reach = 4.2 * SCALE;
+  let aim = owner?.getHeadLocation ? aimPoint(c, owner, 64) : colossusFront(c, 2.6 * SCALE, 2.4 * SCALE);
+  const dx = aim.x - p.x, dz = aim.z - p.z, l = Math.hypot(dx, dz) || 1;
+  if (l > reach) aim = { x: p.x + (dx / l) * reach, y: aim.y, z: p.z + (dz / l) * reach };
+  aim.y = Math.max(p.y + 0.6, Math.min(p.y + 3.2 * SCALE, aim.y));
+  faceTo(e, aim);
+  const mv = move ?? ((c.flags.lr = !c.flags.lr) ? "punch_r" : "punch_l");
+  cact(e, mv);
+  sound(e, "mob.ravager.attack", 1.4, 0.6);
   system.runTimeout(() => {
     if (!c.alive()) return;
-    const at = colossusFront(c, 2.6 * SCALE, 2.4 * SCALE);
-    // o soco acompanha um pouco o seu olhar (mira de cima pra baixo)
-    const look = owner?.getViewDirection?.();
-    if (look) at.y = Math.max(c.pos().y + 1, at.y + look.y * 8);
+    const at = aim;
     const dim = c.dim();
-    if (c.rec.settings.destroy !== false) smash(dim, at, 3.6);
-    // o golpe pega do punho até o chão (monstros pequenos não escapam por baixo)
-    areaDamage(c, at, 6, 70, 2.6, 0.7);
-    areaDamage(c, { x: at.x, y: c.pos().y + 1, z: at.z }, 6, 70, 2.6, 0.7);
-    particle(dim, "lila:dust", { x: at.x, y: c.pos().y + 0.5, z: at.z });
-    particle(dim, "lila:shock", at);
-    particle(dim, "lila:dust", at);
-    particle(dim, "lila:smoke", at);
+    if (c.rec.settings.destroy !== false) smash(dim, at, mv === "claw" ? 4.2 : 3.6);
+    // o golpe pega do ponto mirado até o chão (monstros pequenos não escapam por baixo)
+    areaDamage(c, at, 6, mv === "claw" ? 60 : 70, 2.6, 0.7);
+    areaDamage(c, { x: at.x, y: p.y + 1, z: at.z }, 6, 60, 2.6, 0.7);
+    particle(dim, "lila:curse_hit", at);
+    particle(dim, "lila:curse_spark", at);
+    particle(dim, "lila:curse_quake", { x: at.x, y: p.y + 0.2, z: at.z });
+    particle(dim, "lila:curse_ground", { x: at.x, y: p.y + 0.2, z: at.z });
     sound(e, "random.explode", 1.6, 0.55);
-    sound(e, "lila.stomp", 1.6, 1.3);
+    sound(e, "mob.irongolem.hit", 1.6, 0.5);
     shake(dim, at, 0.35, 0.6, 40);
-  }, 8);
-  system.runTimeout(() => getAction(c.entity) === "work" && setAction(c.entity, "idle"), 18);
+  }, mv === "claw" ? 7 : 5);
   return true;
 }
 
@@ -1146,16 +1157,17 @@ function landShock(c) {
 export function stomp(c) {
   const e = c.entity;
   if (!e) return;
-  setAction(e, "place");
+  cact(e, "slam");
   sound(e, "lila.servo", 1, 0.5);
   system.runTimeout(() => {
     if (!c.alive()) return;
     const at = c.pos();
     const dim = c.dim();
-    for (let k = 0; k < 3; k++) particle(dim, "lila:shock", { x: at.x, y: at.y + 0.3 + k * 0.4, z: at.z });
+    particle(dim, "lila:curse_quake", { x: at.x, y: at.y + 0.2, z: at.z });
     for (let i = 0; i < 8; i++) {
       const a = (i / 8) * Math.PI * 2;
-      particle(dim, "lila:dust", { x: at.x + Math.cos(a) * 7, y: at.y + 0.3, z: at.z + Math.sin(a) * 7 });
+      particle(dim, "lila:curse_ground", { x: at.x + Math.cos(a) * 7, y: at.y + 0.3, z: at.z + Math.sin(a) * 7 });
+      particle(dim, "lila:curse_ground_smoke", { x: at.x + Math.cos(a) * 7, y: at.y + 0.3, z: at.z + Math.sin(a) * 7 });
     }
     areaDamage(c, at, 12, 45, 3.2, 0.9);
     sound(e, "lila.stomp", 2, 0.8);
@@ -1194,62 +1206,11 @@ function colossusJump(c) {
 
 /** Raio do visor, para onde você olha (carrega 1 s, dispara 2,5 s). */
 export function beam(c, owner) {
-  const e = c.entity;
-  if (!e || system.currentTick < (c.flags.cdBeam ?? 0)) return;
-  c.flags.cdBeam = system.currentTick + 110;
-  setAction(e, "charge");
-  sound(e, "beacon.activate", 1.5, 0.6);
-  sound(e, "lila.servo", 1, 0.4);
-  const dim = c.dim();
-  let k = 0;
-  const id = system.runInterval(() => {
-    k++;
-    if (!c.alive() || formOf(c) !== "colossus") {
-      system.clearRun(id);
-      return;
-    }
-    if (k === 20) {
-      sound(c.entity, "mob.warden.sonic_boom", 2, 0.6);
-      sound(c.entity, "lila.beam", 2, 1);
-    }
-    if (k > 20 && k % 2 === 0) {
-      const mouth = colossusFront(c, 0.8 * SCALE, 7.25 * SCALE); // visor em T
-      const o = c.owner();
-      const dir = o && riders(c).some((r) => r.id === o.id) ? o.getViewDirection() : (() => {
-        const f = yawDir(c.entity.getRotation().y);
-        return { x: f.x, y: -0.25, z: f.z };
-      })();
-      let end = { x: mouth.x + dir.x * 90, y: mouth.y + dir.y * 90, z: mouth.z + dir.z * 90 };
-      try {
-        const hit = dim.getBlockFromRay(mouth, dir, { maxDistance: 90, includeLiquidBlocks: true, includePassableBlocks: false });
-        if (hit) end = { x: hit.block.location.x + 0.5, y: hit.block.location.y + 0.5, z: hit.block.location.z + 0.5 };
-      } catch {
-        /* ignore */
-      }
-      trail(dim, mouth, end, "lila:beam", 2.2);
-      if (c.rec.settings.destroy !== false) smash(dim, end, 2.6);
-      particle(dim, "lila:fire", end);
-      particle(dim, "lila:shock", end);
-      try {
-        for (const h of dim.getEntitiesFromRay(mouth, dir, { maxDistance: 90 })) {
-          const t = h.entity;
-          if (t.id === c.rec.ownerId || t.id === c.entity?.id || t.typeId === "lila:robot" || riders(c).some((r) => r.id === t.id)) continue;
-          if (t.typeId === "minecraft:player" && !c.flags.aggro?.has(t.id)) continue;
-          t.applyDamage(28, { cause: EntityDamageCause.fire, damagingEntity: c.entity });
-          t.setOnFire?.(5, true);
-        }
-      } catch {
-        /* ignore */
-      }
-      areaDamage(c, end, 4, 18, 1.2, 0.3);
-      if (k % 20 === 0) sound(c.entity, "lila.beam", 2, 1);
-      if (k % 10 === 0) shake(dim, c.pos(), 0.2, 0.5, 40);
-    }
-    if (k >= 70) {
-      system.clearRun(id);
-      if (c.alive() && getAction(c.entity) === "charge") setAction(c.entity, "idle");
-    }
-  }, 1);
+  // Maldição: não existe mais raio — a boca enorme DEVORA o que está na frente
+  if (!c.entity || system.currentTick < (c.flags.cdBeam ?? 0)) return;
+  c.flags.cdBeam = system.currentTick + 50;
+  if (owner?.getHeadLocation) faceTo(c.entity, aimPoint(c, owner, 48));
+  curseDevour(c);
 }
 
 export function roar(c) {

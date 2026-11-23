@@ -9,6 +9,7 @@ import { backupInventory, defeat, tickDefeat } from "./lila/lifecycle.js";
 import { flushHud, resetWaypoint, updateHud } from "./lila/hud.js";
 import { riddenBy, rideTick } from "./lila/drone.js";
 import { fight, markAggro } from "./lila/combat.js";
+import { curseAtmosphereTick } from "./lila/curse.js";
 import { exitVehicle, formOf, formTick, isRideForm, primaryAttack, releaseRiders, riders } from "./lila/forms.js";
 import { endSwarm, isCloud, isNanoItem, nanoBreak, nanoDropped, nanoHitBlock, nanoHitEntity, nanoProtects, nanoSwing, nanoUse, shieldOn, swarmTick } from "./lila/swarm.js";
 import { booting, offTick } from "./lila/power.js";
@@ -45,7 +46,7 @@ system.beforeEvents.startup.subscribe((ev) => {
             return;
           }
           if (!c.rec.summoned || (!c.alive() && !armyActive(c))) {
-            src.sendMessage(`${def.chatTag}Me invoque primeiro com o §lControle do Hacknd§r.`);
+            src.sendMessage(`${def.chatTag}Me invoque primeiro com o item §lMaldição§r.`);
             return;
           }
           src.sendMessage(`§7Você » ${def.name}: §f${text}`);
@@ -87,6 +88,8 @@ world.afterEvents.worldLoad.subscribe(() => {
       }
       if (!c.owner() && !c.flags.test) continue; // dono offline: ele espera
       try {
+        // MALDIÇÃO: cinzas no ar / névoa gigante / faíscas / forma de fumaça do dono
+        if (c.rec.summoned && system.currentTick % 2 === 0) curseAtmosphereTick(c, system.currentTick);
         // virou veículo/titã/torreta/exército, desligou ou sumiu: recolhe ferramentas, névoa e luz
         if (c.flags.nanoActive && (!c.alive() || !isCloud(c))) endSwarm(c);
         if (armyActive(c)) {

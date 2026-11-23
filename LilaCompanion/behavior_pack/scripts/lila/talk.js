@@ -39,8 +39,8 @@ export function pick(arr) {
 }
 
 export const LINES = {
-  summon: ["Chegamos! Milhares de nanorrobôs às suas ordens.", "O enxame chegou. Pode contar com a gente!", "Aqui! O que vamos aprontar hoje?",
-    "Enxame online. Bora jogar!"],
+  summon: ["...eu saí da terra. Estou aqui.", "Você me chamou. Quem eu esmago hoje?", "A maldição despertou. Fica perto de mim.",
+    "Ninguém encosta em você enquanto eu existir."],
   ack: ["Deixa comigo!", "Pode deixar!", "Beleza, já vou.", "Fechado!", "Tô indo!", "Ok, considera feito."],
   done: ["Pronto!", "Feito!", "Terminei!", "Missão cumprida!", "Prontinho."],
   idleChatter: [
@@ -50,8 +50,8 @@ export const LINES = {
   night: ["Tá escurecendo... fica perto de mim.", "Noite chegando, cuidado com os monstros!"],
   sleepy: ["Boa noite! Zzz...", "Vou deitar um pouquinho. Me acorda se precisar."],
   wake: ["Bom dia! Bora trabalhar.", "Acordei! Dormi muito bem."],
-  hurtOwner: ["Ei! Ninguém mexe com você!", "Deixa que eu cuido dele!", "Fica atrás de mim!"],
-  defeat: ["Ai... já volto, prometo...", "Fui derrotada... volto em 20 segundos!"],
+  hurtOwner: ["NINGUÉM TOCA EM VOCÊ!", "Esse aí é meu.", "Fica atrás de mim!"],
+  defeat: ["Virei fumaça... volto em 20 segundos.", "A fumaça se espalhou... já me refaço."],
   back: ["Voltei! Continuando de onde parei.", "Tô de volta! Onde a gente estava mesmo? Ah, lembrei."],
   thanks: ["De nada! :)", "Imagina, a gente é um time!", "Tamo junto!"],
   hello: ["Oi oi!", "E aí! Tudo certo?", "Olá! Precisa de algo?"],

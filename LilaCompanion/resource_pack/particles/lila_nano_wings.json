@@ -52,9 +52,9 @@
         "color": {
           "interpolant": "v.particle_age / v.particle_lifetime",
           "gradient": {
-            "0.0": "#FFC8F8FF",
-            "0.5": "#FF4C6878",
-            "1.0": "#C0283038"
+            "0.0": "#FFFF8828",
+            "0.5": "#FF27242E",
+            "1.0": "#C017161C"
           }
         }
       },

@@ -30,15 +30,15 @@ export function registerSummon(def) {
  */
 export const DRONE = registerSummon({
   key: "drone",
-  name: "Hacknd",
+  name: "Maldição",
   entity: "lila:drone",
   controller: "lila:drone_controller",
   health: 300,
   strength: 8,
   creative: true,
   respawnTicks: 400,
-  color: { red: 0.3, green: 0.75, blue: 1.0 },
-  chatTag: "§b§lHACKND§r§7 »§r ",
+  color: { red: 0.25, green: 0.1, blue: 0.35 },
+  chatTag: "§5§lMALDIÇÃO§r§7 »§r ",
   defaults: { mode: "follow", roam: 160, hunt: true },
   flying: true, speed: 2.2, mineSpeed: 5, vision: 64,
   gun: { damage: 7, every: 2, range: 36 },

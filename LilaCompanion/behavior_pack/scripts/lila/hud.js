@@ -43,7 +43,7 @@ export function updateHud(c) {
   }
   let text;
   if (c.rec.form === "army") {
-    text = `§b${c.def?.name ?? "Hacknd"}§r §7· §aexército em ação§7 (use o controle para comandar)`;
+    text = `§5${c.def?.name ?? "Maldição"}§r §7· §8exército de sombras em ação§7 (use a Maldição para comandar)`;
   } else if (c.rec.defeat) {
     text = `${c.kind === "drone" ? "§b" : "§a"}${c.def?.name ?? "Lila"}§r §7volta em §e${Math.max(1, Math.ceil(c.rec.defeat.left / 20))}s`;
   } else if (!c.rec.summoned) {
@@ -63,7 +63,7 @@ export function updateHud(c) {
     const vert = dy > 4 ? " §b▲" : dy < -4 ? " §b▼" : "";
     const cur = c.urgent?.desc ?? c.job?.desc;
     const form = c.rec.form && c.rec.form !== "drone" ? ` §6[${FORM_NAMES[c.rec.form] ?? c.rec.form}]` : "";
-    text = `§b${c.def?.name ?? "Hacknd"}${form} §f${arrow} §e${Math.round(d)}m${vert}§r §7· ${goalLabel(cur)}`;
+    text = `§5${c.def?.name ?? "Maldição"}${form} §f${arrow} §e${Math.round(d)}m${vert}§r §7· ${goalLabel(cur)}`;
   }
   c.flags.hudText = text;
 }

@@ -36,15 +36,16 @@ const TOOL_NAMES = { sword: "Espada", pickaxe: "Picareta", axe: "Machado", shove
 export const isNanoItem = (id) => typeof id === "string" && id.startsWith("lila:nano_");
 export const NANO_MODES = ["auto", "escudo", "asas", "prancha", "maos", "devorador"];
 export const MODE_NAMES = {
-  auto: "Inteligente", escudo: "Escudo (barreira)", asas: "Asas", prancha: "Prancha voadora", maos: "Mãos gigantes", devorador: "Devorador",
+  auto: "Inteligente (ferramentas de sombra)", escudo: "Escudo de fumaça", asas: "Asas de fumaça", prancha: "Nuvem voadora", maos: "Mãos da maldição",
+  devorador: "Boca devoradora",
 };
 const MODE_HELP = {
-  auto: "eles agem sozinhos: ferramentas na sua mão, proteção de queda, luz, e picam monstros",
-  escudo: "barreira girando em volta de você: nada passa e nada te acerta (eles não atacam)",
-  asas: "olhe para onde quer ir e ande para voar · pular sobe · agachar desce planando",
-  prancha: "ande para voar na prancha · pular sobe · agachar desce",
-  maos: "duas mãos gigantes atrás de você: bata e elas socam junto",
-  devorador: "eles comem tudo por onde você passa (agachado: o chão também)",
+  auto: "a fumaça age sozinha: ferramentas de sombra na sua mão, proteção de queda e luz",
+  escudo: "fumaça girando em volta de você: nada passa e nada te acerta",
+  asas: "a fumaça vira duas asas enormes: olhe para onde quer ir e ande · pular sobe · agachar desce planando",
+  prancha: "uma nuvem de fumaça te carrega: ande para voar · pular sobe · agachar desce",
+  maos: "duas mãos da maldição atrás de você: bata e elas socam junto",
+  devorador: "a fumaça come tudo por onde você passa (agachado: o chão também)",
 };
 
 const PROJECTILES = new Set(["minecraft:arrow", "minecraft:fireball", "minecraft:small_fireball", "minecraft:dragon_fireball",
@@ -386,7 +387,7 @@ function careTick(c, owner) {
       owner.addEffect("absorption", 600, { amplifier: 1, showParticles: false });
       owner.addEffect("regeneration", 100, { amplifier: 1, showParticles: false });
       particle(dim, "lila:nano_form", { x: owner.location.x, y: owner.location.y + 1, z: owner.location.z });
-      say(c, "Nanorrobôs remendando você!", { chatter: true });
+      say(c, "A fumaça está fechando suas feridas!", { chatter: true });
     }
   } catch {
     /* ignore */
@@ -470,7 +471,8 @@ function wingsTick(c, owner, pass) {
   const air = !owner.isOnGround;
   if (pass % 2 === 0) {
     const flap = (pass * (air ? 22 : 7)) % 360;
-    fxv(dim, "lila:nano_wings", { x: o.x, y: o.y + 1.35, z: o.z }, { yaw, flap });
+    // MALDIÇÃO: a fumaça vem até você e forma duas ASAS DE FUMAÇA enormes (batendo no voo)
+    fxv(dim, "lila:curse_wing", { x: o.x, y: o.y + 0.45, z: o.z }, { yaw, flap, span: air ? 3.8 : 2.6 });
   }
   if (!air) return;
   const mv = moveInput(owner);
@@ -1084,7 +1086,7 @@ export function doShape(c, kind, owner = c.owner()) {
     // "escudo" de novo com o escudo ligado: desliga (volta ao inteligente)
     const m = kind === "escudo" && modeOf(c) === "escudo" ? "auto" : MODE_SHAPES[kind];
     setNanoMode(c, m, owner);
-    say(c, `Enxame: ${MODE_NAMES[m]}. ${MODE_HELP[m][0].toUpperCase()}${MODE_HELP[m].slice(1)}.`, { force: true });
+    say(c, `Fumaça: ${MODE_NAMES[m]}. ${MODE_HELP[m][0].toUpperCase()}${MODE_HELP[m].slice(1)}.`, { force: true });
     return true;
   }
   if (TOOL_SHAPES[kind]) return formTool(c, owner, TOOL_SHAPES[kind], "ask");
@@ -1107,7 +1109,7 @@ export function doShape(c, kind, owner = c.owner()) {
           }
         }, row * 2);
       }
-      say(c, "Muralha de nanorrobôs na sua frente (some em 1 minuto)!", { force: true });
+      say(c, "Muralha de fumaça na sua frente (some em 1 minuto)!", { force: true });
       return true;
     }
     case "ponte": {
@@ -1133,7 +1135,7 @@ export function doShape(c, kind, owner = c.owner()) {
           if (i % 2 === 0) particle(dim, "lila:nano_point", { x: o.x + f.x * i, y: fy + i, z: o.z + f.z * i });
         }, i);
       }
-      say(c, "Escada de nanorrobôs subindo 24 blocos!", { force: true });
+      say(c, "Escada de fumaça subindo 24 blocos!", { force: true });
       return true;
     }
     case "cupula": {
@@ -1151,7 +1153,7 @@ export function doShape(c, kind, owner = c.owner()) {
           particle(dim, "lila:nano_smoke", { x: o.x, y: o.y + y, z: o.z });
         }, y * 2);
       }
-      say(c, "Cúpula de nanorrobôs em volta de você (com porta na frente, dura 90 s).", { force: true });
+      say(c, "Cúpula de fumaça em volta de você (com porta na frente, dura 90 s).", { force: true });
       return true;
     }
     case "punho":
@@ -1160,12 +1162,12 @@ export function doShape(c, kind, owner = c.owner()) {
       return true;
     case "giro":
       c.flags.shape = { kind: "giro", t0: now, until: now + 120 };
-      say(c, "Lâmina de enxame girando em volta de você!", { force: true });
+      say(c, "Lâminas de sombra girando em volta de você!", { force: true });
       return true;
     case "tornado": {
       const at = aim(owner, 40);
       c.flags.shape = { kind: "tornado", t0: now, until: now + 200, at };
-      say(c, "TORNADO de nanorrobôs!", { force: true });
+      say(c, "TORNADO de fumaça!", { force: true });
       return true;
     }
     case "elevador":
@@ -1181,12 +1183,12 @@ export function doShape(c, kind, owner = c.owner()) {
     case "ataque": {
       const t = lookTarget(c, owner);
       if (!t) {
-        say(c, "Mire em alguém e mande atacar que o enxame vai em cima!", { force: true });
+        say(c, "Mire em alguém e mande atacar que a maldição vai em cima!", { force: true });
         return false;
       }
       c.flags.swarmTarget = t.id;
       c.flags.swarmTargetUntil = now + 400;
-      say(c, `Enxame atacando ${t.typeId.replace("minecraft:", "").replace(/_/g, " ")}!`, { force: true });
+      say(c, `A maldição vai em cima de ${t.typeId.replace("minecraft:", "").replace(/_/g, " ")}!`, { force: true });
       return true;
     }
     default:

@@ -16,6 +16,8 @@ import { ARMY_STYLES, KIND_NAMES, armyActive, command as armyCommand, empower, r
 import { findItemType } from "../lila/creative.js";
 import { say } from "../lila/talk.js";
 import { show } from "./forms.js";
+import { aimedTarget, cact, curseDevour, curseGuard, curseRoar, curseSlamAround, curseStrike, inSmokeForm, nearestFoe, setFog, setSmokeForm } from "../lila/curse.js";
+import { markAggro } from "../lila/combat.js";
 import { logError } from "../core/log.js";
 
 const I = {
@@ -89,11 +91,11 @@ export async function openController(player) {
     if (c.alive() && isRideForm(formOf(c)) && riders(c).some((r) => r.id === player.id)) return pilotPanel(player);
     if (!c.rec.summoned || (!c.alive() && !c.rec.defeat && !armyActive(c))) {
       const f = new ActionFormData()
-        .title("§l§bControle do Hacknd")
+        .title("§l§5Maldição")
         .body(c.rec.defeat
-          ? `§7O Hacknd está se recuperando. Volta em §e${Math.ceil(c.rec.defeat.left / 20)}s§7.`
-          : "§fO §bHacknd§f é um §denxame de nanorrobôs§f (uma nuvem de robozinhos do tamanho de poeira) com §eitens infinitos§f. Eles descem do céu, viram §b12 veículos§f, §ctorreta gigante§f, o §6TITÃ§f, um §aexército§f, ferramentas na sua mão, asas, prancha, mãos gigantes, e constroem §emais de 4800 construções§f mobiliadas. Dá pra §7desligar§f (viram um montinho de poeira).")
-        .button("§l§bInvocar o enxame Hacknd", I.drone)
+          ? `§7A maldição está se refazendo. Volta em §e${Math.ceil(c.rec.defeat.left / 20)}s§7.`
+          : "§fA §5Maldição§f é um espírito de §8fumaça preta§f do tamanho de um wither, com uma boca cheia de dentes, braços longos com garras e tentáculos. Ela §csai do chão§f quando você invoca e §8afunda na terra§f quando vai embora. Luta §lsó no braço§r§f (socos, garras, pancadas, mordidas), te protege, te dá §8asas de fumaça§f, te transforma em §8fumaça§f (voa e atravessa tudo), cobre tudo de §8névoa§f, vira um §8exército de sombras§f, fica §5GIGANTE§f e ainda constrói §emais de 4800 construções§f.")
+        .button("§l§5Invocar a Maldição", I.drone)
         .button("Como funciona", I.info);
       const r = await show(player, f);
       if (!r || r.canceled) return;
@@ -103,10 +105,10 @@ export async function openController(player) {
     }
     if (c.rec.off) {
       // desligado: desmontado no chão
-      const f = new ActionFormData().title("§l§bControle do Hacknd").body("§7O Hacknd está §cdesligado§7 (um montinho de poeira de nanorrobôs no chão).");
+      const f = new ActionFormData().title("§l§5Maldição").body("§7A maldição está §8adormecida§7 (um monte de cinzas no chão).");
       /** @type {[string, string, () => any][]} */
-      const b = [["§a§l⏻ LIGAR o enxame", I.drone, () => powerOn(c)], ["Inventário e status", I.info, () => infoMenu(player)],
-        ["Configurações", I.settings, () => settingsMenu(player)], ["§cDispensar Hacknd", I.dismiss, () => dismiss(c)]];
+      const b = [["§5§l⏻ ACORDAR a maldição", I.drone, () => powerOn(c)], ["Inventário e status", I.info, () => infoMenu(player)],
+        ["Configurações", I.settings, () => settingsMenu(player)], ["§8Mandar de volta para a terra", I.dismiss, () => dismiss(c)]];
       for (const [t, icon] of b) f.button(t, icon);
       const r = await show(player, f);
       if (!r || r.canceled || r.selection === undefined) return;
@@ -116,18 +118,17 @@ export async function openController(player) {
     const cur = c.urgent?.desc ?? c.job?.desc ?? c.rec.goals[0];
     const army = armyActive(c);
     const f = new ActionFormData()
-      .title("§l§bControle do Hacknd")
-      .body(`§7${statusText(c)}\n§fAgora: §a${army ? `exército (${robotsOf(c).length} robôs)` : goalLabel(cur)}${c.rec.paused ? " §c(pausado)" : ""}`);
+      .title("§l§5Maldição")
+      .body(`§7${statusText(c)}\n§fAgora: §a${army ? `exército de sombras (${robotsOf(c).length})` : goalLabel(cur)}${c.rec.paused ? " §c(pausado)" : ""}`);
     /** @type {[string, string, () => any][]} */
     const buttons = [
       ["§l✎ Escrever ordem", I.write, () => writeOrder(player)],
       ["§c§l✖ Cancelar tudo §r§c(volta ao normal)", I.cancel, () => handleIntents(c, [{ type: "stop" }])],
-      ["§8⏻ Desligar o enxame (vira poeira)", I.dismiss, () => (army ? handleIntents(c, [{ type: "stop" }]) : powerOff(c))],
-      ["§bVeículos…", I.vehicle, () => vehicleMenu(player)],
-      [formOf(c) === "colossus" ? "§6Subir no TITÃ (em cima da cabeça)" : "§6§lRobô gigante TITÃ", I.colossus, () => (formOf(c) === "colossus" ? mountOwner(c, player) : handleIntents(c, [{ type: "form", form: "colossus" }]))],
-      ["§d§lPoderes do enxame…\n§8escudo, asas, prancha, mãos, devorador, ferramentas", I.swarm, () => (formOf(c) === "swarm" || formOf(c) === "drone" ? swarmMenu(player) : handleIntents(c, [{ type: "swarm" }]))],
-      [c.rec.mode === "turret" ? "§cDesmontar a torreta" : "§cTorreta gigante", I.turret, () => handleIntents(c, [{ type: c.rec.mode === "turret" ? "stop" : "turret" }])],
-      [army ? "§aComandar o exército…" : "§aModo EXÉRCITO", I.army, () => (army ? armyMenu(player) : armyStyleMenu(player))],
+      ["§4§l⚔ Combate…§r\n§8socos, garra, pancada, rugido, devorar, guarda", I.protect, () => combatMenu(player)],
+      ["§5§l☠ Poderes da maldição…§r\n§8asas de fumaça, virar fumaça, névoa, escudo, mãos", I.swarm, () => powersMenu(player)],
+      [formOf(c) === "colossus" ? "§5Subir na cabeça da Maldição gigante" : "§5§lMaldição GIGANTE", I.colossus, () => (formOf(c) === "colossus" ? mountOwner(c, player) : handleIntents(c, [{ type: "form", form: "colossus" }]))],
+      [army ? "§8Comandar as sombras…" : "§8§lExército de sombras§r\n§8ela se desfaz em soldados de fumaça", I.army, () => (army ? armyMenu(player) : armyStyleMenu(player))],
+      ["§bFormas de fumaça (veículos)…", I.vehicle, () => vehicleMenu(player)],
       ["§e§lConstruir…§r §e(tudo mobiliado)", I.build, () => buildMenu(player)],
       ["§2Transformar bioma…", I.biome, () => biomeMenu(player)],
       ["§6Aplainar / destruir em volta…", I.flatten, () => flattenMenu(player)],
@@ -138,14 +139,14 @@ export async function openController(player) {
       ["Me seguir", I.follow, () => handleIntents(c, [{ type: "follow" }])],
       ["Ficar aqui", I.stay, () => handleIntents(c, [{ type: "stay" }])],
       ["Vem aqui", I.come, () => handleIntents(c, [{ type: "come" }])],
-      ["Carona (o enxame te carrega)", I.ride, () => handleIntents(c, [{ type: "ride" }])],
+      ["Carona (ela te carrega nos ombros)", I.ride, () => handleIntents(c, [{ type: "ride" }])],
       ["Modo livre", I.auto, () => handleIntents(c, [{ type: "auto" }])],
-      ["Escanear você", I.scan, () => handleIntents(c, [{ type: "scan" }])],
       ["Missões", I.missions, () => missionsMenu(player)],
       ["Memórias", I.memory, () => memoriesMenu(player)],
       ["Inventário e status", I.info, () => infoMenu(player)],
       ["Configurações", I.settings, () => settingsMenu(player)],
-      ["§cDispensar Hacknd", I.dismiss, () => dismiss(c)],
+      ["§8Adormecer (vira um monte de cinzas)", I.dismiss, () => (army ? handleIntents(c, [{ type: "stop" }]) : powerOff(c))],
+      ["§8Mandar de volta para a terra", I.dismiss, () => dismiss(c)],
     ];
     for (const [t, icon] of buttons) f.button(t, icon);
     const r = await show(player, f);
@@ -154,6 +155,62 @@ export async function openController(player) {
   } catch (e) {
     logError("ui.controller", e);
   }
+}
+
+/** Combate da Maldição (só corpo a corpo). */
+async function combatMenu(player) {
+  const c = comp(player);
+  if (!c.alive()) return;
+  if (formOf(c) !== "drone" && formOf(c) !== "colossus") handleIntents(c, [{ type: "stop" }]);
+  const f = new ActionFormData().title("§l§4Combate").body("§7Ela luta §lsó no braço§r§7. Mire em algo e escolha, ou deixe ela escolher o golpe.");
+  /** @type {[string, string, () => any][]} */
+  const b = [
+    ["§lAtacar o que eu miro", I.protect, () => {
+      const t = aimedTarget(player);
+      if (!t) return say(c, "Mire numa criatura.", { force: true });
+      markAggro(c, t, 900);
+      handleIntents(c, [{ type: "protect" }]);
+    }],
+    ["§lSequência de socos", I.protect, () => {
+      const t = nearestFoe(c);
+      if (t) curseStrike(c, t, "flurry");
+      else cact(c.entity, "flurry");
+    }],
+    ["§lPancada no chão", I.flatten, () => curseSlamAround(c)],
+    ["§lRugido (medo em volta)", I.colossus, () => curseRoar(c)],
+    ["§lDevorar (suga e engole)", I.sweep, () => curseDevour(c)],
+    ["§lGuarda: me cobrir com os braços", I.stay, () => curseGuard(c, 100)],
+    ["Voltar", I.back, () => openController(player)],
+  ];
+  for (const [t, icon] of b) f.button(t, icon);
+  const r = await show(player, f);
+  if (!r || r.canceled || r.selection === undefined) return;
+  await b[r.selection][2]();
+}
+
+/** Poderes da maldição no jogador. */
+async function powersMenu(player) {
+  const c = comp(player);
+  const mode = modeOf(c);
+  const f = new ActionFormData().title("§l§5Poderes da maldição")
+    .body("§7A fumaça dela vem até você.\n§8Virar fumaça: voa e atravessa tudo (como espectador). Para voltar ao corpo, §fsegure agachar 2 s§8.");
+  /** @type {[string, string, () => any][]} */
+  const b = [
+    [`${mode === "asas" ? "§a● " : ""}§lAsas de fumaça`, I.swarm, () => handleIntents(c, [{ type: "swarm", shape: "asas" }])],
+    [`${inSmokeForm(player) ? "§a● " : ""}§lVirar fumaça`, I.swarm, () => setSmokeForm(player, !inSmokeForm(player))],
+    [`${c.rec.curseFog ? "§a● " : ""}§lNévoa gigante§r\n§8onde você for, o nevoeiro vai junto`, I.biome, () => setFog(c, !c.rec.curseFog)],
+    [`${mode === "escudo" ? "§a● " : ""}§lEscudo de fumaça`, I.swarm, () => handleIntents(c, [{ type: "swarm", shape: "escudo" }])],
+    [`${mode === "maos" ? "§a● " : ""}§lMãos da maldição`, I.swarm, () => handleIntents(c, [{ type: "swarm", shape: "maos" }])],
+    [`${mode === "devorador" ? "§a● " : ""}§lBoca devoradora`, I.swarm, () => handleIntents(c, [{ type: "swarm", shape: "devorador" }])],
+    [`${mode === "prancha" ? "§a● " : ""}§lNuvem voadora`, I.swarm, () => handleIntents(c, [{ type: "swarm", shape: "prancha" }])],
+    [`${mode === "auto" ? "§a● " : ""}§lFerramentas de sombra (inteligente)`, I.swarm, () => handleIntents(c, [{ type: "swarm", shape: "auto" }])],
+    ["§lMais formas da fumaça…§r\n§8muralha, ponte, escada, cúpula...", I.swarm, () => (formOf(c) === "swarm" || formOf(c) === "drone" ? swarmMenu(player) : handleIntents(c, [{ type: "swarm" }]))],
+    ["Voltar", I.back, () => openController(player)],
+  ];
+  for (const [t, icon] of b) f.button(t, icon);
+  const r = await show(player, f);
+  if (!r || r.canceled || r.selection === undefined) return;
+  await b[r.selection][2]();
 }
 
 async function writeOrder(player) {
@@ -194,8 +251,8 @@ async function swarmMenu(player) {
   const c = comp(player);
   const keys = Object.keys(SWARM_SHAPES);
   const mode = modeOf(c);
-  const f = new ActionFormData().title("§l§dEnxame de nanorrobôs")
-    .body(`§fModo agora: §b§l${MODE_NAMES[mode] ?? "—"}§r\n§7Você não precisa deste menu: de mão vazia, bata num bloco que eles viram a ferramenta certa, bata num bicho que viram espada. O §bNúcleo do enxame§7 (na sua barra) troca o modo; agachado, volta um.`);
+  const f = new ActionFormData().title("§l§5Formas da fumaça")
+    .body(`§fModo agora: §b§l${MODE_NAMES[mode] ?? "—"}§r\n§7De mão vazia, bata num bloco que a fumaça vira a ferramenta de sombra certa; bata num bicho que vira espada. A §5Fumaça da Maldição§7 (na sua barra) troca o poder; agachado, volta um.`);
   for (const k of keys) f.button(`${NANO_MODES.includes(k) && k === mode ? "§a● " : ""}${SWARM_SHAPES[k].name}`, I.swarm);
   f.button("§c✖ Voltar à forma normal", I.cancel);
   f.button("Voltar", I.back);
@@ -316,7 +373,7 @@ async function armyMenu(player) {
 async function armyStyleMenu(player) {
   const c = comp(player);
   const keys = Object.keys(ARMY_STYLES);
-  const f = new ActionFormData().title("§l§aModo EXÉRCITO").body(`§7O enxame se divide em ${c.rec.settings.army ?? 10} soldados de nanorrobôs. Que tipo de exército?`);
+  const f = new ActionFormData().title("§l§8Exército de sombras").body(`§7A maldição se desfaz em ${c.rec.settings.army ?? 10} soldados de fumaça (fantasmas). Se todos caírem, ela se remonta. Que tipo de exército?`);
   for (const k of keys) f.button(ARMY_STYLES[k].name, I.army);
   f.button("Voltar", I.back);
   const r = await show(player, f);

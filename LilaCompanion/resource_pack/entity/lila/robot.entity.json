@@ -28,7 +28,12 @@
         "build": "animation.lila.robot.build",
         "slash": "animation.lila.robot.slash",
         "heal": "animation.lila.robot.heal",
+        "shadowfx": "animation.lila.robot.shadowfx",
         "ctrl": "controller.animation.lila.robot.action"
+      },
+      "particle_effects": {
+        "c_smoke": "lila:curse_smoke",
+        "c_wisps": "lila:curse_wisps"
       },
       "scripts": {
         "animate": [
@@ -36,7 +41,8 @@
           {
             "idle": "q.ground_speed < 0.6"
           },
-          "ctrl"
+          "ctrl",
+          "shadowfx"
         ]
       },
       "render_controllers": [

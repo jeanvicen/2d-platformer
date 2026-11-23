@@ -9,7 +9,7 @@ import { canAttack, findThreat, isHostile } from "./combat.js";
 import { say } from "./talk.js";
 import * as inv from "./inventory.js";
 import { logError } from "../core/log.js";
-import { nanoFx, nanoStream } from "./nanofx.js";
+import { cact, curseStrike, isCurseForm, reachOf } from "./curse.js";
 
 /** @typedef {import("./companion.js").Companion} Companion */
 /** @typedef {{x:number,y:number,z:number}} Vec */
@@ -39,6 +39,14 @@ export function clearLine(dim, a, b, slack = 1.5) {
 export function steer(c, to, speed) {
   const e = c.entity;
   if (!e?.isValid) return 0;
+  if ((c.flags.emergeUntil ?? 0) > system.currentTick || c.flags.sinking) {
+    try {
+      e.clearVelocity(); // saindo do chão / afundando: não se mexe
+    } catch {
+      /* ignore */
+    }
+    return Math.hypot(to.x - e.location.x, to.y - e.location.y, to.z - e.location.z);
+  }
   const p = e.location;
   const dx = to.x - p.x, dy = to.y - p.y, dz = to.z - p.z;
   const d = Math.hypot(dx, dy, dz);
@@ -184,7 +192,7 @@ export function* orbitOwner(c, ticks = Infinity) {
     // de lado ou atrás do dono (nunca bem na frente da câmera)
     const a = yaw + Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.4;
     const r = 4 + Math.random() * 5;
-    return { x: o.location.x - Math.sin(a) * r, y: o.location.y + 1.5 + Math.random() * 2, z: o.location.z + Math.cos(a) * r };
+    return { x: o.location.x - Math.sin(a) * r, y: o.location.y + (isCurseForm(c) ? 0.15 : 1.5 + Math.random() * 2), z: o.location.z + Math.cos(a) * r };
   };
   while (c.alive() && system.currentTick - t0 < ticks) {
     const o = c.owner();
@@ -211,7 +219,7 @@ export function* orbitOwner(c, ticks = Infinity) {
       // você andando: vem junto, um pouco atrás e de lado
       const yaw = (o.getRotation().y * Math.PI) / 180;
       const side = c.flags.followSide ?? (c.flags.followSide = Math.random() < 0.5 ? -1 : 1);
-      const tgt = { x: o.location.x + Math.sin(yaw) * 2.5 + Math.cos(yaw) * 2.5 * side, y: o.location.y + 2.2, z: o.location.z - Math.cos(yaw) * 2.5 + Math.sin(yaw) * 2.5 * side };
+      const tgt = { x: o.location.x + Math.sin(yaw) * 3 + Math.cos(yaw) * 3 * side, y: o.location.y + (isCurseForm(c) ? 0.15 : 2.2), z: o.location.z - Math.cos(yaw) * 3 + Math.sin(yaw) * 3 * side };
       if (!clearLine(c.dim(), c.pos(), tgt, 0.5)) tgt.y += 2;
       steer(c, tgt, Math.min(cruise(c), 0.15 + d * 0.07));
       spot = null;
@@ -240,92 +248,21 @@ export function* orbitOwner(c, ticks = Infinity) {
 // ------------------------------------------------------------------ armas
 /** Um tiro da metralhadora (instantâneo, com rastro e faísca). Retorna true se acertou. */
 export function shoot(c, target) {
-  const e = c.entity;
-  if (!e?.isValid || !target?.isValid) return false;
-  const dim = c.dim();
-  const from = { x: e.location.x, y: e.location.y + 1.15, z: e.location.z }; // núcleo do peito
-  const to = { x: target.location.x, y: target.location.y + 0.9, z: target.location.z };
-  const range = c.def?.gun?.range ?? 24;
-  const dist = d3(from, to);
-  if (dist > range || !clearLine(dim, from, to, 1.2)) return false;
-  face(c, { x: to.x - 0.5, y: to.y, z: to.z - 0.5 });
-  // na torreta continua montado (tripé/canhão); só em voo troca para a pose de tiro
-  if (c.rec.mode !== "turret") setAction(e, "attack");
-  const cloud = !c.rec.form || c.rec.form === "drone" || c.rec.form === "swarm";
-  if (cloud) {
-    // Hacknd: um dardo de nanorrobôs sai da nuvem e fura o alvo
-    nanoStream(dim, from, to, 7, 1.8);
-    particle(dim, "lila:nano_smoke", to);
-  } else {
-    // rastro da bala
-    const n = Math.min(14, Math.ceil(dist / 1.4));
-    for (let i = 1; i <= n; i++) {
-      const t = i / (n + 1);
-      particle(dim, "lila:tracer", { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t, z: from.z + (to.z - from.z) * t });
-    }
-    particle(dim, "lila:ping", to);
-  }
-  sound(e, "random.click", 0.6, 1.9);
-  sound(e, "mob.blaze.shoot", 0.25, 1.9);
-  try {
-    target.applyDamage(c.def?.gun?.damage ?? 4, { cause: EntityDamageCause.entityAttack, damagingEntity: e });
-  } catch (err) {
-    logError("drone.shoot", err);
-  }
-  return true;
+  // Maldição: nada de tiro — só golpe corpo a corpo quando o alvo está no alcance do braço
+  return curseStrike(c, target);
 }
 
 /** Soco forte (a mão voa no alvo): dano alto e arremesso. Retorna true se socou. */
 export function punch(c, target) {
-  const e = c.entity;
-  if (!e?.isValid || !target?.isValid) return false;
-  const tl = target.location;
-  if (d3(e.location, { x: tl.x, y: tl.y + 0.8, z: tl.z }) > 3.8) return false;
-  face(c, { x: tl.x - 0.5, y: tl.y + 1, z: tl.z - 0.5 });
-  setAction(e, "punch");
-  sound(e, "mob.bee.aggressive", 0.6, 0.8);
-  // Hacknd: o enxame compacta num punho e voa até o alvo (3 quadros: sai da nuvem, meio, impacto)
-  {
-    const a = e.location, yaw = (-Math.atan2(tl.x - a.x, tl.z - a.z) * 180) / Math.PI;
-    for (let k = 0; k < 3; k++) {
-      system.runTimeout(() => {
-        if (!c.alive() || !target.isValid) return;
-        const p = c.pos(), q = target.location, f = (k + 1) / 3;
-        nanoFx(c.dim(), "lila:nano_hand", { x: p.x + (q.x - p.x) * f, y: p.y + 1 + (q.y + 1 - p.y - 1) * f, z: p.z + (q.z - p.z) * f }, { yaw, size: 0.9 + k * 0.25 });
-      }, k);
-    }
-  }
-  system.runTimeout(() => {
-    if (!c.alive() || !target.isValid) return;
-    const a = c.pos(), b = target.location;
-    const dx = b.x - a.x, dz = b.z - a.z, l = Math.hypot(dx, dz) || 1;
-    try {
-      target.applyDamage((c.def?.gun?.damage ?? 7) * 2.6, { cause: EntityDamageCause.entityAttack, damagingEntity: c.entity });
-      target.applyKnockback({ x: (dx / l) * 1.7, z: (dz / l) * 1.7 }, 0.5);
-    } catch (err) {
-      logError("drone.punch", err);
-    }
-    particle(c.dim(), "lila:shock", { x: b.x, y: b.y + 1, z: b.z });
-    particle(c.dim(), "lila:dust", { x: b.x, y: b.y + 1, z: b.z });
-    sound(c.entity, "random.explode", 0.45, 1.7);
-    sound(c.entity, "mob.irongolem.throw", 1, 1.1);
-  }, 4);
-  system.runTimeout(() => {
-    try {
-      if (c.entity?.getProperty("lila:action") === "punch") setAction(c.entity, "idle");
-    } catch {
-      /* ignore */
-    }
-  }, 10);
-  return true;
+  return curseStrike(c, target, Math.random() < 0.5 ? "punch_r" : "punch_l");
 }
 
 /** Combate: alterna entre atirar de longe (núcleo do peito) e voar pra perto dar socos fortes. */
 /** @param {{loc?:any}} [box] recebe a última posição do alvo (para recolher os drops) */
 export function* gunFight(c, target, maxTicks = 500, box) {
+  // Maldição: luta SÓ corpo a corpo — desliza até o alvo e encadeia socos, garras, pancadas e mordidas
   const t0 = system.currentTick;
-  const every = c.def?.gun?.every ?? 3;
-  let last = 0, lastPunch = 0;
+  let lastHit = 0;
   try {
     while (c.alive() && target.isValid && system.currentTick - t0 < maxTicks) {
       let hp = 1;
@@ -338,23 +275,18 @@ export function* gunFight(c, target, maxTicks = 500, box) {
       const tl = target.location;
       if (box) box.loc = tl;
       const p = c.pos();
-      const d = d3(p, tl);
+      const d = hdist(p, tl);
       if (d > 48) break;
-      const range = (c.def?.gun?.range ?? 24) - 4;
+      const reach = reachOf(c);
       const now = system.currentTick;
-      // a cada ~5 s ele mergulha pra socar (se o alvo estiver a menos de 16 blocos); senão atira de longe
-      const melee = (now - t0) % 100 < 45 && d < 16 && c.rec.mode !== "turret";
-      if (melee) {
-        const k = Math.min(1, 1.8 / Math.max(d, 0.1));
-        steer(c, { x: tl.x + (p.x - tl.x) * k, y: tl.y + 0.4, z: tl.z + (p.z - tl.z) * k }, Math.max(cruise(c), 0.9));
-        if (now - lastPunch >= 12 && punch(c, target)) lastPunch = now;
-        else if (d > 5 && now - last >= every * 2 && shoot(c, target)) last = now;
+      if (d > reach - 0.8 || Math.abs(tl.y - p.y) > 3.5) {
+        const k = Math.min(1, (reach - 1.2) / Math.max(d, 0.1));
+        steer(c, { x: tl.x + (p.x - tl.x) * k, y: tl.y + 0.1, z: tl.z + (p.z - tl.z) * k }, Math.max(cruise(c), 0.95));
       } else {
-        const spot = { x: tl.x + (p.x - tl.x) * Math.min(1, 7 / Math.max(d, 0.1)), y: tl.y + 4, z: tl.z + (p.z - tl.z) * Math.min(1, 7 / Math.max(d, 0.1)) };
-        if (d > range || !clearLine(c.dim(), p, { x: tl.x, y: tl.y + 1, z: tl.z }, 1.2)) steer(c, spot, cruise(c));
-        else hover(c);
-        if (now - last >= every && shoot(c, target)) last = now;
+        hover(c);
+        face(c, { x: tl.x - 0.5, y: tl.y, z: tl.z - 0.5 });
       }
+      if (now - lastHit >= 12 && curseStrike(c, target)) lastHit = now;
       yield 1;
     }
   } finally {
@@ -514,7 +446,7 @@ export function mount(c, player) {
   try {
     if (hdist(e.location, player.location) > 4) e.teleport({ x: player.location.x + 1, y: player.location.y + 0.5, z: player.location.z }, { keepVelocity: false });
     const ok = e.getComponent("minecraft:rideable")?.addRider(player) ?? false;
-    if (ok) say(c, "Segura firme! Olhe para onde quer ir e ande pra frente. Pular = subir. Agachar = descer do enxame.", { force: true });
+    if (ok) say(c, "Segura firme! Olhe para onde quer ir e ande pra frente. Pular = subir. Agachar = descer.", { force: true });
     return ok;
   } catch (err) {
     logError("drone.mount", err);
@@ -552,9 +484,9 @@ export function rideTick(c, rider) {
     /* ignore */
   }
   setMove(e, Math.hypot(want.x, want.z) > 0.5 ? "run" : Math.hypot(want.x, want.y, want.z) > 0.05 ? "walk" : "none");
-  if (system.currentTick % 4 === 0) {
+  if (system.currentTick % 12 === 0) {
     const t = findThreat(c);
-    if (t) shoot(c, t);
+    if (t) curseStrike(c, t); // carregando você: golpeia o que chegar perto (sem tiro)
   }
 }
 

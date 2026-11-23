@@ -171,6 +171,7 @@ async function soloTests(dim, check) {
   for (const f of FORM_LIST) {
     setForm(c, f, { mount: false, quiet: true });
     await system.waitTicks(4);
+    for (let w = 0; w < 6 && Number(c.entity?.getProperty("lila:form")) !== FORM_LIST.indexOf(f); w++) await system.waitTicks(2);
     const prop = Number(c.entity?.getProperty("lila:form"));
     let seats = 0;
     try {
@@ -247,6 +248,29 @@ async function soloTests(dim, check) {
     const ok = punch(c, pz);
     await system.waitTicks(8);
     check("strong punch: big damage + knockback", ok && (dead(pz) || hp(pz) <= h0 - 15), `hp ${h0}->${dead(pz) ? "down" : hp(pz)}`);
+    // MALDIÇÃO: só corpo a corpo — nada de tiro de longe
+    {
+      const far = dim.spawnEntity("minecraft:zombie", { x: 0.5, y: Y + 1, z: 14.5 });
+      far.addEffect("slowness", 200, { amplifier: 10, showParticles: false });
+      await system.waitTicks(3);
+      const { shoot } = await import("../lila/drone.js");
+      const fh = hp(far);
+      const shot = shoot(c, far);
+      await system.waitTicks(10);
+      let cactOk = false;
+      try {
+        cactOk = typeof c.entity?.getProperty("lila:cact") === "number";
+      } catch {
+        /* ignore */
+      }
+      check("CURSE: melee only — a target 14 blocks away is never shot (animated actions property present)", !shot && hp(far) >= fh && cactOk,
+        `shot=${shot} hp ${fh}->${hp(far)} cact=${cactOk}`);
+      try {
+        far.remove();
+      } catch {
+        /* ignore */
+      }
+    }
     try {
       pz.remove();
     } catch {
@@ -397,7 +421,7 @@ async function soloTests(dim, check) {
   await waitUntil(() => !c.rec.defeat && c.alive(), RESPAWN_TICKS + 60);
   check("respawn after 20 s with inventory", c.alive() && inv.totalItems(c) === items, `ticks=${system.currentTick - t0} items ${items}->${inv.totalItems(c)}`);
   dismiss(c);
-  await system.waitTicks(5);
+  await system.waitTicks(70); // Maldição: afunda na terra antes de sumir
   const back = restoreBodyForTest(c, dim, { x: 0.5, y: Y + 2, z: 0.5 });
   check("dismiss + resummon keeps everything", !!back && inv.totalItems(c) === items);
 }
@@ -523,7 +547,7 @@ async function vehicleTests(c, dim, check) {
     await system.waitTicks(1);
     cmax = Math.max(cmax, c.pos().y);
   }
-  check("TITAN robot jumps (thrusters)", cmax - cy0 >= 4, `up=${(cmax - cy0).toFixed(1)} blocks`);
+  check("GIANT CURSE jumps", cmax - cy0 >= 4, `up=${(cmax - cy0).toFixed(1)} blocks`);
   setForm(c, "drone", { mount: false, quiet: true });
   await system.waitTicks(4);
   c.entity?.teleport({ x: 0.5, y: Y + 2, z: 0.5 });
@@ -626,7 +650,35 @@ async function ownerTests(dim, check) {
   };
   const c = loadCompanion(owner, "drone");
   check("summon in front of owner", summon(c, owner) && c.alive());
-  await system.waitTicks(20);
+  let emerging = -1;
+  try {
+    emerging = /** @type {number} */ (c.entity?.getProperty("lila:cact") ?? -1);
+  } catch {
+    /* ignore */
+  }
+  await system.waitTicks(105);
+  let settled = -1;
+  try {
+    settled = /** @type {number} */ (c.entity?.getProperty("lila:cact") ?? -1);
+  } catch {
+    /* ignore */
+  }
+  check("CURSE: comes out of the ground when summoned (emerge animation) and then settles", emerging === 9 && settled === 0, `start=${emerging} after=${settled}`);
+  {
+    const { setSmokeForm, setFog } = await import("../lila/curse.js");
+    const gm0 = owner.getGameMode();
+    setSmokeForm(owner, true);
+    await system.waitTicks(3);
+    const spect = String(owner.getGameMode()).toLowerCase() === "spectator";
+    setSmokeForm(owner, false);
+    await system.waitTicks(3);
+    check("CURSE: turn into smoke (fly and pass through everything) and come back to the body", spect && owner.getGameMode() === gm0 && owner.getDynamicProperty("lila:prevgm") === undefined,
+      `smoke=${spect} back=${owner.getGameMode()} (was ${gm0})`);
+    setFog(c, true);
+    const fogOn = !!c.rec.curseFog;
+    setFog(c, false);
+    check("CURSE: giant fog power turns on and off", fogOn && !c.rec.curseFog);
+  }
 
   // itens infinitos e kit
   command(c, "me dá 64 diamantes");
@@ -675,7 +727,7 @@ async function ownerTests(dim, check) {
   command(c, "modo colosso");
   await waitUntil(() => riders(c)[0]?.id === owner.id, 120);
   const ph = owner.location.y - c.pos().y;
-  check("TITAN: owner rides ON TOP of the head (~26 blocks up)", formOf(c) === "colossus" && riders(c)[0]?.id === owner.id && ph > 23,
+  check("GIANT CURSE: owner rides ON TOP of the head (~14 blocks up)", formOf(c) === "colossus" && riders(c)[0]?.id === owner.id && ph > 12,
     `pilot height=${ph.toFixed(1)} blocks`);
   const hp0 = hp(owner);
   try {
@@ -687,7 +739,7 @@ async function ownerTests(dim, check) {
   check("colossus: pilot is (almost) immortal", hp(owner) >= hp0, `hp ${hp0}->${hp(owner)}`);
   cmd(dim, `scriptevent lilatest:act Dono swing`);
   await system.waitTicks(4);
-  check("TITAN: attack button = punch (near) / visor beam (far)", c.entity?.getProperty("lila:action") === "work" || (c.flags.cdPunch ?? 0) > 0 || (c.flags.cdBeam ?? 0) > 0,
+  check("GIANT CURSE: attack button = punch where you aim (no beam)", c.entity?.getProperty("lila:action") === "work" || (c.flags.cdPunch ?? 0) > 0 || (c.flags.cdBeam ?? 0) > 0,
     `punch=${c.flags.cdPunch ?? 0} beam=${c.flags.cdBeam ?? 0}`);
   try {
     c.entity?.getComponent("minecraft:rideable")?.ejectRider(owner);

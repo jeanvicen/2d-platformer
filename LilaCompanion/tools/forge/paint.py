@@ -31,10 +31,11 @@ def _nano_skin(rgb, glow, P, st, seed):
     s, t, fw, fh = st
     L = (rgb[..., 0] * 0.299 + rgb[..., 1] * 0.587 + rgb[..., 2] * 0.114)
     ln = np.clip(L / 255.0, 0, 1) ** 0.85
-    dark = np.array([18.0, 22.0, 29.0])
-    mid = np.array([96.0, 110.0, 130.0])
+    # MALDIÇÃO: tudo feito de fumaça preta (antes: nanorrobôs cinza-azulados)
+    dark = np.array([10.0, 9.0, 13.0])
+    mid = np.array([64.0, 60.0, 78.0])
     base = dark[None, None, :] + (mid - dark)[None, None, :] * ln[..., None]
-    chroma = (rgb - L[..., None]) * NANO["chroma"]
+    chroma = (rgb - L[..., None]) * NANO["chroma"] * 0.35
     # granulado: ruído de alta frequência no espaço 3D (cada texel é um aglomerado de robôs)
     hx = np.floor(x * 8.0 + 1000).astype(np.int64)
     hy = np.floor(y * 8.0 + 1000).astype(np.int64)
@@ -46,12 +47,12 @@ def _nano_skin(rgb, glow, P, st, seed):
     cs = np.minimum(np.mod(s * 2.0, 1.0), np.mod(t * 2.0, 1.0))
     cell = np.where(cs < 0.14, 0.82, 1.0)
     out = (base + chroma) * cell[..., None] + grain[..., None]
-    # brilho ciano: um robozinho aceso aqui e ali (emissivo)
-    spark = r > 0.986
-    out = np.where(spark[..., None], np.array([140.0, 236.0, 255.0])[None, None, :], out)
-    # partes que já brilhavam (olhos, faróis, núcleo, vidros) viram luz ciano do enxame
+    # brasas: uma faísca acesa aqui e ali (emissivo, laranja-avermelhado)
+    spark = r > 0.992
+    out = np.where(spark[..., None], np.array([255.0, 128.0, 48.0])[None, None, :], out)
+    # partes que já brilhavam (olhos, faróis, núcleo, vidros) viram brasa da maldição
     gl = glow
-    cyan = np.stack([L * 0.42, L * 0.9 + 20, np.minimum(255, L * 1.0 + 40)], axis=-1)
+    cyan = np.stack([np.minimum(255, L * 1.0 + 50), L * 0.42 + 10, L * 0.16], axis=-1)
     keep = rgb * 0.3 + cyan * 0.7
     out = np.where(gl[..., None], keep, out)
     return np.clip(out, 0, 255), glow | spark
@@ -335,11 +336,25 @@ def m_crystal(P, N, st, p):
     return rgb, np.ones(rgb.shape[:2], dtype=bool)
 
 
+def m_voxel(P, N, st, p):
+    """Arte em voxel (Maldição): cada célula de 1 unidade tem um tom um pouco diferente, com um
+    leve brilho frio/roxo e manchas maiores — o visual "bloquinho" das imagens de referência."""
+    x, y, z = P
+    cell = p.params.get("cell", 1.0)
+    h = _hash3(np.floor(x / cell + 1e-4).astype(np.int64), np.floor(y / cell + 1e-4).astype(np.int64), np.floor(z / cell + 1e-4).astype(np.int64), int(p.seed))
+    big = fbm(x * 0.12, y * 0.12, z * 0.12, int(p.seed) + 7, 3)
+    base = col(p.color)
+    hi = col(p.color2 or tuple(min(255, int(c * 1.9 + 14)) for c in p.color))
+    k = np.clip(0.18 + 0.55 * h * h + 0.35 * (big - 0.5), 0, 1)
+    rgb = base[None, None, :] * (1 - k[..., None]) + hi[None, None, :] * k[..., None]
+    return rgb, None
+
+
 MATERIALS = {
     "matte": m_matte, "fur": m_fur, "scales": m_scales, "feather": m_feather,
     "metal": m_metal, "cloth": m_cloth, "skin": m_skin, "hair": m_hair,
     "stone": m_stone, "glow": m_glow, "membrane": m_membrane, "bone": m_bone,
-    "wood": m_wood, "leather": m_leather, "crystal": m_crystal,
+    "wood": m_wood, "leather": m_leather, "crystal": m_crystal, "voxel": m_voxel,
 }
 
 

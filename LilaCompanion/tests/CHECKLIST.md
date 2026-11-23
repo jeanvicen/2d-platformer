@@ -1,4 +1,4 @@
-# Checklist de aceitação — Hacknd 3.2.0 (painel de poderes, modo poder, 60 poderes assinatura)
+# Checklist de aceitação — Hacknd 3.3.0 (a MALDIÇÃO + escolha livre da raça)
 
 Legenda: **PASS** = verificado de verdade · **NOT TESTED** = não dá para testar neste ambiente
 (servidor sem tela, sem celular, sem som).
@@ -18,6 +18,19 @@ com jogadores simulados "Dono" e "Intruso" → `tests/last_bds_owner_run.log`.
 | Molang (836 expressões, inclusive a nuvem do enxame, chegada pelo céu, montar/desmanchar, asas/mãos/prancha): parênteses, funções conhecidas, toda variável lida é escrita | PASS |
 | Hacknd: corpo de robô escondido na forma normal (render controller); efeitos do enxame ligados por controlador de animação no cliente (nuvem / montinho desligado / robozinhos em cada forma) — referências conferidas | PASS |
 | As 4851 construções do catálogo geram sem erro (Node) e as megaconstruções mobiliadas geram (vila, cidade, castelo, casa tech, arranha-céu, pirâmide, farol) | PASS |
+
+## A Maldição (3.3)
+| Item | Resultado |
+|---|---|
+| Modelo da Maldição feito a partir da folha de referência (93 ossos, 409 cubos): vistas de frente, lado e costas conferidas por imagem gerada com a mesma geometria | PASS (por imagem) |
+| 16 ações + camadas contínuas (vida, cubinhos, deslizar, olhar) geradas, validadas (ossos existem, Molang sem erro) e poses-chave conferidas por imagem | PASS |
+| Entidade com a ação animada `lila:cact`; **sai do chão ao ser invocada** (começa em "surgir" e assenta depois) | PASS |
+| **Só corpo a corpo**: alvo a 14 blocos nunca é atingido de longe; soco forte de perto derruba | PASS |
+| Mandar de volta: afunda na terra e o corpo é guardado com tudo (invocar de novo traz tudo) | PASS |
+| **Virar fumaça** (espectador) e voltar ao corpo no modo de jogo de antes; **Névoa gigante** liga e desliga | PASS |
+| Maldição GIGANTE: dono em cima da cabeça (~14 blocos), golpe no botão de ataque | PASS |
+| Exército de sombras: soldados atacam corpo a corpo e, quando todos caem, a maldição se remonta | PASS (testes do exército) |
+| Escolha livre da raça na 1ª vez (sem gastar a roleta) e a 2ª escolha livre recusada (só roleta) | PASS |
 
 ## Sem jogador (servidor oficial)
 | Item | Resultado |
@@ -83,6 +96,7 @@ com jogadores simulados "Dono" e "Intruso" → `tests/last_bds_owner_run.log`.
 | **Painel da direita na tela** (posição, transparência, cores, se o título normal some): é interface do cliente — conferido só por arquivo (`ui/hud_screen.json`) | NOT TESTED |
 | **Câmera do gigante vista na tela** (altura exata dos olhos, cabeça escondida para ele): o servidor aceita o preset, mas o desenho é do cliente; há ajuste de altura no menu | NOT TESTED |
 | Visual das partículas novas (selos, colunas, cortes, raios, correntes) e tremor de tela no celular | NOT TESTED |
+| **Maldição vista na tela**: animações rodando no cliente, fumaça da base, cinzas/faíscas no ar, asas de fumaça, névoa preta, saída do chão "por dentro da terra" | NOT TESTED (o servidor não desenha; conferido por arquivo e por imagens) |
 | A nuvem do enxame na tela (centenas de pontinhos em zigue-zague, névoa, rastro), a chegada pelo céu, o montinho desligado e montar/desmanchar formas — tudo é partícula desenhada no aparelho; conferido por arquivo e por imagens geradas com a mesma matemática | NOT TESTED |
 | Desempenho da nuvem no celular (≈ 560 pontinhos + 22 manchas de névoa + 120 de rastro por enxame; a chegada pelo céu usa até 1000 por 2 s) | NOT TESTED |
 | Aparência no celular: robôs do exército, itens de nanorrobô, asas/mãos/prancha de partículas (conferidos por renderização do modelo e por cálculo; a partícula com orientação depende do cliente) | NOT TESTED |

@@ -8,7 +8,7 @@ import { ABILITIES, BY_RACE, validateCatalog } from "../race/catalog.js";
 import { RACES, RACE_IDS, TOTAL_WEIGHT, pickRace, rollInt, validateWeights } from "../race/data.js";
 import { forget, stateOf } from "../race/state.js";
 import { LAST, SILENCE, STUN, cast, clearActive, TEMP_BLOCKS } from "../race/engine.js";
-import { useRoulette } from "../race/roulette.js";
+import { chooseRace, useRoulette } from "../race/roulette.js";
 import { CAM_LOG, DRAIN_STOP, TRIGGER_LOG, damageMods, startDrain } from "../race/passives.js";
 import { BAL } from "../race/data.js";
 import { MARK, hudText, selectedPower, setPowerMode } from "../race/hud.js";
@@ -384,6 +384,24 @@ export async function raceTests(dim, check) {
   system.clearRun(hold);
   check("VAMPIRE: blood drain (hold, in range, line of sight) drains until the target dies and heals you", started && (!pig.isValid || hp(pig) <= 0) && hp(p) > 10,
     `started=${started} pig=${pig.isValid ? hp(pig) : "dead"} hp=${hp(p).toFixed(1)} stop=${DRAIN_STOP.why}`);
+
+  // ---------------- ESCOLHA LIVRE da 1ª vez (sem roleta), depois só a roleta
+  {
+    const st = stateOf(p);
+    const keep = st.race;
+    const rouletteBefore = count(ROULETTE);
+    st.race = null;
+    st.picked = false;
+    st.rolls = 0;
+    const c1 = chooseRace(p, "angel", { fast: true });
+    await wait(4);
+    const okFirst = c1.ok && stateOf(p).race === "angel" && stateOf(p).picked && count(ROULETTE) === rouletteBefore;
+    const c2 = chooseRace(p, "god", { fast: true });
+    await wait(2);
+    check("FIRST TIME: free race choice without the roulette (nothing spent); a second free choice is refused (roulette only)",
+      okFirst && !c2.ok && c2.reason === "picked" && stateOf(p).race === "angel", `first=${c1.ok}/${stateOf(p).race} second=${c2.ok}/${c2.reason} roulette=${rouletteBefore}->${count(ROULETTE)}`);
+    if (keep && keep !== "angel") await become(keep);
+  }
 
   // ---------------- MODO PODER: painel na direita, barra de itens escolhe, bater usa, quebrar bloqueado
   {

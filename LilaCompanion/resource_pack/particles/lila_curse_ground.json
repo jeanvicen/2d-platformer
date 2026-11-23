@@ -1,0 +1,82 @@
+{
+  "format_version": "1.10.0",
+  "particle_effect": {
+    "description": {
+      "identifier": "lila:curse_ground",
+      "basic_render_parameters": {
+        "material": "particles_blend",
+        "texture": "textures/particle/lila/vfx/shard"
+      }
+    },
+    "components": {
+      "minecraft:emitter_lifetime_once": {
+        "active_time": 0.08
+      },
+      "minecraft:emitter_rate_instant": {
+        "num_particles": 26
+      },
+      "minecraft:emitter_shape_disc": {
+        "offset": [
+          0,
+          0.15,
+          0
+        ],
+        "radius": 1.6,
+        "plane_normal": "y",
+        "direction": [
+          "math.random(-1, 1)",
+          "math.random(1, 2.5)",
+          "math.random(-1, 1)"
+        ]
+      },
+      "minecraft:particle_lifetime_expression": {
+        "max_lifetime": "math.random(0.8, 1.6)"
+      },
+      "minecraft:particle_initial_speed": "math.random(3, 7)",
+      "minecraft:particle_motion_dynamic": {
+        "linear_acceleration": [
+          0,
+          -16,
+          0
+        ],
+        "linear_drag_coefficient": 0.5
+      },
+      "minecraft:particle_motion_collision": {
+        "collision_drag": 4,
+        "coefficient_of_restitution": 0.3,
+        "collision_radius": 0.1
+      },
+      "minecraft:particle_initial_spin": {
+        "rotation": "math.random(0, 360)",
+        "rotation_rate": "math.random(-500, 500)"
+      },
+      "minecraft:particle_appearance_billboard": {
+        "size": [
+          "0.1 + v.particle_random_3 * 0.18",
+          "0.1 + v.particle_random_3 * 0.18"
+        ],
+        "facing_camera_mode": "rotate_xyz",
+        "uv": {
+          "texture_width": 16,
+          "texture_height": 16,
+          "uv": [
+            0,
+            0
+          ],
+          "uv_size": [
+            16,
+            16
+          ]
+        }
+      },
+      "minecraft:particle_appearance_tinting": {
+        "color": [
+          "0.28 + v.particle_random_2 * 0.12",
+          "0.2 + v.particle_random_2 * 0.08",
+          "0.14 + v.particle_random_2 * 0.06",
+          "math.min(1, (1 - (v.particle_age / v.particle_lifetime)) * 4)"
+        ]
+      }
+    }
+  }
+}

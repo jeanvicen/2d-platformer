@@ -19,6 +19,7 @@ import { perm, UNBREAKABLE } from "./handwork.js";
 import { say } from "./talk.js";
 import { nanoAssemble, nanoBurst } from "./nanofx.js";
 import { logError } from "../core/log.js";
+import { cact } from "./curse.js";
 
 /** @typedef {import("./companion.js").Companion} Companion */
 
@@ -108,7 +109,7 @@ export function* deploy(c, n = 10, style = "misto") {
     }
     c.rec.form = "drone";
   }
-  say(c, `Modo exército! O enxame vai se dividir em ${n} soldados de nanorrobôs...`, { force: true });
+  say(c, `Exército de sombras! A maldição se desfaz em ${n} soldados de fumaça... se todos caírem, ela volta.`, { force: true });
   const up = { x: owner.location.x, y: owner.location.y + 9, z: owner.location.z };
   yield* flyTo(c, up, { reach: 1.5, yTol: 1.5, timeout: 60 });
   sound(c.entity, "lila.transform", 1.2, 1.2);
@@ -200,12 +201,15 @@ export function merge(c) {
       logError("army.merge", err);
     }
   }
-  if (e) c.entity = e;
+  if (e) {
+    c.entity = e;
+    cact(e, "reform"); // a fumaça se junta e a maldição se remonta
+  }
   c.rec.form = "drone";
   c.rec.army = null;
   c.flags.armyCache = null;
   c.save();
-  if (c.alive()) say(c, "Todo mundo de volta! Somos um enxame de novo.", { force: true });
+  if (c.alive()) say(c, "As sombras voltaram para mim.", { force: true });
   return !!e;
 }
 
@@ -339,7 +343,7 @@ export function armyTick(c) {
   if (!rs.length) {
     // todos caíram: o drone se remonta
     if (now % 100 === 0 && o && !robotsOf(c, true).length) {
-      say(c, "Meus soldados caíram... me remontando!", { force: true });
+      say(c, "As sombras caíram... a maldição se remonta!", { force: true });
       merge(c);
     }
     return;
@@ -458,69 +462,54 @@ function clearShot(r, from, to) {
   return true;
 }
 
-/** Soldado / construtor: tiro de laser. */
-function laser(c, r, t, dmg = 7) {
-  const from = { x: r.location.x, y: r.location.y + 1.3, z: r.location.z };
-  const to = { x: t.location.x, y: t.location.y + 0.9, z: t.location.z };
-  if (!clearShot(r, from, to)) return;
-  face(r, to);
-  setRobotAction(r, "shoot", 8);
-  beamLine(r.dimension, from, to, Math.min(6, Math.ceil(Math.hypot(to.x - from.x, to.z - from.z) / 2.5)));
-  try {
-    r.dimension.playSound("lila.laser", from, { volume: 0.45, pitch: 0.9 + Math.random() * 0.3 });
-    t.applyDamage(dmg, { cause: EntityDamageCause.entityAttack, damagingEntity: r });
-  } catch {
-    /* ignore */
-  }
-}
-
-/** Artilheiro: canhão de ombro, de longe, com estouro em área (não quebra blocos). */
-function cannon(c, r, t) {
-  const from = { x: r.location.x + 0.3, y: r.location.y + 1.8, z: r.location.z };
-  const to = { x: t.location.x, y: t.location.y + 0.6, z: t.location.z };
-  if (!clearShot(r, from, to)) return;
-  face(r, to);
-  setRobotAction(r, "shoot", 10);
+/** Soldado de sombra: some em fumaça e reaparece colado no alvo com um golpe de garra (sem tiro). */
+function shadowStrike(c, r, t, dmg = 9, area = 0) {
   const dim = r.dimension;
-  beamLine(dim, from, to, 4, "lila:tracer");
-  particle(dim, "lila:muzzle", from);
-  particle(dim, "lila:shock", to);
-  particle(dim, "lila:smoke", to);
+  const p = r.location, q = t.location;
+  const dx = q.x - p.x, dz = q.z - p.z, d = Math.hypot(dx, dz) || 1;
   try {
-    dim.playSound("random.explode", to, { volume: 0.5, pitch: 1.5 });
-    t.applyDamage(16, { cause: EntityDamageCause.entityExplosion, damagingEntity: r });
-    for (const e of dim.getEntities({ location: to, maxDistance: 3.5, families: ["monster"] })) {
-      if (e.id === t.id || !canAttack(c, e)) continue;
-      e.applyDamage(7, { cause: EntityDamageCause.entityExplosion, damagingEntity: r });
-      const dx = e.location.x - to.x, dz = e.location.z - to.z, d = Math.hypot(dx, dz) || 1;
-      e.applyKnockback({ x: (dx / d) * 1.2, z: (dz / d) * 1.2 }, 0.4);
+    if (d > 2.6) {
+      const near = { x: q.x - (dx / d) * 1.4, y: q.y, z: q.z - (dz / d) * 1.4 };
+      const b = dim.getBlock({ x: Math.floor(near.x), y: Math.floor(near.y), z: Math.floor(near.z) });
+      const h = dim.getBlock({ x: Math.floor(near.x), y: Math.floor(near.y) + 1, z: Math.floor(near.z) });
+      if (d > 20 || !b || !h || (b.isSolid && !b.isAir) || (h.isSolid && !h.isAir)) return;
+      particle(dim, "lila:curse_burst", { x: p.x, y: p.y + 1, z: p.z });
+      r.teleport(near, { facingLocation: q });
+      particle(dim, "lila:curse_hit", { x: near.x, y: near.y + 1, z: near.z });
+      dim.playSound("mob.phantom.swoop", near, { volume: 0.5, pitch: 1.3 });
+    } else face(r, q);
+    setRobotAction(r, "slash", 6);
+    t.applyDamage(dmg, { cause: EntityDamageCause.entityAttack, damagingEntity: r });
+    particle(dim, "lila:curse_hit", { x: q.x, y: q.y + 1, z: q.z });
+    particle(dim, "lila:curse_spark", { x: q.x, y: q.y + 1, z: q.z });
+    dim.playSound("mob.irongolem.hit", q, { volume: 0.5, pitch: 1.2 + Math.random() * 0.3 });
+    if (area) {
+      particle(dim, "lila:curse_quake", { x: q.x, y: q.y + 0.2, z: q.z });
+      for (const e of dim.getEntities({ location: q, maxDistance: area, families: ["monster"] })) {
+        if (e.id === t.id || !canAttack(c, e)) continue;
+        e.applyDamage(dmg * 0.5, { cause: EntityDamageCause.entityAttack, damagingEntity: r });
+        const ex = e.location.x - q.x, ez = e.location.z - q.z, l = Math.hypot(ex, ez) || 1;
+        e.applyKnockback({ x: (ex / l) * 1.2, z: (ez / l) * 1.2 }, 0.4);
+      }
     }
   } catch {
     /* ignore */
   }
 }
 
-/** Ninja: some numa fumaça, aparece nas costas do inimigo e corta. */
+/** Soldado / construtor: golpe de sombra (antes era laser). */
+function laser(c, r, t, dmg = 7) {
+  shadowStrike(c, r, t, dmg + 2);
+}
+
+/** Bruto (antes artilheiro): pancada de sombra com impacto em área (antes era canhão). */
+function cannon(c, r, t) {
+  shadowStrike(c, r, t, 16, 3.5);
+}
+
+/** Ninja de sombra: some e aparece nas costas do alvo com um corte. */
 function blink(c, r, t) {
-  const dim = r.dimension;
-  const p = r.location, q = t.location;
-  const dx = q.x - p.x, dz = q.z - p.z, d = Math.hypot(dx, dz) || 1;
-  const behind = { x: q.x + (dx / d) * 1.3, y: q.y, z: q.z + (dz / d) * 1.3 };
-  try {
-    const b = dim.getBlock({ x: Math.floor(behind.x), y: Math.floor(behind.y), z: Math.floor(behind.z) });
-    const h = dim.getBlock({ x: Math.floor(behind.x), y: Math.floor(behind.y) + 1, z: Math.floor(behind.z) });
-    if (d > 2.5 && b && h && (b.isAir || !b.isSolid) && (h.isAir || !h.isSolid)) {
-      particle(dim, "lila:smoke", { x: p.x, y: p.y + 1, z: p.z });
-      r.teleport(behind, { facingLocation: q });
-      dim.playSound("mob.endermen.portal", behind, { volume: 0.4, pitch: 1.6 });
-    } else face(r, q);
-    setRobotAction(r, "slash", 6);
-    particle(dim, "lila:sparkle", { x: q.x, y: q.y + 1, z: q.z });
-    t.applyDamage(11, { cause: EntityDamageCause.entityAttack, damagingEntity: r });
-    dim.playSound("item.trident.throw", q, { volume: 0.5, pitch: 1.4 });
-  } catch {
-    /* ignore */
-  }
+  shadowStrike(c, r, t, 11);
 }
 
 /** Médico: feixe verde de cura no dono (se ferido) e nos robôs com pouca vida. */

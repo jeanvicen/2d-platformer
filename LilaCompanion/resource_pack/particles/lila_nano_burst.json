@@ -37,8 +37,8 @@
       },
       "minecraft:particle_appearance_billboard": {
         "size": [
-          "0.028 + v.particle_random_3 * 0.022",
-          "0.028 + v.particle_random_3 * 0.022"
+          "0.035 + v.particle_random_3 * 0.04",
+          "0.035 + v.particle_random_3 * 0.04"
         ],
         "facing_camera_mode": "rotate_xyz",
         "uv": {
@@ -56,9 +56,9 @@
       },
       "minecraft:particle_appearance_tinting": {
         "color": [
-          "v.particle_random_4 > 0.83 ? 0.55 + 0.45 * math.sin(v.particle_age * 900 + v.particle_random_1 * 360) : 0.12",
-          "v.particle_random_4 > 0.83 ? 0.92 : 0.15",
-          "v.particle_random_4 > 0.83 ? 1.0 : 0.19",
+          "v.particle_random_4 > 0.9 ? 1.0 : 0.06 + v.particle_random_2 * 0.05",
+          "v.particle_random_4 > 0.9 ? 0.42 + 0.3 * math.sin(v.particle_age * 900 + v.particle_random_1 * 360) : 0.055 + v.particle_random_2 * 0.045",
+          "v.particle_random_4 > 0.9 ? 0.1 : 0.075 + v.particle_random_2 * 0.06",
           "math.clamp(math.min(v.particle_age * 5, (v.particle_lifetime - v.particle_age) * 4), 0, 1) * 0.95"
         ]
       }

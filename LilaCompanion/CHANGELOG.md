@@ -1,5 +1,55 @@
 # Changelog
 
+## 3.3.0 — A MALDIÇÃO (o drone de nanorrobôs virou um espírito amaldiçoado de fumaça) + escolha livre da raça
+- **A Maldição**: modelo 3D novo feito a partir da sua folha de referência (voxel preto e cinza-escuro):
+  - cabeça alongada com sulcos e 9 tentáculos;
+  - boca enorme com duas fileiras de dentes longos e mandíbula que abre;
+  - ombros curvados, braços compridos com 4 dedos-garra e polegar;
+  - a parte de baixo é uma coluna de fumaça que se desfaz em cubinhos.
+  Tem ~4,5 blocos de altura (do tamanho de um wither) e 93 ossos animáveis.
+- **Animações** (geradas com curvas de aceleração, quadro a quadro):
+  - **contínuas**: respiração, boca que abre e fecha devagar, tentáculos ondulando como cobra, braços e
+    dedos se mexendo, cauda de fumaça balançando, cubinhos subindo e sumindo, inclinação ao deslizar e
+    cabeça seguindo o alvo;
+  - **16 ações**: soco direito e esquerdo, garra, pancada no chão com as duas mãos, agarrar, mordida,
+    rugido, guarda, surgir do chão, afundar na terra, desmanchar, remontar, gancho, arremesso, devorar
+    e sequência de socos.
+- **Sai do chão** quando é invocada: devagar e assustadora, as mãos primeiro cravando no chão, terra
+  estourando, rachaduras, tremor e um rugido no fim. **Afunda na terra** quando você a manda embora.
+- **Combate só corpo a corpo** (não atira mais nada): socos, garras, pancada quando tem bando, gancho,
+  mordida e sequência de socos, com alcance de braço de verdade. Menu "Combate":
+  - atacar o que você mira;
+  - pancada no chão, rugido de medo e devorar;
+  - guarda (ela cobre você com os braços e você não leva dano).
+- **Atmosfera**:
+  - ao invocar, faíscas de brasa no ar;
+  - com ela por perto, só cinzas caindo;
+  - poder **Névoa gigante**: nevoeiro preto que vai junto onde você for, só quando você liga.
+- **Poderes da maldição no jogador**:
+  - **Asas de fumaça**: a fumaça vem até você e vira duas asas enormes que batem no voo;
+  - **Virar fumaça**: modo espectador, você voa e atravessa tudo. Para voltar ao corpo, segure agachar 2 s;
+  - **Escudo de fumaça**, **Mãos da maldição**, **Boca devoradora**, **Nuvem voadora** e
+    **Ferramentas de sombra** (o antigo modo inteligente).
+- **Maldição GIGANTE** no lugar do robô TITÃ: o mesmo modelo, ~15 blocos de altura, você em cima da cabeça.
+  - Golpes na barra: soco, garra, pancada, salto, rugido e devorar. O raio do visor saiu.
+  - **Mira corrigida**: o golpe vai **onde você está olhando** (bloco ou criatura), até o alcance do
+    braço, e ela vira para lá.
+- **Exército de sombras** (no lugar do exército básico de robôs):
+  - a maldição se desfaz em soldados de fumaça que somem e reaparecem colados no alvo com golpes de
+    garra (sem laser nem canhão);
+  - **se todos caírem, a maldição se remonta**.
+- **Tudo que era nanorrobô virou fumaça**:
+  - pele preta com brasas nos veículos e itens;
+  - partículas de cinza e fumaça;
+  - névoa escura;
+  - nomes de sombra (Espada de Sombra, Fumaça da Maldição...).
+- **Item "Maldição"** (antigo controle): o ícone é a cabeça dela. Ele invoca e comanda.
+- **Raças — escolha livre na primeira vez**:
+  - na primeira vez, um menu deixa escolher qualquer uma das 6 raças, sem roleta e sem gastar nada;
+  - ele abre ao entrar no mundo ou ao usar uma roleta antes de ter raça;
+  - depois disso, trocar de raça é só pela Roleta das Essências.
+- Testes no servidor oficial 1.26.65.1: sem jogador **61/61**.
+
 ## 3.2.0 — Painel de poderes, modo poder, gigante em 1ª pessoa e 60 poderes assinatura
 - **Painel de poderes no canto direito** (meio transparente): mostra a sua raça, a barra de recurso e os
   9 poderes da página, com o escolhido destacado, a recarga em segundos e "×" quando falta recurso.

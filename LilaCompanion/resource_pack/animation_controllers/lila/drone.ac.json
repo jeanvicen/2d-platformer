@@ -1,210 +1,6 @@
 {
   "format_version": "1.10.0",
   "animation_controllers": {
-    "controller.animation.lila.drone.move": {
-      "initial_state": "default",
-      "states": {
-        "default": {
-          "animations": [
-            "motion"
-          ],
-          "blend_transition": 0.3,
-          "transitions": []
-        }
-      }
-    },
-    "controller.animation.lila.drone.action": {
-      "initial_state": "default",
-      "states": {
-        "default": {
-          "blend_transition": 0.2,
-          "transitions": [
-            {
-              "work": "q.property('lila:action') == 'work'"
-            },
-            {
-              "place": "q.property('lila:action') == 'place'"
-            },
-            {
-              "shoot": "q.property('lila:action') == 'shoot'"
-            },
-            {
-              "charge": "q.property('lila:action') == 'charge'"
-            },
-            {
-              "turret": "q.property('lila:action') == 'turret'"
-            },
-            {
-              "craft": "q.property('lila:action') == 'craft'"
-            },
-            {
-              "wave": "q.property('lila:action') == 'wave'"
-            },
-            {
-              "sleep": "q.property('lila:action') == 'sleep'"
-            },
-            {
-              "defeat": "q.property('lila:action') == 'defeat'"
-            },
-            {
-              "summon": "q.property('lila:action') == 'summon'"
-            },
-            {
-              "celebrate": "q.property('lila:action') == 'celebrate'"
-            },
-            {
-              "scan": "q.property('lila:action') == 'scan'"
-            },
-            {
-              "punch": "q.property('lila:action') == 'punch'"
-            }
-          ]
-        },
-        "work": {
-          "animations": [
-            "work"
-          ],
-          "blend_transition": 0.12,
-          "transitions": [
-            {
-              "default": "q.property('lila:action') != 'work'"
-            }
-          ]
-        },
-        "place": {
-          "animations": [
-            "place"
-          ],
-          "blend_transition": 0.12,
-          "transitions": [
-            {
-              "default": "q.property('lila:action') != 'place'"
-            }
-          ]
-        },
-        "shoot": {
-          "animations": [
-            "shoot"
-          ],
-          "blend_transition": 0.12,
-          "transitions": [
-            {
-              "default": "q.property('lila:action') != 'shoot'"
-            }
-          ]
-        },
-        "charge": {
-          "animations": [
-            "charge"
-          ],
-          "blend_transition": 0.12,
-          "transitions": [
-            {
-              "default": "q.property('lila:action') != 'charge'"
-            }
-          ]
-        },
-        "turret": {
-          "animations": [
-            "turret"
-          ],
-          "blend_transition": 0.12,
-          "transitions": [
-            {
-              "default": "q.property('lila:action') != 'turret'"
-            }
-          ]
-        },
-        "craft": {
-          "animations": [
-            "craft"
-          ],
-          "blend_transition": 0.12,
-          "transitions": [
-            {
-              "default": "q.property('lila:action') != 'craft'"
-            }
-          ]
-        },
-        "wave": {
-          "animations": [
-            "wave"
-          ],
-          "blend_transition": 0.12,
-          "transitions": [
-            {
-              "default": "q.property('lila:action') != 'wave'"
-            }
-          ]
-        },
-        "sleep": {
-          "animations": [
-            "sleep"
-          ],
-          "blend_transition": 0.12,
-          "transitions": [
-            {
-              "default": "q.property('lila:action') != 'sleep'"
-            }
-          ]
-        },
-        "defeat": {
-          "animations": [
-            "defeat"
-          ],
-          "blend_transition": 0.12,
-          "transitions": [
-            {
-              "default": "q.property('lila:action') != 'defeat'"
-            }
-          ]
-        },
-        "summon": {
-          "animations": [
-            "summon"
-          ],
-          "blend_transition": 0.12,
-          "transitions": [
-            {
-              "default": "q.property('lila:action') != 'summon'"
-            }
-          ]
-        },
-        "celebrate": {
-          "animations": [
-            "celebrate"
-          ],
-          "blend_transition": 0.12,
-          "transitions": [
-            {
-              "default": "q.property('lila:action') != 'celebrate'"
-            }
-          ]
-        },
-        "scan": {
-          "animations": [
-            "scan"
-          ],
-          "blend_transition": 0.12,
-          "transitions": [
-            {
-              "default": "q.property('lila:action') != 'scan'"
-            }
-          ]
-        },
-        "punch": {
-          "animations": [
-            "punch"
-          ],
-          "blend_transition": 0.12,
-          "transitions": [
-            {
-              "default": "q.property('lila:action') != 'punch'"
-            }
-          ]
-        }
-      }
-    },
     "controller.animation.lila.form.action": {
       "initial_state": "default",
       "states": {
@@ -215,30 +11,15 @@
               "work": "q.property('lila:action') == 'work' && v.form != 0"
             },
             {
-              "place": "q.property('lila:action') == 'place' && v.form != 0"
-            },
-            {
               "shoot": "q.property('lila:action') == 'shoot' && v.form != 0"
             },
             {
               "charge": "q.property('lila:action') == 'charge' && v.form != 0"
-            },
-            {
-              "celebrate": "q.property('lila:action') == 'celebrate' && v.form != 0"
-            },
-            {
-              "wave": "q.property('lila:action') == 'wave' && v.form != 0"
-            },
-            {
-              "defeat": "q.property('lila:action') == 'defeat' && v.form != 0"
             }
           ]
         },
         "work": {
           "animations": [
-            {
-              "col_punch": "v.form == 7"
-            },
             {
               "exc_dig": "v.form == 3"
             }
@@ -247,19 +28,6 @@
           "transitions": [
             {
               "default": "q.property('lila:action') != 'work' || v.form == 0"
-            }
-          ]
-        },
-        "place": {
-          "animations": [
-            {
-              "col_stomp": "v.form == 7"
-            }
-          ],
-          "blend_transition": 0.2,
-          "transitions": [
-            {
-              "default": "q.property('lila:action') != 'place' || v.form == 0"
             }
           ]
         },
@@ -297,9 +65,6 @@
         "charge": {
           "animations": [
             {
-              "col_beam": "v.form == 7"
-            },
-            {
               "turret_missile": "v.form == 8"
             },
             {
@@ -318,45 +83,6 @@
               "default": "q.property('lila:action') != 'charge' || v.form == 0"
             }
           ]
-        },
-        "celebrate": {
-          "animations": [
-            {
-              "col_roar": "v.form == 7"
-            }
-          ],
-          "blend_transition": 0.2,
-          "transitions": [
-            {
-              "default": "q.property('lila:action') != 'celebrate' || v.form == 0"
-            }
-          ]
-        },
-        "wave": {
-          "animations": [
-            {
-              "col_wave": "v.form == 7"
-            }
-          ],
-          "blend_transition": 0.2,
-          "transitions": [
-            {
-              "default": "q.property('lila:action') != 'wave' || v.form == 0"
-            }
-          ]
-        },
-        "defeat": {
-          "animations": [
-            {
-              "col_defeat": "v.form == 7"
-            }
-          ],
-          "blend_transition": 0.2,
-          "transitions": [
-            {
-              "default": "q.property('lila:action') != 'defeat' || v.form == 0"
-            }
-          ]
         }
       }
     },
@@ -366,7 +92,10 @@
         "default": {
           "transitions": [
             {
-              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+              "curse": "(v.form == 0 || v.form == 7) && !q.property('lila:off')"
+            },
+            {
+              "cloud": "v.form == 9 && !q.property('lila:off')"
             },
             {
               "pile": "q.property('lila:off')"
@@ -390,7 +119,56 @@
               "aura_6": "v.form == 6 && !q.property('lila:off')"
             },
             {
-              "aura_7": "v.form == 7 && !q.property('lila:off')"
+              "aura_8": "v.form == 8 && !q.property('lila:off')"
+            },
+            {
+              "aura_10": "v.form == 10 && !q.property('lila:off')"
+            },
+            {
+              "aura_11": "v.form == 11 && !q.property('lila:off')"
+            },
+            {
+              "aura_12": "v.form == 12 && !q.property('lila:off')"
+            },
+            {
+              "aura_13": "v.form == 13 && !q.property('lila:off')"
+            },
+            {
+              "aura_14": "v.form == 14 && !q.property('lila:off')"
+            },
+            {
+              "aura_15": "v.form == 15 && !q.property('lila:off')"
+            }
+          ]
+        },
+        "curse": {
+          "animations": [
+            "fx_curse"
+          ],
+          "transitions": [
+            {
+              "cloud": "v.form == 9 && !q.property('lila:off')"
+            },
+            {
+              "pile": "q.property('lila:off')"
+            },
+            {
+              "aura_1": "v.form == 1 && !q.property('lila:off')"
+            },
+            {
+              "aura_2": "v.form == 2 && !q.property('lila:off')"
+            },
+            {
+              "aura_3": "v.form == 3 && !q.property('lila:off')"
+            },
+            {
+              "aura_4": "v.form == 4 && !q.property('lila:off')"
+            },
+            {
+              "aura_5": "v.form == 5 && !q.property('lila:off')"
+            },
+            {
+              "aura_6": "v.form == 6 && !q.property('lila:off')"
             },
             {
               "aura_8": "v.form == 8 && !q.property('lila:off')"
@@ -412,6 +190,9 @@
             },
             {
               "aura_15": "v.form == 15 && !q.property('lila:off')"
+            },
+            {
+              "default": "!((v.form == 0 || v.form == 7) && !q.property('lila:off'))"
             }
           ]
         },
@@ -421,6 +202,9 @@
           ],
           "transitions": [
             {
+              "curse": "(v.form == 0 || v.form == 7) && !q.property('lila:off')"
+            },
+            {
               "pile": "q.property('lila:off')"
             },
             {
@@ -440,9 +224,6 @@
             },
             {
               "aura_6": "v.form == 6 && !q.property('lila:off')"
-            },
-            {
-              "aura_7": "v.form == 7 && !q.property('lila:off')"
             },
             {
               "aura_8": "v.form == 8 && !q.property('lila:off')"
@@ -466,7 +247,7 @@
               "aura_15": "v.form == 15 && !q.property('lila:off')"
             },
             {
-              "default": "!((v.form == 0 || v.form == 9) && !q.property('lila:off'))"
+              "default": "!(v.form == 9 && !q.property('lila:off'))"
             }
           ]
         },
@@ -476,7 +257,10 @@
           ],
           "transitions": [
             {
-              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+              "curse": "(v.form == 0 || v.form == 7) && !q.property('lila:off')"
+            },
+            {
+              "cloud": "v.form == 9 && !q.property('lila:off')"
             },
             {
               "aura_1": "v.form == 1 && !q.property('lila:off')"
@@ -495,9 +279,6 @@
             },
             {
               "aura_6": "v.form == 6 && !q.property('lila:off')"
-            },
-            {
-              "aura_7": "v.form == 7 && !q.property('lila:off')"
             },
             {
               "aura_8": "v.form == 8 && !q.property('lila:off')"
@@ -531,7 +312,10 @@
           ],
           "transitions": [
             {
-              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+              "curse": "(v.form == 0 || v.form == 7) && !q.property('lila:off')"
+            },
+            {
+              "cloud": "v.form == 9 && !q.property('lila:off')"
             },
             {
               "pile": "q.property('lila:off')"
@@ -550,9 +334,6 @@
             },
             {
               "aura_6": "v.form == 6 && !q.property('lila:off')"
-            },
-            {
-              "aura_7": "v.form == 7 && !q.property('lila:off')"
             },
             {
               "aura_8": "v.form == 8 && !q.property('lila:off')"
@@ -586,7 +367,10 @@
           ],
           "transitions": [
             {
-              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+              "curse": "(v.form == 0 || v.form == 7) && !q.property('lila:off')"
+            },
+            {
+              "cloud": "v.form == 9 && !q.property('lila:off')"
             },
             {
               "pile": "q.property('lila:off')"
@@ -605,9 +389,6 @@
             },
             {
               "aura_6": "v.form == 6 && !q.property('lila:off')"
-            },
-            {
-              "aura_7": "v.form == 7 && !q.property('lila:off')"
             },
             {
               "aura_8": "v.form == 8 && !q.property('lila:off')"
@@ -641,7 +422,10 @@
           ],
           "transitions": [
             {
-              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+              "curse": "(v.form == 0 || v.form == 7) && !q.property('lila:off')"
+            },
+            {
+              "cloud": "v.form == 9 && !q.property('lila:off')"
             },
             {
               "pile": "q.property('lila:off')"
@@ -660,9 +444,6 @@
             },
             {
               "aura_6": "v.form == 6 && !q.property('lila:off')"
-            },
-            {
-              "aura_7": "v.form == 7 && !q.property('lila:off')"
             },
             {
               "aura_8": "v.form == 8 && !q.property('lila:off')"
@@ -696,7 +477,10 @@
           ],
           "transitions": [
             {
-              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+              "curse": "(v.form == 0 || v.form == 7) && !q.property('lila:off')"
+            },
+            {
+              "cloud": "v.form == 9 && !q.property('lila:off')"
             },
             {
               "pile": "q.property('lila:off')"
@@ -715,9 +499,6 @@
             },
             {
               "aura_6": "v.form == 6 && !q.property('lila:off')"
-            },
-            {
-              "aura_7": "v.form == 7 && !q.property('lila:off')"
             },
             {
               "aura_8": "v.form == 8 && !q.property('lila:off')"
@@ -751,7 +532,10 @@
           ],
           "transitions": [
             {
-              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+              "curse": "(v.form == 0 || v.form == 7) && !q.property('lila:off')"
+            },
+            {
+              "cloud": "v.form == 9 && !q.property('lila:off')"
             },
             {
               "pile": "q.property('lila:off')"
@@ -770,9 +554,6 @@
             },
             {
               "aura_6": "v.form == 6 && !q.property('lila:off')"
-            },
-            {
-              "aura_7": "v.form == 7 && !q.property('lila:off')"
             },
             {
               "aura_8": "v.form == 8 && !q.property('lila:off')"
@@ -806,7 +587,10 @@
           ],
           "transitions": [
             {
-              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+              "curse": "(v.form == 0 || v.form == 7) && !q.property('lila:off')"
+            },
+            {
+              "cloud": "v.form == 9 && !q.property('lila:off')"
             },
             {
               "pile": "q.property('lila:off')"
@@ -825,9 +609,6 @@
             },
             {
               "aura_5": "v.form == 5 && !q.property('lila:off')"
-            },
-            {
-              "aura_7": "v.form == 7 && !q.property('lila:off')"
             },
             {
               "aura_8": "v.form == 8 && !q.property('lila:off')"
@@ -855,68 +636,16 @@
             }
           ]
         },
-        "aura_7": {
-          "animations": [
-            "fx_aura_7"
-          ],
-          "transitions": [
-            {
-              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
-            },
-            {
-              "pile": "q.property('lila:off')"
-            },
-            {
-              "aura_1": "v.form == 1 && !q.property('lila:off')"
-            },
-            {
-              "aura_2": "v.form == 2 && !q.property('lila:off')"
-            },
-            {
-              "aura_3": "v.form == 3 && !q.property('lila:off')"
-            },
-            {
-              "aura_4": "v.form == 4 && !q.property('lila:off')"
-            },
-            {
-              "aura_5": "v.form == 5 && !q.property('lila:off')"
-            },
-            {
-              "aura_6": "v.form == 6 && !q.property('lila:off')"
-            },
-            {
-              "aura_8": "v.form == 8 && !q.property('lila:off')"
-            },
-            {
-              "aura_10": "v.form == 10 && !q.property('lila:off')"
-            },
-            {
-              "aura_11": "v.form == 11 && !q.property('lila:off')"
-            },
-            {
-              "aura_12": "v.form == 12 && !q.property('lila:off')"
-            },
-            {
-              "aura_13": "v.form == 13 && !q.property('lila:off')"
-            },
-            {
-              "aura_14": "v.form == 14 && !q.property('lila:off')"
-            },
-            {
-              "aura_15": "v.form == 15 && !q.property('lila:off')"
-            },
-            {
-              "default": "!(v.form == 7 && !q.property('lila:off'))"
-            }
-          ]
-        },
         "aura_8": {
           "animations": [
             "fx_aura_8"
           ],
           "transitions": [
             {
-              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+              "curse": "(v.form == 0 || v.form == 7) && !q.property('lila:off')"
+            },
+            {
+              "cloud": "v.form == 9 && !q.property('lila:off')"
             },
             {
               "pile": "q.property('lila:off')"
@@ -938,9 +667,6 @@
             },
             {
               "aura_6": "v.form == 6 && !q.property('lila:off')"
-            },
-            {
-              "aura_7": "v.form == 7 && !q.property('lila:off')"
             },
             {
               "aura_10": "v.form == 10 && !q.property('lila:off')"
@@ -971,7 +697,10 @@
           ],
           "transitions": [
             {
-              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+              "curse": "(v.form == 0 || v.form == 7) && !q.property('lila:off')"
+            },
+            {
+              "cloud": "v.form == 9 && !q.property('lila:off')"
             },
             {
               "pile": "q.property('lila:off')"
@@ -993,9 +722,6 @@
             },
             {
               "aura_6": "v.form == 6 && !q.property('lila:off')"
-            },
-            {
-              "aura_7": "v.form == 7 && !q.property('lila:off')"
             },
             {
               "aura_8": "v.form == 8 && !q.property('lila:off')"
@@ -1026,7 +752,10 @@
           ],
           "transitions": [
             {
-              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+              "curse": "(v.form == 0 || v.form == 7) && !q.property('lila:off')"
+            },
+            {
+              "cloud": "v.form == 9 && !q.property('lila:off')"
             },
             {
               "pile": "q.property('lila:off')"
@@ -1048,9 +777,6 @@
             },
             {
               "aura_6": "v.form == 6 && !q.property('lila:off')"
-            },
-            {
-              "aura_7": "v.form == 7 && !q.property('lila:off')"
             },
             {
               "aura_8": "v.form == 8 && !q.property('lila:off')"
@@ -1081,7 +807,10 @@
           ],
           "transitions": [
             {
-              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+              "curse": "(v.form == 0 || v.form == 7) && !q.property('lila:off')"
+            },
+            {
+              "cloud": "v.form == 9 && !q.property('lila:off')"
             },
             {
               "pile": "q.property('lila:off')"
@@ -1103,9 +832,6 @@
             },
             {
               "aura_6": "v.form == 6 && !q.property('lila:off')"
-            },
-            {
-              "aura_7": "v.form == 7 && !q.property('lila:off')"
             },
             {
               "aura_8": "v.form == 8 && !q.property('lila:off')"
@@ -1136,7 +862,10 @@
           ],
           "transitions": [
             {
-              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+              "curse": "(v.form == 0 || v.form == 7) && !q.property('lila:off')"
+            },
+            {
+              "cloud": "v.form == 9 && !q.property('lila:off')"
             },
             {
               "pile": "q.property('lila:off')"
@@ -1158,9 +887,6 @@
             },
             {
               "aura_6": "v.form == 6 && !q.property('lila:off')"
-            },
-            {
-              "aura_7": "v.form == 7 && !q.property('lila:off')"
             },
             {
               "aura_8": "v.form == 8 && !q.property('lila:off')"
@@ -1191,7 +917,10 @@
           ],
           "transitions": [
             {
-              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+              "curse": "(v.form == 0 || v.form == 7) && !q.property('lila:off')"
+            },
+            {
+              "cloud": "v.form == 9 && !q.property('lila:off')"
             },
             {
               "pile": "q.property('lila:off')"
@@ -1213,9 +942,6 @@
             },
             {
               "aura_6": "v.form == 6 && !q.property('lila:off')"
-            },
-            {
-              "aura_7": "v.form == 7 && !q.property('lila:off')"
             },
             {
               "aura_8": "v.form == 8 && !q.property('lila:off')"
@@ -1246,7 +972,10 @@
           ],
           "transitions": [
             {
-              "cloud": "(v.form == 0 || v.form == 9) && !q.property('lila:off')"
+              "curse": "(v.form == 0 || v.form == 7) && !q.property('lila:off')"
+            },
+            {
+              "cloud": "v.form == 9 && !q.property('lila:off')"
             },
             {
               "pile": "q.property('lila:off')"
@@ -1270,9 +999,6 @@
               "aura_6": "v.form == 6 && !q.property('lila:off')"
             },
             {
-              "aura_7": "v.form == 7 && !q.property('lila:off')"
-            },
-            {
               "aura_8": "v.form == 8 && !q.property('lila:off')"
             },
             {
@@ -1292,6 +1018,239 @@
             },
             {
               "default": "!(v.form == 15 && !q.property('lila:off'))"
+            }
+          ]
+        }
+      }
+    },
+    "controller.animation.lila.curse.action": {
+      "initial_state": "default",
+      "states": {
+        "default": {
+          "transitions": [
+            {
+              "s_punch_r": "q.property('lila:cact') == 1"
+            },
+            {
+              "s_punch_l": "q.property('lila:cact') == 2"
+            },
+            {
+              "s_claw": "q.property('lila:cact') == 3"
+            },
+            {
+              "s_slam": "q.property('lila:cact') == 4"
+            },
+            {
+              "s_grab": "q.property('lila:cact') == 5"
+            },
+            {
+              "s_bite": "q.property('lila:cact') == 6"
+            },
+            {
+              "s_roar": "q.property('lila:cact') == 7"
+            },
+            {
+              "s_guard": "q.property('lila:cact') == 8"
+            },
+            {
+              "s_emerge": "q.property('lila:cact') == 9"
+            },
+            {
+              "s_sink": "q.property('lila:cact') == 10"
+            },
+            {
+              "s_dissolve": "q.property('lila:cact') == 11"
+            },
+            {
+              "s_reform": "q.property('lila:cact') == 12"
+            },
+            {
+              "s_uppercut": "q.property('lila:cact') == 13"
+            },
+            {
+              "s_throw": "q.property('lila:cact') == 14"
+            },
+            {
+              "s_devour": "q.property('lila:cact') == 15"
+            },
+            {
+              "s_flurry": "q.property('lila:cact') == 16"
+            }
+          ]
+        },
+        "s_punch_r": {
+          "animations": [
+            "ca_punch_r"
+          ],
+          "blend_transition": 0.12,
+          "transitions": [
+            {
+              "default": "q.property('lila:cact') != 1"
+            }
+          ]
+        },
+        "s_punch_l": {
+          "animations": [
+            "ca_punch_l"
+          ],
+          "blend_transition": 0.12,
+          "transitions": [
+            {
+              "default": "q.property('lila:cact') != 2"
+            }
+          ]
+        },
+        "s_claw": {
+          "animations": [
+            "ca_claw"
+          ],
+          "blend_transition": 0.12,
+          "transitions": [
+            {
+              "default": "q.property('lila:cact') != 3"
+            }
+          ]
+        },
+        "s_slam": {
+          "animations": [
+            "ca_slam"
+          ],
+          "blend_transition": 0.12,
+          "transitions": [
+            {
+              "default": "q.property('lila:cact') != 4"
+            }
+          ]
+        },
+        "s_grab": {
+          "animations": [
+            "ca_grab"
+          ],
+          "blend_transition": 0.12,
+          "transitions": [
+            {
+              "default": "q.property('lila:cact') != 5"
+            }
+          ]
+        },
+        "s_bite": {
+          "animations": [
+            "ca_bite"
+          ],
+          "blend_transition": 0.12,
+          "transitions": [
+            {
+              "default": "q.property('lila:cact') != 6"
+            }
+          ]
+        },
+        "s_roar": {
+          "animations": [
+            "ca_roar"
+          ],
+          "blend_transition": 0.12,
+          "transitions": [
+            {
+              "default": "q.property('lila:cact') != 7"
+            }
+          ]
+        },
+        "s_guard": {
+          "animations": [
+            "ca_guard"
+          ],
+          "blend_transition": 0.12,
+          "transitions": [
+            {
+              "default": "q.property('lila:cact') != 8"
+            }
+          ]
+        },
+        "s_emerge": {
+          "animations": [
+            "ca_emerge"
+          ],
+          "blend_transition": 0.12,
+          "transitions": [
+            {
+              "default": "q.property('lila:cact') != 9"
+            }
+          ]
+        },
+        "s_sink": {
+          "animations": [
+            "ca_sink"
+          ],
+          "blend_transition": 0.12,
+          "transitions": [
+            {
+              "default": "q.property('lila:cact') != 10"
+            }
+          ]
+        },
+        "s_dissolve": {
+          "animations": [
+            "ca_dissolve"
+          ],
+          "blend_transition": 0.12,
+          "transitions": [
+            {
+              "default": "q.property('lila:cact') != 11"
+            }
+          ]
+        },
+        "s_reform": {
+          "animations": [
+            "ca_reform"
+          ],
+          "blend_transition": 0.12,
+          "transitions": [
+            {
+              "default": "q.property('lila:cact') != 12"
+            }
+          ]
+        },
+        "s_uppercut": {
+          "animations": [
+            "ca_uppercut"
+          ],
+          "blend_transition": 0.12,
+          "transitions": [
+            {
+              "default": "q.property('lila:cact') != 13"
+            }
+          ]
+        },
+        "s_throw": {
+          "animations": [
+            "ca_throw"
+          ],
+          "blend_transition": 0.12,
+          "transitions": [
+            {
+              "default": "q.property('lila:cact') != 14"
+            }
+          ]
+        },
+        "s_devour": {
+          "animations": [
+            "ca_devour"
+          ],
+          "blend_transition": 0.12,
+          "transitions": [
+            {
+              "default": "q.property('lila:cact') != 15"
+            }
+          ]
+        },
+        "s_flurry": {
+          "animations": [
+            "ca_flurry"
+          ],
+          "blend_transition": 0.12,
+          "transitions": [
+            {
+              "default": "q.property('lila:cact') != 16"
             }
           ]
         }

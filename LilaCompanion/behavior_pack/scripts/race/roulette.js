@@ -73,6 +73,31 @@ export async function useRoulette(player, slot = player.selectedSlotIndex, o = {
   }
 }
 
+/**
+ * ESCOLHA LIVRE da primeira vez (sem roleta, sem gastar item). Só vale uma vez por jogador:
+ * depois disso, trocar de raça é só pela Roleta das Essências.
+ * @returns {{ok:boolean, race?:string, reason?:string}}
+ */
+export function chooseRace(player, race, o = {}) {
+  const s = stateOf(player);
+  if (!RACES[race]) return { ok: false, reason: "race" };
+  if (s.picked || s.race) return { ok: false, reason: "picked" };
+  if (ROLLING.has(player.id)) return { ok: false, reason: "rolling" };
+  ROLLING.add(player.id);
+  try {
+    commit(player, race);
+    s.rolls = Math.max(0, s.rolls - 1); // escolher não conta como giro
+    s.chosen = true;
+    saveState(player);
+    LOG.push({ player: player.id, roll: -1, race });
+    if (o.fast) reveal(player, { chosen: true });
+    else system.runTimeout(() => player.isValid && reveal(player, { chosen: true }), 10);
+    return { ok: true, race };
+  } finally {
+    system.runTimeout(() => ROLLING.delete(player.id), o.fast ? 2 : 40);
+  }
+}
+
 /** Grava a raça nova (servidor). A aparência só muda quando a roda para (pending). */
 function commit(player, race) {
   const s = stateOf(player);
@@ -87,6 +112,7 @@ function commit(player, race) {
   s.slots = defaultSlots(BY_RACE[race]);
   s.active = 0;
   s.rolls++;
+  s.picked = true; // depois da 1ª raça, trocar é só pela roleta
   s.pending = true;
   saveState(player);
   try {
@@ -97,7 +123,7 @@ function commit(player, race) {
 }
 
 /** Revela e transforma (também chamado ao relogar se ficou pendente). */
-export function reveal(player) {
+export function reveal(player, o = {}) {
   const s = stateOf(player);
   if (!s.race) return;
   s.pending = false;
@@ -142,7 +168,7 @@ export function reveal(player) {
     if (!player.isValid) return;
     player.sendMessage(`${R.color}§l✦ ${R.name}!§r §7${R.blurb}\n§7Ponto fraco: §f${R.weakness}\n§7Use o §bNúcleo da Raça§7 para ligar o §lMODO PODER§r§7: os poderes aparecem no canto direito, a barra de itens (1-9) escolhe e §fbater usa§7 · agachar + bater = página 2 · agachar + usar o Núcleo = grimório com os 100.`);
   }, 30);
-  if (race === "god" || race === "dark") {
+  if ((race === "god" || race === "dark") && !o.chosen) {
     try {
       dim.runCommand(`tellraw @a {"rawtext":[{"text":"${race === "god" ? "§e§l✦ " : "§5§l✦ "}${player.name} tirou ${R.name} na Roleta das Essências (1%)!"}]}`);
     } catch {

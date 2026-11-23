@@ -2,6 +2,7 @@
 // do pacote de recursos, efeitos de som/partícula e o item visível na mão dela.
 import { logError } from "../core/log.js";
 import { DRONE } from "./registry.js";
+import { mapAction } from "./curse.js";
 
 export const ACTIONS = ["idle", "mine", "chop", "dig", "place", "attack", "eat", "sleep", "craft",
   "farm", "wave", "sit", "defeat", "summon", "celebrate", "think"];
@@ -10,7 +11,10 @@ export const MOVES = ["none", "walk", "run", "swim", "climb", "fall", "sneak"];
 /** @param {import("@minecraft/server").Entity|undefined} e */
 export function setAction(e, action) {
   if (!e?.isValid) return;
-  if (e.typeId === DRONE.entity) action = DRONE.actionMap?.[action] ?? action;
+  if (e.typeId === DRONE.entity) {
+    action = DRONE.actionMap?.[action] ?? action;
+    mapAction(e, action); // Maldição: a ação vira animação de golpe/rugido/pancada
+  }
   try {
     if (e.getProperty("lila:action") !== action) e.setProperty("lila:action", action);
   } catch (err) {

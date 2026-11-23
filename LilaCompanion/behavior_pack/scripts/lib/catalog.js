@@ -105,8 +105,8 @@ export const CREATIVE_ITEMS = [
 export const FORM_LIST = ["drone", "heli", "car", "excavator", "tank", "jet", "moto", "colossus", "turret",
   "swarm", "ship", "ufo", "sub", "boat", "truck", "stealth"];
 export const FORM_NAMES = {
-  drone: "enxame (forma normal)", heli: "helicóptero", car: "carro esportivo", excavator: "escavadeira", tank: "tanque de guerra",
-  jet: "caça a jato", moto: "moto", colossus: "robô gigante TITÃ", turret: "torreta gigante", swarm: "enxame de nanorrobôs",
+  drone: "Maldição (forma normal)", heli: "helicóptero", car: "carro esportivo", excavator: "escavadeira", tank: "tanque de guerra",
+  jet: "caça a jato", moto: "moto", colossus: "Maldição gigante", turret: "torreta gigante", swarm: "nuvem de fumaça",
   ship: "nave espacial", ufo: "disco voador", sub: "submarino", boat: "lancha", truck: "caminhão-monstro", stealth: "caça supersônico furtivo",
 };
 export const FORM_WORDS = {
@@ -116,7 +116,7 @@ export const FORM_WORDS = {
   tank: ["tanque", "tanque de guerra", "blindado", "tank"],
   jet: ["jato", "jatinho", "aviao", "aviao de guerra", "caca a jato", "aeronave", "jet", "plane"],
   moto: ["moto", "motoca", "motocicleta", "motinha", "bike", "motorcycle"],
-  colossus: ["colosso", "colossal", "modo colosso", "modo colossal", "tita", "titan", "robozao", "robo gigante", "gigante",
+  colossus: ["maldicao gigante", "maldicao gigantesca", "gigantesca", "colosso", "colossal", "modo colosso", "modo colossal", "tita", "titan", "robozao", "robo gigante", "gigante",
     "godzilla", "godzila", "kaiju", "mecha", "monstro gigante", "robo gigantesco", "robo colossal", "robo de batalha"],
   ship: ["nave", "nave espacial", "navinha", "espaconave", "foguete", "starfighter", "spaceship", "nave de guerra", "nave alienigena"],
   ufo: ["disco voador", "ovni", "ufo", "disco", "nave de et", "nave extraterrestre", "abducao"],
@@ -134,16 +134,16 @@ export const SWARM_WORDS = ["enxame", "nanorrobos", "nanorobos", "nano robos", "
   "nuvem de robos", "milhares de robos", "abelhas", "vespas", "marimbondos", "enxame de abelhas", "swarm"];
 export const SWARM_SHAPES = {
   auto: { name: "Modo inteligente (age sozinho)", w: ["inteligente", "modo inteligente", "automatico", "modo automatico", "auto", "sozinho", "normal do enxame"] },
-  escudo: { name: "Escudo / barreira (nada te acerta)", w: ["escudo", "me protege com escudo", "escudo de enxame", "shield", "bolha", "campo de forca", "barreira", "protecao total"] },
-  asas: { name: "Asas grandes (voar)", w: ["asas", "asa", "me faz voar", "wings", "planar", "voar com asas", "quero voar"] },
+  escudo: { name: "Escudo de fumaça (nada te acerta)", w: ["escudo", "me protege com escudo", "escudo de enxame", "shield", "bolha", "campo de forca", "barreira", "protecao total"] },
+  asas: { name: "Asas de fumaça (voar)", w: ["asas", "asa", "me faz voar", "wings", "planar", "voar com asas", "quero voar"] },
   prancha: { name: "Prancha voadora", w: ["prancha", "prancha voadora", "skate voador", "hoverboard", "tabua", "surfar", "skate"] },
   maos: { name: "Mãos gigantes atrás de mim", w: ["maos gigantes", "maos", "mao gigante", "maozona", "maozonas", "maozonas gigantes", "bracos gigantes", "punhos gigantes"] },
   devorador: { name: "Devorador (come tudo por onde passo)", w: ["devorador", "modo devorador", "devora", "devora tudo", "come tudo", "devorar", "devorar tudo", "consome tudo", "desintegra tudo"] },
-  espada: { name: "Espada de nanorrobôs na mão", w: ["espada", "sword", "katana", "sabre"] },
-  machado: { name: "Machado de nanorrobôs", w: ["machado", "axe", "machadinha"] },
-  picareta: { name: "Picareta de nanorrobôs", w: ["picareta", "pickaxe", "picareta de nano"] },
-  pa: { name: "Pá de nanorrobôs", w: ["pa", "pazinha", "shovel", "pa de nanorrobo"] },
-  enxada: { name: "Enxada de nanorrobôs", w: ["enxada", "hoe", "foice"] },
+  espada: { name: "Espada de sombra na mão", w: ["espada", "sword", "katana", "sabre"] },
+  machado: { name: "Machado de sombra", w: ["machado", "axe", "machadinha"] },
+  picareta: { name: "Picareta de sombra", w: ["picareta", "pickaxe", "picareta de nano"] },
+  pa: { name: "Pá de sombra", w: ["pa", "pazinha", "shovel", "pa de nanorrobo"] },
+  enxada: { name: "Enxada de sombra", w: ["enxada", "hoe", "foice"] },
   martelo: { name: "Martelo que explode e volta", w: ["martelo", "marreta", "hammer", "martelo explosivo"] },
   muralha: { name: "Muralha na frente", w: ["muralha", "parede", "muro", "wall"] },
   ponte: { name: "Ponte para onde eu olho", w: ["ponte", "bridge", "passarela"] },

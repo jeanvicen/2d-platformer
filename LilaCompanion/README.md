@@ -36,9 +36,9 @@ sensação de densidade. O servidor não manda nada por quadro para desenhar a n
 4. Não precisa de experimentos nem de cheats. Requisito: Bedrock **1.26.30+** (testado no
    servidor oficial 1.26.65.1).
 
-## 2. Começando
+## 2. Começando — a MALDIÇÃO
 
-Ao entrar no mundo **nada aparece**. Fabrique o **Controle do Hacknd** (bancada):
+Ao entrar no mundo **nada aparece**. Fabrique o item **Maldição** (bancada; o ícone é a cabeça dela):
 
 ```
 F V F     F = barra de ferro   V = vidro
@@ -46,19 +46,33 @@ R D R     R = pó de redstone   D = diamante
 F _ F
 ```
 
-Use o controle → **Invocar o enxame Hacknd**: os nanorrobôs descem do céu. Pelo chat: `/hacknd <ordem>` (ou `/hacknd` sozinho = menu; `/drone` também funciona).
+Use a Maldição → **Invocar a Maldição**: ela **sai do chão** na sua frente, devagar, cravando as garras
+na terra, e termina com um rugido. Ela é um espírito de **fumaça preta** do tamanho de um wither: cabeça
+com sulcos e tentáculos, boca enorme cheia de dentes, braços compridos com garras e a parte de baixo
+virando fumaça. Pelo chat: `/hacknd <ordem>` (ou `/hacknd` sozinho = menu).
 
-**Cancelar tudo** (primeiro botão vermelho, ou "cancela" / "volta ao normal") larga qualquer tarefa
-e volta a ser enxame: junta o exército, desfaz veículo, TITÃ e torreta.
+- **Mandar de volta para a terra**: ela **afunda no chão** e some (invoque de novo quando quiser).
+- **Cancelar tudo** (botão vermelho, ou "cancela" / "volta ao normal"): larga qualquer tarefa e volta à
+  forma normal (junta o exército de sombras, desfaz veículo e a forma gigante).
+- **Adormecer / acordar**: adormecida, vira um monte de cinzas no chão.
 
-**Desligar / ligar** (botão no controle, ou "desliga" / "liga"): desligado, o campo cai e a poeira desce
-num montinho no chão (não segue, não ataca). Ligando, a poeira levanta e mais robozinhos descem do céu.
+**Luta — só no braço** (ela não atira nada): socos, garras, pancada com as duas mãos quando tem bando,
+gancho, mordida e sequência de socos, com o alcance do braço dela. No menu **Combate**:
 
-**Luta:** o enxame compacta num **punho de nanorrobôs** que voa até o alvo (soco forte que arremessa)
-e dispara **dardos de poeira**, protegendo você atacando primeiro.
+- atacar o que você mira;
+- sequência de socos, pancada no chão, rugido (medo em volta) e devorar (suga e engole);
+- **guarda**: ela cruza os braços na sua frente e você não leva dano.
 
-**No dia a dia a nuvem passeia por perto** (4 a 9 blocos, do lado ou atrás, olhando em volta) em vez de
-ficar rodando em volta de você; quando você anda, ele acompanha.
+**Atmosfera**: ao invocar, o ar se enche de faíscas de brasa; com ela por perto caem cinzas. O poder
+**Névoa gigante** cobre tudo de um nevoeiro preto que vai junto com você (só quando você liga).
+
+**Poderes da maldição** (menu do item):
+
+- **Asas de fumaça**: a fumaça vem até você e vira duas asas enormes (voa olhando e andando);
+- **Virar fumaça**: você vira fumaça, voa e atravessa tudo. Para voltar ao corpo, **segure agachar
+  2 s**;
+- **Escudo de fumaça**, **Mãos da maldição**, **Boca devoradora**, **Nuvem voadora** e
+  **Ferramentas de sombra** (de mão vazia, a fumaça vira a ferramenta certa).
 
 ## 3. Veículos
 
@@ -80,24 +94,18 @@ Velocidades: carro ~23 blocos/s, moto ~26, caminhão ~20, tanque ~11, escavadeir
 respira e enxerga debaixo d'água. Outros jogadores podem pegar carona tocando no veículo. **Só o dono
 pilota.**
 
-## 4. Robô gigante TITÃ
+## 4. Maldição GIGANTE
 
-"modo colosso" (ou "robô gigante", "titã", "robozão"). Robô humanoide original de ~26 blocos (armadura
-branca e vermelha, visor em T, reator no peito, propulsores nas costas). Ele te põe **em cima da
-cabeça** (plataforma com corrimão baixo: visão 360°), onde você fica **quase imortal**.
+"maldição gigante" (ou "modo colosso", "gigante"). Ela cresce até uns **15 blocos** com o mesmo corpo
+e as mesmas animações, e te põe **em cima da cabeça** (outros sobem nos ombros e na corcunda).
 
-- **câmera em terceira pessoa** automática enquanto você pilota (dá pra ver o robô e o caminho);
-- **andar**: passadas pesadas (tremor de tela, poeira); sobe morros de até 9 blocos de forma suave e
-  **atravessa paredes e árvores** abrindo caminho na largura do corpo (não trava mais);
-- **poderes na barra**: slot 1 soco · 2 raio do visor · 3 salto com pisão · 4 onda de choque · 5 pose de
-  poder (monstros ficam fracos) — escolha o slot e **bata**;
-- **pular**: salto com os propulsores e onda de choque ao cair (não sai);
-- **agachar**: sai (cai devagar).
+- **golpes na barra**: slot 1 soco · 2 garra · 3 pancada no chão · 4 salto · 5 rugido · 6 devorar —
+  escolha o slot e **bata**;
+- **mira**: o golpe vai **onde você está olhando** (bloco ou criatura), até o alcance do braço, e ela
+  vira para lá antes de bater;
+- **andar**: passos pesados que tremem a tela; **agachar**: sai.
 
-Mais pessoas sobem nas ombreiras e na mochila. Se você sair sem cancelar, ele **continua TITÃ**
-(parado, pisando em monstros) até você mandar "Cancelar".
-
-## 4b. Poderes do enxame
+## 4b. Poderes da fumaça (antigo enxame)
 
 A forma normal **já é o enxame**: os poderes funcionam sempre (menu **Poderes do enxame…**, ou fale
 o nome). Em volta de você ficam robozinhos minúsculos espalhados no ar (sem orbitar) e uma névoa
@@ -129,6 +137,10 @@ lâmina giratória, tornado, elevador, ataca** (o que você mira). "Cancelar" de
 ferramentas.
 
 ## 4c. Roleta das Essências — raças
+
+**Primeira vez: escolha livre.** Ao entrar no mundo (ou ao usar uma roleta antes de ter raça) abre o
+menu **Escolha a sua raça**: escolha qualquer uma das 6, sem roleta e sem gastar nada. Depois disso,
+**trocar de raça é só pela roleta**.
 
 Fabrique a **Roleta das Essências** (bancada):
 
@@ -188,11 +200,12 @@ monstro e em **qualquer um que te atacar** (jogador também).
 - Se **você** bater nele, leva uma **lição de leve** (3 tirinhos fracos). Dá pra desligar em
   Configurações.
 
-## 7. Modo exército
+## 7. Exército de sombras
 
-"modo exército" (ou "com 15 robôs"; padrão 10, até 24). O menu pergunta o **estilo**: misto, só
-soldados, ninjas, artilharia, construtores ou médicos (por texto: "exército de ninjas"). O robô sobe,
-explode num clarão e vira robôs humanoides de 5 tipos:
+"modo exército" (ou "com 15 soldados"; padrão 10, até 24). A maldição **se desfaz em soldados de
+fumaça** — fantasmas de sombra que somem e reaparecem colados no inimigo com golpes de garra (ninguém
+atira). **Se todos caírem, a maldição se remonta** sozinha. O menu pergunta o estilo: misto, só
+soldados, ninjas, brutos, construtores ou médicos. São 5 tipos:
 
 | Tipo | Visual | Faz |
 |---|---|---|

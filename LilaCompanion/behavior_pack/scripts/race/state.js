@@ -9,9 +9,9 @@ const KEY = "lila:race_state";
 export const SCHEMA = 2; // 2 = 3.2 (poderes assinatura entraram no catálogo: barra antiga é refeita)
 const cache = new Map();
 
-/** @returns {{v:number, race:string|null, wing:number, xpSeen:number, res:number, slots:(string|null)[], active:number, cd:Record<string,number>, tog:Record<string,boolean>, serial:number, pending:boolean, rolls:number, pm:boolean, page:number, eye:number}} */
+/** @returns {{v:number, race:string|null, wing:number, xpSeen:number, res:number, slots:(string|null)[], active:number, cd:Record<string,number>, tog:Record<string,boolean>, serial:number, pending:boolean, rolls:number, pm:boolean, page:number, eye:number, picked:boolean}} */
 function fresh() {
-  return { v: SCHEMA, race: null, wing: 0, xpSeen: -1, res: 50, slots: Array(BAL.quickSlots).fill(null), active: 0, cd: {}, tog: {}, serial: 0, pending: false, rolls: 0, pm: false, page: 0, eye: 0 };
+  return { v: SCHEMA, race: null, wing: 0, xpSeen: -1, res: 50, slots: Array(BAL.quickSlots).fill(null), active: 0, cd: {}, tog: {}, serial: 0, pending: false, rolls: 0, pm: false, page: 0, eye: 0, picked: false };
 }
 
 function sanitize(d) {
@@ -38,6 +38,8 @@ function sanitize(d) {
   s.pending = !!d.pending;
   s.rolls = Math.max(0, Math.floor(Number(d.rolls) || 0));
   s.pm = !!d.pm && !!s.race;
+  // escolha livre da 1ª vez: já usada por quem escolheu, girou a roleta ou já tem raça
+  s.picked = !!d.picked || !!s.race || s.rolls > 0;
   s.page = Math.max(0, Math.min(Math.ceil(BAL.quickSlots / 9) - 1, Math.floor(Number(d.page) || 0)));
   s.eye = Math.max(-4, Math.min(4, Math.round((Number(d.eye) || 0) * 2) / 2)); // ajuste da câmera do gigante (blocos)
   return s;

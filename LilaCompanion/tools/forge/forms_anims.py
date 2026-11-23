@@ -345,6 +345,9 @@ def form_controllers():
         "wave": [("col_wave", 7)],
         "defeat": [("col_defeat", 7)],
     }
+    # Maldição: a forma gigante (7) agora é a Maldição com as animações dela — sai tudo do robô TITÃ
+    by_action = {a: [x for x in lst if not str(x[0]).startswith("col_")] for a, lst in by_action.items()}
+    by_action = {a: lst for a, lst in by_action.items() if lst}
     states = {"default": {"blend_transition": 0.15, "transitions": []}}
     for act, lst in by_action.items():
         states["default"]["transitions"].append({act: f"{ACT} == '{act}' && v.form != 0"})

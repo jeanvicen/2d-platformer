@@ -6,7 +6,7 @@ import { engineTick } from "./engine.js";
 import { afterHurt, applyBody, castActive, damageMods, draining, onKill, raceTick, stopDrain } from "./passives.js";
 import { CORE, ROULETTE, ensureCore, itemSpawned, scytheBreak, weaponDamage, weaponHit, weaponPendingTick } from "./weapons.js";
 import { reveal, useRoulette } from "./roulette.js";
-import { openGrimoire } from "./ui.js";
+import { openFirstChoice, openGrimoire } from "./ui.js";
 import { cast } from "./engine.js";
 import { sigForget } from "./signature.js";
 import { godHistory } from "./signature2.js";
@@ -36,7 +36,9 @@ world.afterEvents.itemUse.subscribe((ev) => {
   const p = ev.source;
   const id = ev.itemStack?.typeId;
   if (id === ROULETTE) {
-    system.run(() => void useRoulette(p, p.selectedSlotIndex));
+    const st = stateOf(p);
+    if (!st.race && !st.picked) system.run(() => void openFirstChoice(p)); // 1ª vez: escolha livre (não gasta a roleta)
+    else system.run(() => void useRoulette(p, p.selectedSlotIndex));
     return;
   }
   if (id !== CORE) return;
@@ -169,7 +171,10 @@ world.afterEvents.playerSpawn.subscribe((ev) => {
   system.runTimeout(() => {
     if (!p.isValid) return;
     const s = stateOf(p);
-    if (!s.race) return;
+    if (!s.race) {
+      if (!s.picked && ev.initialSpawn) system.runTimeout(() => p.isValid && void openFirstChoice(p), 70); // 1ª vez: escolha livre
+      return;
+    }
     if (s.pending) reveal(p); // caiu no meio da roleta: aplica agora (nada duplica)
     else applyBody(p);
     ensureCore(p);

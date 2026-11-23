@@ -9,6 +9,10 @@ import { now, saveState, stateOf } from "./state.js";
 import { cast } from "./engine.js";
 import { setPowerMode } from "./hud.js";
 import { giantCamera } from "./passives.js";
+import { chooseRace } from "./roulette.js";
+import { MessageFormData } from "@minecraft/server-ui";
+import { RACE_IDS } from "./data.js";
+import { system } from "@minecraft/server";
 
 export const icon = (a) => `textures/ui/race/${a.race}/${String(a.index + 1).padStart(3, "0")}`;
 const emblem = (race) => `textures/ui/race/emblem_${race}`;
@@ -292,6 +296,48 @@ export async function openInfo(player) {
   if (k === "cam" || k === "up" || k === "down") giantCamera(player, !s.tog.giantCamOff);
   saveState(player);
   return openInfo(player);
+}
+
+/**
+ * ESCOLHA LIVRE da primeira vez: as 6 raças, sem roleta e sem gastar nada. Depois de escolher,
+ * trocar de raça é só pela Roleta das Essências. Abre sozinha ao entrar no mundo (até escolher)
+ * e ao usar uma roleta antes de ter raça.
+ */
+const CHOOSING = new Set();
+export async function openFirstChoice(player, tries = 0) {
+  const s = stateOf(player);
+  if (s.race || s.picked || CHOOSING.has(player.id)) return;
+  CHOOSING.add(player.id);
+  try {
+    const f = new ActionFormData().title("§l§6Escolha a sua raça")
+      .body("§fPrimeira vez: §aescolha livre§f, sem roleta e sem gastar nada.\n§7Depois disso, trocar de raça é só pela §6Roleta das Essências§7.\n");
+    for (const r of RACE_IDS) f.button(`§l${RACES[r].color}${RACES[r].name}§r\n§8${RACES[r].blurb.slice(0, 46)}…`, emblem(r));
+    f.button("§l§7Agora não§r\n§8o menu volta quando você entrar de novo");
+    const res = await f.show(player);
+    if (res.canceled) {
+      if (String(res.cancelationReason) === "UserBusy" && tries < 8) system.runTimeout(() => player.isValid && openFirstChoice(player, tries + 1), 40);
+      return;
+    }
+    const race = RACE_IDS[res.selection ?? -1];
+    if (!race) {
+      player.onScreenDisplay.setActionBar("§7Tudo bem — o menu de raça volta quando você entrar no mundo de novo (ou use uma Roleta).");
+      return;
+    }
+    const R = RACES[race];
+    const c = await new MessageFormData().title(`§l${R.color}${R.name}`)
+      .body(`${R.title}§r\n§f${R.blurb}\n\n§c⚠ Ponto fraco:§f ${R.weakness}\n\n§7Depois de escolher, para trocar só girando a §6Roleta das Essências§7.`)
+      .button1("§7Voltar").button2("§aSer esta raça").show(player);
+    if (c.canceled || c.selection !== 1) {
+      CHOOSING.delete(player.id);
+      return openFirstChoice(player);
+    }
+    const r = chooseRace(player, race);
+    if (!r.ok && r.reason === "picked") player.onScreenDisplay.setActionBar("§7Você já escolheu a primeira raça — agora só pela Roleta das Essências.");
+  } catch {
+    /* jogador saiu */
+  } finally {
+    CHOOSING.delete(player.id);
+  }
 }
 
 /** Informações da roleta (antes de girar). */
