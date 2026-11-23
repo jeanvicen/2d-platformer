@@ -10,7 +10,7 @@
   acertar de 4 blocos de distância.
 - **Sistema de raças removido por completo** (roleta, núcleo, armas de raça, poderes de raça, mudanças no
   corpo do jogador e a câmera do gigante). Os efeitos visuais genéricos que a Maldição usa continuam.
-- Testes no servidor oficial 1.26.65.1: %%TESTS%%.
+- Checagens: typecheck, validação cruzada dos pacotes (sem nenhum arquivo de raça), Molang, IDs e unitários 15/15.
 
 ## 3.3.3 — Maldição com vida, voltar da fumaça pelo celular, poderes no corpo dela
 - **Voltar da forma de fumaça (funciona no celular)**: olhe para o CHÃO por 1 segundo, ou segure o
