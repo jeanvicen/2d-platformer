@@ -42,7 +42,7 @@ from forge.render import render  # noqa: E402
 
 MOVES = ["none", "walk", "run", "swim", "climb", "fall", "sneak"]
 
-VERSION = [3, 3, 2]
+VERSION = [3, 3, 3]
 MIN_ENGINE = [1, 26, 30]
 SERVER_VERSION = "2.8.0"
 SERVER_UI_VERSION = "2.1.0"
@@ -110,6 +110,9 @@ def clean():
 # ============================================================ manifests + icons
 def manifests(icon):
     meta = {"authors": ["0neajx"], "url": "https://github.com/jeanvicen/2d-platformer"}
+    # versão visível dentro do jogo (a Maldição fala ao ser invocada: confere se o pacote novo entrou)
+    with open(os.path.join(BP, "scripts", "version.js"), "w", encoding="utf-8") as fh:
+        fh.write(f'// gerado por tools/build_assets.py\nexport const VERSION = "{".".join(map(str, VERSION))}";\n')
     wjson(os.path.join(BP, "manifest.json"), {
         "format_version": 2,
         "header": {"name": "Hacknd (BP)",

@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.3.3 — Maldição com vida, voltar da fumaça pelo celular, poderes no corpo dela
+- **Voltar da forma de fumaça (funciona no celular)**: olhe para o CHÃO por 1 segundo, ou segure o
+  botão de DESCER, ou digite `/hacknd`. Ao virar fumaça aparece um título grande explicando, e a barra de
+  baixo mostra sempre como voltar com uma barra de progresso. Antes o painel "Maldição · te seguindo"
+  cobria essa mensagem e o agachar não era detectado no espectador.
+- **Ela nunca fica parada como estátua**: além do movimento contínuo (agora bem mais forte: tentáculos
+  chicoteando, cabeça virando com trancos, boca abrindo, braços e fumaça balançando), de poucos em poucos
+  segundos ela faz algo sozinha — **grita** (rugido com tremor), arranha o ar, morde, agarra, soca,
+  devora e bate no chão, com som.
+- **Poderes feitos pelo corpo dela**: no Escudo ela cobre você com os braços; nas Mãos da maldição ela
+  soca junto, virada para onde você bateu; na Boca devoradora ela abre a bocona e engole.
+- Ao invocar, ela mostra a versão no chat (`Hacknd v3.3.3`) para você conferir que o pacote novo entrou.
+- Testes no servidor oficial 1.26.65.1: %%TESTS%%.
+
 ## 3.3.2 — Animações vivas, forma de fumaça que volta e voo
 - **Animações não ficam mais duras**: a Maldição respira, flutua, torce o tronco, vira e inclina a
   cabeça com trancos, chicoteia os tentáculos, balança os braços, mexe os dedos, abre e estala a boca.

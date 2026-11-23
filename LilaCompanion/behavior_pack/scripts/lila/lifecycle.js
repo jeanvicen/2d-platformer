@@ -2,6 +2,7 @@
 // persistidos mesmo se o mundo fechar) e retoma o plano. Uma Lila por dono, sem duplicatas.
 // O "corpo" dela é guardado como estrutura do mundo (StructureManager), o que preserva o
 // inventário inteiro sem perdas (durabilidade, encantamentos, nomes).
+import { VERSION } from "../version.js";
 import { ItemStack, StructureSaveMode, system, world } from "@minecraft/server";
 import { ENTITY_ID, OWNER_PROP, findEntityFor, adopt } from "./companion.js";
 import { setAction, setMove, hold, sound, particle } from "./anim.js";
@@ -127,6 +128,7 @@ export function summon(c, player) {
   }
   c.rec.summoned = true;
   c.rec.paused = false;
+  say(c, `§8Hacknd v${VERSION}`, { force: true }); // mostra a versão: dá para conferir que o pacote novo entrou
   c.flags.tagUntil = system.currentTick + 600;
   arrive(c, player.dimension, loc, true);
   say(c, pick(LINES.summon), { force: true });

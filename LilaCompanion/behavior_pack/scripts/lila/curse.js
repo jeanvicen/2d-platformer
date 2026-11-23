@@ -331,11 +331,16 @@ export function setSmokeForm(player, on) {
       const prev = player.getGameMode();
       if (prev === GameMode.Spectator) return false;
       player.setDynamicProperty("lila:prevgm", String(prev));
-      SMOKE_FORM.set(player.id, { prev, hold: 0 });
+      SMOKE_FORM.set(player.id, { prev, hold: 0, t0: system.currentTick });
       player.setGameMode(GameMode.Spectator);
       fx(player.dimension, "lila:curse_burst", { x: player.location.x, y: player.location.y + 1, z: player.location.z });
       snd(player.dimension, "mob.phantom.flap", player.location, 1, 0.5);
-      player.onScreenDisplay.setActionBar("§5§lVOCÊ É FUMAÇA§r §7— voe e atravesse tudo · §fsegure AGACHAR 1,5 s§7 ou diga «volta» no chat para voltar ao corpo");
+      try {
+        player.onScreenDisplay.setTitle("§5§lVOCÊ É FUMAÇA", {
+          subtitle: "§fpara VOLTAR: olhe para o CHÃO 1 s §7ou segure §fDESCER§7 · §f/hacknd", fadeInDuration: 5, stayDuration: 70, fadeOutDuration: 15 });
+      } catch {
+        /* ignore */
+      }
       return true;
     }
     const st = SMOKE_FORM.get(player.id);
@@ -367,6 +372,16 @@ world.afterEvents.playerSpawn.subscribe((ev) => {
   }, 20);
 });
 
+// o botão de agachar/descer chega também por evento (mais confiável no celular e no espectador)
+try {
+  world.afterEvents.playerButtonInput.subscribe((ev) => {
+    const sf = SMOKE_FORM.get(ev.player.id);
+    if (sf && ev.button === InputButton.Sneak) sf.btn = ev.newButtonState === ButtonState.Pressed ? Infinity : 0;
+  });
+} catch {
+  /* versão sem o evento */
+}
+
 /** Forma de fumaça: roda sozinha (não depende da maldição estar invocada — ninguém fica preso). */
 system.runInterval(() => {
   // script recarregado (/reload) com alguém ainda de fumaça: reconecta para ele conseguir voltar
@@ -393,23 +408,58 @@ system.runInterval(() => {
     try {
       fx(p.dimension, "lila:curse_form", p.location);
       if (tick % 6 === 0) fx(p.dimension, "lila:curse_embers", p.location);
-      let sneak = !!(/** @type {any} */ (p).isSneaking);
+      let sneak = !!(/** @type {any} */ (p).isSneaking) || (sf.btn ?? 0) > tick;
       try {
         sneak = sneak || p.inputInfo.getButtonState(InputButton.Sneak) === ButtonState.Pressed;
       } catch {
         /* versão sem inputInfo */
       }
+      const down = tick - (sf.t0 ?? 0) > 30 && p.getRotation().x > 70; // olhando para o chão (funciona em qualquer controle, até no celular)
       sf.hold = sneak ? sf.hold + 2 : 0;
-      if (sf.hold > 0 && sf.hold < 30) p.onScreenDisplay.setActionBar(`§5Voltando ao corpo... §f${"■".repeat(Math.ceil(sf.hold / 6))}§8${"■".repeat(5 - Math.ceil(sf.hold / 6))}`);
-      if (sf.hold >= 30) setSmokeForm(p, false);
+      sf.look = down ? (sf.look ?? 0) + 2 : 0;
+      const prog = Math.max(sf.hold / 30, (sf.look ?? 0) / 20);
+      if (prog >= 1) {
+        setSmokeForm(p, false);
+        continue;
+      }
+      const n = Math.ceil(prog * 10);
+      p.onScreenDisplay.setActionBar(prog > 0
+        ? `§5§lVOLTANDO AO CORPO §r§f${"█".repeat(n)}§8${"█".repeat(10 - n)}`
+        : "§5§lFUMAÇA§r §7· para voltar: §folhe para o CHÃO 1 s§7 ou §fsegure DESCER§7 · ou §f/hacknd");
     } catch {
       /* ignore */
     }
   }
 }, 2);
 
+const IDLE_ACTS = ["roar", "claw", "bite", "grab", "roar", "punch_l", "devour", "claw", "bite", "slam"];
+/** Parada à toa: de tempos em tempos ela grita, arranha o ar, morde, agarra — nunca fica estátua. */
+function idleTick(c, tick) {
+  const e = c.entity;
+  if (!e?.isValid || !isCurseForm(c) || c.rec.off || c.flags.sinking) return;
+  if ((c.flags.emergeUntil ?? 0) > tick || (c.flags.idleNext ?? 0) > tick) return;
+  c.flags.idleNext = tick + 70 + Math.floor(Math.random() * 90);
+  if (cactOf(e) !== "none") return;
+  try {
+    const v = e.getVelocity();
+    if (Math.hypot(v.x, v.z) > 0.25) return; // correndo/voando: a animação de voo já cuida
+  } catch {
+    return;
+  }
+  const a = IDLE_ACTS[Math.floor(Math.random() * IDLE_ACTS.length)];
+  cact(e, a);
+  const at = e.location, dim = e.dimension;
+  if (a === "roar") {
+    snd(dim, "mob.warden.roar", at, 1.1, 0.75 + Math.random() * 0.2); // o grito dela
+    shakeNear(dim, at, 0.15, 0.5, 14);
+  } else if (a === "bite") snd(dim, "mob.ravager.bite", at, 0.9, 0.8);
+  else if (a === "devour") snd(dim, "mob.warden.sniff", at, 1, 0.6);
+  else snd(dim, "mob.warden.ambient", at, 0.9, 0.7 + Math.random() * 0.3);
+}
+
 /** Tique da atmosfera (chamado a cada 2 ticks para cada maldição invocada). */
 export function curseAtmosphereTick(c, tick) {
+  idleTick(c, tick);
   const o = c.owner();
   if (!o?.isValid) return;
   const dim = o.dimension, at = o.location;

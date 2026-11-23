@@ -1,5 +1,6 @@
 // HUDLocator: "Hacknd ↗ 38m" na barra de ação + ponto na barra de localização nativa.
 // Mostra onde ele está mesmo longe, a forma atual, outra dimensão ou volta da derrota.
+import { inSmokeForm } from "./curse.js";
 import { EntityWaypoint, WaypointTexture } from "@minecraft/server";
 import { goalLabel } from "./goals.js";
 import { logError } from "../core/log.js";
@@ -99,6 +100,7 @@ export function resetWaypoint(c) {
 
 /** Junta as linhas de todas as companheiras do dono numa barra só (sem piscar uma por cima da outra). */
 export function flushHud(owner, comps) {
+  if (inSmokeForm(owner)) return; // de fumaça: a barra mostra como voltar ao corpo (não esconder isso)
   const parts = comps.map((c) => c.flags.hudText).filter(Boolean);
   if (!parts.length) return;
   try {

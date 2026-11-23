@@ -16,6 +16,7 @@
 // explode no que acertar e volta voando para a sua mão).
 // Formas antigas continuam: muralha, ponte, escada, cúpula, punho do céu, lâmina giratória,
 // tornado, elevador e "ataca" (no que você olha).
+import { cact, cactOf, faceTo } from "./curse.js";
 import { BlockVolume, EntityDamageCause, ItemStack, MolangVariableMap, system } from "@minecraft/server";
 import { particle, setAction, sound } from "./anim.js";
 import { canAttack, isHostile } from "./combat.js";
@@ -233,6 +234,17 @@ export function swarmTick(c) {
   const od = owner.dimension;
   const mode = modeOf(c);
   // a atmosfera (cinzas, brasas e a névoa) fica com curseAtmosphereTick — aqui não solta nada por tick
+  // 3.3.3: os poderes também são feitos pelo CORPO da Maldição (não só pela fumaça)
+  if (mode === "escudo") {
+    if (pass % 10 === 0 && cactOf(e) !== "guard") {
+      cact(e, "guard", 0); // cobre você com os braços enquanto o escudo estiver ligado
+      c.flags.shieldGuard = true;
+    }
+  } else if (c.flags.shieldGuard) {
+    c.flags.shieldGuard = false;
+    if (cactOf(e) === "guard") cact(e, "none", 0);
+  }
+  if (mode === "devorador" && pass % 40 === 0) cact(e, "devour"); // a bocona abre e engole junto
   try {
     if (mode === "escudo") {
       if (pass % 2 === 0) barrierTick(c, owner);
@@ -570,6 +582,11 @@ export function nanoSwing(c, owner) {
   }
   c.flags.punchSide = -(c.flags.punchSide ?? 1);
   c.flags.punch = { side: c.flags.punchSide, t0: system.currentTick, to, dir, hit: false };
+  // a própria Maldição soca junto, virada para onde você bateu
+  if (c.entity?.isValid) {
+    faceTo(c.entity, to);
+    cact(c.entity, c.flags.punchSide > 0 ? "punch_l" : "punch_r");
+  }
   try {
     owner.dimension.playSound("mob.vex.charge", owner.location, { volume: 0.6, pitch: 0.7 });
   } catch {

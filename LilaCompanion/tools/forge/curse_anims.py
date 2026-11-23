@@ -181,39 +181,39 @@ def life_anims():
     bones = {
         # flutua respirando: sobe/desce, balança e torce o tronco
         "body": {"position": [f"math.sin({T} * 48) * 0.8", f"math.sin({T} * 110) * 1.8", 0],
-                 "rotation": [f"math.sin({T} * 110 + 40) * 4", f"math.sin({T} * 42) * 10", f"math.sin({T} * 55) * 3.5"]},
+                 "rotation": [f"math.sin({T} * 110 + 40) * 4", f"math.sin({T} * 42) * 15", f"math.sin({T} * 55) * 3.5"]},
         "chest": {"rotation": [f"math.sin({T} * 110) * 6 + {tw(31)} * 10", f"math.sin({T} * 47 + 20) * 7", f"math.sin({T} * 61) * 4"],
                   "scale": f"1 + math.sin({T} * 110) * 0.035"},
         "neck": {"rotation": [f"math.sin({T} * 73 + 70) * 6", f"math.sin({T} * 34) * 12", f"math.sin({T} * 39) * 5"]},
         # cabeça: olha em volta devagar, inclina de lado (sinistro) e dá trancos
-        "head": {"rotation": [f"math.sin({T} * 83) * 7 - {tw(29, 50)} * 14", f"math.sin({T} * 27 + 60) * 16 + {tw(23, 120)} * 22",
-                              f"math.sin({T} * 35) * 12 + {tw(19, 200)} * 18"]},
+        "head": {"rotation": [f"math.sin({T} * 83) * 7 - {tw(29, 50)} * 14", f"math.sin({T} * 27 + 60) * 24 + {tw(23, 120)} * 30",
+                              f"math.sin({T} * 35) * 16 + {tw(19, 200)} * 24"]},
         # boca: respira abrindo e fechando + estalo de dentes
-        "jaw": {"rotation": [f"8 + math.sin({T} * 110) * 8 + {tw(37)} * 30 + {tw(71, 90)} * 14", 0, 0]},
+        "jaw": {"rotation": [f"10 + math.sin({T} * 110) * 10 + {tw(37)} * 38 + {tw(71, 90)} * 18", 0, 0]},
         # fumaça de baixo: ondula como cauda, cada gomo atrasado em relação ao de cima, torce e pulsa
         "smoke_hi": {"rotation": [f"math.sin({T} * 90) * 7", f"math.sin({T} * 38) * 14", f"math.cos({T} * 90) * 8"],
                      "scale": f"1 + math.sin({T} * 150) * 0.05"},
-        "smoke_mid": {"rotation": [f"math.sin({T} * 90 - 70) * 12", f"math.sin({T} * 38 - 60) * 18", f"math.cos({T} * 90 - 70) * 13"],
+        "smoke_mid": {"rotation": [f"math.sin({T} * 90 - 70) * 16", f"math.sin({T} * 38 - 60) * 18", f"math.cos({T} * 90 - 70) * 13"],
                       "scale": f"1 + math.sin({T} * 150 - 70) * 0.08"},
-        "smoke_lo": {"rotation": [f"math.sin({T} * 90 - 140) * 17", f"math.sin({T} * 38 - 120) * 24", f"math.cos({T} * 90 - 140) * 19"],
+        "smoke_lo": {"rotation": [f"math.sin({T} * 90 - 140) * 24", f"math.sin({T} * 38 - 120) * 34", f"math.cos({T} * 90 - 140) * 26"],
                      "scale": f"1 + math.sin({T} * 150 - 140) * 0.12"},
         "smoke_pool": {"rotation": [0, f"{T} * 40", 0], "scale": f"1 + math.sin({T} * 120) * 0.16"},
     }
     for side, sg in (("r", -1), ("l", 1)):
         ph = 0 if side == "r" else 110
         # braços pendurados balançando, abrindo um pouco para fora; mãos girando e dedos que coçam o ar
-        bones[f"arm_{side}"] = {"rotation": [f"math.sin({T} * 70 + {ph}) * 11 - 4", f"{sg} * math.sin({T} * 41 + {ph}) * 6",
-                                             f"{sg} * (5 + math.sin({T} * 55 + {ph}) * 7)"]}
-        bones[f"fore_{side}"] = {"rotation": [f"-8 + math.sin({T} * 70 + {ph} - 50) * 13", 0, 0]}
+        bones[f"arm_{side}"] = {"rotation": [f"math.sin({T} * 70 + {ph}) * 18 - 6", f"{sg} * math.sin({T} * 41 + {ph}) * 6",
+                                             f"{sg} * (7 + math.sin({T} * 55 + {ph}) * 10)"]}
+        bones[f"fore_{side}"] = {"rotation": [f"-10 + math.sin({T} * 70 + {ph} - 50) * 18", 0, 0]}
         bones[f"hand_{side}"] = {"rotation": [f"math.sin({T} * 70 + {ph} - 100) * 14", f"{sg} * math.sin({T} * 43) * 12",
                                               f"{sg} * math.sin({T} * 47) * 10"]}
         for k in FINGERS:
             bones[f"fing_{side}{k}_0"] = {"rotation": [f"math.sin({T} * 150 + {k * 47 + ph}) * 16 - 10", 0, 0]}
             bones[f"fing_{side}{k}_1"] = {"rotation": [f"math.sin({T} * 150 + {k * 47 + ph} - 60) * 20 - 14", 0, 0]}
     for i in TENTS:
-        sp = 120 + (i * 17) % 60
+        sp = 150 + (i * 23) % 70
         for k in SEGS:
-            amp = 6 + k * 5.2           # a ponta mexe bem mais que a base (chicote)
+            amp = 10 + k * 7.0          # a ponta mexe bem mais que a base (chicote)
             ph = i * 47 + k * 55
             bones[f"tent{i}_{k}"] = {"rotation": [f"math.sin({T} * {sp} - {ph}) * {amp:.1f}", f"math.sin({T} * {sp * 0.6:.0f} - {ph}) * {amp * 0.5:.1f}",
                                                   f"math.cos({T} * {sp * 0.8:.0f} - {ph}) * {amp * 0.9:.1f}"]}
